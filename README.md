@@ -3,17 +3,14 @@ KT Connect
 
 Management and Integration with your Kubernetes dev environment more efficient.
 
+![Logo](./docs/_media/logo.png)
+
 ## Features
 
-* Direct access remote Kubernetes cluster: KT Connect use sshuttle as the vpn tool to access remote Kubernetes cluster network.
-
-* Exchange in cluster request to local: Developer can exchange the workload to redirect the request to local app.
-
-* Support Service Mesh: You can create a mesh version in local host and redirect to your local
-
-* Dashboard Visual: A Dashboard view you can know how the environemnt is use.
-
-* As a kubectl plugin: Run ktctl as a kubectl plugin, all you need is kubectl.
+* Connect: Direct access remote Kubernetes cluster: KT Connect use sshuttle as the vpn tool to access remote Kubernetes cluster network.
+* Exchange: Developer can exchange the workload to redirect the request to local app.
+* Mesh: You can create a mesh version in local host and redirect to your local
+* Dashboard: A Dashboard view you can know how the environemnt is use.
 
 ## QuickStart
 
