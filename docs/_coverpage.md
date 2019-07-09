@@ -2,7 +2,7 @@
 
 # KT Connect<small>0.0.4</small>
 
-> A sample kubernetes develope tool
+> Management and Integration with your Kubernetes dev environment more efficient.
 
 - Connect, Exchange And Mesh
 
