@@ -1,37 +1,25 @@
 KT Connect
 ===========
 
-A simple kubernetes cli tool, and help developer connect test environment more efficient.
+Management and Integration with your Kubernetes dev environment more efficient.
 
 ## Features
 
-* Direct access remote Kubernetes cluster:
+* Direct access remote Kubernetes cluster: KT Connect use sshuttle as the vpn tool to access remote Kubernetes cluster network.
 
-  KT Connect use sshuttle as the vpn tool to access remote Kubernetes cluster network.
+* Exchange in cluster request to local: Developer can exchange the workload to redirect the request to local app.
 
-* Exchange in cluster request to local:
+* Support Service Mesh: You can create a mesh version in local host and redirect to your local
 
-  Developer can exchange the workload to redirect the request to local app.
+* Dashboard Visual: A Dashboard view you can know how the environemnt is use.
 
-* Support Service Mesh:
-
-  You can create a mesh version in local host and redirect to your local
-
-* As a kubectl plugin:
-
-  Run ktctl as a kubectl plugin, all you need is kubectl.
-
-* Dashboard Visual:
-
-  A Dashboard view you can know how the environemnt is use.
+* As a kubectl plugin: Run ktctl as a kubectl plugin, all you need is kubectl.
 
 ## QuickStart
 
 You can download and install the ktctl from [Downloads And Install](https://rdc-incubator.github.io/kt-docs/#/downloads)
 
-### Cli
-
-#### Deploy a service in Kubernetes
+### Deploy a service in Kubernetes
 
 ```
 $ kubectl run tomcat --image=tomcat:7 --expose --port=8080
@@ -55,7 +43,7 @@ NAME     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
 tomcat   ClusterIP   172.19.143.139   <none>        8080/TCP   4m
 ```
 
-#### Connect: Access Kubernetes resource from local
+### Connect: Access Kubernetes resource from local
 
 ```
 $ sudo ktctl connect
@@ -84,7 +72,7 @@ Access Server internal DNS address
 $ curl http://tomcat.default.svc.cluster.local:8080
 ```
 
-#### Exchange: Access local from cluster
+### Exchange: Access local from cluster
 
 Create Tomcat 8 in local and expose 8080 port
 
@@ -113,7 +101,7 @@ $ curl http://tomcat.default.svc.cluster.local:8080 | grep '<h1>'
 <h1>Apache Tomcat/8.5.37</h1> #
 ```
 
-#### Mesh: Build large test environemnt with ServiceMesh
+### Mesh: Build large test environemnt with ServiceMesh
 
 > You can know more from [Mesh Best Practices](https://rdc-incubator.github.io/kt-docs/#/guide/mesh)
 
@@ -138,6 +126,8 @@ SSH Remote port-forward POD 172.16.0.217 22 to 127.0.0.1:2217 starting
 
 ### Dashboard
 
-You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
+Dashboard can help your know how your dev environemnt is used. 
 
 ![Dashboard](./docs/_media/dashboard-demo.png)
+
+You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
