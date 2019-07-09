@@ -1,0 +1,162 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/alibaba/kt-connect/pkg/kt/action"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/urfave/cli"
+)
+
+var (
+	// global params
+	kubeconfig string
+	namespace  string
+	debug      bool
+	image      string
+
+	// connect
+	disableDNS   bool
+	localSSHPort int
+	cidr         string
+
+	// exchange
+	expose string
+
+	//context
+	pidFile  string
+	userHome string
+)
+
+func main() {
+
+	userHome := util.HomeDir()
+	appHome := fmt.Sprintf("%s/.ktctl", userHome)
+	util.CreateDirIfNotExist(appHome)
+	pidFile = fmt.Sprintf("%s/pid", appHome)
+
+	app := cli.NewApp()
+	app.Name = "KT Connect"
+	app.Usage = ""
+	app.Version = "0.0.4"
+	app.Authors = []cli.Author{
+		cli.Author{
+			Name: "rdc incubator",
+		},
+	}
+
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:        "namespace,n",
+			Value:       "default",
+			Destination: &namespace,
+		},
+		cli.StringFlag{
+			Name:        "kubeconfig,c",
+			Value:       filepath.Join(userHome, ".kube", "config"),
+			Destination: &kubeconfig,
+		},
+		cli.StringFlag{
+			Name:        "image,i",
+			Usage:       "Custom proxy image",
+			Value:       "registry.cn-shanghai.aliyuncs.com/kube-helm/kube-proxy:1560842881",
+			Destination: &image,
+		},
+		cli.BoolFlag{
+			Name:        "debug,d",
+			Usage:       "debug mode",
+			Destination: &debug,
+		},
+	}
+
+	app.Commands = []cli.Command{
+		{
+			Name:  "connect",
+			Usage: "connection to kubernetes cluster",
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:        "port",
+					Value:       2222,
+					Usage:       "Local SSH Proxy port",
+					Destination: &localSSHPort,
+				},
+				cli.BoolFlag{
+					Name:        "disableDNS",
+					Usage:       "Disable Cluster DNS",
+					Destination: &disableDNS,
+				},
+				cli.StringFlag{
+					Name:        "cidr",
+					Usage:       "Custom CIDR eq '172.2.0.0/16'",
+					Destination: &cidr,
+				},
+			},
+			Action: func(c *cli.Context) error {
+				action := action.Action{
+					Kubeconfig: kubeconfig,
+					Namespace:  namespace,
+					Debug:      debug,
+					Image:      image,
+					PidFile:    pidFile,
+					UserHome:   userHome,
+				}
+				action.Connect(localSSHPort, disableDNS, cidr)
+				return nil
+			},
+		},
+		{
+			Name:  "exchange",
+			Usage: "exchange kubernetes deployment to local",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:        "expose",
+					Usage:       "expose port",
+					Destination: &expose,
+				},
+			},
+			Action: func(c *cli.Context) error {
+				action := action.Action{
+					Kubeconfig: kubeconfig,
+					Namespace:  namespace,
+					Debug:      debug,
+					Image:      image,
+					PidFile:    pidFile,
+					UserHome:   userHome,
+				}
+				action.Exchange(c.Args().First(), expose, userHome, pidFile)
+				return nil
+			},
+		},
+		{
+			Name:  "mesh",
+			Usage: "mesh kubernetes deployment to local",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:        "expose",
+					Usage:       "expose port",
+					Destination: &expose,
+				},
+			},
+			Action: func(c *cli.Context) error {
+				action := action.Action{
+					Kubeconfig: kubeconfig,
+					Namespace:  namespace,
+					Debug:      debug,
+					Image:      image,
+					PidFile:    pidFile,
+					UserHome:   userHome,
+				}
+				action.Mesh(c.Args().First(), expose, userHome, pidFile)
+				return nil
+			},
+		},
+	}
+
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
