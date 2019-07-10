@@ -19,7 +19,6 @@ package rest
 import (
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"k8s.io/client-go/plugin/pkg/client/auth/exec"
@@ -61,8 +60,6 @@ func HTTPWrappersForConfig(config *Config, rt http.RoundTripper) (http.RoundTrip
 
 // TransportConfig converts a client config to an appropriate transport config.
 func (c *Config) TransportConfig() (*transport.Config, error) {
-	fmt.Println(c.Insecure)
-	fmt.Println(c.UserAgent)
 	conf := &transport.Config{
 		UserAgent:     c.UserAgent,
 		Transport:     c.Transport,
