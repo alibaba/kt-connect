@@ -3,9 +3,11 @@ KT Connect
 
 ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg)
 
+![Logo](./docs/_media/logo.png)
+
 Management and Integration with your Kubernetes dev environment more efficient.
 
-![Logo](./docs/_media/logo.png)
+![Arch](./docs/_media/arch.png)
 
 ## Features
 
