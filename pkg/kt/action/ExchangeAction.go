@@ -34,7 +34,7 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 		Debug:      action.Debug,
 	}
 
-	err := factory.InitSwap()
+	err := factory.InitExchange()
 	if err != nil {
 		panic(err.Error())
 	}
