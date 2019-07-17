@@ -1,11 +1,12 @@
 package connect
 
 import (
-	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"k8s.io/api/apps/v1"

@@ -2,9 +2,10 @@ package connect
 
 import (
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appsv1 "k8s.io/api/apps/v1"
@@ -100,17 +101,17 @@ func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset
 		}
 
 		if len(pods.Items) <= 0 {
-			log.Printf("Pods not ready......\n")
+			log.Printf("Shadow Pods not ready......")
 		} else {
 			pod = pods.Items[0]
-			log.Printf("Pod status is %s\n", pod.Status.Phase)
+			log.Printf("Shadow Pod status is %s", pod.Status.Phase)
 			if pod.Status.Phase == "Running" {
 				break
 			}
 		}
-
 		time.Sleep(time.Duration(2) * time.Second)
 	}
+	log.Info().Msg("Shadow is ready.")
 	return
 }
 
@@ -121,13 +122,13 @@ func createAndWait(
 ) (podIP string, err error) {
 
 	localIPAddress := util.GetOutboundIP()
-	log.Printf("Client address %s", localIPAddress)
+	log.Info().Msgf("Client address %s", localIPAddress)
 	labels["remoteAddress"] = localIPAddress
 
 	client := clientset.AppsV1().Deployments(namespace)
 	deployment := generatorDeployment(namespace, name, labels, image)
 	result, err := client.Create(deployment)
-	log.Printf("Deploying proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Debug().Msgf("Deploying proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 
 	if err != nil {
 		return

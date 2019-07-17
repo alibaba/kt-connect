@@ -3,11 +3,12 @@ package action
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -26,7 +27,7 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 		panic(err.Error())
 	}
 
-	fmt.Printf("Daemon Start At %d", pid)
+	log.Info().Msgf("Daemon Start At %d", pid)
 
 	factory := connect.Connect{
 		Kubeconfig: action.Kubeconfig,
@@ -74,6 +75,6 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 
 	s := <-channel
-	log.Printf("[Exit] Signal is %s", s)
+	log.Info().Msgf("[Exit] Signal is %s", s)
 	factory.OnConnectExit(endpointName, pid)
 }

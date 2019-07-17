@@ -1,9 +1,10 @@
 package connect
 
 import (
-	"log"
 	"os"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -32,7 +33,7 @@ func (c *Connect) StartVPN(name string, podIP string, cidrs []string) (err error
 	if err != nil {
 		return
 	}
-	log.Printf("KT proxy start successful\n")
+	log.Printf("KT proxy start successful")
 	return
 }
 
@@ -47,7 +48,7 @@ func (c *Connect) OnConnectExit(name string, pid int) {
 		panic(err.Error())
 	}
 
-	log.Println("Cleanup proxy deplyment " + name)
+	log.Printf("Cleanup proxy deplyment %s", name)
 	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
 	deletePolicy := metav1.DeletePropagationForeground
 	deploymentsClient.Delete(name, &metav1.DeleteOptions{

@@ -2,10 +2,11 @@ package util
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"net"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -18,7 +19,7 @@ func GetOutboundIP() (address string) {
 	address = "127.0.0.1"
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 		return
 	}
 	defer conn.Close()

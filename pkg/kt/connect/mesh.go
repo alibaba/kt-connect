@@ -1,9 +1,10 @@
 package connect
 
 import (
-	"log"
 	"os"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
