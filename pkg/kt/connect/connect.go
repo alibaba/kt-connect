@@ -62,10 +62,10 @@ type Connect struct {
 	Expose       string
 	Port         int
 	DisableDNS   bool
-	podIP        string
-	swapReplicas *int32
-	labels       map[string]string
-	cidrs        []string
+	podIP        string            // need to remove
+	swapReplicas *int32            // need to remove
+	labels       map[string]string // need to remove
+	cidrs        []string          // need to remove
 	PodCIDR      string
 	Debug        bool
 	PidFile      string
@@ -80,11 +80,18 @@ func (c *Connect) GetClientSet() (clientset *kubernetes.Clientset, err error) {
 	return
 }
 
+// PrepareSSHPrivateKey
 func (connect *Connect) PrepareSSHPrivateKey() (err error) {
 	err = ioutil.WriteFile("/tmp/kt_id_rsa", pk, 400)
 	if err != nil {
 		log.Printf("Fails create temp ssh private key")
 	}
+	return
+}
+
+// CreateEndpoint
+func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, err error) {
+	podIP, err = createAndWait(clientset, namespace, name, labels, image)
 	return
 }
 

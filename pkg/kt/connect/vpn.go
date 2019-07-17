@@ -11,12 +11,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// CreateEndpoint
-func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, err error) {
-	podIP, err = createAndWait(clientset, namespace, name, labels, image)
-	return
-}
-
 // GetProxyCrids
 func (c *Connect) GetProxyCrids(clientset *kubernetes.Clientset) (cidrs []string, err error) {
 	cidrs, err = util.GetCirds(clientset, c.PodCIDR)
