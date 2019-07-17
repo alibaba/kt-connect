@@ -13,10 +13,8 @@ import (
 // BackgroundRun run cmd in background
 func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 
-	if debug {
-		log.Printf("Child, os.Args = %+v", os.Args)
-		log.Printf("Child, cmd.Args = %+v", cmd.Args)
-	}
+	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
+	log.Debug().Msgf("Child, cmd.Args = %+v", cmd.Args)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	stdoutIn, _ := cmd.StdoutPipe()

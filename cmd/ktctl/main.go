@@ -34,6 +34,7 @@ var (
 
 func main() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
@@ -106,7 +107,7 @@ func main() {
 					UserHome:   userHome,
 				}
 				if debug {
-					log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+					zerolog.SetGlobalLevel(zerolog.DebugLevel)
 				}
 				action.Connect(localSSHPort, disableDNS, cidr)
 				return nil
@@ -132,7 +133,7 @@ func main() {
 					UserHome:   userHome,
 				}
 				if debug {
-					log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+					zerolog.SetGlobalLevel(zerolog.DebugLevel)
 				}
 				action.Exchange(c.Args().First(), expose, userHome, pidFile)
 				return nil
@@ -158,7 +159,7 @@ func main() {
 					UserHome:   userHome,
 				}
 				if debug {
-					log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+					zerolog.SetGlobalLevel(zerolog.DebugLevel)
 				}
 				action.Mesh(c.Args().First(), expose, userHome, pidFile)
 				return nil
