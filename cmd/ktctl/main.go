@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/alibaba/kt-connect/pkg/kt/action"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 )
 
@@ -32,6 +33,8 @@ var (
 )
 
 func main() {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
@@ -103,6 +106,9 @@ func main() {
 					PidFile:    pidFile,
 					UserHome:   userHome,
 				}
+				if debug {
+					zerolog.SetGlobalLevel(zerolog.DebugLevel)
+				}
 				action.Connect(localSSHPort, disableDNS, cidr)
 				return nil
 			},
@@ -125,6 +131,9 @@ func main() {
 					Image:      image,
 					PidFile:    pidFile,
 					UserHome:   userHome,
+				}
+				if debug {
+					zerolog.SetGlobalLevel(zerolog.DebugLevel)
 				}
 				action.Exchange(c.Args().First(), expose, userHome, pidFile)
 				return nil
@@ -149,6 +158,9 @@ func main() {
 					PidFile:    pidFile,
 					UserHome:   userHome,
 				}
+				if debug {
+					zerolog.SetGlobalLevel(zerolog.DebugLevel)
+				}
 				action.Mesh(c.Args().First(), expose, userHome, pidFile)
 				return nil
 			},
@@ -157,6 +169,6 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 }

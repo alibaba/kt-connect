@@ -176,6 +176,30 @@
 			"revisionTime": "2018-11-13T02:31:45Z"
 		},
 		{
+			"checksumSHA1": "XHzl6Dj5oQMBK1p1kRBDZJPZNWU=",
+			"path": "github.com/rs/zerolog",
+			"revision": "77a169535877e62778d87315a3be91d262788981",
+			"revisionTime": "2019-07-04T06:16:03Z"
+		},
+		{
+			"checksumSHA1": "73NzoKIiJU6h4v6hg9eM4t7V/zw=",
+			"path": "github.com/rs/zerolog/internal/cbor",
+			"revision": "77a169535877e62778d87315a3be91d262788981",
+			"revisionTime": "2019-07-04T06:16:03Z"
+		},
+		{
+			"checksumSHA1": "3L8WJt61Z8Iqgkeo821moFixlBk=",
+			"path": "github.com/rs/zerolog/internal/json",
+			"revision": "77a169535877e62778d87315a3be91d262788981",
+			"revisionTime": "2019-07-04T06:16:03Z"
+		},
+		{
+			"checksumSHA1": "GrCvxT3h3vAVIwGe8bFAilXjgVA=",
+			"path": "github.com/rs/zerolog/log",
+			"revision": "77a169535877e62778d87315a3be91d262788981",
+			"revisionTime": "2019-07-04T06:16:03Z"
+		},
+		{
 			"checksumSHA1": "k5TsfhX2vvfffYbZQ4fMKtL5+cA=",
 			"origin": "k8s.io/client-go/vendor/github.com/spf13/pflag",
 			"path": "github.com/spf13/pflag",

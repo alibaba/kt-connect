@@ -2,10 +2,11 @@ package action
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -34,19 +35,20 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 		Debug:      action.Debug,
 	}
 
-	err := factory.InitMesh()
+	clientset, err := factory.GetClientSet()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	defer factory.Exit()
-
-	// SSH Remote Port forward
-	factory.RemotePortForwardToPod()
+	shadow, err := factory.Mesh(clientset)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
+	factory.OnMeshExit(shadow, clientset)
 }

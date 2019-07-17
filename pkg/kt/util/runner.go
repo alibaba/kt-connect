@@ -1,21 +1,20 @@
-package connect
+package util
 
 import (
 	"bytes"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // BackgroundRun run cmd in background
 func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 
-	if debug {
-		log.Printf("Child, os.Args = %+v\n", os.Args)
-		log.Printf("Child, cmd.Args = %+v\n", cmd.Args)
-	}
+	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
+	log.Debug().Msgf("Child, cmd.Args = %+v", cmd.Args)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	stdoutIn, _ := cmd.StdoutPipe()
@@ -38,11 +37,11 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 
 	go func() {
 		err = cmd.Wait()
-		log.Printf("%s exited\n", name)
+		log.Printf("%s exited", name)
 	}()
 
 	time.Sleep(time.Duration(2) * time.Second)
 	pid := cmd.Process.Pid
-	log.Printf("%s start at pid: %d\n", name, pid)
+	log.Printf("%s start at pid: %d", name, pid)
 	return
 }

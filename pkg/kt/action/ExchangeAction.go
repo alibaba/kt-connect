@@ -2,13 +2,14 @@ package action
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 //Exchange exchange kubernetes workload
@@ -34,19 +35,27 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 		Debug:      action.Debug,
 	}
 
-	err := factory.InitSwap()
+	clientset, err := factory.GetClientSet()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	defer factory.Exit()
+	origin, err := clientset.AppsV1().Deployments(action.Namespace).Get(swap, metav1.GetOptions{})
+	if err != nil {
+		panic(err.Error())
+	}
 
-	// SSH Remote Port forward
-	factory.RemotePortForwardToPod()
+	replicas := origin.Spec.Replicas
+
+	shadow, err := factory.Exchange(action.Namespace, origin, clientset)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
+	factory.HandleExchangeExit(shadow, replicas, origin, clientset)
 }
