@@ -74,8 +74,6 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 
 func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (shadowName string, podIP string, err error) {
 	shadowName = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
-	c.swapReplicas = origin.Spec.Replicas
-	c.Name = shadowName
 
 	labels := map[string]string{
 		"kt":           shadowName,

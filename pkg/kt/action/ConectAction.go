@@ -31,7 +31,6 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 	factory := connect.Connect{
 		Kubeconfig: action.Kubeconfig,
 		Namespace:  action.Namespace,
-		Name:       "kt-connect-daemon",
 		Image:      action.Image,
 		Port:       localSSHPort,
 		DisableDNS: disableDNS,

@@ -51,21 +51,16 @@ func init() {
 
 // Connect VPN connect interface
 type Connect struct {
-	Kubeconfig   string
-	Namespace    string
-	Name         string // need to remove
-	Image        string
-	Swap         string
-	Expose       string
-	Port         int
-	DisableDNS   bool
-	podIP        string            // need to remove
-	swapReplicas *int32            // need to remove
-	labels       map[string]string // need to remove
-	cidrs        []string          // need to remove
-	PodCIDR      string
-	Debug        bool
-	PidFile      string
+	Kubeconfig string
+	Namespace  string
+	Image      string
+	Swap       string
+	Expose     string
+	Port       int
+	DisableDNS bool
+	PodCIDR    string
+	Debug      bool
+	PidFile    string
 }
 
 func (c *Connect) GetClientSet() (clientset *kubernetes.Clientset, err error) {

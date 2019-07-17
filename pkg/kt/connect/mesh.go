@@ -33,6 +33,10 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName
 		"version":      meshVersion,
 	}
 
+	for k, v := range origin.Spec.Selector.MatchLabels {
+		labels[k] = v
+	}
+
 	podIP, err = createAndWait(clientset, c.Namespace, shadowName, labels, c.Image)
 	if err != nil {
 		return "", "", err
