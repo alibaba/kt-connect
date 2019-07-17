@@ -58,8 +58,6 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 		action.Namespace,
 	)
 
-	defer factory.OnConnectExit(endpointName, pid)
-
 	if err != nil {
 		panic(err.Error())
 	}
