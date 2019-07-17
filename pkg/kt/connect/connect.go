@@ -1,11 +1,9 @@
 package connect
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -92,35 +90,6 @@ func (connect *Connect) PrepareSSHPrivateKey() (err error) {
 func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, err error) {
 	podIP, err = createAndWait(clientset, namespace, name, labels, image)
 	return
-}
-
-// RemotePortForwardToPod
-func (c *Connect) RemotePortForwardToPod() (err error) {
-	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(c.podIP))
-	if err != nil {
-		return
-	}
-	portforward := util.PortForward(c.Kubeconfig, c.Namespace, c.Name, localSSHPort)
-	err = util.BackgroundRun(portforward, "exchange port forward to local", c.Debug)
-	if err != nil {
-		return
-	}
-
-	time.Sleep(time.Duration(2) * time.Second)
-
-	fmt.Printf("SSH Remote port-forward from %s 22 to 127.0.0.1:%d starting\n", c.podIP, localSSHPort)
-	cmd := util.SSHRemotePortForward(c.Expose, "127.0.0.1", c.Expose, localSSHPort)
-	return util.BackgroundRun(cmd, "ssh remote port-forward", c.Debug)
-}
-
-// ExposeToLocal remote port forward to local
-func (c *Connect) ExposeToLocal() (err error) {
-	if c.Expose == "" {
-		return
-	}
-	fmt.Printf("SSH Remote port-forward starting\n")
-	cmd := util.SSHRemotePortForward(c.Expose, "127.0.0.1", c.Expose, c.Port)
-	return util.BackgroundRun(cmd, "ssh remote port-forward", c.Debug)
 }
 
 func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset) (pod apiv1.Pod, err error) {

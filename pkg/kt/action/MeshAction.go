@@ -44,9 +44,6 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 		panic(err.Error())
 	}
 
-	// SSH Remote Port forward
-	// factory.RemotePortForwardToPod()
-
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 
