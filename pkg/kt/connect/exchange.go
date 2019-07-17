@@ -15,7 +15,7 @@ import (
 
 // Exchange
 func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (shadow string, err error) {
-	shadow, podIP, err := c.createShadow(origin, namespace, clientset)
+	shadow, podIP, err := c.createExchangeShadow(origin, namespace, clientset)
 	down := int32(0)
 	scaleTo(origin, namespace, clientset, &down)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, shadow, podIP, c.Debug)
@@ -72,7 +72,7 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (shadowName string, podIP string, err error) {
+func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (shadowName string, podIP string, err error) {
 	shadowName = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 	c.swapReplicas = origin.Spec.Replicas
 	c.Name = shadowName

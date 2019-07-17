@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"os"
 	"strconv"
 	"time"
 
@@ -56,7 +55,7 @@ func init() {
 type Connect struct {
 	Kubeconfig   string
 	Namespace    string
-	Name         string
+	Name         string // need to remove
 	Image        string
 	Swap         string
 	Expose       string
@@ -109,7 +108,7 @@ func (c *Connect) RemotePortForwardToPod() (err error) {
 
 	time.Sleep(time.Duration(2) * time.Second)
 
-	fmt.Printf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", c.podIP, localSSHPort)
+	fmt.Printf("SSH Remote port-forward from %s 22 to 127.0.0.1:%d starting\n", c.podIP, localSSHPort)
 	cmd := util.SSHRemotePortForward(c.Expose, "127.0.0.1", c.Expose, localSSHPort)
 	return util.BackgroundRun(cmd, "ssh remote port-forward", c.Debug)
 }
@@ -149,44 +148,6 @@ func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset
 		time.Sleep(time.Duration(2) * time.Second)
 	}
 	return
-}
-
-// Exit cleanup proxy deployment in proxy
-func (c *Connect) Exit() {
-	os.Remove(c.PidFile)
-	config, err := clientcmd.BuildConfigFromFlags("", c.Kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	log.Println("Cleanup proxy deplyment " + c.Name)
-	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
-	deletePolicy := metav1.DeletePropagationForeground
-	deploymentsClient.Delete(c.Name, &metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
-
-	if c.Swap != "" {
-		origin, err := deploymentsClient.Get(c.Swap, metav1.GetOptions{})
-		if err != nil {
-			fmt.Printf("Fail to get swap deployment %s in cluster", c.Swap)
-		}
-		log.Println("Recover origin deplyment " + c.Swap)
-		origin.Spec.Replicas = c.swapReplicas
-		var one = int32(1)
-		origin.Spec.Replicas = &one
-
-		d, err := deploymentsClient.Update(origin)
-		if err != nil {
-			log.Printf("Fail to revert deployment %s in cluster, please mannual scale it.", c.Swap)
-		}
-		log.Printf(" * %s (%d replicas)\n", d.Name, *d.Spec.Replicas)
-	}
-
 }
 
 func createAndWait(

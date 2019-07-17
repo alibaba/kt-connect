@@ -34,19 +34,23 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 		Debug:      action.Debug,
 	}
 
-	err := factory.InitMesh()
+	clientset, err := factory.GetClientSet()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	defer factory.Exit()
+	shadow, err := factory.Mesh(clientset)
+	if err != nil {
+		panic(err.Error())
+	}
 
 	// SSH Remote Port forward
-	factory.RemotePortForwardToPod()
+	// factory.RemotePortForwardToPod()
 
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
+	factory.OnMeshExit(shadow, clientset)
 }
