@@ -72,7 +72,7 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 	factory.StartVPN(endpointName, endPointIP, cidrs)
 
 	channel := make(chan os.Signal)
-	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	s := <-channel
 	log.Info().Msgf("[Exit] Signal is %s", s)

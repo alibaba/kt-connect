@@ -46,7 +46,7 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 	}
 
 	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
