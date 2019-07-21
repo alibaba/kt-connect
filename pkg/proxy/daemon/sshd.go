@@ -6,8 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// SSHDStart start sshd daemon
-func SSHDStart() (err error) {
+// StartSSHDaemon start sshd daemon
+func StartSSHDaemon() (err error) {
 	cmd := exec.Command("/usr/sbin/sshd", "-D")
 	err = cmd.Start()
 	if err != nil {

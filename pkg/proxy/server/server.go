@@ -8,11 +8,11 @@ import (
 // Run start kt proxy
 func Run() (err error) {
 	log.Info().Msg("Start kt connect proxy")
-	err = daemon.SSHDStart()
+	err = daemon.StartSSHDaemon()
 	if err != nil {
 		return
 	}
-	err = daemon.DNSServerStart()
+	err = daemon.StartDNSDaemon()
 	if err != nil {
 		return
 	}

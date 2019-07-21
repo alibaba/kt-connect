@@ -12,10 +12,30 @@ import (
 	"github.com/miekg/dns"
 )
 
-type handler struct{}
+// StartDNSDaemon start dns server
+func StartDNSDaemon() (err error) {
+	srv := &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
+	srv.Handler = &dnsHandler{}
+
+	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+
+	log.Info().Msgf("Successful load local /etc/resolv.conf")
+	for _, server := range config.Servers {
+		log.Info().Msgf("Success load nameserver %s\n", server)
+	}
+
+	fmt.Printf("DNS Server Start At 53...\n")
+	err = srv.ListenAndServe()
+	if err != nil {
+		log.Error().Msgf("Failed to set udp listener %s\n", err.Error())
+	}
+	return
+}
+
+type dnsHandler struct{}
 
 // getDomain get internal service dns address
-func (h *handler) getDomain(origin string) string {
+func (h *dnsHandler) getDomain(origin string) string {
 	domain := origin
 
 	namespace, find := os.LookupEnv("PROXY_NAMESPACE")
@@ -35,7 +55,7 @@ func (h *handler) getDomain(origin string) string {
 }
 
 //ServeDNS query DNS rescord
-func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 
 	msg := dns.Msg{}
 	msg.SetReply(r)
@@ -76,24 +96,4 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	}
 
 	w.WriteMsg(&msg)
-}
-
-// DNSServerStart start dns server
-func DNSServerStart() (err error) {
-	srv := &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
-	srv.Handler = &handler{}
-
-	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-
-	log.Info().Msgf("Successful load local /etc/resolv.conf")
-	for _, server := range config.Servers {
-		log.Info().Msgf("Success load nameserver %s\n", server)
-	}
-
-	fmt.Printf("DNS Server Start At 53...\n")
-	err = srv.ListenAndServe()
-	if err != nil {
-		log.Error().Msgf("Failed to set udp listener %s\n", err.Error())
-	}
-	return
 }
