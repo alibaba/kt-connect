@@ -1,20 +1,23 @@
 package daemon
 
 import (
-	"fmt"
 	"os/exec"
+
+	"github.com/rs/zerolog/log"
 )
 
-func SSHDStart() {
+// SSHDStart start sshd daemon
+func SSHDStart() (err error) {
 	cmd := exec.Command("/usr/sbin/sshd", "-D")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return
 	}
 	pid := cmd.Process.Pid
-	fmt.Printf("SSHD start at pid: %d\n", pid)
+	log.Info().Msgf("SSHD start at pid: %d\n", pid)
 	go func() {
 		err = cmd.Wait()
-		fmt.Printf("SSHD Exited with error: %v\n", err)
+		log.Error().Msgf("SSHD Exited with error: %v\n", err)
 	}()
+	return
 }

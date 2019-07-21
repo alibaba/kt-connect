@@ -1,10 +1,18 @@
 package main
 
 import (
-	"github.com/alibaba/kt-connect/pkg/proxy/daemon"
+	"os"
+
+	"github.com/alibaba/kt-connect/pkg/proxy/server"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
-	daemon.SSHDStart()
-	daemon.DNSServerStart()
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	err := server.Run()
+	if err != nil {
+		panic(err.Error())
+	}
 }
