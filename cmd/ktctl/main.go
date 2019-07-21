@@ -32,10 +32,12 @@ var (
 	userHome string
 )
 
-func main() {
+func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+}
 
+func main() {
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
 	util.CreateDirIfNotExist(appHome)

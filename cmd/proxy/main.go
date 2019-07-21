@@ -8,9 +8,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func main() {
+func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+}
+
+func main() {
 	err := server.Run()
 	if err != nil {
 		panic(err.Error())
