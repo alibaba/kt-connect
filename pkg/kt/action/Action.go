@@ -1,5 +1,6 @@
 package action
 
+// Action cmd action
 type Action struct {
 	Kubeconfig string
 	Namespace  string
