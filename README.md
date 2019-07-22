@@ -93,6 +93,11 @@ SSH Remote port-forward for POD starting
 2019/06/19 11:19:14 ssh remote port-forward start at pid: 3567
 ```
 
+```
+tips:
+if your remote port diffrent local port, you can user ${remotePort}:{localPort} set expose parameter
+```
+
 Access local tomcat by internal service DNS address:
 
 > Note: if `kubectl connect` not running, you can only access from cluster
