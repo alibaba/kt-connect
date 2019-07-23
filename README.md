@@ -140,6 +140,14 @@ You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-i
 
 ## How To Build
 
+### use go build
+
+```
+go build -o "output/ktctl/ktctl" ./cmd/ktctl
+```
+
+### use gox
+
 Install Gox
 
 ```
