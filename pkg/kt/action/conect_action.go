@@ -66,6 +66,7 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 	cidrs, err := factory.GetProxyCrids(clientSet)
 
 	if err != nil {
+		factory.OnConnectExit(endpointName, pid)
 		panic(err.Error())
 	}
 
