@@ -53,8 +53,8 @@ func SSHRemotePortForward(localPort string, remoteHost string, remotePort string
 }
 
 // PortForward kubectl port forward
-func PortForward(kubeConifg string, namespace string, deployment string, remotePort int) *exec.Cmd {
-	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "-n", namespace, "port-forward", "deployments/"+deployment, fmt.Sprintf("%d", remotePort)+":22")
+func PortForward(kubeConifg string, namespace string, resource string, remotePort int) *exec.Cmd {
+	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "-n", namespace, "port-forward", resource, fmt.Sprintf("%d", remotePort)+":22")
 }
 
 // SSHUttle ssh-baed vpn connect

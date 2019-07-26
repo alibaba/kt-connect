@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -46,7 +47,7 @@ func remotePortForward(expose string, kubeconfig string, namespace string, targe
 	if err != nil {
 		return
 	}
-	portforward := util.PortForward(kubeconfig, namespace, target, localSSHPort)
+	portforward := util.PortForward(kubeconfig, namespace, fmt.Sprintf("deployments/%s", target), localSSHPort)
 	err = util.BackgroundRun(portforward, "exchange port forward to local", debug)
 	if err != nil {
 		return
