@@ -45,13 +45,13 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 		panic(err.Error())
 	}
 
-	endpointName := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 
-	endPointIP, err := factory.CreateEndpoint(
+	endPointIP, podName, err := factory.CreateEndpoint(
 		clientSet,
-		endpointName,
+		workload,
 		map[string]string{
-			"kt":           endpointName,
+			"kt":           workload,
 			"kt-component": "connect",
 			"control-by":   "kt",
 		},
@@ -66,16 +66,16 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 	cidrs, err := factory.GetProxyCrids(clientSet)
 
 	if err != nil {
-		factory.OnConnectExit(endpointName, pid)
+		factory.OnConnectExit(workload, pid)
 		panic(err.Error())
 	}
 
-	factory.StartVPN(endpointName, endPointIP, cidrs)
+	factory.StartVPN(podName, endPointIP, cidrs)
 
 	channel := make(chan os.Signal)
 	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	s := <-channel
 	log.Info().Msgf("[Exit] Signal is %s", s)
-	factory.OnConnectExit(endpointName, pid)
+	factory.OnConnectExit(workload, pid)
 }

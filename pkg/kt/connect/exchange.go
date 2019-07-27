@@ -2,9 +2,7 @@ package connect
 
 import (
 	"os"
-	"strconv"
 	"strings"
-	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -15,11 +13,11 @@ import (
 )
 
 // Exchange
-func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (shadow string, err error) {
-	shadow, podIP, err := c.createExchangeShadow(origin, namespace, clientset)
+func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (workload string, err error) {
+	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset)
 	down := int32(0)
 	scaleTo(origin, namespace, clientset, &down)
-	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, shadow, podIP, c.Debug)
+	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
 	return
 }
 
@@ -41,30 +39,6 @@ func (c *Connect) HandleExchangeExit(shadow string, replicas *int32, origin *v1.
 	scaleTo(app, c.Namespace, clientset, replicas)
 }
 
-func remotePortForward(expose string, kubeconfig string, namespace string, target string, remoteIP string, debug bool) (err error) {
-	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
-	if err != nil {
-		return
-	}
-	portforward := util.PortForward(kubeconfig, namespace, target, localSSHPort)
-	err = util.BackgroundRun(portforward, "exchange port forward to local", debug)
-	if err != nil {
-		return
-	}
-
-	time.Sleep(time.Duration(2) * time.Second)
-	log.Printf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
-	localPort := expose
-	remotePort := expose
-	ports := strings.SplitN(expose, ":", 2)
-	if len(ports) > 1 {
-		localPort = ports[1]
-		remotePort = ports[0]
-	}
-	cmd := util.SSHRemotePortForward(localPort, "127.0.0.1", remotePort, localSSHPort)
-	return util.BackgroundRun(cmd, "ssh remote port-forward", debug)
-}
-
 //ScaleTo Scale
 func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.Clientset, replicas *int32) (err error) {
 	log.Printf("Try Scale deployment %s to %d\n", deployment.GetObjectMeta().GetName(), *replicas)
@@ -80,11 +54,11 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (shadowName string, podIP string, err error) {
-	shadowName = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (workload string, podIP string, podName string, err error) {
+	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	labels := map[string]string{
-		"kt":           shadowName,
+		"kt":           workload,
 		"kt-component": "exchange",
 		"control-by":   "kt",
 	}
@@ -93,9 +67,9 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		labels[k] = v
 	}
 
-	podIP, err = createAndWait(clientset, namespace, shadowName, labels, c.Image)
+	podIP, podName, err = createAndWait(clientset, namespace, workload, labels, c.Image)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 	return
 }

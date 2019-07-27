@@ -37,6 +37,7 @@ func (c *Connect) StartVPN(name string, podIP string, cidrs []string) (err error
 	return
 }
 
+// OnConnectExit handle connect exit
 func (c *Connect) OnConnectExit(name string, pid int) {
 	os.Remove(c.PidFile)
 	config, err := clientcmd.BuildConfigFromFlags("", c.Kubeconfig)

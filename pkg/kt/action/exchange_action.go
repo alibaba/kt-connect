@@ -47,7 +47,7 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 
 	replicas := origin.Spec.Replicas
 
-	shadow, err := factory.Exchange(action.Namespace, origin, clientset)
+	workload, err := factory.Exchange(action.Namespace, origin, clientset)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -57,5 +57,5 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
-	factory.HandleExchangeExit(shadow, replicas, origin, clientset)
+	factory.HandleExchangeExit(workload, replicas, origin, clientset)
 }
