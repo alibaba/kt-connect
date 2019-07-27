@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"strconv"
@@ -85,9 +84,8 @@ func (connect *Connect) PrepareSSHPrivateKey() (err error) {
 }
 
 // CreateEndpoint
-func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, err error) {
-	podIP, err = createAndWait(clientset, namespace, name, labels, image)
-	return
+func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, podName string, err error) {
+	return createAndWait(clientset, namespace, name, labels, image)
 }
 
 func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset) (pod apiv1.Pod, err error) {
@@ -121,7 +119,7 @@ func createAndWait(
 	clientset *kubernetes.Clientset,
 	namespace string, name string,
 	labels map[string]string, image string,
-) (podIP string, err error) {
+) (podIP string, podName string, err error) {
 
 	localIPAddress := util.GetOutboundIP()
 	log.Info().Msgf("Client address %s", localIPAddress)
@@ -143,6 +141,7 @@ func createAndWait(
 	}
 	log.Printf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 	podIP = pod.Status.PodIP
+	podName = pod.GetObjectMeta().GetName()
 	return
 }
 
@@ -151,7 +150,7 @@ func remotePortForward(expose string, kubeconfig string, namespace string, targe
 	if err != nil {
 		return
 	}
-	portforward := util.PortForward(kubeconfig, namespace, fmt.Sprintf("deployments/%s", target), localSSHPort)
+	portforward := util.PortForward(kubeconfig, namespace, target, localSSHPort)
 	err = util.BackgroundRun(portforward, "exchange port forward to local", debug)
 	if err != nil {
 		return

@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"fmt"
 	"os"
 	"time"
 
@@ -25,7 +24,7 @@ func (c *Connect) StartVPN(name string, podIP string, cidrs []string) (err error
 	if err != nil {
 		return
 	}
-	err = util.BackgroundRun(util.PortForward(c.Kubeconfig, c.Namespace, fmt.Sprintf("deployments/%s", name), c.Port), "port-forward", c.Debug)
+	err = util.BackgroundRun(util.PortForward(c.Kubeconfig, c.Namespace, name, c.Port), "port-forward", c.Debug)
 	if err != nil {
 		return
 	}

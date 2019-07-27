@@ -47,7 +47,7 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 
 	endpointName := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 
-	endPointIP, err := factory.CreateEndpoint(
+	endPointIP, podName, err := factory.CreateEndpoint(
 		clientSet,
 		endpointName,
 		map[string]string{
@@ -70,7 +70,7 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 		panic(err.Error())
 	}
 
-	factory.StartVPN(endpointName, endPointIP, cidrs)
+	factory.StartVPN(podName, endPointIP, cidrs)
 
 	channel := make(chan os.Signal)
 	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

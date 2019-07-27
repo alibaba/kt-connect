@@ -13,16 +13,16 @@ import (
 
 // InitMesh prepare swap deployment
 func (c *Connect) Mesh(clientset *kubernetes.Clientset) (shadow string, err error) {
-	shadow, podIP, err := c.createMeshShadown(clientset)
-	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, shadow, podIP, c.Debug)
+	shadow, podIP, podName, err := c.createMeshShadown(clientset)
+	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
 	return
 }
 
-func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName string, podIP string, err error) {
+func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName string, podIP string, podName string, err error) {
 	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
 	origin, err := deploymentsClient.Get(c.Swap, metav1.GetOptions{})
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	meshVersion := strings.ToLower(util.RandomString(5))
@@ -38,9 +38,9 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName
 		labels[k] = v
 	}
 
-	podIP, err = createAndWait(clientset, c.Namespace, shadowName, labels, c.Image)
+	podIP, podName, err = createAndWait(clientset, c.Namespace, shadowName, labels, c.Image)
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	log.Printf("-----------------------------------------------------------\n")
