@@ -1,7 +1,7 @@
 KT Connect
 ===========
 
-![License](https://img.shields.io/github/license/alibaba/kt-connect.svg)
+![Build Status](https://travis-ci.org/alibaba/kt-connect.svg?branch=master) ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg) 
 
 ![Logo](./docs/_media/logo.png)
 
