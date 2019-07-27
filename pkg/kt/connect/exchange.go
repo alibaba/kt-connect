@@ -13,8 +13,8 @@ import (
 )
 
 // Exchange
-func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (shadow string, err error) {
-	shadow, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset)
+func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (workload string, err error) {
+	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset)
 	down := int32(0)
 	scaleTo(origin, namespace, clientset, &down)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
@@ -54,11 +54,11 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (shadowName string, podIP string, podName string, err error) {
-	shadowName = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (workload string, podIP string, podName string, err error) {
+	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	labels := map[string]string{
-		"kt":           shadowName,
+		"kt":           workload,
 		"kt-component": "exchange",
 		"control-by":   "kt",
 	}
@@ -67,7 +67,7 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		labels[k] = v
 	}
 
-	podIP, podName, err = createAndWait(clientset, namespace, shadowName, labels, c.Image)
+	podIP, podName, err = createAndWait(clientset, namespace, workload, labels, c.Image)
 	if err != nil {
 		return "", "", "", err
 	}

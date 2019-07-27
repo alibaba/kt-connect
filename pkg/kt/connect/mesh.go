@@ -12,8 +12,8 @@ import (
 )
 
 // InitMesh prepare swap deployment
-func (c *Connect) Mesh(clientset *kubernetes.Clientset) (shadow string, err error) {
-	shadow, podIP, podName, err := c.createMeshShadown(clientset)
+func (c *Connect) Mesh(clientset *kubernetes.Clientset) (workload string, err error) {
+	workload, podIP, podName, err := c.createMeshShadown(clientset)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
 	return
 }

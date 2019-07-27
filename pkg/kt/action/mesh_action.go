@@ -40,7 +40,7 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 		panic(err.Error())
 	}
 
-	shadow, err := factory.Mesh(clientset)
+	workload, err := factory.Mesh(clientset)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -50,5 +50,5 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
-	factory.OnMeshExit(shadow, clientset)
+	factory.OnMeshExit(workload, clientset)
 }
