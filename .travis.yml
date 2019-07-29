@@ -5,3 +5,4 @@ go:
 
 script:
   - go build -o "output/ktctl/ktctl" ./cmd/ktctl
+  - go build -o "output/kt-proxy" ./cmd/proxy
