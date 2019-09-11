@@ -1,0 +1,5 @@
+docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -f docker/kt-connect/Dockerfile .
+mkdir -p output/ktctl
+docker run -v $PWD:$TRAVIS_BUILD_DIR --rm --entrypoint cp registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect /go/src/github.com/alibaba/kt-connect/output/ktctl $TRAVIS_BUILD_DIR/output/ktctl
+ls $TRAVIS_BUILD_DIR/output/ktctl
+docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow -f docker/shadow/Dockerfile .
