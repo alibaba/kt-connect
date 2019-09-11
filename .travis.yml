@@ -7,5 +7,5 @@ services:
   - docker
 
 script:
-  - go build -o "output/ktctl/ktctl" ./cmd/ktctl
+  - docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -f docker/kt-connect/Dockerfile .
   - docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow -f docker/proxy/Dockerfile .

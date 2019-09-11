@@ -3,11 +3,11 @@ ENV GO111MODULE on
 WORKDIR /go/src/github.com/alibaba/kt-connect/
 COPY . .
 RUN go mod download
-RUN GOARCH=amd64 GOOS=linux go build -o bin/kt-proxy cmd/proxy/main.go
+RUN GOARCH=amd64 GOOS=linux go build -o bin/kt-shadow cmd/proxy/main.go
 
 FROM ubuntu:16.04
 
-COPY --from=0 /go/src/github.com/alibaba/kt-connect/bin/kt-proxy /usr/sbin/kt-proxy
+COPY --from=0 /go/src/github.com/alibaba/kt-connect/bin/kt-shadow /usr/sbin/kt-shadow
 
 RUN apt-get update && apt-get install -y openssh-server dnsutils sshuttle iputils-ping curl
 RUN mkdir /var/run/sshd
@@ -22,9 +22,9 @@ RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
-ADD docker/proxy/loop.sh /root/loop.sh
-ADD docker/proxy/sshd_config /etc/ssh/sshd_config
+ADD docker/shadow/loop.sh /root/loop.sh
+ADD docker/shadow/sshd_config /etc/ssh/sshd_config
 RUN chmod +rw /etc/ssh/sshd_config
 
 EXPOSE 22
-CMD ["/usr/sbin/kt-proxy"]
+CMD ["/usr/sbin/kt-shadow"]
