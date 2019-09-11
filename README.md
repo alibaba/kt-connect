@@ -157,3 +157,9 @@ go get github.com/mitchellh/gox
 ```
 gox -output="output/ktctl/ktctl_{{.OS}}_{{.Arch}}" ${GOPATH}/src/github.com/alibaba/kt-connect/cmd/ktctl
 ```
+
+## How To Build Proxy
+
+```
+GOARCH=amd64 GOOS=linux go build -o bin/proxy cmd/proxy/main.go
+```

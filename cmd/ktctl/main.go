@@ -68,7 +68,7 @@ func main() {
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
-			Value:       "registry.cn-shanghai.aliyuncs.com/kube-helm/kube-proxy:1560842881",
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect:v0.0.5",
 			Destination: &image,
 		},
 		cli.BoolFlag{
