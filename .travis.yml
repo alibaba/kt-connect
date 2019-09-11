@@ -3,6 +3,9 @@ language: go
 go:
 - 1.12.x
 
+services:
+  - docker
+
 script:
   - go build -o "output/ktctl/ktctl" ./cmd/ktctl
-  - go build -o "output/kt-proxy" ./cmd/proxy
+  - docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow -f docker/proxy/Dockerfile .
