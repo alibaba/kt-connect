@@ -8,4 +8,4 @@ services:
 
 script:
   - docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -f docker/kt-connect/Dockerfile .
-  - docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow -f docker/proxy/Dockerfile .
+  - docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow -f docker/shadow/Dockerfile .
