@@ -2,6 +2,7 @@ services:
 - docker
 script:
 - sh bin/build
+- sh bin/archive
 deploy:
   provider: script
   script: 

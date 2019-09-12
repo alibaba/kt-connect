@@ -1,0 +1,3 @@
+mkdir -p output/ktctl
+docker run -v $PWD:$TRAVIS_BUILD_DIR --rm --entrypoint cp registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -r /go/src/github.com/alibaba/kt-connect/output/ktctl $TRAVIS_BUILD_DIR/output/ktctl
+ls -al $TRAVIS_BUILD_DIR/output/ktctl
