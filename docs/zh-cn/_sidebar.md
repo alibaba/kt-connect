@@ -2,6 +2,7 @@
 * [快速开始](zh-cn/quickstart.md)
 * [下载](zh-cn/downloads.md)
 * [可视化](zh-cn/guide/dashboard.md)
+* [Windows支持](zn-cn/guide/windows-support.md)
 * 最佳实践
   * [本地联调测试](zh-cn/guide/localdev.md)
   * [Mesh最佳实践](zh-cn/guide/mesh.md)

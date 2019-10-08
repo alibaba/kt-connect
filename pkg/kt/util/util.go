@@ -25,6 +25,13 @@ func HomeDir() string {
 	return "/root"
 }
 
+// PrivateKeyPath Get ssh private key path
+func PrivateKeyPath() string {
+	userHome := HomeDir()
+	privateKey := fmt.Sprintf("%s/.kt_id_rsa", userHome)
+	return privateKey
+}
+
 // CreateDirIfNotExist create dir
 func CreateDirIfNotExist(dir string) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -45,7 +52,7 @@ func SSHRemotePortForward(localPort string, remoteHost string, remotePort string
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",
 		"-oUserKnownHostsFile=/dev/null",
-		"-i", "/tmp/kt_id_rsa",
+		"-i", PrivateKeyPath(),
 		"-R", remotePort+":127.0.0.1:"+localPort,
 		fmt.Sprintf("root@%s", remoteHost), "-p"+fmt.Sprintf("%d", remoteSSHPort),
 		"sh", "loop.sh",
@@ -63,7 +70,9 @@ func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bo
 	if !disableDNS {
 		args = append(args, "--dns", "--to-ns", DNSServer)
 	}
-	args = append(args, "-e", "ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i /tmp/kt_id_rsa", "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
+
+	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", PrivateKeyPath())
+	args = append(args, "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
 	args = append(args, cidrs...)
 	return exec.Command("sshuttle", args...)
 }
