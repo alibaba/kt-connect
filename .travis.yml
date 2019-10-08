@@ -6,7 +6,7 @@ script:
 deploy:
   provider: script
   script: 
-    - sh docker-push
+    - sh bin/docker-push
   on:
     branch: master
 deploy:
