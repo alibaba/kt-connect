@@ -76,6 +76,7 @@ func (c *Connect) GetClientSet() (clientset *kubernetes.Clientset, err error) {
 
 // PrepareSSHPrivateKey
 func (connect *Connect) PrepareSSHPrivateKey() (err error) {
+	// TODO: should adaptor windows
 	err = ioutil.WriteFile("/tmp/kt_id_rsa", pk, 400)
 	if err != nil {
 		log.Printf("Fails create temp ssh private key")
