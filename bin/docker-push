@@ -1,2 +1,2 @@
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin registry.cn-hangzhou.aliyuncs.com
-docker push registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow
+docker push registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:$TRAVIS_BRANCH
