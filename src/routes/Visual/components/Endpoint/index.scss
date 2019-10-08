@@ -1,0 +1,47 @@
+.endpoint-list-item {
+  padding: 20px;
+  background-color: #fff;
+  margin: 8px 0px;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #fff;
+  line-height: 30px;
+  &-connected {
+    border-color: #52c41a !important;
+    .basic {
+      color: #52c41a;
+    }
+  }
+  &:hover {
+    border-color: #a6a6a6;
+  }
+  .basic {
+    font-weight: bold;
+  }
+  .address {
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+    overflow: hidden;
+    border-radius: 100%;
+    border: 2px solid #d9d9d9;
+    background-color: #fff;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+    margin-left: -5px;
+    text-align: center;
+    position: relative;
+    &-icon {
+      line-height: 30px;
+      text-align: center;
+    }
+    &-proxy {
+      color: #52c41a;
+      z-index: 1;
+    }
+  }
+  .status {
+    &-connected {
+      
+    }
+  }
+}

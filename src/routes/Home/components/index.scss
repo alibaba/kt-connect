@@ -1,0 +1,18 @@
+.dashboard {
+  .ant-col {
+    padding: 5px;
+    .panel {
+      text-align: center;
+      background: #fafafa;
+      min-height: 100px;
+      padding: 24px;
+      .metrics {
+        font-size: 24px;
+        font-weight: 100px;
+      }
+      .name {
+        font-size: 14px;
+      }
+    }
+  }
+}
