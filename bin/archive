@@ -10,5 +10,5 @@ tar zcvf ktctl_darwin_amd64.tar.gz ktctl_darwin_amd64
 tar zcvf ktctl_darwin_386.tar.gz ktctl_darwin_386
 tar zcvf ktctl_linux_amd64.tar.gz ktctl_linux_amd64
 tar zcvf ktctl_linux_386.tar.gz ktctl_linux_386
-tar zcvf ktctl_windows_386.tar.gz ktctl_windows_386
-tar zcvf ktctl_windows_amd64.tar.gz ktctl_windows_amd64
+tar zcvf ktctl_windows_386.tar.gz ktctl_windows_386.exe
+tar zcvf ktctl_windows_amd64.tar.gz ktctl_windows_amd64.exe
