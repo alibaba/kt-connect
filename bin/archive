@@ -1,10 +1,14 @@
 echo "======== move artifacts======="
+mkdir -p artifacts
 docker run -v $PWD/artifacts:/artifacts --rm --entrypoint cp registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -r /go/src/github.com/alibaba/kt-connect/output/ktctl /artifacts
 
 echo "======== archive artifacts======="
 ls -al artifacts/ktctl
+chmod 777 artifacts/ktctl
 cd artifacts/ktctl
 tar zcvf ktctl_darwin_amd64.tar.gz ktctl_darwin_amd64
 tar zcvf ktctl_darwin_386.tar.gz ktctl_darwin_386
 tar zcvf ktctl_linux_amd64.tar.gz ktctl_linux_amd64
 tar zcvf ktctl_linux_386.tar.gz ktctl_linux_386
+tar zcvf ktctl_windows_386.tar.gz ktctl_windows_386
+tar zcvf ktctl_windows_amd64.tar.gz ktctl_windows_amd64
