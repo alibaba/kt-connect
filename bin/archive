@@ -1,5 +1,5 @@
 mkdir -p output/ktctl
-docker run -v $PWD:/go/src/github.com/alibaba/kt-connect/ --rm --entrypoint cp registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -r /go/src/github.com/alibaba/kt-connect/output/ktctl/ output/ktctl/
+docker run -v $PWD:/go/src/github.com/alibaba/kt-connect/ --rm --entrypoint ls registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect /go/src/github.com/alibaba/kt-connect/output/ktctl/
 ls -al output/ktctl/
 
 cd output/ktctl/
