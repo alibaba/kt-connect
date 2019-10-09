@@ -1,5 +1,18 @@
 services:
 - docker
+
+env:
+  global:
+   - NAMESPACE=registry.cn-hangzhou.aliyuncs.com/rdc-incubator
+   - CTL_REPO=kt-connect
+   - SHADOW_REPO=kt-connect-shadow
+   - DASHBOARD_REPO=kt-connect-dashboard
+   - SERVER_REPO=kt-connect-server
+
+before_script:
+  - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
+  - docker pull registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow || true
+
 script:
 - sh bin/build
 - sh bin/archive
