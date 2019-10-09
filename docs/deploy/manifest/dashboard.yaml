@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kt-dashboard
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: kt-dashboard
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: kt-dashboard
+  name: kt-dashboard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kt-dashboard
+  template:
+    metadata:
+      labels:
+        app: kt-dashboard
+    spec:
+      serviceAccount: ktadmin
+      containers:
+      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:master
+        imagePullPolicy: Always
+        name: dashboard
+        ports:
+        - containerPort: 80
+      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:master
+        imagePullPolicy: Always
+        name: controller
+        ports:
+        - containerPort: 8000
