@@ -17,13 +17,14 @@ env:
 before_script:
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
   - docker pull ${NAMESPACE}/${SHADOW_REPO} || true
+  - docker pull ${NAMESPACE}/${SHADOW_BASE_REPO} || true
   - docker build -t ${NAMESPACE}/${BUILDER_REPO} -f docker/builder/Dockerfile .
   - docker build -t ${NAMESPACE}/${SHADOW_BASE_REPO} -f docker/shadow/Dockerfile_base .
 script:
 - docker build -t ${NAMESPACE}/${CTL_REPO}:${TAG} -f docker/kt-connect/Dockerfile .
 - docker build -t ${NAMESPACE}/${SHADOW_REPO}:${TAG} -f docker/shadow/Dockerfile .
-- docker build -t ${NAMESPACE}/${DASHBOARD_REPO}:${TAG} -f docker/dashboard/Dockerfile .
 - docker build -t ${NAMESPACE}/${SERVER_REPO}:${TAG} -f docker/apiserver/Dockerfile .
+- docker build -t ${NAMESPACE}/${DASHBOARD_REPO}:${TAG} -f docker/dashboard/Dockerfile .
 - sh bin/archive
 
 after_success:
