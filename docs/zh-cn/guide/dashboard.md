@@ -93,12 +93,12 @@ spec:
     spec:
       serviceAccount: ktadmin
       containers:
-      - image: registry.cn-shanghai.aliyuncs.com/kube-helm/kt-dashboard:stable
+      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:stable
         imagePullPolicy: Always
         name: dashboard
         ports:
         - containerPort: 80
-      - image: registry.cn-shanghai.aliyuncs.com/kube-helm/kt-controller:stable
+      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:stable
         imagePullPolicy: Always
         name: controller
         ports:

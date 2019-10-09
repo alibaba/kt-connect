@@ -28,12 +28,12 @@ spec:
     spec:
       serviceAccount: ktadmin
       containers:
-      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:master
+      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:stable
         imagePullPolicy: Always
         name: dashboard
         ports:
         - containerPort: 80
-      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:master
+      - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:stable
         imagePullPolicy: Always
         name: controller
         ports:
