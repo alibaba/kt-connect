@@ -1,24 +1,25 @@
-services:
-- docker
-script:
-- sh bin/build
-- sh bin/archive
-deploy:
-  provider: script
-  script: 
-    - sh bin/docker-push
-  on:
-    repo: alibaba/kt-connect
-deploy:
-  provider: releases
-  api_key:
-    secure: Bub3t4U4qSrXgxyUEUpjqKdAqoNakj2WvzmdAyIqc4qlFujRJ22Iw2J2fmcFhi5Z+hCaGZUooD7D/9SgVDxgjxZIkgsWspxYWYSgKAvuyH1UiGZaRW1xB9xDxcu5DtVnsLvLa6XANTY4zP8LlawkTRFqY8OdAaItqG3KyyrcWrcMz+tHQLrg19A9ZnCHvYXdugFMJJUouV8J8nwV19vcvrESipf9WfnAcj71Xksx8TsWL9GAWfIbCz8cOj03MUpIgNb5hZt8mFFTv444ZAIo+79YbHR6X+YyOuJplwewBe8VSi7JAVeSlD1TOwLft+IDjQAejNucDgcj+i/d9ENDlHu2cHy4jkdYaXHvizI6og7/nQNofzgx16gJxZGcRU6GXylNcJq918gQPmnuh2LeQmSpQ99NI8+Qp9O5ZfISYXl0UbXIuKBwQSWJyYJ/xuc1QaG3Esch6veZmmm2OfpJZRdI5LeHouaK3RRAt9dB23SXUx/6e8cwVPMVATtajvL9R8o1IFKQK4NLeW0Y7izuK0/mVc8+Wrk5lsim4tT4A+F7fVYKQM99QXYnwy//e1YrWvdS+9TCgmeBRsNBbo5MOSYwdDawZOU1wrbEwNbNI6d2npeC62P0Z2IgrO0BkWtIBBfBnImB3PAtQBSN6Rhc+E52DbWgLxHgYL3usAN9G9k=
-  file: 
-    - artifacts/ktctl/ktctl_linux_amd64.tar.gz
-    - artifacts/ktctl/ktctl_darwin_amd64.tar.gz
-    - artifacts/ktctl/ktctl_linux_386.tar.gz
-    - artifacts/ktctl/ktctl_darwin_386.tar.gz
-  skip_cleanup: true
-  draft: true
-  on:
-    tags: true
+jobs:
+  include:
+    - stage: Build
+      script:
+      - sh bin/build
+      - sh bin/archive
+    - stage: Docker Relese
+      provider: script
+      script: 
+      - sh bin/docker-push
+      on:
+        repo: alibaba/kt-connect
+    - stage: Github Release
+      provider: releases
+      api_key:
+          secure: Bub3t4U4qSrXgxyUEUpjqKdAqoNakj2WvzmdAyIqc4qlFujRJ22Iw2J2fmcFhi5Z+hCaGZUooD7D/9SgVDxgjxZIkgsWspxYWYSgKAvuyH1UiGZaRW1xB9xDxcu5DtVnsLvLa6XANTY4zP8LlawkTRFqY8OdAaItqG3KyyrcWrcMz+tHQLrg19A9ZnCHvYXdugFMJJUouV8J8nwV19vcvrESipf9WfnAcj71Xksx8TsWL9GAWfIbCz8cOj03MUpIgNb5hZt8mFFTv444ZAIo+79YbHR6X+YyOuJplwewBe8VSi7JAVeSlD1TOwLft+IDjQAejNucDgcj+i/d9ENDlHu2cHy4jkdYaXHvizI6og7/nQNofzgx16gJxZGcRU6GXylNcJq918gQPmnuh2LeQmSpQ99NI8+Qp9O5ZfISYXl0UbXIuKBwQSWJyYJ/xuc1QaG3Esch6veZmmm2OfpJZRdI5LeHouaK3RRAt9dB23SXUx/6e8cwVPMVATtajvL9R8o1IFKQK4NLeW0Y7izuK0/mVc8+Wrk5lsim4tT4A+F7fVYKQM99QXYnwy//e1YrWvdS+9TCgmeBRsNBbo5MOSYwdDawZOU1wrbEwNbNI6d2npeC62P0Z2IgrO0BkWtIBBfBnImB3PAtQBSN6Rhc+E52DbWgLxHgYL3usAN9G9k=
+      file: 
+        - artifacts/ktctl/ktctl_linux_amd64.tar.gz
+        - artifacts/ktctl/ktctl_darwin_amd64.tar.gz
+        - artifacts/ktctl/ktctl_linux_386.tar.gz
+        - artifacts/ktctl/ktctl_darwin_386.tar.gz
+      skip_cleanup: true
+      draft: true
+      on:
+        tags: true
