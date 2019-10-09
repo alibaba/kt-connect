@@ -6,8 +6,8 @@ import (
 	"net"
 	"strings"
 
+	"github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -47,7 +47,7 @@ func GetCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []string, 
 	if err != nil {
 		return
 	}
-	cidrs = append(cidrs, serviceCird)
+	cidrs = append(cidrs, serviceCird...)
 	return
 }
 
@@ -74,21 +74,24 @@ func getPodCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []strin
 	return
 }
 
-func getServiceCird(clientset *kubernetes.Clientset) (cidr string, err error) {
+func getServiceCird(clientset *kubernetes.Clientset) (cidr []string, err error) {
 	serviceList, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
 	if err != nil {
 		log.Printf("Fails to get service info of cluster")
-		return "", err
+		return cidr, err
 	}
 
-	cluserIps := []string{}
+	samples := mapset.NewSet()
 	for _, service := range serviceList.Items {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
-			cluserIps = append(cluserIps, service.Spec.ClusterIP)
+			sample := strings.Join(append(strings.Split(service.Spec.ClusterIP, ".")[:2], []string{"0", "0"}...), ".") + "/16"
+			samples.Add(sample)
 		}
 	}
 
-	sample := cluserIps[0]
-	cidr = strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
+	for _, sample := range samples.ToSlice() {
+		cidr = append(cidr, fmt.Sprint(sample))
+	}
+
 	return
 }

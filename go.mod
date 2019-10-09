@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/campoy/embedmd v0.0.0-20171205015432-c59ce00e0296 // indirect
+	github.com/deckarep/golang-set v1.7.1 // indirect
 	github.com/dustin/go-broadcast v0.0.0-20171205050544-f664265f5a66 // indirect
 	github.com/gin-gonic/autotls v0.0.0-20180426091246-be87bd5ef97b // indirect
 	github.com/gin-gonic/gin v1.4.0
