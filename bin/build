@@ -1,3 +1,4 @@
+echo $TAG
 TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")  
 docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect -f docker/kt-connect/Dockerfile .
 
