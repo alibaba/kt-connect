@@ -95,7 +95,7 @@ func (c *ClusterController) Deployments(context *gin.Context) {
 
 	}
 
-	resource, err := c.Context.Client().Extensions().Deployments(namespace).List(options)
+	resource, err := c.Context.Client().ExtensionsV1beta1().Deployments(namespace).List(options)
 
 	if err != nil {
 		context.JSON(500, gin.H{
@@ -109,7 +109,7 @@ func (c *ClusterController) Deployments(context *gin.Context) {
 func (c *ClusterController) Deployment(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	resource, err := c.Context.Client().Extensions().Deployments(namespace).Get(name, metav1.GetOptions{})
+	resource, err := c.Context.Client().ExtensionsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
 			"message": "fail get deployment",
@@ -122,7 +122,7 @@ func (c *ClusterController) Deployment(context *gin.Context) {
 func (c *ClusterController) ReplicaSet(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	resource, err := c.Context.Client().Extensions().ReplicaSets(namespace).Get(name, metav1.GetOptions{})
+	resource, err := c.Context.Client().ExtensionsV1beta1().ReplicaSets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
 			"message": "fail get replicaSet",
@@ -160,7 +160,7 @@ func (c *ClusterController) Pod(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
 
-	pod, err := c.Context.Client().Core().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := c.Context.Client().CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
 			"message": "fail get pod",
