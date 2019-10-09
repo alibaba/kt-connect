@@ -1,8 +1,7 @@
-FROM golang:1.11
+FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/builder
 ENV GO111MODULE on
 WORKDIR /go/src/github.com/alibaba/kt-connect/
 COPY . .
-RUN go mod download
 RUN GOARCH=amd64 GOOS=linux go build -o bin/kt-shadow cmd/proxy/main.go
 
 FROM ubuntu:16.04
