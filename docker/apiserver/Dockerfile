@@ -1,10 +1,9 @@
-FROM golang:1.11 as build-deps
+FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/builder as build-deps
 LABEL MAINTAINER yunlong <zhenmu.zyl@alibaba-inc.com>
 ENV GO111MODULE on
 
 WORKDIR /go/src/github.com/alibaba/kt-connect
 COPY . .
-RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o output/kt-apiserver-linux-amd64 cmd/server/main.go 
 
 FROM alpine
