@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -82,22 +83,35 @@ func query(w dns.ResponseWriter, req *dns.Msg) (rr []dns.RR) {
 	msg.SetQuestion(domain, qtype)
 	msg.RecursionDesired = true
 
-	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
-
-	if len(config.Servers) <= 0 {
-		log.Error().Msgf("*** error: dns server is 0")
-		return
-	}
-
-	rr = exchange(domain, config.Servers[0], config.Port, qtype, msg)
+	rr = exchange(domain, qtype, msg)
 	return
 }
 
-func exchange(domain string, server string, port string, Qtype uint16, m *dns.Msg) (rr []dns.RR) {
-	log.Info().Msgf("Exchange message for domain %s to dns server %s:%s\n", domain, server, port)
+func getResolvServer() (address string, err error) {
+	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
+
+	if len(config.Servers) <= 0 {
+		err = errors.New("*** error: dns server is 0")
+		return
+	}
+
+	server := config.Servers[0]
+	port := config.Port
+
+	address = net.JoinHostPort(server, port)
+	return
+}
+
+func exchange(domain string, Qtype uint16, m *dns.Msg) (rr []dns.RR) {
+	address, err := getResolvServer()
+	if err != nil {
+		log.Error().Msgf(err.Error())
+		return
+	}
+	log.Info().Msgf("Exchange message for domain %s to dns server %s\n", domain, address)
 
 	c := new(dns.Client)
-	res, _, err := c.Exchange(m, net.JoinHostPort(server, port))
+	res, _, err := c.Exchange(m, address)
 
 	if res == nil {
 		log.Error().Msgf("*** error: %s\n", err.Error())
