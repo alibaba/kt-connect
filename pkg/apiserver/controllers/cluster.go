@@ -43,7 +43,7 @@ func (c *ClusterController) Services(context *gin.Context) {
 func (c *ClusterController) Service(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	service, err := c.Context.Client().Core().Services(namespace).Get(name, metav1.GetOptions{})
+	service, err := c.Context.Client().CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
 			"message": "fail get service",
@@ -68,7 +68,7 @@ func (c *ClusterController) Endpoints(context *gin.Context) {
 func (c *ClusterController) Endpoint(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	endpoint, err := c.Context.Client().Core().Endpoints(namespace).Get(name, metav1.GetOptions{})
+	endpoint, err := c.Context.Client().CoreV1().Endpoints(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
 			"message": "fail get endpoint",
