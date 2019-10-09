@@ -1,0 +1,35 @@
+// add your custom style
+.terminal-dialog {
+  .ant-modal-body {
+    background-color: #001529;
+    padding: 5px;
+  }
+}
+
+.log-dialog {
+  .ant-modal-body {
+    background-color: #001529;
+    padding: 5px;
+    
+  }
+  .log-container {
+    color: #fff;
+    max-height: 600px;
+    overflow: hidden;
+    overflow-y: auto;
+    p {
+      margin: 2px;
+    }
+    .timestamp {
+      display: none;
+    }
+  }
+}
+
+.virtualservice-container {
+  margin-bottom: 20px;
+}
+
+.ant-form-item {
+  margin-bottom: 0px;
+}

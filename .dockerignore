@@ -1,3 +1,6 @@
 output
 .github
 docs
+build
+.vscode
+artifacts
