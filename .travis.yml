@@ -24,7 +24,11 @@ script:
 - sh bin/archive
 
 after_success:
-- sh bin/docker-push
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
+- docker push ${NAMESPACE}/${CTL_REPO}:${TAG}
+- docker push ${NAMESPACE}/${SHADOW_REPO}:${TAG}
+- docker push ${NAMESPACE}/${DASHBOARD_REPO}:${TAG}
+- docker push ${NAMESPACE}/${SERVER_REPO}:${TAG}
 
 deploy:
   provider: releases
