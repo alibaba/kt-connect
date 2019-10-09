@@ -13,12 +13,13 @@ import (
 	"github.com/miekg/dns"
 )
 
-type dnsHandler struct{}
+// DNSRequestHandler
+type DNSRequestHandler struct{}
 
-// StartDNSDaemon start dns server
-func StartDNSDaemon() (err error) {
+// ServeDNS start dns server
+func ServeDNS() (err error) {
 	srv := &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
-	srv.Handler = &dnsHandler{}
+	srv.Handler = &DNSRequestHandler{}
 
 	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 
@@ -36,7 +37,7 @@ func StartDNSDaemon() (err error) {
 }
 
 //ServeDNS query DNS rescord
-func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+func (h *DNSRequestHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(r)
 	msg.Authoritative = true
@@ -49,7 +50,6 @@ func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	w.WriteMsg(&msg)
 }
 
-// getDomain get internal service dns address
 func getDomain(origin string) string {
 	domain := origin
 
