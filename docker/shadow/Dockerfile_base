@@ -16,3 +16,5 @@ RUN echo "export VISIBLE=now" >> /etc/profile
 ADD docker/shadow/loop.sh /root/loop.sh
 ADD docker/shadow/sshd_config /etc/ssh/sshd_config
 RUN chmod +rw /etc/ssh/sshd_config
+
+EXPOSE 22
