@@ -18,6 +18,9 @@ before_script:
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
   - docker pull ${NAMESPACE}/${SHADOW_REPO} || true
   - docker pull ${NAMESPACE}/${SHADOW_BASE_REPO} || true
+  - docker pull golang:1.11 || true
+  - docker pull node:9.11.1 || true
+  - docker pull alpine || true
   - docker build -t ${NAMESPACE}/${BUILDER_REPO} -f docker/builder/Dockerfile .
   - docker build -t ${NAMESPACE}/${SHADOW_BASE_REPO} -f docker/shadow/Dockerfile_base .
 script:
