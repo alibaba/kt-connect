@@ -18,12 +18,10 @@ before_script:
 script:
 - sh bin/build
 - sh bin/archive
-deploy:
-  provider: script
-  script: 
-    - sh bin/docker-push
-  on:
-    repo: alibaba/kt-connect
+
+after_success:
+- sh bin/docker-push
+
 deploy:
   provider: releases
   api_key:
