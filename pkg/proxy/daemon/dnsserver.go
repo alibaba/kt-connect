@@ -12,6 +12,8 @@ import (
 	"github.com/miekg/dns"
 )
 
+type dnsHandler struct{}
+
 // StartDNSDaemon start dns server
 func StartDNSDaemon() (err error) {
 	srv := &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
@@ -32,10 +34,22 @@ func StartDNSDaemon() (err error) {
 	return
 }
 
-type dnsHandler struct{}
+//ServeDNS query DNS rescord
+func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+	msg := dns.Msg{}
+	msg.SetReply(r)
+	msg.Authoritative = true
+	// Stuff must be in the answer section
+	for _, a := range query(w, r) {
+		log.Info().Msgf("%v\n", a)
+		msg.Answer = append(msg.Answer, a)
+	}
+
+	w.WriteMsg(&msg)
+}
 
 // getDomain get internal service dns address
-func (h *dnsHandler) getDomain(origin string) string {
+func getDomain(origin string) string {
 	domain := origin
 
 	namespace, find := os.LookupEnv("PROXY_NAMESPACE")
@@ -54,46 +68,47 @@ func (h *dnsHandler) getDomain(origin string) string {
 	return domain
 }
 
-//ServeDNS query DNS rescord
-func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+func query(w dns.ResponseWriter, req *dns.Msg) (rr []dns.RR) {
+	if len(req.Question) <= 0 {
+		log.Error().Msgf("*** error: dns Msg question length is 0")
+		return
+	}
 
-	msg := dns.Msg{}
-	msg.SetReply(r)
-	msg.Authoritative = true
-
-	origin := r.Question[0].Name
-
-	domain := h.getDomain(origin)
+	domain := getDomain(req.Question[0].Name)
+	qtype := req.Question[0].Qtype
 	log.Info().Msgf("Received DNS query for %s: \n", domain)
+
+	msg := new(dns.Msg)
+	msg.SetQuestion(domain, qtype)
+	msg.RecursionDesired = true
 
 	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 
-	c := new(dns.Client)
+	if len(config.Servers) <= 0 {
+		log.Error().Msgf("*** error: dns server is 0")
+		return
+	}
 
-	m := new(dns.Msg)
-	m.SetQuestion(domain, r.Question[0].Qtype)
-	m.RecursionDesired = true
+	rr = exchange(domain, config.Servers[0], config.Port, qtype, msg)
+	return
+}
 
-	server := config.Servers[0]
-	port := config.Port
-
+func exchange(domain string, server string, port string, Qtype uint16, m *dns.Msg) (rr []dns.RR) {
 	log.Info().Msgf("Exchange message for domain %s to dns server %s:%s\n", domain, server, port)
 
+	c := new(dns.Client)
 	res, _, err := c.Exchange(m, net.JoinHostPort(server, port))
 
 	if res == nil {
 		log.Error().Msgf("*** error: %s\n", err.Error())
+		return
 	}
 
 	if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf(" *** invalid answer name %s after %d query for %s\n", domain, r.Question[0].Qtype, domain)
+		log.Error().Msgf(" *** invalid answer name %s after %d query for %s\n", domain, Qtype, domain)
+		return
 	}
 
-	// Stuff must be in the answer section
-	for _, a := range res.Answer {
-		log.Info().Msgf("%v\n", a)
-		msg.Answer = append(msg.Answer, a)
-	}
-
-	w.WriteMsg(&msg)
+	rr = res.Answer
+	return
 }
