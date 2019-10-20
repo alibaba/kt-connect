@@ -26,6 +26,16 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 ## Release Note
 
+### 0.0.6
+
+* Add windows support doc.
+* Fixed clusterIP cidr missing.
+* Rename docker images address.
+
+### 0.0.5
+
+* Add dashboard and api server source code
+
 ### 0.0.4
 
 > Release At 2019-06-26
