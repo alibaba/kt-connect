@@ -1,0 +1,1 @@
+docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/builder -f docker/shadow/Dockerfile_base .
