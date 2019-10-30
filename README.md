@@ -163,3 +163,9 @@ gox -output="output/ktctl/ktctl_{{.OS}}_{{.Arch}}" ${GOPATH}/src/github.com/alib
 ```
 GOARCH=amd64 GOOS=linux go build -o bin/proxy cmd/proxy/main.go
 ```
+
+## Ask For Help
+
+Please contact me with DingTalk:
+
+![image](https://user-images.githubusercontent.com/1088868/67843153-67cffb00-fb36-11e9-972e-ed9773bc115b.png)
