@@ -72,7 +72,7 @@ func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bo
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", PrivateKeyPath())
-	args = append(args, "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
+	args = append(args, "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x")
 	args = append(args, cidrs...)
 	return exec.Command("sshuttle", args...)
 }
