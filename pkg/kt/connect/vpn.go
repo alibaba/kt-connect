@@ -29,7 +29,7 @@ func (c *Connect) StartVPN(name string, podIP string, cidrs []string) (err error
 		return
 	}
 	time.Sleep(time.Duration(5) * time.Second)
-	err = util.BackgroundRun(util.SSHUttle("127.0.0.1", c.Port, podIP, c.DisableDNS, cidrs), "vpn(sshuttle)", c.Debug)
+	err = util.BackgroundRun(util.SSHUttle("127.0.0.1", c.Port, podIP, c.DisableDNS, cidrs, c.Debug), "vpn(sshuttle)", c.Debug)
 	if err != nil {
 		return
 	}

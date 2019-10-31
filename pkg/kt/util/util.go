@@ -65,10 +65,14 @@ func PortForward(kubeConifg string, namespace string, resource string, remotePor
 }
 
 // SSHUttle ssh-baed vpn connect
-func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bool, cidrs []string) *exec.Cmd {
+func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
 	args := []string{}
 	if !disableDNS {
 		args = append(args, "--dns", "--to-ns", DNSServer)
+	}
+
+	if debug {
+		args = append(args, "-v")
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", PrivateKeyPath())
