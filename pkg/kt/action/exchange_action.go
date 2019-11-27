@@ -22,7 +22,7 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 	}
 
 	if swap == "" || expose == "" {
-		err := fmt.Errorf("-replace and -expose is required")
+		err := fmt.Errorf("-expose is required")
 		panic(err.Error())
 	}
 
