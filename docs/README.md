@@ -24,6 +24,10 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 ## Release Note
 
+### 0.0.7
+
+* Add oidc plugin to support TKE
+
 ### 0.0.6
 
 * Add windows support doc.
