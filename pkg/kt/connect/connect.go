@@ -65,6 +65,7 @@ type Connect struct {
 	PidFile    string
 }
 
+// GetClientSet get Kubernetes client from config
 func (c *Connect) GetClientSet() (clientset *kubernetes.Clientset, err error) {
 	config, err := clientcmd.BuildConfigFromFlags("", c.Kubeconfig)
 	if err != nil {
@@ -75,7 +76,7 @@ func (c *Connect) GetClientSet() (clientset *kubernetes.Clientset, err error) {
 }
 
 // PrepareSSHPrivateKey generator ssh private key
-func (connect *Connect) PrepareSSHPrivateKey() (err error) {
+func (c *Connect) PrepareSSHPrivateKey() (err error) {
 	privateKey := util.PrivateKeyPath()
 	err = ioutil.WriteFile(privateKey, pk, 400)
 	if err != nil {
@@ -84,7 +85,7 @@ func (connect *Connect) PrepareSSHPrivateKey() (err error) {
 	return
 }
 
-// CreateEndpoint
+// CreateEndpoint create a endpoint to connect from local
 func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, podName string, err error) {
 	return createAndWait(clientset, namespace, name, labels, image)
 }

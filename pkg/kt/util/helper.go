@@ -71,6 +71,27 @@ func getPodCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []strin
 			cidrs = append(cidrs, node.Spec.PodCIDR)
 		}
 	}
+
+	if len(cidrs) == 0 {
+		log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
+		podList, err2 := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		if err2 != nil {
+			log.Printf("Fails to get service info of cluster")
+			return
+		}
+
+		samples := mapset.NewSet()
+		for _, pod := range podList.Items {
+			if pod.Status.PodIP != "" && pod.Status.PodIP != "None" {
+				samples.Add(getCirdFromSample(pod.Status.PodIP))
+			}
+		}
+
+		for _, sample := range samples.ToSlice() {
+			cidrs = append(cidrs, fmt.Sprint(sample))
+		}
+	}
+
 	return
 }
 
@@ -84,8 +105,7 @@ func getServiceCird(clientset *kubernetes.Clientset) (cidr []string, err error) 
 	samples := mapset.NewSet()
 	for _, service := range serviceList.Items {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
-			sample := strings.Join(append(strings.Split(service.Spec.ClusterIP, ".")[:2], []string{"0", "0"}...), ".") + "/16"
-			samples.Add(sample)
+			samples.Add(getCirdFromSample(service.Spec.ClusterIP))
 		}
 	}
 
@@ -94,4 +114,8 @@ func getServiceCird(clientset *kubernetes.Clientset) (cidr []string, err error) 
 	}
 
 	return
+}
+
+func getCirdFromSample(sample string) string {
+	return strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
 }
