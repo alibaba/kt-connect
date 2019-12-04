@@ -68,8 +68,11 @@ func query(w dns.ResponseWriter, req *dns.Msg) (rr []dns.RR) {
 		return
 	}
 
-	domain := getDomain(req.Question[0].Name)
 	qtype := req.Question[0].Qtype
+	name := req.Question[0].Name
+
+	domain := getDomain(name)
+	
 	log.Info().Msgf("Received DNS query for %s: \n", domain)
 
 	msg := new(dns.Msg)
