@@ -2,7 +2,6 @@ package daemon
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"strconv"
@@ -13,13 +12,13 @@ import (
 	"github.com/miekg/dns"
 )
 
-// DNSRequestHandler
-type DNSRequestHandler struct{}
+// dns server
+type server struct{}
 
-// ServeDNS start dns server
-func ServeDNS() (err error) {
-	srv := &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
-	srv.Handler = &DNSRequestHandler{}
+// NewDNSServerDefault create default dns server
+func NewDNSServerDefault() (srv *dns.Server) {
+	srv = &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
+	srv.Handler = &server{}
 
 	config, _ := dns.ClientConfigFromFile("/etc/resolv.conf")
 
@@ -27,22 +26,16 @@ func ServeDNS() (err error) {
 	for _, server := range config.Servers {
 		log.Info().Msgf("Success load nameserver %s\n", server)
 	}
-
-	fmt.Printf("DNS Server Start At 53...\n")
-	err = srv.ListenAndServe()
-	if err != nil {
-		log.Error().Msgf("Failed to set udp listener %s\n", err.Error())
-	}
 	return
 }
 
 //ServeDNS query DNS rescord
-func (h *DNSRequestHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+func (h *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg := dns.Msg{}
-	msg.SetReply(r)
+	msg.SetReply(req)
 	msg.Authoritative = true
 	// Stuff must be in the answer section
-	for _, a := range query(w, r) {
+	for _, a := range query(w, req) {
 		log.Info().Msgf("%v\n", a)
 		msg.Answer = append(msg.Answer, a)
 	}

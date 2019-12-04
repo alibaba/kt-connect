@@ -6,4 +6,7 @@ RUN GOARCH=amd64 GOOS=linux go build -o bin/kt-shadow cmd/proxy/main.go
 
 FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base
 COPY --from=0 /go/src/github.com/alibaba/kt-connect/bin/kt-shadow /usr/sbin/kt-shadow
-CMD ["/usr/sbin/kt-shadow"]
+ADD docker/shadow/run.sh /run.sh
+RUN chmod 755 /run.sh
+
+CMD ["/run.sh"]
