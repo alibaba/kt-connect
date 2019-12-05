@@ -15,7 +15,7 @@ import (
 )
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
+func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disableDNS bool, cidr string) {
 	if util.IsDaemonRunning(action.PidFile) {
 		err := fmt.Errorf("Connect already running %s. exit this", action.PidFile)
 		panic(err.Error())
@@ -33,7 +33,9 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 		Kubeconfig: action.Kubeconfig,
 		Namespace:  action.Namespace,
 		Image:      action.Image,
-		Port:       localSSHPort,
+		Method:     method,
+		ProxyPort:  socke5Proxy,
+		Port:       sshPort,
 		DisableDNS: disableDNS,
 		PodCIDR:    cidr,
 		Debug:      action.Debug,
@@ -70,7 +72,7 @@ func (action *Action) Connect(localSSHPort int, disableDNS bool, cidr string) {
 		panic(err.Error())
 	}
 
-	factory.StartVPN(podName, endPointIP, cidrs)
+	factory.StartConnect(podName, endPointIP, cidrs)
 
 	channel := make(chan os.Signal)
 	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
