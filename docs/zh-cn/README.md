@@ -27,6 +27,8 @@ KT使用shhuttle作为网络连接实现，实现轻量级的SSH VPN网络
 ### 0.0.7
 
 * 添加Oidc插件支持TKE集群
+* 新增SOCKS5代理模式以支持WSL环境下使用
+* 修复了当Node中不包含Pod网段信息时PodIP无法访问的问题
 
 ### 0.0.6
 

@@ -1,6 +1,6 @@
 ![logo](../_media/logo.png)
 
-# KT Connect<small>0.0.6</small>
+# KT Connect<small>0.0.7</small>
 
 > 面向Kubernetes的本地开发者辅助工具
 

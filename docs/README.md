@@ -27,6 +27,8 @@ Run kt as a kubectl plugin, all you need is kubectl.
 ### 0.0.7
 
 * Add oidc plugin to support TKE
+* Add socks5 method to support WSL
+* Fixed issue when node.Spec.PodCIRD dynamic cal CIRD
 
 ### 0.0.6
 
