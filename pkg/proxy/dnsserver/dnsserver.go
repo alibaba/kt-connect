@@ -1,4 +1,4 @@
-package daemon
+package dnsserver
 
 import (
 	"errors"
@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/miekg/dns"
 )
 
@@ -51,14 +50,12 @@ func getDomain(origin string) string {
 		namespace = "default"
 	}
 
-	index := strings.Index(domain, ".")
-
-	if index+1 == len(domain) {
+	if !strings.Contains(domain, ".svc.cluster.local.") {
 		domain = domain + namespace + ".svc.cluster.local."
 		log.Info().Msgf("*** Use in cluster dns address %s\n", domain)
 	}
-	log.Info().Msgf("Format domain %s to %s\n", origin, domain)
 
+	log.Info().Msgf("Format domain %s to %s\n", origin, domain)
 	return domain
 }
 
@@ -68,15 +65,16 @@ func query(w dns.ResponseWriter, req *dns.Msg) (rr []dns.RR) {
 		return
 	}
 
-	domain := getDomain(req.Question[0].Name)
-	qtype := req.Question[0].Qtype
-	log.Info().Msgf("Received DNS query for %s: \n", domain)
-
 	msg := new(dns.Msg)
-	msg.SetQuestion(domain, qtype)
 	msg.RecursionDesired = true
 
-	rr = exchange(domain, qtype, msg)
+	qtype := req.Question[0].Qtype
+	name := req.Question[0].Name
+	domain := getDomain(name)
+
+	log.Info().Msgf("Received DNS query for %s: \n", domain)
+	msg.SetQuestion(domain, qtype)
+	rr = exchange(domain, qtype, msg, name)
 	return
 }
 
@@ -95,7 +93,7 @@ func getResolvServer() (address string, err error) {
 	return
 }
 
-func exchange(domain string, Qtype uint16, m *dns.Msg) (rr []dns.RR) {
+func exchange(domain string, Qtype uint16, m *dns.Msg, name string) (rr []dns.RR) {
 	address, err := getResolvServer()
 	if err != nil {
 		log.Error().Msgf(err.Error())
@@ -116,6 +114,36 @@ func exchange(domain string, Qtype uint16, m *dns.Msg) (rr []dns.RR) {
 		return
 	}
 
-	rr = res.Answer
+	for _, item := range res.Answer {
+		log.Info().Msgf("response: %s", item.String())
+		r, err := getAnswer(name, domain, item)
+		if err != nil {
+			return	
+		}
+		rr = append(rr, r)
+	}
+
+	return
+}
+
+func getAnswer(name string, inClusterName string, acutal dns.RR) (tmp dns.RR, err error) {
+	var parts []string
+	if name != inClusterName {
+		log.Info().Msgf("origin %s query name is not same %s", inClusterName, name)
+		parts = append(parts, name)
+		
+		log.Info().Msgf("origin answer rr to %s", acutal.String())
+		answer := strings.Split(acutal.String(), "\t")
+		
+		parts = append(parts, answer[1:]...)
+		rrStr := strings.Join(parts, " ")
+		log.Info().Msgf("rewrite rr to %s", rrStr)
+		tmp, err = dns.NewRR(rrStr)
+		if err != nil {
+			return
+		}
+	} else {
+		tmp = acutal
+	}
 	return
 }
