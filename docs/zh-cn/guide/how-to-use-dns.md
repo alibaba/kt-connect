@@ -11,16 +11,36 @@ $ kubectl apply -f https://rdc-incubators.oss-cn-beijing.aliyuncs.com/dns/dns.ya
 ```
 
 ```
-$ kubectl get pods --selector="kt-component=dns-server" -o wide
-NAME                              READY   STATUS    RESTARTS   AGE   IP             NODE                        NOMINATED NODE
-kt-connect-dns-56dc4597b9-2tb4z   1/1     Running   0          26m   172.23.0.253   cn-beijing.192.168.69.185   <none>
+$ kubectl get svc kt-connect-dns
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+kt-connect-dns   ClusterIP   172.21.14.147   <none>        53/UDP    5d22h
 ```
 
-在本地配置kt-connect-dns容器的PodIP作为DNS Server.
+在本地配置kt-connect-dns服务的PodIP作为DNS Server.
 
 dns.yaml的实际内容如下所示：
 
 ```
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    kt-component: dns-server
+  name: kt-connect-dns
+spec:
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+    targetPort: 53
+  - name: dns-tcp
+    port: 53
+    protocol: TCP
+    targetPort: 53
+  selector:
+    kt-component: dns-server
+  type: ClusterIP
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
