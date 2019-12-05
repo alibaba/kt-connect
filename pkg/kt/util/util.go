@@ -59,6 +59,18 @@ func SSHRemotePortForward(localPort string, remoteHost string, remotePort string
 	)
 }
 
+// SSHDynamicPortForward ssh remote port forward
+func SSHDynamicPortForward(remoteHost string, remoteSSHPort int, proxyPort int) *exec.Cmd {
+	return exec.Command("ssh",
+		"-oStrictHostKeyChecking=no",
+		"-oUserKnownHostsFile=/dev/null",
+		"-i", PrivateKeyPath(),
+		"-D", fmt.Sprintf("%d", proxyPort),
+		fmt.Sprintf("root@%s", remoteHost), "-p"+fmt.Sprintf("%d", remoteSSHPort),
+		"sh", "loop.sh",
+	)
+}
+
 // PortForward kubectl port forward
 func PortForward(kubeConifg string, namespace string, resource string, remotePort int) *exec.Cmd {
 	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "-n", namespace, "port-forward", resource, fmt.Sprintf("%d", remotePort)+":22")

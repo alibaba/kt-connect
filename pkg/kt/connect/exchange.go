@@ -7,12 +7,12 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// Exchange
+// Exchange exchange request to local
 func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (workload string, err error) {
 	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset)
 	down := int32(0)
@@ -21,7 +21,7 @@ func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *k
 	return
 }
 
-// HandleExchangeExit
+// HandleExchangeExit handle error when exchange exit
 func (c *Connect) HandleExchangeExit(shadow string, replicas *int32, origin *v1.Deployment, clientset *kubernetes.Clientset) {
 	os.Remove(c.PidFile)
 	log.Printf("Cleanup proxy shadow %s", shadow)

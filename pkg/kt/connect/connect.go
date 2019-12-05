@@ -56,9 +56,11 @@ type Connect struct {
 	Kubeconfig string
 	Namespace  string
 	Image      string
+	Method     string
 	Swap       string
 	Expose     string
-	Port       int
+	ProxyPort  int
+	Port       int // Local SSH Port
 	DisableDNS bool
 	PodCIDR    string
 	Debug      bool
@@ -130,7 +132,7 @@ func createAndWait(
 	client := clientset.AppsV1().Deployments(namespace)
 	deployment := generatorDeployment(namespace, name, labels, image)
 	result, err := client.Create(deployment)
-	log.Debug().Msgf("Deploying proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Info().Msgf("Deploying shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 
 	if err != nil {
 		return

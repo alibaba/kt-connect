@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// InitMesh prepare swap deployment
+// Mesh prepare swap deployment
 func (c *Connect) Mesh(clientset *kubernetes.Clientset) (workload string, err error) {
 	workload, podIP, podName, err := c.createMeshShadown(clientset)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
@@ -50,7 +50,7 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName
 	return
 }
 
-// Exit cleanup proxy deployment in proxy
+// OnMeshExit cleanup proxy deployment in proxy
 func (c *Connect) OnMeshExit(shadow string, clientset *kubernetes.Clientset) {
 	os.Remove(c.PidFile)
 

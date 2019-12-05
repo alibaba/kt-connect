@@ -22,9 +22,11 @@ var (
 	image      string
 
 	// connect
-	disableDNS   bool
-	localSSHPort int
-	cidr         string
+	disableDNS  bool
+	sshPort     int
+	socke5Proxy int
+	cidr        string
+	method      string
 
 	// exchange
 	expose string
@@ -84,11 +86,23 @@ func main() {
 			Name:  "connect",
 			Usage: "connection to kubernetes cluster",
 			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:        "method",
+					Value:       "vpn",
+					Usage:       "Connect method 'vpn' or 'socks5'",
+					Destination: &method,
+				},
+				cli.IntFlag{
+					Name:        "proxy",
+					Value:       2223,
+					Usage:       "when should method socks5, you can choice which port to proxy, default 2223",
+					Destination: &socke5Proxy,
+				},
 				cli.IntFlag{
 					Name:        "port",
 					Value:       2222,
 					Usage:       "Local SSH Proxy port",
-					Destination: &localSSHPort,
+					Destination: &sshPort,
 				},
 				cli.BoolFlag{
 					Name:        "disableDNS",
@@ -113,7 +127,7 @@ func main() {
 				if debug {
 					zerolog.SetGlobalLevel(zerolog.DebugLevel)
 				}
-				action.Connect(localSSHPort, disableDNS, cidr)
+				action.Connect(sshPort, method, socke5Proxy, disableDNS, cidr)
 				return nil
 			},
 		},
