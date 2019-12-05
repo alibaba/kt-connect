@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/alibaba/kt-connect/pkg/proxy/daemon"
+	"github.com/alibaba/kt-connect/pkg/proxy/dnsserver"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -15,7 +15,7 @@ func init() {
 
 func main() {
 	log.Info().Msg("Start kt connect proxy")
-	srv := daemon.NewDNSServerDefault()
+	srv := dnsserver.NewDNSServerDefault()
 	err := srv.ListenAndServe()
 	if err != nil {
 		panic(err.Error())

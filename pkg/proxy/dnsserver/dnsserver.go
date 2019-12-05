@@ -1,4 +1,4 @@
-package daemon
+package dnsserver
 
 import (
 	"errors"
@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/miekg/dns"
 )
 
