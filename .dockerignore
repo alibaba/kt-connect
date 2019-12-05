@@ -1,5 +1,6 @@
 output
 .github
+.git
 docs
 build
 .vscode
