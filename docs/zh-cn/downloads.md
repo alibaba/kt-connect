@@ -2,6 +2,8 @@
 
 ## 二进制包
 
+> 你可以从这里下载最新构建的软件包[Nightly Build](./nightly.md)
+
 Mac:
 
 * [Darwin amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_darwin_amd64.tar.gz)

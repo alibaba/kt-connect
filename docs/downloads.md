@@ -2,6 +2,8 @@
 
 ## Binary Packages
 
+> You can downloads latest build from [Nightly Build](./nightly.md)
+
 Mac:
 
 * [Darwin amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_darwin_amd64.tar.gz)
