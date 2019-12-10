@@ -8,7 +8,7 @@ KT Connect在最新版本中0.0.8+[点击下载](https://alibaba.github.io/kt-co
 
 ### 启动socks5代理服务
 
-在IDEA的工作目录下使用ktctl启动本地到就群的socks5代理服务：
+在IDEA的工作目录下使用ktctl启动本地到集群的socks5代理服务：
 
 ```
 sudo ktctl -d connect --method=socks5
