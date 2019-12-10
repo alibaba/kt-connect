@@ -37,6 +37,12 @@ java ...省略的其他输出... -Djava.rmi.server.hostname=127.0.0.1 -Dspring.l
 
 通过设置-Dhttp.proxyHost和-Dhttp.proxyPort启动参数，在Java程序中所有网络请求完全通过KT Connect进行转发。从而可以直接在代码中访问Kubernetes集群中的服务。 
 
+```
+$ kubectl get svc spring-sample
+NAME                   TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+spring-sample   ClusterIP   172.21.15.36   <none>        8080/TCP   160d
+```
+
 例如, 直接在代码中访问Kubernetes集群内的服务：
 
 ```java
