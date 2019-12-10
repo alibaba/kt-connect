@@ -1,6 +1,6 @@
 # 在IDEA中进行Java开发
 
-> VPN模式由于是全局的，已经实现了系统级别的流量代理。 本文主要介绍socks5代理模式
+> VPN模式由于是全局的，已经实现了系统级别的流量代理。 本文只适用于socks5代理模式
 
 KT Connect在最新版本中0.0.8+[点击下载](https://alibaba.github.io/kt-connect/#/nightly)中支持与IDEA集成，从而可以帮助开发者直接在IDEA开发Java程序并直接调用Kubernetes集群中已有的服务。
 
