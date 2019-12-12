@@ -40,7 +40,7 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 		panic(err.Error())
 	}
 
-	workload, err := factory.Mesh(clientset)
+	workload, err := factory.Mesh(clientset, util.String2Map(action.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
