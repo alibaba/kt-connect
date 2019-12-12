@@ -88,7 +88,8 @@ func (c *Connect) PrepareSSHPrivateKey() (err error) {
 }
 
 // CreateEndpoint create a endpoint to connect from local
-func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string, namespace string) (podIP string, podName string, err error) {
+func (c *Connect) CreateEndpoint(clientset *kubernetes.Clientset, name string, labels map[string]string, image string,
+	namespace string) (podIP string, podName string, err error) {
 	return createAndWait(clientset, namespace, name, labels, image)
 }
 

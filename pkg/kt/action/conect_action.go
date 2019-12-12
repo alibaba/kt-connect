@@ -48,15 +48,19 @@ func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disab
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	labels := map[string]string{
+		"kt":           workload,
+		"kt-component": "connect",
+		"control-by":   "kt",
+	}
+	for k, v := range util.String2Map(action.Labels) {
+		labels[k] = v
+	}
 
 	endPointIP, podName, err := factory.CreateEndpoint(
 		clientSet,
 		workload,
-		map[string]string{
-			"kt":           workload,
-			"kt-component": "connect",
-			"control-by":   "kt",
-		},
+		labels,
 		action.Image,
 		action.Namespace,
 	)

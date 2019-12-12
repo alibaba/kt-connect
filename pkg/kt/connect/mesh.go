@@ -12,13 +12,14 @@ import (
 )
 
 // Mesh prepare swap deployment
-func (c *Connect) Mesh(clientset *kubernetes.Clientset) (workload string, err error) {
-	workload, podIP, podName, err := c.createMeshShadown(clientset)
+func (c *Connect) Mesh(clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+	workload, podIP, podName, err := c.createMeshShadown(clientset, labels)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
 	return
 }
 
-func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName string, podIP string, podName string, err error) {
+func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset,
+	extraLabels map[string]string) (shadowName string, podIP string, podName string, err error) {
 	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
 	origin, err := deploymentsClient.Get(c.Swap, metav1.GetOptions{})
 	if err != nil {
@@ -33,7 +34,9 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset) (shadowName
 		"control-by":   "kt",
 		"version":      meshVersion,
 	}
-
+	for k, v := range extraLabels {
+		labels[k] = v
+	}
 	for k, v := range origin.Spec.Selector.MatchLabels {
 		labels[k] = v
 	}

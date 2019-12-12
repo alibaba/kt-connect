@@ -5,4 +5,5 @@ output/**
 .vscode/
 artifacts
 
-node_modules
+node_modules/
+note/

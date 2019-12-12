@@ -8,4 +8,5 @@ type Action struct {
 	Image      string
 	PidFile    string
 	UserHome   string
+	Labels     string
 }
