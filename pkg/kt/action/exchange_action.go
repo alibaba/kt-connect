@@ -47,7 +47,7 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(action.Namespace, origin, clientset)
+	workload, err := factory.Exchange(action.Namespace, origin, clientset, util.String2Map(action.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

@@ -13,8 +13,9 @@ import (
 )
 
 // Exchange exchange request to local
-func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset) (workload string, err error) {
-	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset)
+func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset,
+	labels map[string]string) (workload string, err error) {
+	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset, labels)
 	down := int32(0)
 	scaleTo(origin, namespace, clientset, &down)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
@@ -54,7 +55,8 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset) (workload string, podIP string, podName string, err error) {
+func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset,
+	extraLabels map[string]string) (workload string, podIP string, podName string, err error) {
 	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	labels := map[string]string{
@@ -62,7 +64,9 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		"kt-component": "exchange",
 		"control-by":   "kt",
 	}
-
+	for k, v := range extraLabels {
+		labels[k] = v
+	}
 	for k, v := range origin.Spec.Selector.MatchLabels {
 		labels[k] = v
 	}
