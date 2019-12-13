@@ -14,5 +14,5 @@ sudo tar zcvf ktctl_darwin_amd64.tar.gz ktctl_darwin_amd64
 sudo tar zcvf ktctl_darwin_386.tar.gz ktctl_darwin_386
 sudo tar zcvf ktctl_linux_amd64.tar.gz ktctl_linux_amd64
 sudo tar zcvf ktctl_linux_386.tar.gz ktctl_linux_386
-# sudo tar zcvf ktctl_windows_386.tar.gz ktctl_windows_386.exe
-# sudo tar zcvf ktctl_windows_amd64.tar.gz ktctl_windows_amd64.exe
+sudo tar zcvf ktctl_windows_386.tar.gz ktctl_windows_386.exe
+sudo tar zcvf ktctl_windows_amd64.tar.gz ktctl_windows_amd64.exe
