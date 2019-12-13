@@ -51,7 +51,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "KT Connect"
 	app.Usage = ""
-	app.Version = "0.0.8-beta.0"
+	app.Version = "0.0.8"
 	app.Authors = []cli.Author{
 		cli.Author{
 			Name: "rdc incubator",
