@@ -62,7 +62,7 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 				Options:    options,
 			}
 			
-			action.Connect(options.ConnectOptions.SSHPort, options.ConnectOptions.Method, options.ConnectOptions.Socke5Proxy, options.ConnectOptions.DisableDNS, options.ConnectOptions.CIDR)
+			action.Connect()
 			return nil
 		},
 	}
@@ -89,7 +89,7 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 				Options:    options,
 			}
 			
-			action.Exchange(c.Args().First(), options.ExchangeOptions.Expose)
+			action.Exchange(c.Args().First())
 			return nil
 		},
 	}
@@ -117,7 +117,7 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 				Options:    options,
 			}
 			
-			action.Mesh(c.Args().First(), options.MeshOptions.Expose)
+			action.Mesh(c.Args().First())
 			return nil
 		},
 	}

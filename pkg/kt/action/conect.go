@@ -15,8 +15,13 @@ import (
 )
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disableDNS bool, cidr string) {
+func (action *Action) Connect() {
 	pidFile := action.Options.RuntimeOptions.PidFile
+	sshPort := action.Options.ConnectOptions.SSHPort
+	method := action.Options.ConnectOptions.Method
+	socke5Proxy := action.Options.ConnectOptions.Socke5Proxy
+	disableDNS := action.Options.ConnectOptions.DisableDNS
+	cidr := action.Options.ConnectOptions.CIDR
 
 	if util.IsDaemonRunning(pidFile) {
 		err := fmt.Errorf("Connect already running %s. exit this", pidFile)
