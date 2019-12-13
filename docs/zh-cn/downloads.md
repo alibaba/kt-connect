@@ -14,6 +14,12 @@ Linux:
 * [Linux Amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_linux_amd64.tar.gz)
 * [Linux 386](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_linux_386.tar.gz)
 
+Windows:
+
+* [Windws amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_windows_amd64.tar.gz)
+* [Windows 386](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_windows_386.tar.gz)
+
+
 ## Mac用户
 
 安装sshuttle
