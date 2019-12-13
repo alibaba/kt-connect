@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -50,7 +51,7 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 		PidFile:    options.RuntimeOptions.PidFile,
 	}
 
-	clientSet, err := factory.GetClientSet()
+	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -65,12 +66,12 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 		labels[k] = v
 	}
 
-	endPointIP, podName, err := factory.CreateEndpoint(
+	endPointIP, podName, err := cluster.CreateShadow(
 		clientSet,
+		options.Namespace,
 		workload,
 		labels,
 		options.Image,
-		options.Namespace,
 	)
 
 	if err != nil {
@@ -119,7 +120,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 		Debug:      options.Debug,
 	}
 
-	clientset, err := factory.GetClientSet()
+	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -171,7 +172,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		Debug:      options.Debug,
 	}
 
-	clientset, err := factory.GetClientSet()
+	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		panic(err.Error())
 	}

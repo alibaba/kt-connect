@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -71,7 +72,7 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		labels[k] = v
 	}
 
-	podIP, podName, err = createAndWait(clientset, namespace, workload, labels, c.Image)
+	podIP, podName, err = cluster.CreateShadow(clientset, namespace, workload, labels, c.Image)
 	if err != nil {
 		return "", "", "", err
 	}
