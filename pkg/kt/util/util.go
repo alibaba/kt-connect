@@ -26,6 +26,15 @@ func HomeDir() string {
 	return "/root"
 }
 
+// RandomString Generate RandomString
+func RandomString(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
+
 // PrivateKeyPath Get ssh private key path
 func PrivateKeyPath() string {
 	userHome := HomeDir()

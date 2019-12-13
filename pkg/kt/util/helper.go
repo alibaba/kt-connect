@@ -28,15 +28,6 @@ func GetOutboundIP() (address string) {
 	return
 }
 
-// RandomString Generate RandomString
-func RandomString(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
-
 // GetCirds Get kubernetes cluster resource crids
 func GetCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []string, err error) {
 	cidrs, err = getPodCirds(clientset, podCIDR)
