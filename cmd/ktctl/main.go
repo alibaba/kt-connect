@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -16,7 +17,7 @@ func init() {
 }
 
 func main() {
-	options := command.NewDaemonOptions()
+	options := options.NewDaemonOptions()
 
 	app := cli.NewApp()
 	app.Name = "KT Connect"

@@ -14,7 +14,7 @@ import (
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(swap string, expose string, userHome string, pidFile string) {
-	daemonRunning := util.IsDaemonRunning(pidFile)
+	daemonRunning := util.IsDaemonRunning(action.Options.RuntimeOptions.PidFile)
 	if !daemonRunning {
 		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
 	} else {
@@ -29,10 +29,10 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 	factory := connect.Connect{
 		Swap:       swap,
 		Expose:     expose,
-		Kubeconfig: action.Kubeconfig,
-		Namespace:  action.Namespace,
-		Image:      action.Image,
-		Debug:      action.Debug,
+		Kubeconfig: action.Options.KubeConfig,
+		Namespace:  action.Options.Namespace,
+		Image:      action.Options.Image,
+		Debug:      action.Options.Debug,
 	}
 
 	clientset, err := factory.GetClientSet()
@@ -40,7 +40,7 @@ func (action *Action) Mesh(swap string, expose string, userHome string, pidFile 
 		panic(err.Error())
 	}
 
-	workload, err := factory.Mesh(clientset, util.String2Map(action.Labels))
+	workload, err := factory.Mesh(clientset, util.String2Map(action.Options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

@@ -16,13 +16,15 @@ import (
 
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disableDNS bool, cidr string) {
-	if util.IsDaemonRunning(action.PidFile) {
-		err := fmt.Errorf("Connect already running %s. exit this", action.PidFile)
+	pidFile := action.Options.RuntimeOptions.PidFile
+
+	if util.IsDaemonRunning(pidFile) {
+		err := fmt.Errorf("Connect already running %s. exit this", pidFile)
 		panic(err.Error())
 	}
 
 	pid := os.Getpid()
-	err := ioutil.WriteFile(action.PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	err := ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -30,16 +32,16 @@ func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disab
 	log.Info().Msgf("Daemon Start At %d", pid)
 
 	factory := connect.Connect{
-		Kubeconfig: action.Kubeconfig,
-		Namespace:  action.Namespace,
-		Image:      action.Image,
+		Kubeconfig: action.Options.KubeConfig,
+		Namespace:  action.Options.Namespace,
+		Image:      action.Options.Image,
+		Debug:      action.Debug,
 		Method:     method,
 		ProxyPort:  socke5Proxy,
 		Port:       sshPort,
 		DisableDNS: disableDNS,
 		PodCIDR:    cidr,
-		Debug:      action.Debug,
-		PidFile:    action.PidFile,
+		PidFile:    pidFile,
 	}
 
 	clientSet, err := factory.GetClientSet()
@@ -53,7 +55,7 @@ func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disab
 		"kt-component": "connect",
 		"control-by":   "kt",
 	}
-	for k, v := range util.String2Map(action.Labels) {
+	for k, v := range util.String2Map(action.Options.Labels) {
 		labels[k] = v
 	}
 
@@ -61,8 +63,8 @@ func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disab
 		clientSet,
 		workload,
 		labels,
-		action.Image,
-		action.Namespace,
+		action.Options.Image,
+		action.Options.Namespace,
 	)
 
 	if err != nil {

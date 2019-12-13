@@ -2,6 +2,7 @@ package command
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/action"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli"
 	"path/filepath"
@@ -16,7 +17,8 @@ func NewCliAuthor() []cli.Author {
 	}
 }
 
-func newConnectCommand(options *DaemonOptions) cli.Command {
+// newConnectCommand return new connect command
+func newConnectCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "connect",
 		Usage: "connection to kubernetes cluster",
@@ -51,25 +53,23 @@ func newConnectCommand(options *DaemonOptions) cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			action := action.Action{
-				Kubeconfig: options.Kubeconfig,
-				Namespace:  options.Namespace,
-				Debug:      options.Debug,
-				Image:      options.Image,
-				PidFile:    options.RuntimeOptions.PidFile,
-				UserHome:   options.RuntimeOptions.UserHome,
-				Labels:     options.Labels,
-			}
+
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
+
+			action := action.Action{
+				Options:    options,
+			}
+			
 			action.Connect(options.ConnectOptions.SSHPort, options.ConnectOptions.Method, options.ConnectOptions.Socke5Proxy, options.ConnectOptions.DisableDNS, options.ConnectOptions.CIDR)
 			return nil
 		},
 	}
 }
 
-func newExchangeCommand(options *DaemonOptions) cli.Command {
+// newExchangeCommand return new exchange command
+func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",
@@ -81,25 +81,22 @@ func newExchangeCommand(options *DaemonOptions) cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			action := action.Action{
-				Kubeconfig: options.Kubeconfig,
-				Namespace:  options.Namespace,
-				Debug:      options.Debug,
-				Image:      options.Image,
-				Labels:     options.Labels,
-				PidFile:    options.RuntimeOptions.PidFile,
-				UserHome:   options.RuntimeOptions.UserHome,
-			}
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
+
+			action := action.Action{
+				Options:    options,
+			}
+			
 			action.Exchange(c.Args().First(), options.ExchangeOptions.Expose, options.RuntimeOptions.UserHome, options.RuntimeOptions.PidFile)
 			return nil
 		},
 	}
 }
 
-func newMeshCommand(options *DaemonOptions) cli.Command {
+// newMeshCommand return new mesh command
+func newMeshCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",
@@ -111,18 +108,15 @@ func newMeshCommand(options *DaemonOptions) cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			action := action.Action{
-				Kubeconfig: options.Kubeconfig,
-				Namespace:  options.Namespace,
-				Debug:      options.Debug,
-				Image:      options.Image,
-				Labels:     options.Labels,
-				PidFile:    options.RuntimeOptions.PidFile,
-				UserHome:   options.RuntimeOptions.UserHome,
-			}
+
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
+
+			action := action.Action{
+				Options:    options,
+			}
+			
 			action.Mesh(c.Args().First(), options.MeshOptions.Expose, options.RuntimeOptions.UserHome, options.RuntimeOptions.PidFile)
 			return nil
 		},
@@ -130,7 +124,7 @@ func newMeshCommand(options *DaemonOptions) cli.Command {
 }
 
 // NewCommands return new Connect Command
-func NewCommands(options *DaemonOptions) []cli.Command {
+func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command {
 		newConnectCommand(options),
 		newExchangeCommand(options),
@@ -139,7 +133,7 @@ func NewCommands(options *DaemonOptions) []cli.Command {
 }
 
 // AppFlags return app flags
-func AppFlags(options *DaemonOptions) []cli.Flag {
+func AppFlags(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
@@ -149,7 +143,7 @@ func AppFlags(options *DaemonOptions) []cli.Flag {
 		cli.StringFlag{
 			Name:        "kubeconfig,c",
 			Value:       filepath.Join(options.RuntimeOptions.UserHome, ".kube", "config"),
-			Destination: &options.Kubeconfig,
+			Destination: &options.KubeConfig,
 		},
 		cli.StringFlag{
 			Name:        "image,i",

@@ -1,4 +1,4 @@
-package command
+package options
 
 import (
 	"fmt"
@@ -26,11 +26,12 @@ type runtimeOptions struct {
 	PidFile  string
 	UserHome string
 	AppHome  string
+	Shadow   string
 }
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	Kubeconfig      string
+	KubeConfig      string
 	Namespace       string
 	Debug           bool
 	Image           string

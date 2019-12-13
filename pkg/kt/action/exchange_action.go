@@ -14,7 +14,7 @@ import (
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(swap string, expose string, userHome string, pidFile string) {
-	daemonRunning := util.IsDaemonRunning(pidFile)
+	daemonRunning := util.IsDaemonRunning(action.Options.RuntimeOptions.PidFile)
 	if !daemonRunning {
 		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
 	} else {
@@ -29,10 +29,10 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 	factory := connect.Connect{
 		Swap:       swap,
 		Expose:     expose,
-		Kubeconfig: action.Kubeconfig,
-		Namespace:  action.Namespace,
-		Image:      action.Image,
-		Debug:      action.Debug,
+		Kubeconfig: action.Options.KubeConfig,
+		Namespace:  action.Options.Namespace,
+		Image:      action.Options.Image,
+		Debug:      action.Options.Debug,
 	}
 
 	clientset, err := factory.GetClientSet()
@@ -40,14 +40,14 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 		panic(err.Error())
 	}
 
-	origin, err := clientset.AppsV1().Deployments(action.Namespace).Get(swap, metav1.GetOptions{})
+	origin, err := clientset.AppsV1().Deployments(action.Options.Namespace).Get(swap, metav1.GetOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(action.Namespace, origin, clientset, util.String2Map(action.Labels))
+	workload, err := factory.Exchange(action.Options.Namespace, origin, clientset, util.String2Map(action.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
