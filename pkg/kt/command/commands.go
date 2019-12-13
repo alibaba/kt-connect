@@ -1,7 +1,6 @@
 package command
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/action"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli"
@@ -58,7 +57,7 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := action.Action{
+			action := Action{
 				Options:    options,
 			}
 			
@@ -85,7 +84,7 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := action.Action{
+			action := Action{
 				Options:    options,
 			}
 			
@@ -113,7 +112,7 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := action.Action{
+			action := Action{
 				Options:    options,
 			}
 			
