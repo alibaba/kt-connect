@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // IsDaemonRunning check daemon is running or not
@@ -91,4 +92,17 @@ func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bo
 	args = append(args, "-v", "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
 	args = append(args, cidrs...)
 	return exec.Command("sshuttle", args...)
+}
+
+// Convert parameter string to real map "k1=v1,k2=v2" -> {"k1":"v1","k2","v2"}
+func String2Map(str string) map[string]string {
+	res := make(map[string]string)
+	splitStr := strings.Split(str, ",")
+	for _, item := range splitStr {
+		index := strings.Index(item, "=")
+		if index > 0 {
+			res[item[0:index]] = item[index+1:]
+		}
+	}
+	return res
 }

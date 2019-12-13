@@ -20,6 +20,7 @@ var (
 	namespace  string
 	debug      bool
 	image      string
+	labels     string
 
 	// connect
 	disableDNS  bool
@@ -31,7 +32,7 @@ var (
 	// exchange
 	expose string
 
-	//context
+	// context
 	pidFile  string
 	userHome string
 )
@@ -79,6 +80,11 @@ func main() {
 			Usage:       "debug mode",
 			Destination: &debug,
 		},
+		cli.StringFlag{
+			Name:        "label,l",
+			Usage:       "Extra labels on proxy pod e.g. 'label1=val1,label2=val2'",
+			Destination: &labels,
+		},
 	}
 
 	app.Commands = []cli.Command{
@@ -123,6 +129,7 @@ func main() {
 					Image:      image,
 					PidFile:    pidFile,
 					UserHome:   userHome,
+					Labels:     labels,
 				}
 				if debug {
 					zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -149,6 +156,7 @@ func main() {
 					Image:      image,
 					PidFile:    pidFile,
 					UserHome:   userHome,
+					Labels:     labels,
 				}
 				if debug {
 					zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -175,6 +183,7 @@ func main() {
 					Image:      image,
 					PidFile:    pidFile,
 					UserHome:   userHome,
+					Labels:     labels,
 				}
 				if debug {
 					zerolog.SetGlobalLevel(zerolog.DebugLevel)
