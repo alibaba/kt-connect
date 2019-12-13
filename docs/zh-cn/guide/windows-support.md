@@ -1,7 +1,39 @@
 Windows支持
-==============
+=============
 
-## 使用Windows Subsystem for Linux (WSL)
+> 限制：Windwos环境下KT Connect只支持使用SOCKS5代理模式，在该模式下用户可以直接在本地访问PodIP和ClusterIP,但是无法直接使用DNS。
+
+## 在Windows原生环境中使用KT Connect
+
+> 前置条件： 请确保本机以安装kubectl并且能够正常与Kubernetes集群交互
+
+用户可以在[每日构建](https://alibaba.github.io/kt-connect/#/zh-cn/nightly)下载KT Connect最新版本的Windows可执行文件。下载并解压.exe文件到PATH路径下：
+
+执行命令：
+
+```
+$ ktctl -d connect --method socks5
+```
+
+在Connect完成后ktctl会在本地自动创建SOCKS5代理。根据日志提示，在CMD中设置http_proxy环境变量即可在CMD中访问Kubernetes集群中的服务。
+
+日志输出：
+
+```
+4:31PM INF ==============================================================
+4:31PM INF Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:2223
+4:31PM INF ==============================================================
+```
+
+设置环境变量
+
+```
+set http_proxy=socks5://127.0.0.1:2223
+```
+
+对于IDEA用户，请参考[在IDEA中使用IDEA](https://alibaba.github.io/kt-connect/#/zh-cn/guide/how-to-use-in-idea)。
+
+## Windows Subsystem for Linux (WSL)
 
 KT Connect 为了能够在Windows下使用KT Connection, 您可以尝试使用Windows Subsystem for Linux。
 
@@ -15,7 +47,6 @@ $ sudo ktctl -d connect --method socks5
 4:31PM INF Client address 30.5.125.75
 4:31PM INF Deploying shadow deployment kt-connect-daemon-cusdp in namespace default
 
-4:31PM DBG Shadow Pod status is Pending
 4:31PM DBG Shadow Pod status is Running
 4:31PM INF Shadow is ready.
 4:31PM DBG Success deploy proxy deployment kt-connect-daemon-cusdp in namespace default

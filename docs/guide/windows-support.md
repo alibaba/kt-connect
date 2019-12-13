@@ -1,7 +1,40 @@
 Windows Support
 ==============
 
-## Use Windows Subsystem for Linux (WSL)
+> Limit： In Windows environment, you can only use socks5 method to access PodIP and ClusterIP with out DNS.
+
+
+## Window Native
+
+> Precondition: Please make suere kubectl is already install and can connection to Kubernetes Cluster.
+
+User can download the windows exe biranary from [Daily Build](https://alibaba.github.io/kt-connect/#/nightly). Download and install to PATH.
+
+Exec Command：
+
+```
+$ ktctl -d connect --method socks5
+```
+
+After this ktctl will create a socks5 proxy in local. and follow the log output set http_proxy environment varibale.
+
+Output:
+
+```
+4:31PM INF ==============================================================
+4:31PM INF Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:2223
+4:31PM INF ==============================================================
+```
+
+Set environment:
+
+```
+set http_proxy=socks5://127.0.0.1:2223
+```
+
+For IDEA User，Please see [How to use in IDEA](https://alibaba.github.io/kt-connect/#/guide/how-to-use-in-idea).
+
+## Windows Subsystem for Linux (WSL)
 
 In order to use kt-connect in Windows you can use WSL in windows 10（released April 2017）。
 
