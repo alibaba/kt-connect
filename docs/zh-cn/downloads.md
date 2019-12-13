@@ -2,7 +2,7 @@
 
 ## 二进制包
 
-> 你可以从这里下载最新构建的软件包[Nightly Build](./nightly.md)
+> 你可以从这里下载最新构建的软件包[Nightly Build](/zh-cn/nightly.md)
 
 Mac:
 
