@@ -13,8 +13,9 @@ import (
 )
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(swap string, expose string, userHome string, pidFile string) {
-	daemonRunning := util.IsDaemonRunning(action.Options.RuntimeOptions.PidFile)
+func (action *Action) Mesh(swap string, expose string) {
+	pidFile := action.Options.RuntimeOptions.PidFile
+	daemonRunning := util.IsDaemonRunning(pidFile)
 	if !daemonRunning {
 		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
 	} else {

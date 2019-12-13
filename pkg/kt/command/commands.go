@@ -89,7 +89,7 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 				Options:    options,
 			}
 			
-			action.Exchange(c.Args().First(), options.ExchangeOptions.Expose, options.RuntimeOptions.UserHome, options.RuntimeOptions.PidFile)
+			action.Exchange(c.Args().First(), options.ExchangeOptions.Expose)
 			return nil
 		},
 	}
@@ -117,7 +117,7 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 				Options:    options,
 			}
 			
-			action.Mesh(c.Args().First(), options.MeshOptions.Expose, options.RuntimeOptions.UserHome, options.RuntimeOptions.PidFile)
+			action.Mesh(c.Args().First(), options.MeshOptions.Expose)
 			return nil
 		},
 	}

@@ -13,8 +13,9 @@ import (
 )
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(swap string, expose string, userHome string, pidFile string) {
-	daemonRunning := util.IsDaemonRunning(action.Options.RuntimeOptions.PidFile)
+func (action *Action) Exchange(swap string, expose string) {
+	pidFile := action.Options.RuntimeOptions.PidFile
+	daemonRunning := util.IsDaemonRunning(pidFile)
 	if !daemonRunning {
 		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
 	} else {
@@ -47,7 +48,7 @@ func (action *Action) Exchange(swap string, expose string, userHome string, pidF
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(action.Options.Namespace, origin, clientset, util.String2Map(action.Labels))
+	workload, err := factory.Exchange(action.Options.Namespace, origin, clientset, util.String2Map(action.Options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

@@ -35,7 +35,7 @@ func (action *Action) Connect(sshPort int, method string, socke5Proxy int, disab
 		Kubeconfig: action.Options.KubeConfig,
 		Namespace:  action.Options.Namespace,
 		Image:      action.Options.Image,
-		Debug:      action.Debug,
+		Debug:      action.Options.Debug,
 		Method:     method,
 		ProxyPort:  socke5Proxy,
 		Port:       sshPort,
