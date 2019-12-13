@@ -25,4 +25,5 @@ jobs:
         fi
 
     - name: Build
-      run: go build -v .
+      run: |
+        RUN GOARCH=amd64 GOOS=linux go build -o "output/ktctl/ktctl_linux_amd64" ./cmd/ktctl
