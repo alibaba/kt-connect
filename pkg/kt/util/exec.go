@@ -2,60 +2,14 @@ package util
 
 import (
 	"fmt"
+	"bytes"
+	"io"
 	"os"
 	"os/exec"
-	"strings"
+	"time"
+
+	"github.com/rs/zerolog/log"
 )
-
-// IsDaemonRunning check daemon is running or not
-func IsDaemonRunning(pidFile string) bool {
-	if _, err := os.Stat(pidFile); os.IsNotExist(err) {
-		return false
-	}
-	return true
-}
-
-// HomeDir Current User home dir
-func HomeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	if h := os.Getenv("USERPROFILE"); h != "" {
-		return h
-	}
-	return "/root"
-}
-
-// RandomString Generate RandomString
-func RandomString(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
-
-// PrivateKeyPath Get ssh private key path
-func PrivateKeyPath() string {
-	userHome := HomeDir()
-	privateKey := fmt.Sprintf("%s/.kt_id_rsa", userHome)
-	return privateKey
-}
-
-// CreateDirIfNotExist create dir
-func CreateDirIfNotExist(dir string) {
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.MkdirAll(dir, 0755)
-		if err != nil {
-			panic(err)
-		}
-	}
-}
-
-// GetRandomSSHPort get pod random ssh port
-func GetRandomSSHPort(podIP string) string {
-	return fmt.Sprintf("22%s", podIP[len(podIP)-2:len(podIP)])
-}
 
 // SSHRemotePortForward ssh remote port forward
 func SSHRemotePortForward(localPort string, remoteHost string, remotePort string, remoteSSHPort int) *exec.Cmd {
@@ -103,15 +57,38 @@ func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bo
 	return exec.Command("sshuttle", args...)
 }
 
-// Convert parameter string to real map "k1=v1,k2=v2" -> {"k1":"v1","k2","v2"}
-func String2Map(str string) map[string]string {
-	res := make(map[string]string)
-	splitStr := strings.Split(str, ",")
-	for _, item := range splitStr {
-		index := strings.Index(item, "=")
-		if index > 0 {
-			res[item[0:index]] = item[index+1:]
-		}
+// BackgroundRun run cmd in background
+func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
+
+	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
+	log.Debug().Msgf("Child, cmd.Args = %+v", cmd.Args)
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+	stdoutIn, _ := cmd.StdoutPipe()
+	stderrIn, _ := cmd.StderrPipe()
+	var errStdout, errStderr error
+	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
+	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
+	go func() {
+		_, errStdout = io.Copy(stdout, stdoutIn)
+	}()
+	go func() {
+		_, errStderr = io.Copy(stderr, stderrIn)
+	}()
+
+	err = cmd.Start()
+
+	if err != nil {
+		return
 	}
-	return res
+
+	go func() {
+		err = cmd.Wait()
+		log.Printf("%s exited", name)
+	}()
+
+	time.Sleep(time.Duration(2) * time.Second)
+	pid := cmd.Process.Pid
+	log.Printf("%s start at pid: %d", name, pid)
+	return
 }
