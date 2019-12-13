@@ -2,7 +2,7 @@
 * [Quick Start](quickstart.md)
 * [Downloads](downloads.md)
 * [Dashboard](guide/dashboard.md)
-* [Windows Support(Beta)](guide/windows-support.md)
+* [Windows Support](guide/windows-support.md)
 * Best Practices
   * [Local dev](guide/localdev.md)
   * [Mesh best practices](guide/mesh.md)
