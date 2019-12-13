@@ -1,40 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 
-	"github.com/alibaba/kt-connect/pkg/kt/action"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-)
-
-var (
-	// global params
-	kubeconfig string
-	namespace  string
-	debug      bool
-	image      string
-	labels     string
-
-	// connect
-	disableDNS  bool
-	sshPort     int
-	socke5Proxy int
-	cidr        string
-	method      string
-
-	// exchange
-	expose string
-
-	// context
-	pidFile  string
-	userHome string
 )
 
 func init() {
@@ -43,156 +17,15 @@ func init() {
 }
 
 func main() {
-	userHome := util.HomeDir()
-	appHome := fmt.Sprintf("%s/.ktctl", userHome)
-	util.CreateDirIfNotExist(appHome)
-	pidFile = fmt.Sprintf("%s/pid", appHome)
+	options := command.NewDaemonOptions()
 
 	app := cli.NewApp()
 	app.Name = "KT Connect"
 	app.Usage = ""
 	app.Version = "0.0.8"
-	app.Authors = []cli.Author{
-		cli.Author{
-			Name: "rdc incubator",
-		},
-	}
-
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:        "namespace,n",
-			Value:       "default",
-			Destination: &namespace,
-		},
-		cli.StringFlag{
-			Name:        "kubeconfig,c",
-			Value:       filepath.Join(userHome, ".kube", "config"),
-			Destination: &kubeconfig,
-		},
-		cli.StringFlag{
-			Name:        "image,i",
-			Usage:       "Custom proxy image",
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:stable",
-			Destination: &image,
-		},
-		cli.BoolFlag{
-			Name:        "debug,d",
-			Usage:       "debug mode",
-			Destination: &debug,
-		},
-		cli.StringFlag{
-			Name:        "label,l",
-			Usage:       "Extra labels on proxy pod e.g. 'label1=val1,label2=val2'",
-			Destination: &labels,
-		},
-	}
-
-	app.Commands = []cli.Command{
-		{
-			Name:  "connect",
-			Usage: "connection to kubernetes cluster",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:        "method",
-					Value:       "vpn",
-					Usage:       "Connect method 'vpn' or 'socks5'",
-					Destination: &method,
-				},
-				cli.IntFlag{
-					Name:        "proxy",
-					Value:       2223,
-					Usage:       "when should method socks5, you can choice which port to proxy, default 2223",
-					Destination: &socke5Proxy,
-				},
-				cli.IntFlag{
-					Name:        "port",
-					Value:       2222,
-					Usage:       "Local SSH Proxy port",
-					Destination: &sshPort,
-				},
-				cli.BoolFlag{
-					Name:        "disableDNS",
-					Usage:       "Disable Cluster DNS",
-					Destination: &disableDNS,
-				},
-				cli.StringFlag{
-					Name:        "cidr",
-					Usage:       "Custom CIDR eq '172.2.0.0/16'",
-					Destination: &cidr,
-				},
-			},
-			Action: func(c *cli.Context) error {
-				action := action.Action{
-					Kubeconfig: kubeconfig,
-					Namespace:  namespace,
-					Debug:      debug,
-					Image:      image,
-					PidFile:    pidFile,
-					UserHome:   userHome,
-					Labels:     labels,
-				}
-				if debug {
-					zerolog.SetGlobalLevel(zerolog.DebugLevel)
-				}
-				action.Connect(sshPort, method, socke5Proxy, disableDNS, cidr)
-				return nil
-			},
-		},
-		{
-			Name:  "exchange",
-			Usage: "exchange kubernetes deployment to local",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:        "expose",
-					Usage:       "expose port",
-					Destination: &expose,
-				},
-			},
-			Action: func(c *cli.Context) error {
-				action := action.Action{
-					Kubeconfig: kubeconfig,
-					Namespace:  namespace,
-					Debug:      debug,
-					Image:      image,
-					PidFile:    pidFile,
-					UserHome:   userHome,
-					Labels:     labels,
-				}
-				if debug {
-					zerolog.SetGlobalLevel(zerolog.DebugLevel)
-				}
-				action.Exchange(c.Args().First(), expose, userHome, pidFile)
-				return nil
-			},
-		},
-		{
-			Name:  "mesh",
-			Usage: "mesh kubernetes deployment to local",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:        "expose",
-					Usage:       "expose port",
-					Destination: &expose,
-				},
-			},
-			Action: func(c *cli.Context) error {
-				action := action.Action{
-					Kubeconfig: kubeconfig,
-					Namespace:  namespace,
-					Debug:      debug,
-					Image:      image,
-					PidFile:    pidFile,
-					UserHome:   userHome,
-					Labels:     labels,
-				}
-				if debug {
-					zerolog.SetGlobalLevel(zerolog.DebugLevel)
-				}
-				action.Mesh(c.Args().First(), expose, userHome, pidFile)
-				return nil
-			},
-		},
-	}
+	app.Authors = command.NewCliAuthor()
+	app.Flags = command.AppFlags(options)
+	app.Commands = command.NewCommands(options)
 
 	err := app.Run(os.Args)
 	if err != nil {
