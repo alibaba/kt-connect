@@ -23,21 +23,14 @@ type Action struct {
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect() {
-	pidFile := action.Options.RuntimeOptions.PidFile
-	sshPort := action.Options.ConnectOptions.SSHPort
-	method := action.Options.ConnectOptions.Method
-	socke5Proxy := action.Options.ConnectOptions.Socke5Proxy
-	disableDNS := action.Options.ConnectOptions.DisableDNS
-	cidr := action.Options.ConnectOptions.CIDR
-
-	if util.IsDaemonRunning(pidFile) {
-		err := fmt.Errorf("Connect already running %s. exit this", pidFile)
+func (action *Action) Connect(options *options.DaemonOptions) {
+	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
+		err := fmt.Errorf("Connect already running %s. exit this", options.RuntimeOptions.PidFile)
 		panic(err.Error())
 	}
 
 	pid := os.Getpid()
-	err := ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	err := ioutil.WriteFile(options.RuntimeOptions.PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -45,16 +38,16 @@ func (action *Action) Connect() {
 	log.Info().Msgf("Daemon Start At %d", pid)
 
 	factory := connect.Connect{
-		Kubeconfig: action.Options.KubeConfig,
-		Namespace:  action.Options.Namespace,
-		Image:      action.Options.Image,
-		Debug:      action.Options.Debug,
-		Method:     method,
-		ProxyPort:  socke5Proxy,
-		Port:       sshPort,
-		DisableDNS: disableDNS,
-		PodCIDR:    cidr,
-		PidFile:    pidFile,
+		Kubeconfig: options.KubeConfig,
+		Namespace:  options.Namespace,
+		Image:      options.Image,
+		Debug:      options.Debug,
+		Method:     options.ConnectOptions.Method,
+		ProxyPort:  options.ConnectOptions.Socke5Proxy,
+		Port:       options.ConnectOptions.SSHPort,
+		DisableDNS: options.ConnectOptions.DisableDNS,
+		PodCIDR:    options.ConnectOptions.CIDR,
+		PidFile:    options.RuntimeOptions.PidFile,
 	}
 
 	clientSet, err := factory.GetClientSet()
@@ -68,7 +61,7 @@ func (action *Action) Connect() {
 		"kt-component": "connect",
 		"control-by":   "kt",
 	}
-	for k, v := range util.String2Map(action.Options.Labels) {
+	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
 
@@ -76,8 +69,8 @@ func (action *Action) Connect() {
 		clientSet,
 		workload,
 		labels,
-		action.Options.Image,
-		action.Options.Namespace,
+		options.Image,
+		options.Namespace,
 	)
 
 	if err != nil {
@@ -102,10 +95,10 @@ func (action *Action) Connect() {
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(swap string) {
-	pidFile := action.Options.RuntimeOptions.PidFile
+func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
+	pidFile := options.RuntimeOptions.PidFile
 	daemonRunning := util.IsDaemonRunning(pidFile)
-	expose := action.Options.ExchangeOptions.Expose
+	expose := options.ExchangeOptions.Expose
 	if !daemonRunning {
 		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
 	} else {
@@ -120,10 +113,10 @@ func (action *Action) Exchange(swap string) {
 	factory := connect.Connect{
 		Swap:       swap,
 		Expose:     expose,
-		Kubeconfig: action.Options.KubeConfig,
-		Namespace:  action.Options.Namespace,
-		Image:      action.Options.Image,
-		Debug:      action.Options.Debug,
+		Kubeconfig: options.KubeConfig,
+		Namespace:  options.Namespace,
+		Image:      options.Image,
+		Debug:      options.Debug,
 	}
 
 	clientset, err := factory.GetClientSet()
@@ -131,14 +124,14 @@ func (action *Action) Exchange(swap string) {
 		panic(err.Error())
 	}
 
-	origin, err := clientset.AppsV1().Deployments(action.Options.Namespace).Get(swap, metav1.GetOptions{})
+	origin, err := clientset.AppsV1().Deployments(options.Namespace).Get(swap, metav1.GetOptions{})
 	if err != nil {
 		panic(err.Error())
 	}
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(action.Options.Namespace, origin, clientset, util.String2Map(action.Options.Labels))
+	workload, err := factory.Exchange(options.Namespace, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -153,10 +146,10 @@ func (action *Action) Exchange(swap string) {
 
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(swap string) {
-	pidFile := action.Options.RuntimeOptions.PidFile
+func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
+	pidFile := options.RuntimeOptions.PidFile
 	daemonRunning := util.IsDaemonRunning(pidFile)
-	expose := action.Options.MeshOptions.Expose
+	expose := options.MeshOptions.Expose
 
 	if !daemonRunning {
 		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
@@ -172,10 +165,10 @@ func (action *Action) Mesh(swap string) {
 	factory := connect.Connect{
 		Swap:       swap,
 		Expose:     expose,
-		Kubeconfig: action.Options.KubeConfig,
-		Namespace:  action.Options.Namespace,
-		Image:      action.Options.Image,
-		Debug:      action.Options.Debug,
+		Kubeconfig: options.KubeConfig,
+		Namespace:  options.Namespace,
+		Image:      options.Image,
+		Debug:      options.Debug,
 	}
 
 	clientset, err := factory.GetClientSet()
@@ -183,7 +176,7 @@ func (action *Action) Mesh(swap string) {
 		panic(err.Error())
 	}
 
-	workload, err := factory.Mesh(clientset, util.String2Map(action.Options.Labels))
+	workload, err := factory.Mesh(clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

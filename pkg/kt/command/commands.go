@@ -57,11 +57,8 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := Action{
-				Options:    options,
-			}
-			
-			action.Connect()
+			action := Action{}
+			action.Connect(options)
 			return nil
 		},
 	}
@@ -84,11 +81,8 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := Action{
-				Options:    options,
-			}
-			
-			action.Exchange(c.Args().First())
+			action := Action{}
+			action.Exchange(c.Args().First(), options)
 			return nil
 		},
 	}
@@ -107,16 +101,11 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-
-			action := Action{
-				Options:    options,
-			}
-			
-			action.Mesh(c.Args().First())
+			action := Action{}
+			action.Mesh(c.Args().First(), options)
 			return nil
 		},
 	}
