@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -41,7 +42,7 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset,
 		labels[k] = v
 	}
 
-	podIP, podName, err = createAndWait(clientset, c.Namespace, shadowName, labels, c.Image)
+	podIP, podName, err = cluster.CreateShadow(clientset, c.Namespace, shadowName, labels, c.Image)
 	if err != nil {
 		return "", "", "", err
 	}

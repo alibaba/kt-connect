@@ -2,8 +2,6 @@ package util
 
 import (
 	"fmt"
-	"math/rand"
-	"net"
 	"strings"
 
 	"github.com/deckarep/golang-set"
@@ -11,31 +9,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-// GetOutboundIP Get preferred outbound ip of this machine
-func GetOutboundIP() (address string) {
-	address = "127.0.0.1"
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal().Err(err)
-		return
-	}
-	defer conn.Close()
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	address = fmt.Sprintf("%s", localAddr.IP)
-	return
-}
-
-// RandomString Generate RandomString
-func RandomString(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
-	}
-	return string(b)
-}
 
 // GetCirds Get kubernetes cluster resource crids
 func GetCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []string, err error) {
