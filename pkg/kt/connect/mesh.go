@@ -1,20 +1,21 @@
 package connect
 
 import (
-	"os"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Mesh prepare swap deployment
-func (c *Connect) Mesh(clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+func (c *Connect) Mesh(options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
 	workload, podIP, podName, err := c.createMeshShadown(clientset, labels)
+	options.RuntimeOptions.Shadow=workload
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
 	return
 }

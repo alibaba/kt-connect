@@ -127,7 +127,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(options.Namespace, origin, clientset, util.String2Map(options.Labels))
+	workload, err := factory.Exchange(options, options.Namespace, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -172,7 +172,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	workload, err := factory.Mesh(clientset, util.String2Map(options.Labels))
+	workload, err := factory.Mesh(options, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

@@ -1,22 +1,23 @@
 package connect
 
 import (
-	"os"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Exchange exchange request to local
-func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset,
+func (c *Connect) Exchange(options *options.DaemonOptions, namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset,
 	labels map[string]string) (workload string, err error) {
 	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset, labels)
+	options.RuntimeOptions.Shadow=workload
 	down := int32(0)
 	scaleTo(origin, namespace, clientset, &down)
 	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
