@@ -19,7 +19,7 @@ func (c *Connect) GetProxyCrids(clientset *kubernetes.Clientset) (cidrs []string
 
 // StartConnect start vpn connection
 func (c *Connect) StartConnect(name string, podIP string, cidrs []string) (err error) {
-	err = c.PrepareSSHPrivateKey()
+	err = util.PrepareSSHPrivateKey()
 	if err != nil {
 		return
 	}
