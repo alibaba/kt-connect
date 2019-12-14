@@ -38,9 +38,9 @@ func RemoveShadow(kubeConfig string, namespace string, name string) {
 // CreateShadow create shadow
 func CreateShadow(
 	clientset *kubernetes.Clientset,
-	namespace string, 
 	name string,
 	labels map[string]string, 
+	namespace string, 
 	image string,
 ) (podIP string, podName string, err error) {
 

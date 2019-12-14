@@ -27,6 +27,8 @@ type runtimeOptions struct {
 	UserHome string
 	AppHome  string
 	Shadow   string
+	Origin   string
+	Replicas int
 }
 
 // DaemonOptions cli options

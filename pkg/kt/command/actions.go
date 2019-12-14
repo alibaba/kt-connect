@@ -38,18 +38,7 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 
 	log.Info().Msgf("Daemon Start At %d", pid)
 
-	factory := connect.Connect{
-		Kubeconfig: options.KubeConfig,
-		Namespace:  options.Namespace,
-		Image:      options.Image,
-		Debug:      options.Debug,
-		Method:     options.ConnectOptions.Method,
-		ProxyPort:  options.ConnectOptions.Socke5Proxy,
-		Port:       options.ConnectOptions.SSHPort,
-		DisableDNS: options.ConnectOptions.DisableDNS,
-		PodCIDR:    options.ConnectOptions.CIDR,
-		PidFile:    options.RuntimeOptions.PidFile,
-	}
+	factory := connect.Connect{Options: options}
 
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
@@ -64,15 +53,16 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 		"kt-component": "connect",
 		"control-by":   "kt",
 	}
+
 	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
 
 	endPointIP, podName, err := cluster.CreateShadow(
 		clientSet,
-		options.Namespace,
 		workload,
 		labels,
+		options.Namespace,
 		options.Image,
 	)
 
@@ -127,7 +117,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(options, options.Namespace, origin, clientset, util.String2Map(options.Labels))
+	workload, err := factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

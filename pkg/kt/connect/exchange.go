@@ -72,7 +72,7 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		labels[k] = v
 	}
 
-	podIP, podName, err = cluster.CreateShadow(clientset, namespace, workload, labels, c.Image)
+	podIP, podName, err = cluster.CreateShadow(clientset, workload, labels, c.Image, namespace)
 	if err != nil {
 		return "", "", "", err
 	}

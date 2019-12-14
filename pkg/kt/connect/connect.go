@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog/log"
 )
 
@@ -60,6 +61,7 @@ type Connect struct {
 	PodCIDR    string
 	Debug      bool
 	PidFile    string
+	Options    *options.DaemonOptions
 }
 
 // PrepareSSHPrivateKey generator ssh private key
