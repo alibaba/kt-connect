@@ -89,3 +89,10 @@ func CreateDirIfNotExist(dir string) {
 		}
 	}
 }
+
+// WritePidFile write pid to file
+func WritePidFile(pidFile string) (pid int, err error){
+	pid = os.Getpid()
+	err = ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644)
+	return
+}

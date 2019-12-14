@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"strings"
@@ -27,19 +26,14 @@ type Action struct {
 func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
 		err = fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
-		return
+		panic(err)
 	}
-
-	pid := os.Getpid()
-	err = ioutil.WriteFile(options.RuntimeOptions.PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
 	if err != nil {
 		return
 	}
-
-	log.Info().Msgf("Daemon Start At %d", pid)
-
+	log.Info().Msgf("Connect Start At %d", pid)
 	factory := connect.Connect{Options: options}
-
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		return
@@ -87,14 +81,8 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
-	pidFile := options.RuntimeOptions.PidFile
-	daemonRunning := util.IsDaemonRunning(pidFile)
+	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.ExchangeOptions.Expose
-	if !daemonRunning {
-		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
-	} else {
-		log.Printf("'KT Connect' is runing, you can access local app from cluster and localhost")
-	}
 
 	if swap == "" || expose == "" {
 		err := fmt.Errorf("-expose is required")
@@ -137,15 +125,8 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
-	pidFile := options.RuntimeOptions.PidFile
-	daemonRunning := util.IsDaemonRunning(pidFile)
+	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.MeshOptions.Expose
-
-	if !daemonRunning {
-		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
-	} else {
-		log.Printf("'KT Connect' is runing, you can access local app from cluster and localhost")
-	}
 
 	if swap == "" || expose == "" {
 		err := fmt.Errorf("-expose is required")
@@ -177,4 +158,15 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 	s := <-c
 	log.Printf("[Exit] Signal is %s", s)
 	factory.OnMeshExit(workload, clientset)
+}
+
+
+// checkConnectRunning check connect is running and print help msg
+func checkConnectRunning(pidFile string) {
+	daemonRunning := util.IsDaemonRunning(pidFile)
+	if !daemonRunning {
+		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
+	} else {
+		log.Printf("'KT Connect' is runing, you can access local app from cluster and localhost")
+	}
 }
