@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"syscall"
+	// "syscall"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -161,10 +161,11 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 // SetUpCloseHandler registry close handeler 
 func SetUpCloseHandler(options *options.DaemonOptions) {
 	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt)
 	go func() {
 		<-c
 		CleanupWorkspace(options)
+		os.Exit(0)
 	}()
 }
 
@@ -178,5 +179,4 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		fmt.Printf("\r- Clean Shadow %s \n", options.RuntimeOptions.Shadow)
 		cluster.RemoveShadow(options.KubeConfig, options.Namespace, options.RuntimeOptions.Shadow)
 	}
-	os.Exit(0)
 }

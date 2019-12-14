@@ -30,7 +30,7 @@ func main() {
 
 	err := app.Run(os.Args)
 	if err != nil {
+		log.Info().Msg(err.Error())
 		command.CleanupWorkspace(options)
-		log.Fatal().Err(err)
 	}
 }

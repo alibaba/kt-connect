@@ -12,8 +12,8 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,16 +24,16 @@ type Action struct {
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(options *options.DaemonOptions) {
+func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		err := fmt.Errorf("Connect already running %s. exit this", options.RuntimeOptions.PidFile)
-		panic(err.Error())
+		err = fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
+		return
 	}
 
 	pid := os.Getpid()
-	err := ioutil.WriteFile(options.RuntimeOptions.PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	err = ioutil.WriteFile(options.RuntimeOptions.PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 	if err != nil {
-		panic(err.Error())
+		return
 	}
 
 	log.Info().Msgf("Daemon Start At %d", pid)
@@ -42,11 +42,11 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
-		panic(err.Error())
+		return
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	options.RuntimeOptions.Shadow=workload
+	options.RuntimeOptions.Shadow = workload
 
 	labels := map[string]string{
 		"kt":           workload,
@@ -67,10 +67,13 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 	)
 
 	if err != nil {
-		panic(err.Error())
+		return
 	}
 
 	cidrs, err := util.GetCirds(clientSet, options.ConnectOptions.CIDR)
+	if err != nil {
+		return
+	}
 
 	factory.StartConnect(podName, endPointIP, cidrs)
 
@@ -79,6 +82,7 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 
 	s := <-channel
 	log.Info().Msgf("[Exit] Signal is %s", s)
+	return
 }
 
 //Exchange exchange kubernetes workload
@@ -130,7 +134,6 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	log.Printf("[Exit] Signal is %s", s)
 	factory.HandleExchangeExit(workload, replicas, origin, clientset)
 }
-
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
