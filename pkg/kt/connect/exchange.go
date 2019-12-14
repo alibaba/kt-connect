@@ -14,13 +14,13 @@ import (
 )
 
 // Exchange exchange request to local
-func (c *Connect) Exchange(options *options.DaemonOptions, namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset,
+func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset,
 	labels map[string]string) (workload string, err error) {
-	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset, labels)
+	workload, podIP, podName, err := c.createExchangeShadow(origin, options.Namespace, clientset, labels)
 	options.RuntimeOptions.Shadow=workload
 	down := int32(0)
-	scaleTo(origin, namespace, clientset, &down)
-	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
+	scaleTo(origin, options.Namespace, clientset, &down)
+	remotePortForward(c.Expose, c.Kubeconfig, options.Namespace, podName, podIP, c.Debug)
 	return
 }
 
