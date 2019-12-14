@@ -22,6 +22,19 @@ func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
+// RemoveShadow remove shadow from cluster
+func RemoveShadow(kubeConfig string, namespace string, name string) {
+	client, err := GetKubernetesClient(kubeConfig)
+	if err != nil {
+		return
+	}
+	deploymentsClient := client.AppsV1().Deployments(namespace)
+	deletePolicy := metav1.DeletePropagationForeground
+	deploymentsClient.Delete(name, &metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
 // CreateShadow create shadow
 func CreateShadow(
 	clientset *kubernetes.Clientset,

@@ -25,7 +25,6 @@ func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *k
 
 // HandleExchangeExit handle error when exchange exit
 func (c *Connect) HandleExchangeExit(shadow string, replicas *int32, origin *v1.Deployment, clientset *kubernetes.Clientset) {
-	os.Remove(c.PidFile)
 	log.Printf("Cleanup proxy shadow %s", shadow)
 	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
 	deletePolicy := metav1.DeletePropagationForeground

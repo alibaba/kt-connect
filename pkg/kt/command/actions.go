@@ -57,6 +57,8 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	options.RuntimeOptions.Shadow=workload
+
 	labels := map[string]string{
 		"kt":           workload,
 		"kt-component": "connect",
@@ -79,12 +81,6 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 	}
 
 	cidrs, err := factory.GetProxyCrids(clientSet)
-
-	if err != nil {
-		factory.OnConnectExit(workload, pid)
-		panic(err.Error())
-	}
-
 	factory.StartConnect(podName, endPointIP, cidrs)
 
 	channel := make(chan os.Signal)
@@ -92,7 +88,6 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 
 	s := <-channel
 	log.Info().Msgf("[Exit] Signal is %s", s)
-	factory.OnConnectExit(workload, pid)
 }
 
 //Exchange exchange kubernetes workload

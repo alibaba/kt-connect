@@ -1,10 +1,16 @@
 package command
 
 import (
+	"fmt"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli"
-	"path/filepath"
 )
 
 // NewCliAuthor return cli author
@@ -113,7 +119,7 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
-	return []cli.Command {
+	return []cli.Command{
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
@@ -150,4 +156,27 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.Labels,
 		},
 	}
+}
+
+// SetUpCloseHandler registry close handeler 
+func SetUpCloseHandler(options *options.DaemonOptions) {
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		CleanupWorkspace(options)
+	}()
+}
+
+// CleanupWorkspace clean workspace
+func CleanupWorkspace(options *options.DaemonOptions) {
+	fmt.Printf("\r- Ctrl+C pressed in Terminal Cleanup Workspace\n")
+	fmt.Printf("\r- Remove pid %s \n", options.RuntimeOptions.PidFile)
+	os.Remove(options.RuntimeOptions.PidFile)
+	os.Remove(".jvmrc")
+	if len(options.RuntimeOptions.Shadow) > 0 {
+		fmt.Printf("\r- Clean Shadow %s \n", options.RuntimeOptions.Shadow)
+		cluster.RemoveShadow(options.KubeConfig, options.Namespace, options.RuntimeOptions.Shadow)
+	}
+	os.Exit(0)
 }

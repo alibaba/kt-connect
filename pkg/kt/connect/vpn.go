@@ -3,15 +3,12 @@ package connect
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"time"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // GetProxyCrids get All VPN CRID
@@ -46,25 +43,4 @@ func (c *Connect) StartConnect(name string, podIP string, cidrs []string) (err e
 
 	log.Printf("KT proxy start successful")
 	return
-}
-
-// OnConnectExit handle connect exit
-func (c *Connect) OnConnectExit(name string, pid int) {
-	os.Remove(c.PidFile)
-	os.Remove(".jvmrc")
-	config, err := clientcmd.BuildConfigFromFlags("", c.Kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	log.Printf("Cleanup proxy deplyment %s", name)
-	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
-	deletePolicy := metav1.DeletePropagationForeground
-	deploymentsClient.Delete(name, &metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
 }
