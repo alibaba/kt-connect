@@ -6,16 +6,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"k8s.io/client-go/kubernetes"
 )
-
-// GetProxyCrids get All VPN CRID
-func (c *Connect) GetProxyCrids(clientset *kubernetes.Clientset) (cidrs []string, err error) {
-	cidrs, err = util.GetCirds(clientset, c.PodCIDR)
-	return
-}
 
 // StartConnect start vpn connection
 func (c *Connect) StartConnect(name string, podIP string, cidrs []string) (err error) {

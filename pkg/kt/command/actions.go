@@ -70,7 +70,8 @@ func (action *Action) Connect(options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	cidrs, err := factory.GetProxyCrids(clientSet)
+	cidrs, err := util.GetCirds(clientSet, options.ConnectOptions.CIDR)
+
 	factory.StartConnect(podName, endPointIP, cidrs)
 
 	channel := make(chan os.Signal)
