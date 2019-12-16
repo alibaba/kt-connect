@@ -9,7 +9,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	v1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -22,23 +21,6 @@ func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment
 	scaleTo(origin, options.Namespace, clientset, &down)
 	remotePortForward(c.Expose, c.Kubeconfig, options.Namespace, podName, podIP, c.Debug)
 	return
-}
-
-// HandleExchangeExit handle error when exchange exit
-func (c *Connect) HandleExchangeExit(shadow string, replicas *int32, origin *v1.Deployment, clientset *kubernetes.Clientset) {
-	log.Printf("Cleanup proxy shadow %s", shadow)
-	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
-	deletePolicy := metav1.DeletePropagationForeground
-	deploymentsClient.Delete(shadow, &metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
-
-	app, err := clientset.AppsV1().Deployments(c.Namespace).Get(c.Swap, metav1.GetOptions{})
-	if err != nil {
-		return
-	}
-
-	scaleTo(app, c.Namespace, clientset, replicas)
 }
 
 //ScaleTo Scale

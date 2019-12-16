@@ -114,7 +114,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	options.RuntimeOptions.Origin = swap
 	options.RuntimeOptions.Replicas = *replicas
 
-	workload, err := factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
+	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -123,8 +123,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	s := <-c
-	log.Printf("[Exit] Signal is %s", s)
-	factory.HandleExchangeExit(workload, replicas, origin, clientset)
+	log.Info().Msgf("Exchange is finished by Signal is %s", s)
 }
 
 //Mesh exchange kubernetes workload
@@ -151,7 +150,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	workload, err := factory.Mesh(options, clientset, util.String2Map(options.Labels))
+	_, err = factory.Mesh(options, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -160,8 +159,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 	s := <-c
-	log.Printf("[Exit] Signal is %s", s)
-	factory.OnMeshExit(workload, clientset)
+	log.Info().Msgf("Mesh is finished by signal %s", s)
 }
 
 // checkConnectRunning check connect is running and print help msg

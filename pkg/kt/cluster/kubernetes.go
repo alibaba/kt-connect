@@ -99,7 +99,7 @@ func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset
 			log.Printf("Shadow Pods not ready......")
 		} else {
 			pod = pods.Items[0]
-			log.Printf("Shadow Pod status is %s", pod.Status.Phase)
+			log.Log().Msgf("Shadow Pod status is %s", pod.Status.Phase)
 			if pod.Status.Phase == "Running" {
 				break
 			}

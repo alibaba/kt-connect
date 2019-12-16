@@ -54,13 +54,3 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset,
 
 	return
 }
-
-// OnMeshExit cleanup proxy deployment in proxy
-func (c *Connect) OnMeshExit(shadow string, clientset *kubernetes.Clientset) {
-	log.Printf("Remove proxy shadow %s", shadow)
-	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
-	deletePolicy := metav1.DeletePropagationForeground
-	deploymentsClient.Delete(shadow, &metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
-}
