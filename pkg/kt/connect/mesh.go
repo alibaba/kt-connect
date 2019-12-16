@@ -13,17 +13,21 @@ import (
 )
 
 // Mesh prepare swap deployment
-func (c *Connect) Mesh(options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
-	workload, podIP, podName, err := c.createMeshShadown(clientset, labels)
+func (c *Connect) Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+	workload, podIP, podName, err := c.createMeshShadown(swap, clientset, labels, options.Namespace, options.Image)
 	options.RuntimeOptions.Shadow = workload
-	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
+	remotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 	return
 }
 
-func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset,
-	extraLabels map[string]string) (shadowName string, podIP string, podName string, err error) {
-	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
-	origin, err := deploymentsClient.Get(c.Swap, metav1.GetOptions{})
+func (c *Connect) createMeshShadown(
+	swap string,
+	clientset *kubernetes.Clientset,
+	extraLabels map[string]string,
+	namespace string, image string,
+) (shadowName string, podIP string, podName string, err error) {
+	deploymentsClient := clientset.AppsV1().Deployments(namespace)
+	origin, err := deploymentsClient.Get(swap, metav1.GetOptions{})
 	if err != nil {
 		return "", "", "", err
 	}
@@ -43,7 +47,7 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset,
 		labels[k] = v
 	}
 
-	podIP, podName, err = cluster.CreateShadow(clientset, shadowName, labels, c.Namespace, c.Image)
+	podIP, podName, err = cluster.CreateShadow(clientset, shadowName, labels, namespace, image)
 	if err != nil {
 		return "", "", "", err
 	}
