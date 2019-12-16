@@ -110,6 +110,10 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 
 	replicas := origin.Spec.Replicas
 
+	// Prepare context inorder to remove after command exit
+	options.RuntimeOptions.Origin = swap
+	options.RuntimeOptions.Replicas = *replicas
+
 	workload, err := factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
@@ -159,7 +163,6 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 	log.Printf("[Exit] Signal is %s", s)
 	factory.OnMeshExit(workload, clientset)
 }
-
 
 // checkConnectRunning check connect is running and print help msg
 func checkConnectRunning(pidFile string) {

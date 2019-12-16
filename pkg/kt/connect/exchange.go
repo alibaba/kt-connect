@@ -5,9 +5,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	v1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -17,7 +17,7 @@ import (
 func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset,
 	labels map[string]string) (workload string, err error) {
 	workload, podIP, podName, err := c.createExchangeShadow(origin, options.Namespace, clientset, labels)
-	options.RuntimeOptions.Shadow=workload
+	options.RuntimeOptions.Shadow = workload
 	down := int32(0)
 	scaleTo(origin, options.Namespace, clientset, &down)
 	remotePortForward(c.Expose, c.Kubeconfig, options.Namespace, podName, podIP, c.Debug)

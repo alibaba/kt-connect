@@ -1,15 +1,15 @@
 package cluster
 
 import (
-	"time"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"time"
 
 	"github.com/rs/zerolog/log"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // GetKubernetesClient get Kubernetes client from config
@@ -22,12 +22,27 @@ func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-// RemoveShadow remove shadow from cluster
-func RemoveShadow(kubeConfig string, namespace string, name string) {
-	client, err := GetKubernetesClient(kubeConfig)
+// ScaleTo scale app
+func ScaleTo(clientSet *kubernetes.Clientset, namespace string, name string, replicas int32) (err error) {
+	log.Info().Msgf("Scale %s in %s to %d", name, namespace, replicas)
+	client := clientSet.AppsV1().Deployments(namespace)
+	deployment, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
 		return
 	}
+
+	// make sure min replicas
+	if replicas == 0 {
+		replicas = 1
+	}
+
+	deployment.Spec.Replicas = &replicas
+	_, err = client.Update(deployment)
+	return
+}
+
+// Remove remove shadow from cluster
+func Remove(client *kubernetes.Clientset, namespace string, name string) {
 	deploymentsClient := client.AppsV1().Deployments(namespace)
 	deletePolicy := metav1.DeletePropagationForeground
 	deploymentsClient.Delete(name, &metav1.DeleteOptions{
@@ -39,8 +54,8 @@ func RemoveShadow(kubeConfig string, namespace string, name string) {
 func CreateShadow(
 	clientset *kubernetes.Clientset,
 	name string,
-	labels map[string]string, 
-	namespace string, 
+	labels map[string]string,
+	namespace string,
 	image string,
 ) (podIP string, podName string, err error) {
 

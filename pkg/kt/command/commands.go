@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	// "syscall"
 
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli"
 )
@@ -158,7 +158,7 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
-// SetUpCloseHandler registry close handeler 
+// SetUpCloseHandler registry close handeler
 func SetUpCloseHandler(options *options.DaemonOptions) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt)
@@ -175,8 +175,24 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 	fmt.Printf("\r- Remove pid %s \n", options.RuntimeOptions.PidFile)
 	os.Remove(options.RuntimeOptions.PidFile)
 	os.Remove(".jvmrc")
+
+	client, err := cluster.GetKubernetesClient(options.KubeConfig)
+	if err != nil {
+		return
+	}
+
+	// scale origin app to replicas
+	if len(options.RuntimeOptions.Origin) > 0 {
+		cluster.ScaleTo(
+			client,
+			options.Namespace,
+			options.RuntimeOptions.Origin,
+			options.RuntimeOptions.Replicas,
+		)
+	}
+
 	if len(options.RuntimeOptions.Shadow) > 0 {
 		fmt.Printf("\r- Clean Shadow %s \n", options.RuntimeOptions.Shadow)
-		cluster.RemoveShadow(options.KubeConfig, options.Namespace, options.RuntimeOptions.Shadow)
+		cluster.Remove(client, options.Namespace, options.RuntimeOptions.Shadow)
 	}
 }
