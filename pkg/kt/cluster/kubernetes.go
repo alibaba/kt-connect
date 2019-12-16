@@ -78,7 +78,7 @@ func CreateShadow(
 	if err != nil {
 		return
 	}
-	log.Printf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Info().Msgf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 	podIP = pod.Status.PodIP
 	podName = pod.GetObjectMeta().GetName()
 	return
