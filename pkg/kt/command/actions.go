@@ -2,10 +2,7 @@ package command
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/rs/zerolog/log"
 
@@ -70,12 +67,6 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	}
 
 	factory.StartConnect(podName, endPointIP, cidrs)
-
-	channel := make(chan os.Signal)
-	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	s := <-channel
-	log.Info().Msgf("[Exit] Signal is %s", s)
 	return
 }
 
@@ -118,12 +109,6 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	s := <-c
-	log.Info().Msgf("Exchange is finished by Signal is %s", s)
 }
 
 //Mesh exchange kubernetes workload
@@ -154,12 +139,6 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	s := <-c
-	log.Info().Msgf("Mesh is finished by signal %s", s)
 }
 
 // checkConnectRunning check connect is running and print help msg

@@ -26,11 +26,12 @@ func main() {
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
 	app.Commands = command.NewCommands(options)
-	command.SetUpCloseHandler(options)
-
+	ch := command.SetUpCloseHandler(options)
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Info().Msg(err.Error())
 		command.CleanupWorkspace(options)
 	}
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
 }

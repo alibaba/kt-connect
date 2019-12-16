@@ -24,7 +24,6 @@ func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 
 // ScaleTo scale app
 func ScaleTo(clientSet *kubernetes.Clientset, namespace string, name string, replicas int32) (err error) {
-	log.Info().Msgf("Scale %s in %s to %d", name, namespace, replicas)
 	client := clientSet.AppsV1().Deployments(namespace)
 	deployment, err := client.Get(name, metav1.GetOptions{})
 	if err != nil {
@@ -35,6 +34,8 @@ func ScaleTo(clientSet *kubernetes.Clientset, namespace string, name string, rep
 	if replicas == 0 {
 		replicas = 1
 	}
+
+	log.Info().Msgf("- Scale %s in %s to %d", name, namespace, replicas)
 
 	deployment.Spec.Replicas = &replicas
 	_, err = client.Update(deployment)
@@ -99,7 +100,7 @@ func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset
 			log.Printf("Shadow Pods not ready......")
 		} else {
 			pod = pods.Items[0]
-			log.Log().Msgf("Shadow Pod status is %s", pod.Status.Phase)
+			log.Info().Msgf("Shadow Pod status is %s", pod.Status.Phase)
 			if pod.Status.Phase == "Running" {
 				break
 			}

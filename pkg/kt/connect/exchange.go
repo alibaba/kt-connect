@@ -13,13 +13,13 @@ import (
 )
 
 // Exchange exchange request to local
-func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset,
-	labels map[string]string) (workload string, err error) {
-	workload, podIP, podName, err := c.createExchangeShadow(origin, options.Namespace, clientset, labels)
+func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+	podIP, podName, err := c.createExchangeShadow(origin, options.Namespace, workload, clientset, labels)
 	options.RuntimeOptions.Shadow = workload
 	down := int32(0)
 	scaleTo(origin, options.Namespace, clientset, &down)
-	remotePortForward(c.Expose, c.Kubeconfig, options.Namespace, podName, podIP, c.Debug)
+	remotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, c.Debug)
 	return
 }
 
@@ -38,10 +38,8 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset,
-	extraLabels map[string]string) (workload string, podIP string, podName string, err error) {
-	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
-
+func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, workload string, clientset *kubernetes.Clientset, extraLabels map[string]string) (podIP string, podName string, err error) {
+	log.Info().Msgf("Create Exchange shadow %s in namespace %s", workload, namespace)
 	labels := map[string]string{
 		"kt":           workload,
 		"kt-component": "exchange",
@@ -54,9 +52,6 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		labels[k] = v
 	}
 
-	podIP, podName, err = cluster.CreateShadow(clientset, workload, labels, c.Image, namespace)
-	if err != nil {
-		return "", "", "", err
-	}
+	podIP, podName, err = cluster.CreateShadow(clientset, workload, labels, namespace, c.Image)
 	return
 }

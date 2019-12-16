@@ -43,7 +43,7 @@ func (c *Connect) createMeshShadown(clientset *kubernetes.Clientset,
 		labels[k] = v
 	}
 
-	podIP, podName, err = cluster.CreateShadow(clientset, shadowName, labels, c.Image, c.Namespace)
+	podIP, podName, err = cluster.CreateShadow(clientset, shadowName, labels, c.Namespace, c.Image)
 	if err != nil {
 		return "", "", "", err
 	}

@@ -159,38 +159,41 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 }
 
 // SetUpCloseHandler registry close handeler
-func SetUpCloseHandler(options *options.DaemonOptions) {
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+func SetUpCloseHandler(options *options.DaemonOptions) (ch chan os.Signal) {
+	ch = make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
-		<-c
-		log.Info().Msgf("\n\r- Ctrl+C pressed in Terminal Cleam Workspace\n")
+		<-ch
+		log.Info().Msgf("- Terminal And Clean Workspace\n")
 		CleanupWorkspace(options)
+		log.Info().Msgf("- Successful Clean Up Workspace\n")
 		os.Exit(0)
 	}()
+	return
 }
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(options *options.DaemonOptions) {
-
+	log.Info().Msgf("- Start Clean Workspace\n")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
-		log.Info().Msgf("\r- Remove pid %s \n", options.RuntimeOptions.PidFile)
+		log.Info().Msgf("- Remove pid %s", options.RuntimeOptions.PidFile)
 		os.Remove(options.RuntimeOptions.PidFile)
 	}
 
 	if _, err := os.Stat(".jvmrc"); err == nil {
-		log.Info().Msgf("\r- Remove .jvmrc %s \n", options.RuntimeOptions.PidFile)
+		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
 		os.Remove(".jvmrc")
 	}
 
 	client, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
+		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
 		return
 	}
 
 	// scale origin app to replicas
 	if len(options.RuntimeOptions.Origin) > 0 {
-		log.Info().Msgf("\r- Recover Origin App %s \n", options.RuntimeOptions.Origin)
+		log.Info().Msgf("- Recover Origin App %s", options.RuntimeOptions.Origin)
 		cluster.ScaleTo(
 			client,
 			options.Namespace,
@@ -200,7 +203,8 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 	}
 
 	if len(options.RuntimeOptions.Shadow) > 0 {
-		log.Info().Msgf("\r- Clean Shadow %s \n", options.RuntimeOptions.Shadow)
+		log.Info().Msgf("- Start Clean Shadow %s", options.RuntimeOptions.Shadow)
 		cluster.Remove(client, options.Namespace, options.RuntimeOptions.Shadow)
+		log.Info().Msgf("- Successful Clean Shadow %s", options.RuntimeOptions.Shadow)
 	}
 }
