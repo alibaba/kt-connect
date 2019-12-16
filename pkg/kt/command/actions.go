@@ -66,7 +66,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	factory.StartConnect(podName, endPointIP, cidrs)
+	factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
 	return
 }
 
@@ -78,15 +78,6 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	if swap == "" || expose == "" {
 		err := fmt.Errorf("-expose is required")
 		panic(err.Error())
-	}
-
-	factory := connect.Connect{
-		Swap:       swap,
-		Expose:     expose,
-		Kubeconfig: options.KubeConfig,
-		Namespace:  options.Namespace,
-		Image:      options.Image,
-		Debug:      options.Debug,
 	}
 
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
@@ -105,6 +96,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	options.RuntimeOptions.Origin = swap
 	options.RuntimeOptions.Replicas = *replicas
 
+	factory := connect.Connect{}
 	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
@@ -121,21 +113,13 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	factory := connect.Connect{
-		Swap:       swap,
-		Expose:     expose,
-		Kubeconfig: options.KubeConfig,
-		Namespace:  options.Namespace,
-		Image:      options.Image,
-		Debug:      options.Debug,
-	}
-
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	_, err = factory.Mesh(options, clientset, util.String2Map(options.Labels))
+	factory := connect.Connect{}
+	_, err = factory.Mesh(swap, options, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
