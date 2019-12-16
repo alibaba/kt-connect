@@ -26,7 +26,12 @@ type runtimeOptions struct {
 	PidFile  string
 	UserHome string
 	AppHome  string
-	Shadow   string
+	// Shadow deployment name
+	Shadow string
+	// The origin app name
+	Origin string
+	// The origin repicas
+	Replicas int32
 }
 
 // DaemonOptions cli options

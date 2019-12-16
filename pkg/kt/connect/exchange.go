@@ -1,44 +1,26 @@
 package connect
 
 import (
-	"os"
 	"strings"
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	v1 "k8s.io/api/apps/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 // Exchange exchange request to local
-func (c *Connect) Exchange(namespace string, origin *v1.Deployment, clientset *kubernetes.Clientset,
-	labels map[string]string) (workload string, err error) {
-	workload, podIP, podName, err := c.createExchangeShadow(origin, namespace, clientset, labels)
+func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+	podIP, podName, err := c.createExchangeShadow(origin, options.Namespace, workload, clientset, labels)
+	options.RuntimeOptions.Shadow = workload
 	down := int32(0)
-	scaleTo(origin, namespace, clientset, &down)
-	remotePortForward(c.Expose, c.Kubeconfig, c.Namespace, podName, podIP, c.Debug)
+	scaleTo(origin, options.Namespace, clientset, &down)
+	remotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, c.Debug)
 	return
-}
-
-// HandleExchangeExit handle error when exchange exit
-func (c *Connect) HandleExchangeExit(shadow string, replicas *int32, origin *v1.Deployment, clientset *kubernetes.Clientset) {
-	os.Remove(c.PidFile)
-	log.Printf("Cleanup proxy shadow %s", shadow)
-	deploymentsClient := clientset.AppsV1().Deployments(c.Namespace)
-	deletePolicy := metav1.DeletePropagationForeground
-	deploymentsClient.Delete(shadow, &metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
-
-	app, err := clientset.AppsV1().Deployments(c.Namespace).Get(c.Swap, metav1.GetOptions{})
-	if err != nil {
-		return
-	}
-
-	scaleTo(app, c.Namespace, clientset, replicas)
 }
 
 //ScaleTo Scale
@@ -56,10 +38,8 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, clientset *kubernetes.Clientset,
-	extraLabels map[string]string) (workload string, podIP string, podName string, err error) {
-	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
-
+func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, workload string, clientset *kubernetes.Clientset, extraLabels map[string]string) (podIP string, podName string, err error) {
+	log.Info().Msgf("Create Exchange shadow %s in namespace %s", workload, namespace)
 	labels := map[string]string{
 		"kt":           workload,
 		"kt-component": "exchange",
@@ -72,9 +52,6 @@ func (c *Connect) createExchangeShadow(origin *v1.Deployment, namespace string, 
 		labels[k] = v
 	}
 
-	podIP, podName, err = cluster.CreateShadow(clientset, namespace, workload, labels, c.Image)
-	if err != nil {
-		return "", "", "", err
-	}
+	podIP, podName, err = cluster.CreateShadow(clientset, workload, labels, namespace, c.Image)
 	return
 }

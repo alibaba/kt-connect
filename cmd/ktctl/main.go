@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
@@ -9,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
+	"os"
 )
 
 func init() {
@@ -26,9 +26,12 @@ func main() {
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
 	app.Commands = command.NewCommands(options)
-
+	ch := command.SetUpCloseHandler(options)
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal().Err(err)
+		log.Info().Msg(err.Error())
+		command.CleanupWorkspace(options)
 	}
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
 }

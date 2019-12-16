@@ -1,15 +1,15 @@
 package cluster
 
 import (
-	"time"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"time"
 
 	"github.com/rs/zerolog/log"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 // GetKubernetesClient get Kubernetes client from config
@@ -22,12 +22,41 @@ func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
+// ScaleTo scale app
+func ScaleTo(clientSet *kubernetes.Clientset, namespace string, name string, replicas int32) (err error) {
+	client := clientSet.AppsV1().Deployments(namespace)
+	deployment, err := client.Get(name, metav1.GetOptions{})
+	if err != nil {
+		return
+	}
+
+	// make sure min replicas
+	if replicas == 0 {
+		replicas = 1
+	}
+
+	log.Info().Msgf("- Scale %s in %s to %d", name, namespace, replicas)
+
+	deployment.Spec.Replicas = &replicas
+	_, err = client.Update(deployment)
+	return
+}
+
+// Remove remove shadow from cluster
+func Remove(client *kubernetes.Clientset, namespace string, name string) {
+	deploymentsClient := client.AppsV1().Deployments(namespace)
+	deletePolicy := metav1.DeletePropagationForeground
+	deploymentsClient.Delete(name, &metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
 // CreateShadow create shadow
 func CreateShadow(
 	clientset *kubernetes.Clientset,
-	namespace string, 
 	name string,
-	labels map[string]string, 
+	labels map[string]string,
+	namespace string,
 	image string,
 ) (podIP string, podName string, err error) {
 
@@ -49,7 +78,7 @@ func CreateShadow(
 	if err != nil {
 		return
 	}
-	log.Printf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Info().Msgf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 	podIP = pod.Status.PodIP
 	podName = pod.GetObjectMeta().GetName()
 	return
@@ -71,7 +100,7 @@ func waitPodReady(namespace string, name string, clientset *kubernetes.Clientset
 			log.Printf("Shadow Pods not ready......")
 		} else {
 			pod = pods.Items[0]
-			log.Printf("Shadow Pod status is %s", pod.Status.Phase)
+			log.Info().Msgf("Shadow Pod status is %s", pod.Status.Phase)
 			if pod.Status.Phase == "Running" {
 				break
 			}

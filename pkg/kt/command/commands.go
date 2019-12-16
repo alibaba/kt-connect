@@ -1,10 +1,16 @@
 package command
 
 import (
+	"os"
+	"os/signal"
+	"path/filepath"
+	"syscall"
+
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
-	"path/filepath"
 )
 
 // NewCliAuthor return cli author
@@ -113,7 +119,7 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
-	return []cli.Command {
+	return []cli.Command{
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
@@ -149,5 +155,56 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Extra labels on proxy pod e.g. 'label1=val1,label2=val2'",
 			Destination: &options.Labels,
 		},
+	}
+}
+
+// SetUpCloseHandler registry close handeler
+func SetUpCloseHandler(options *options.DaemonOptions) (ch chan os.Signal) {
+	ch = make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go func() {
+		<-ch
+		log.Info().Msgf("- Terminal And Clean Workspace\n")
+		CleanupWorkspace(options)
+		log.Info().Msgf("- Successful Clean Up Workspace\n")
+		os.Exit(0)
+	}()
+	return
+}
+
+// CleanupWorkspace clean workspace
+func CleanupWorkspace(options *options.DaemonOptions) {
+	log.Info().Msgf("- Start Clean Workspace\n")
+	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
+		log.Info().Msgf("- Remove pid %s", options.RuntimeOptions.PidFile)
+		os.Remove(options.RuntimeOptions.PidFile)
+	}
+
+	if _, err := os.Stat(".jvmrc"); err == nil {
+		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
+		os.Remove(".jvmrc")
+	}
+
+	client, err := cluster.GetKubernetesClient(options.KubeConfig)
+	if err != nil {
+		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
+		return
+	}
+
+	// scale origin app to replicas
+	if len(options.RuntimeOptions.Origin) > 0 {
+		log.Info().Msgf("- Recover Origin App %s", options.RuntimeOptions.Origin)
+		cluster.ScaleTo(
+			client,
+			options.Namespace,
+			options.RuntimeOptions.Origin,
+			options.RuntimeOptions.Replicas,
+		)
+	}
+
+	if len(options.RuntimeOptions.Shadow) > 0 {
+		log.Info().Msgf("- Start Clean Shadow %s", options.RuntimeOptions.Shadow)
+		cluster.Remove(client, options.Namespace, options.RuntimeOptions.Shadow)
+		log.Info().Msgf("- Successful Clean Shadow %s", options.RuntimeOptions.Shadow)
 	}
 }

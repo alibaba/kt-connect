@@ -2,18 +2,14 @@ package command
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 
 	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,87 +20,60 @@ type Action struct {
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(options *options.DaemonOptions) {
+func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		err := fmt.Errorf("Connect already running %s. exit this", options.RuntimeOptions.PidFile)
-		panic(err.Error())
+		err = fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
+		panic(err)
 	}
-
-	pid := os.Getpid()
-	err := ioutil.WriteFile(options.RuntimeOptions.PidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
 	if err != nil {
-		panic(err.Error())
+		return
 	}
-
-	log.Info().Msgf("Daemon Start At %d", pid)
-
-	factory := connect.Connect{
-		Kubeconfig: options.KubeConfig,
-		Namespace:  options.Namespace,
-		Image:      options.Image,
-		Debug:      options.Debug,
-		Method:     options.ConnectOptions.Method,
-		ProxyPort:  options.ConnectOptions.Socke5Proxy,
-		Port:       options.ConnectOptions.SSHPort,
-		DisableDNS: options.ConnectOptions.DisableDNS,
-		PodCIDR:    options.ConnectOptions.CIDR,
-		PidFile:    options.RuntimeOptions.PidFile,
-	}
-
+	log.Info().Msgf("Connect Start At %d", pid)
+	factory := connect.Connect{Options: options}
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
-		panic(err.Error())
+		return
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	options.RuntimeOptions.Shadow = workload
+
 	labels := map[string]string{
 		"kt":           workload,
 		"kt-component": "connect",
 		"control-by":   "kt",
 	}
+
 	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
 
 	endPointIP, podName, err := cluster.CreateShadow(
 		clientSet,
-		options.Namespace,
 		workload,
 		labels,
+		options.Namespace,
 		options.Image,
 	)
 
 	if err != nil {
-		panic(err.Error())
+		return
 	}
 
-	cidrs, err := factory.GetProxyCrids(clientSet)
-
+	cidrs, err := util.GetCirds(clientSet, options.ConnectOptions.CIDR)
 	if err != nil {
-		factory.OnConnectExit(workload, pid)
-		panic(err.Error())
+		return
 	}
 
 	factory.StartConnect(podName, endPointIP, cidrs)
-
-	channel := make(chan os.Signal)
-	signal.Notify(channel, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	s := <-channel
-	log.Info().Msgf("[Exit] Signal is %s", s)
-	factory.OnConnectExit(workload, pid)
+	return
 }
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
-	pidFile := options.RuntimeOptions.PidFile
-	daemonRunning := util.IsDaemonRunning(pidFile)
+	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.ExchangeOptions.Expose
-	if !daemonRunning {
-		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
-	} else {
-		log.Printf("'KT Connect' is runing, you can access local app from cluster and localhost")
-	}
 
 	if swap == "" || expose == "" {
 		err := fmt.Errorf("-expose is required")
@@ -132,31 +101,20 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 
 	replicas := origin.Spec.Replicas
 
-	workload, err := factory.Exchange(options.Namespace, origin, clientset, util.String2Map(options.Labels))
+	// Prepare context inorder to remove after command exit
+	options.RuntimeOptions.Origin = swap
+	options.RuntimeOptions.Replicas = *replicas
+
+	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
-
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	s := <-c
-	log.Printf("[Exit] Signal is %s", s)
-	factory.HandleExchangeExit(workload, replicas, origin, clientset)
 }
-
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
-	pidFile := options.RuntimeOptions.PidFile
-	daemonRunning := util.IsDaemonRunning(pidFile)
+	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.MeshOptions.Expose
-
-	if !daemonRunning {
-		log.Printf("'KT Connect' not runing, you can only access local app from cluster")
-	} else {
-		log.Printf("'KT Connect' is runing, you can access local app from cluster and localhost")
-	}
 
 	if swap == "" || expose == "" {
 		err := fmt.Errorf("-expose is required")
@@ -177,15 +135,18 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	workload, err := factory.Mesh(clientset, util.String2Map(options.Labels))
+	_, err = factory.Mesh(options, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
+}
 
-	c := make(chan os.Signal)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-
-	s := <-c
-	log.Printf("[Exit] Signal is %s", s)
-	factory.OnMeshExit(workload, clientset)
+// checkConnectRunning check connect is running and print help msg
+func checkConnectRunning(pidFile string) {
+	daemonRunning := util.IsDaemonRunning(pidFile)
+	if !daemonRunning {
+		log.Info().Msgf("'KT Connect' not runing, you can only access local app from cluster")
+	} else {
+		log.Info().Msgf("'KT Connect' is runing, you can access local app from cluster and localhost")
+	}
 }
