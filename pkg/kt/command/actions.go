@@ -30,7 +30,6 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 	log.Info().Msgf("Connect Start At %d", pid)
-	factory := connect.Connect{}
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		return
@@ -66,7 +65,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	factory.StartConnect(podName, endPointIP, cidrs, options)
+	connect.StartConnect(podName, endPointIP, cidrs, options)
 	return
 }
 
@@ -96,8 +95,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	options.RuntimeOptions.Origin = swap
 	options.RuntimeOptions.Replicas = *replicas
 
-	factory := connect.Connect{}
-	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
+	_, err = connect.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}
@@ -118,8 +116,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	factory := connect.Connect{}
-	_, err = factory.Mesh(swap, options, clientset, util.String2Map(options.Labels))
+	_, err = connect.Mesh(swap, options, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		panic(err.Error())
 	}

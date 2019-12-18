@@ -13,9 +13,9 @@ import (
 )
 
 // Exchange exchange request to local
-func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+func Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
 	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
-	podIP, podName, err := c.createExchangeShadow(origin, options.Namespace, workload, clientset, labels, options.Image)
+	podIP, podName, err := createExchangeShadow(origin, options.Namespace, workload, clientset, labels, options.Image)
 	options.RuntimeOptions.Shadow = workload
 	down := int32(0)
 	scaleTo(origin, options.Namespace, clientset, &down)
@@ -38,7 +38,7 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 	return nil
 }
 
-func (c *Connect) createExchangeShadow(
+func createExchangeShadow(
 	origin *v1.Deployment,
 	namespace string,
 	workload string,

@@ -11,7 +11,7 @@ import (
 )
 
 // StartConnect start vpn connection
-func (c *Connect) StartConnect(name string, podIP string, cidrs []string, options *options.DaemonOptions) (err error) {
+func StartConnect(name string, podIP string, cidrs []string, options *options.DaemonOptions) (err error) {
 	debug := options.Debug
 	err = util.PrepareSSHPrivateKey()
 	if err != nil {
