@@ -21,28 +21,21 @@ type Action struct {
 
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(options *options.DaemonOptions) (err error) {
-	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		err = fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
-		panic(err)
+	if options.ConnectOptions.Method != "socks5" {
+		checkAndWritePidFile(options.RuntimeOptions.PidFile)
 	}
-	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
-	if err != nil {
-		return
-	}
-	log.Info().Msgf("Connect Start At %d", pid)
+
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		return
 	}
 
-	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	options.RuntimeOptions.Shadow = workload
-
-	labels := util.Labels(workload, "connect", map[string]string{}, options.Labels)
+	options.RuntimeOptions.Shadow = fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	labels := util.Labels(options.RuntimeOptions.Shadow, "connect", map[string]string{}, options.Labels)
 
 	endPointIP, podName, err := cluster.CreateShadow(
 		clientSet,
-		workload,
+		options.RuntimeOptions.Shadow,
 		labels,
 		options.Namespace,
 		options.Image,
@@ -112,6 +105,17 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+// checkAndWritePid check PidFile present and write current pid
+func checkAndWritePidFile(pidFile string) (err error) {
+	if util.IsDaemonRunning(pidFile) {
+		err = fmt.Errorf("Connect already running %s exit this", pidFile)
+		panic(err)
+	}
+	pid, err := util.WritePidFile(pidFile)
+	log.Info().Msgf("Connect Start At %d", pid)
+	return
 }
 
 // checkConnectRunning check connect is running and print help msg

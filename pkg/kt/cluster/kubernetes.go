@@ -1,8 +1,9 @@
 package cluster
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"time"
+
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
