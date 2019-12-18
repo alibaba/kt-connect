@@ -30,7 +30,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 	log.Info().Msgf("Connect Start At %d", pid)
-	factory := connect.Connect{Options: options}
+	factory := connect.Connect{}
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		return
@@ -66,7 +66,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
+	factory.StartConnect(podName, endPointIP, cidrs, options)
 	return
 }
 
