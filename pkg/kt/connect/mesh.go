@@ -13,8 +13,8 @@ import (
 )
 
 // Mesh prepare swap deployment
-func Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
-	workload, podIP, podName, err := createMeshShadown(swap, clientset, labels, options.Namespace, options.Image)
+func Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset) (workload string, err error) {
+	workload, podIP, podName, err := createMeshShadown(swap, clientset, options)
 	if err != nil {
 		return
 	}
@@ -26,9 +26,11 @@ func Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Cli
 func createMeshShadown(
 	swap string,
 	clientset *kubernetes.Clientset,
-	extraLabels map[string]string,
-	namespace string, image string,
+	options *options.DaemonOptions,
 ) (shadowName string, podIP string, podName string, err error) {
+	image := options.Image
+	namespace := options.Namespace
+
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 	origin, err := deploymentsClient.Get(swap, metav1.GetOptions{})
 	if err != nil {
@@ -37,19 +39,7 @@ func createMeshShadown(
 
 	meshVersion := strings.ToLower(util.RandomString(5))
 	shadowName = origin.GetObjectMeta().GetName() + "-kt-" + meshVersion
-	labels := map[string]string{
-		"kt":           shadowName,
-		"kt-component": "mesh",
-		"control-by":   "kt",
-		"version":      meshVersion,
-	}
-	for k, v := range extraLabels {
-		labels[k] = v
-	}
-	for k, v := range origin.Spec.Selector.MatchLabels {
-		labels[k] = v
-	}
-
+	labels := util.Labels(shadowName, "mesh", origin.Spec.Selector.MatchLabels, options.Labels)
 	podIP, podName, err = cluster.CreateShadow(clientset, shadowName, labels, namespace, image)
 	if err != nil {
 		return "", "", "", err

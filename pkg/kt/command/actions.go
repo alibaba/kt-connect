@@ -38,15 +38,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 	options.RuntimeOptions.Shadow = workload
 
-	labels := map[string]string{
-		"kt":           workload,
-		"kt-component": "connect",
-		"control-by":   "kt",
-	}
-
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
-	}
+	labels := util.Labels(workload, "connect", map[string]string{}, options.Labels)
 
 	endPointIP, podName, err := cluster.CreateShadow(
 		clientSet,
@@ -95,7 +87,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 	options.RuntimeOptions.Origin = swap
 	options.RuntimeOptions.Replicas = *replicas
 
-	_, err = connect.Exchange(options, origin, clientset, util.String2Map(options.Labels))
+	_, err = connect.Exchange(options, origin, clientset)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -116,7 +108,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
 		panic(err.Error())
 	}
 
-	_, err = connect.Mesh(swap, options, clientset, util.String2Map(options.Labels))
+	_, err = connect.Mesh(swap, options, clientset)
 	if err != nil {
 		panic(err.Error())
 	}

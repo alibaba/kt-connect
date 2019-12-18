@@ -13,10 +13,10 @@ import (
 )
 
 // Exchange exchange request to local
-func Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+func Exchange(options *options.DaemonOptions, origin *v1.Deployment, clientset *kubernetes.Clientset) (workload string, err error) {
 	workload = origin.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
-	podIP, podName, err := createExchangeShadow(origin, options.Namespace, workload, clientset, labels, options.Image)
 	options.RuntimeOptions.Shadow = workload
+	podIP, podName, err := createExchangeShadow(origin, workload, clientset, options)
 	down := int32(0)
 	scaleTo(origin, options.Namespace, clientset, &down)
 	remotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
@@ -40,25 +40,14 @@ func scaleTo(deployment *v1.Deployment, namespace string, clientset *kubernetes.
 
 func createExchangeShadow(
 	origin *v1.Deployment,
-	namespace string,
 	workload string,
 	clientset *kubernetes.Clientset,
-	extraLabels map[string]string,
-	image string,
+	options *options.DaemonOptions,
 ) (podIP string, podName string, err error) {
+	namespace := options.Namespace
+	image := options.Image
 	log.Info().Msgf("Create Exchange shadow %s in namespace %s", workload, namespace)
-	labels := map[string]string{
-		"kt":           workload,
-		"kt-component": "exchange",
-		"control-by":   "kt",
-	}
-	for k, v := range extraLabels {
-		labels[k] = v
-	}
-	for k, v := range origin.Spec.Selector.MatchLabels {
-		labels[k] = v
-	}
-
+	labels := util.Labels(workload, "exchange", origin.Spec.Selector.MatchLabels, options.Labels)
 	podIP, podName, err = cluster.CreateShadow(clientset, workload, labels, namespace, image)
 	return
 }
