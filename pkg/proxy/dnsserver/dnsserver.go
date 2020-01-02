@@ -137,8 +137,9 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 
 	for _, item := range res.Answer {
 		log.Info().Msgf("response: %s", item.String())
-		r, err := s.getAnswer(name, domain, item)
-		if err != nil {
+		r, errInLoop := s.getAnswer(name, domain, item)
+		if errInLoop != nil {
+			err = errInLoop
 			return
 		}
 		rr = append(rr, r)
