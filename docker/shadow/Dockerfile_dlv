@@ -1,0 +1,5 @@
+FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/builder
+
+FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest
+COPY --from=0 /go/bin/dlv /usr/sbin/dlv
+CMD ["/run.sh", "--debug"]

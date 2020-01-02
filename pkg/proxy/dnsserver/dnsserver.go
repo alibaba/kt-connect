@@ -114,7 +114,7 @@ func exchange(domain string, Qtype uint16, m *dns.Msg, name string) (rr []dns.RR
 	}
 
 	if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf(" *** invalid answer name %s after %d query for %s\n", domain, Qtype, domain)
+		log.Error().Msgf(" *** invalid answer name %s after %d query for %s\n", name, Qtype, domain)
 		return
 	}
 
@@ -131,15 +131,15 @@ func exchange(domain string, Qtype uint16, m *dns.Msg, name string) (rr []dns.RR
 }
 
 func getAnswer(name string, inClusterName string, acutal dns.RR) (tmp dns.RR, err error) {
-	var parts []string
 	if name != inClusterName {
 		log.Info().Msgf("origin %s query name is not same %s", inClusterName, name)
-		parts = append(parts, name)
-
 		log.Info().Msgf("origin answer rr to %s", acutal.String())
-		answer := strings.Split(acutal.String(), "\t")
 
+		var parts []string
+		parts = append(parts, name)
+		answer := strings.Split(acutal.String(), "\t")
 		parts = append(parts, answer[1:]...)
+
 		rrStr := strings.Join(parts, " ")
 		log.Info().Msgf("rewrite rr to %s", rrStr)
 		tmp, err = dns.NewRR(rrStr)
