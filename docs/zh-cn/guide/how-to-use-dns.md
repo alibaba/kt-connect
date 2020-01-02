@@ -61,3 +61,38 @@ spec:
       - image: registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:stable
         name: dns-server
 ```
+
+## 调试DNS服务
+
+构建DNS服务调试镜像：
+
+```
+$ bin/build-shadow-dlv
+```
+
+部署调试版本DNS服务：
+
+```
+$ kubectl apply -f https://rdc-incubators.oss-cn-beijing.aliyuncs.com/dns/dns-debug.yaml
+```
+
+查看创建的`kt-connect-dns`服务IP：
+
+```
+$ kubectl get svc kt-connect-dns
+NAME             TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+kt-connect-dns   ClusterIP   172.21.14.147   <none>        53/UDP    5d22h
+```
+
+如果本地和集群之间的VPN未建立，用`ktctl connect`打通网络。
+通过IDE连接`kt-connect-dns`服务IP的`2345`端口，可以同步查看`kt-connect-dns`服务输出的日志：
+
+```
+$ kubectl logs $(kubectl get pod -l kt-component=dns-server -o jsonpath='{.items[0].metadata.name}') dns-server -f
+```
+
+使用`nslookup <查询域名> <DNS服务IP>`命令触发查询，例如：
+
+```
+$ nslookup tomcat.default.svc.cluster.local 172.21.14.147
+```
