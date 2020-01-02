@@ -49,23 +49,17 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	_ = w.WriteMsg(&msg)
 }
 
-func (s *server) getDomain(origin string, stripPostfix bool) string {
+func (s *server) getDomainWithClusterPostfix(origin string) string {
+	dotIndex := strings.Index(origin, ".") + 1
+	return s.getDomain(origin[:dotIndex])
+}
+
+func (s *server) getDomain(origin string) string {
 	domain := origin
 	postfix := s.config.Search[0]
 
-	// should not happens, just in case
-	if !strings.Contains(domain, ".") {
-		domain = domain + "."
-	}
-
-	// strip domain postfix, if required
-	dotIndex := strings.Index(domain, ".") + 1
-	if stripPostfix {
-		domain = domain[:dotIndex]
-	}
-
 	// has only one dot at the end of queried domain name
-	if dotIndex == len(domain) {
+	if strings.Index(origin, ".") == (len(domain) - 1) {
 		domain = domain + postfix + "."
 		log.Info().Msgf("Format domain %s to %s\n", origin, domain)
 	}
@@ -82,10 +76,10 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	qtype := req.Question[0].Qtype
 	name := req.Question[0].Name
 
-	rr, err := s.exchange(s.getDomain(name, false), qtype, name)
+	rr, err := s.exchange(s.getDomain(name), qtype, name)
 	if IsDomainNotExist(err) {
-		log.Info().Msgf("Retry with domain postfix stripped")
-		rr, _ = s.exchange(s.getDomain(name, true), qtype, name)
+		log.Info().Msgf("Retry with cluster domain postfix")
+		rr, _ = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
 	}
 	return
 }
