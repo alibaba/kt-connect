@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"github.com/miekg/dns"
+	"github.com/rs/zerolog/log"
 )
 
 // dns server
@@ -50,7 +50,8 @@ func getDomain(origin string) string {
 		namespace = "default"
 	}
 
-	if !strings.Contains(domain, ".svc.cluster.local.") {
+	// has only one dot at the end of queried domain name
+	if strings.Index(domain, ".") == (len(domain) - 1) {
 		domain = domain + namespace + ".svc.cluster.local."
 		log.Info().Msgf("*** Use in cluster dns address %s\n", domain)
 	}
@@ -105,12 +106,16 @@ func exchange(domain string, Qtype uint16, m *dns.Msg, name string) (rr []dns.RR
 	res, _, err := c.Exchange(m, address)
 
 	if res == nil {
-		log.Error().Msgf("*** error: %s\n", err.Error())
+		if err != nil {
+			log.Error().Msgf("*** error: %s\n", err.Error())
+		} else {
+			log.Error().Msgf("*** error: unknown\n")
+		}
 		return
 	}
 
 	if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf(" *** invalid answer name %s after %d query for %s\n", domain, Qtype, domain)
+		log.Error().Msgf(" *** invalid answer name %s after %d query for %s\n", name, Qtype, domain)
 		return
 	}
 
@@ -118,7 +123,7 @@ func exchange(domain string, Qtype uint16, m *dns.Msg, name string) (rr []dns.RR
 		log.Info().Msgf("response: %s", item.String())
 		r, err := getAnswer(name, domain, item)
 		if err != nil {
-			return	
+			return
 		}
 		rr = append(rr, r)
 	}
@@ -127,15 +132,15 @@ func exchange(domain string, Qtype uint16, m *dns.Msg, name string) (rr []dns.RR
 }
 
 func getAnswer(name string, inClusterName string, acutal dns.RR) (tmp dns.RR, err error) {
-	var parts []string
 	if name != inClusterName {
 		log.Info().Msgf("origin %s query name is not same %s", inClusterName, name)
-		parts = append(parts, name)
-		
 		log.Info().Msgf("origin answer rr to %s", acutal.String())
+
+		var parts []string
+		parts = append(parts, name)
 		answer := strings.Split(acutal.String(), "\t")
-		
 		parts = append(parts, answer[1:]...)
+
 		rrStr := strings.Join(parts, " ")
 		log.Info().Msgf("rewrite rr to %s", rrStr)
 		tmp, err = dns.NewRR(rrStr)
