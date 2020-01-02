@@ -34,12 +34,12 @@ func (h *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg.SetReply(req)
 	msg.Authoritative = true
 	// Stuff must be in the answer section
-	for _, a := range query(w, req) {
+	for _, a := range query(req) {
 		log.Info().Msgf("%v\n", a)
 		msg.Answer = append(msg.Answer, a)
 	}
 
-	w.WriteMsg(&msg)
+	_ = w.WriteMsg(&msg)
 }
 
 func getDomain(origin string) string {
@@ -60,7 +60,7 @@ func getDomain(origin string) string {
 	return domain
 }
 
-func query(w dns.ResponseWriter, req *dns.Msg) (rr []dns.RR) {
+func query(req *dns.Msg) (rr []dns.RR) {
 	if len(req.Question) <= 0 {
 		log.Error().Msgf("*** error: dns Msg question length is 0")
 		return
