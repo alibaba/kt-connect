@@ -50,7 +50,8 @@ func getDomain(origin string) string {
 		namespace = "default"
 	}
 
-	if !strings.Contains(domain, ".") {
+	// has only one dot at the end of queried domain name
+	if strings.Index(domain, ".") == (len(domain) - 1) {
 		domain = domain + namespace + ".svc.cluster.local."
 		log.Info().Msgf("*** Use in cluster dns address %s\n", domain)
 	}
