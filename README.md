@@ -70,7 +70,7 @@ $ curl http://172.19.143.139:8080
 Access Server internal DNS address
 
 ```
-$ curl http://tomcat.default.svc.cluster.local:8080
+$ curl http://tomcat:8080
 ```
 
 ### Exchange: Access local from cluster
@@ -103,7 +103,7 @@ Access local tomcat by internal service DNS address:
 > Note: if `kubectl connect` not running, you can only access from cluster
 
 ```
-$ curl http://tomcat.default.svc.cluster.local:8080 | grep '<h1>'
+$ curl http://tomcat:8080 | grep '<h1>'
 <h1>Apache Tomcat/8.5.37</h1> #
 ```
 

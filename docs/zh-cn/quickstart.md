@@ -56,7 +56,7 @@ $ curl http://172.19.143.139:8080
 使用Service的域名访问：
 
 ```
-$ curl http://tomcat.default.svc.cluster.local:8080
+$ curl http://tomcat:8080
 ```
 
 ## Exchange: 将集群流量转发到本地
@@ -86,7 +86,7 @@ SSH Remote port-forward for POD starting
 > 注意如果未运行`ktctl connect`,只能从集群内访问
 
 ```
-$ curl http://tomcat.default.svc.cluster.local:8080 | grep '<h1>'
+$ curl http://tomcat:8080 | grep '<h1>'
 <h1>Apache Tomcat/8.5.37</h1> #
 ```
 
