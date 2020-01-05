@@ -7,3 +7,5 @@ artifacts
 
 node_modules/
 note/
+
+.jvmrc

@@ -37,7 +37,7 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 			cli.IntFlag{
 				Name:        "proxy",
 				Value:       2223,
-				Usage:       "when should method socks5, you can choice which port to proxy, default 2223",
+				Usage:       "when should method socks5, you can choice which port to proxy",
 				Destination: &options.ConnectOptions.Socke5Proxy,
 			},
 			cli.IntFlag{
