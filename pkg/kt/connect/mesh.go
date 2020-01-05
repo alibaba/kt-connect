@@ -15,8 +15,11 @@ import (
 // Mesh prepare swap deployment
 func (c *Connect) Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
 	workload, podIP, podName, err := c.createMeshShadown(swap, clientset, labels, options.Namespace, options.Image)
+	if err != nil {
+		panic(err.Error())
+	}
 	options.RuntimeOptions.Shadow = workload
-	remotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+	err = remotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 	return
 }
 
@@ -40,10 +43,11 @@ func (c *Connect) createMeshShadown(
 		"control-by":   "kt",
 		"version":      meshVersion,
 	}
-	for k, v := range extraLabels {
+	for k, v := range origin.Spec.Selector.MatchLabels {
 		labels[k] = v
 	}
-	for k, v := range origin.Spec.Selector.MatchLabels {
+	// extra labels must be applied after origin labels
+	for k, v := range extraLabels {
 		labels[k] = v
 	}
 

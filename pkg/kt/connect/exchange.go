@@ -52,10 +52,11 @@ func (c *Connect) createExchangeShadow(
 		"kt-component": "exchange",
 		"control-by":   "kt",
 	}
-	for k, v := range extraLabels {
+	for k, v := range origin.Spec.Selector.MatchLabels {
 		labels[k] = v
 	}
-	for k, v := range origin.Spec.Selector.MatchLabels {
+	// extra labels must be applied after origin labels
+	for k, v := range extraLabels {
 		labels[k] = v
 	}
 
