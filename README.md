@@ -82,7 +82,7 @@ docker run -itd -p 8080:8080 tomcat:8
 ```
 
 ```
-$ ktctl exchange tomcat --expose 8080
+$ sudo ktctl exchange tomcat --expose 8080
 2019/06/19 11:19:10  * tomcat (0 replicas)
 2019/06/19 11:19:10 Scale deployment tomcat to zero
 2019/06/19 11:19:10 Deploying proxy deployment tomcat-kt-oxpjf in namespace default
@@ -114,7 +114,7 @@ $ curl http://tomcat:8080 | grep '<h1>'
 The most different from mesh and exchange is exchange will scale the origin workload replicas to zero. And messh will keep it and create a pod instance with random version, after this user can modifi the Istio route rule let the specific request redirect to local, and the environment is working as normal:
 
 ```
-$ ktctl mesh tomcat --expose 8080
+$ sudo ktctl mesh tomcat --expose 8080
 2019/06/19 22:10:23 'KT Connect' not runing, you can only access local app from cluster
 2019/06/19 22:10:24 Deploying proxy deployment tomcat-kt-ybocr in namespace default
 2019/06/19 22:10:24 Pod status is Pending
