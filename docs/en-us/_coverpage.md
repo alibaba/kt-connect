@@ -1,4 +1,4 @@
-![logo](_media/logo.png)
+![logo](../_media/logo.png)
 
 # KT Connect<small>0.0.7</small>
 
@@ -6,5 +6,5 @@
 
 - Connect, Exchange And Mesh
 
-[Quick start](/quickstart)
-[Download](/downloads)
+[Quick start](/en-us/quickstart)
+[Download](/en-us/downloads)

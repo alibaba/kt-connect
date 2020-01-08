@@ -2,7 +2,7 @@
 
 ## Binary Packages
 
-> You can downloads latest build from [Nightly Build](./nightly.md)
+> You can downloads latest build from [Nightly Build](nightly.md)
 
 Mac:
 

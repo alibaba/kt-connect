@@ -30,7 +30,7 @@ tomcat   ClusterIP   172.19.143.139   <none>        8080/TCP   4m
 
 Connect to kubernetes cluster, KT will deployment a proxy pod in cluster：
 
-![](_media/demo-1.gif)
+![](../_media/demo-1.gif)
 
 ```shell
 $ sudo ktctl connect
@@ -61,7 +61,7 @@ $ curl http://tomcat:8080
 
 ## Exchange: Access local from cluster
 
-![](_media/demo-2.gif)
+![](../_media/demo-2.gif)
 
 Create Tomcat 8 in local and expose 8080 port
 
@@ -94,7 +94,7 @@ $ curl http://tomcat:8080 | grep '<h1>'
 
 The most different from `mesh` and `exchange` is exchange will scale the origin workload replicas to zero. And messh will keep it and create a pod instance with random `version`, after this user can modifi the Istio route rule let the specific request redirect to local, and the environment is working as normal:
 
-![](_media/demo-3.gif)
+![](../_media/demo-3.gif)
 
 ```
 $ ktctl mesh tomcat --expose 8080

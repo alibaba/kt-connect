@@ -5,7 +5,7 @@ Dashboard
 
 KT Connect Dashboard support visualization your test environment status, as follow:
 
-![](../_media/guide/kt-dashboard.png)
+![](../../_media/guide/kt-dashboard.png)
 
 Current support features as follow:
 

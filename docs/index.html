@@ -16,10 +16,12 @@
   <script>
     window.$docsify = {
       name: 'Kt Docs',
-      repo: '',
       loadSidebar: true,
       loadNavbar: true,
-      coverpage: ['/', '/zh-cn/'],
+      mergeNavbar: true,
+      homepage: '/en-us/README.md',
+      alias: { '^/([^/]+)$': '/en-us/$1' },
+      coverpage: ['/', '/en-us/', '/zh-cn/'],
       plugins: [
         function (hook, vm) {
           hook.beforeEach(function (html) {
