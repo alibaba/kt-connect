@@ -11,10 +11,10 @@ Management and Integration with your Kubernetes dev environment more efficient.
 
 ## Features
 
-* Connect: Direct access remote Kubernetes cluster: KT Connect use sshuttle as the vpn tool to access remote Kubernetes cluster network.
+* Connect: Direct access remote Kubernetes cluster: KT Connect use `sshuttle` as the vpn tool to access remote Kubernetes cluster network.
 * Exchange: Developer can exchange the workload to redirect the request to local app.
 * Mesh: You can create a mesh version in local host and redirect to your local
-* Dashboard: A Dashboard view you can know how the environemnt is use.
+* Dashboard: A Dashboard view you can know how the environment is use.
 
 ## QuickStart
 

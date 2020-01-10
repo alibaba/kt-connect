@@ -24,7 +24,15 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 ## Release Note
 
+### 0.0.8
+
+> Release At 2019-12-13
+
+* Add IDEA integration support
+
 ### 0.0.7
+
+> Release At 2019-12-05
 
 * Add oidc plugin to support TKE
 * Add socks5 method to support WSL
@@ -32,11 +40,15 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 ### 0.0.6
 
+> Release At 2019-10-01
+
 * Add windows support doc.
 * Fixed clusterIP cidr missing.
 * Rename docker images address.
 
 ### 0.0.5
+
+> Release At 2019-10-09
 
 * Add dashboard and api server source code
 
