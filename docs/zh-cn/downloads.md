@@ -37,7 +37,7 @@ $ mv ktctl_darwin_amd64 /usr/local/bin/ktctl
 $ ktctl -h
 ```
 
-## Linux User
+## Linux用户
 
 安装sshuttle
 
