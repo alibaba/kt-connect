@@ -24,6 +24,11 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 ## Release Note
 
+### 0.0.8
+
+* Add windows native support
+* Add idea support
+
 ### 0.0.7
 
 > Release At 2019-12-05
@@ -36,7 +41,6 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 > Release At 2019-10-01
 
-* Add windows support doc.
 * Fixed clusterIP cidr missing.
 * Rename docker images address.
 
