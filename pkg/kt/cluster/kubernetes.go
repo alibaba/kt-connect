@@ -1,8 +1,9 @@
 package cluster
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"time"
+
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
@@ -129,8 +130,9 @@ func generatorDeployment(namespace string, name string, labels map[string]string
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  "standalone",
-							Image: image,
+							Name:            "standalone",
+							Image:           image,
+							ImagePullPolicy: "Always",
 						},
 					},
 				},
