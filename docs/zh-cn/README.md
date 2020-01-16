@@ -24,6 +24,14 @@ KT使用shhuttle作为网络连接实现，实现轻量级的SSH VPN网络
 
 ## 更新日志
 
+### 0.0.9
+
+> 发布时间： 2020-01-16
+
+* Support Service Name as dns address
+* Make sure shadow is clean up after command exit
+
+
 ### 0.0.8
 
 * 添加Windows原生支持

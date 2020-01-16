@@ -24,6 +24,13 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 ## Release Note
 
+### 0.0.9
+
+> Release At 2020-01-16
+
+* Support Service Name as dns address
+* Make sure shadow is clean up after command exit
+
 ### 0.0.8
 
 * Add windows native support
