@@ -1,6 +1,6 @@
 <!-- ![logo](_media/logo.png) -->
 
-# KT Connect<small>0.0.8</small>
+# KT Connect<small>0.0.9</small>
 
 > Management and Integration with your Kubernetes dev environment more efficient.
 
