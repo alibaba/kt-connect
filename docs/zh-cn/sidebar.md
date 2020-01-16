@@ -1,12 +1,14 @@
-* [主页](zh-cn/)
-* [快速开始](zh-cn/quickstart.md)
-* [下载](zh-cn/downloads.md)
-* [可视化](zh-cn/guide/dashboard.md)
-* [Windows支持](zh-cn/guide/windows-support.md)
-* 最佳实践
-  * [本地联调测试](zh-cn/guide/localdev.md)
-  * [Mesh最佳实践](zh-cn/guide/mesh.md)
-  * [使用DNS服务](zh-cn/guide/how-to-use-dns.md)
-  * [在IDEA中联调](zh-cn/guide/how-to-use-in-idea.md)
-* 与其他工具比较
-* [路线图](zh-cn/roadmap.md)
+- 入门
+  - [快速开始](zh-cn/quickstart.md)
+  - [下载](zh-cn/downloads.md)
+
+- 指南
+  - [本地联调测试](zh-cn/guide/localdev.md)
+  - [Mesh最佳实践](zh-cn/guide/mesh.md)
+  - [使用DNS服务](zh-cn/guide/how-to-use-dns.md)
+  - [在IDEA中联调](zh-cn/guide/how-to-use-in-idea.md)
+  - [Windows支持](zh-cn/guide/windows-support.md)
+  - [可视化](zh-cn/guide/dashboard.md)
+
+- [Changelog](zh-cn/changelog.md)
+<!-- - [Need Help](es-us/needhelp.md) -->

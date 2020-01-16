@@ -6,5 +6,5 @@
 
 - 连接 & 交换 & 混合
 
+[Github](https://github.com/alibaba/kt-connect)
 [快速开始](zh-cn/quickstart)
-[下载](zh-cn/downloads)

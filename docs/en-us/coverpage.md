@@ -6,5 +6,6 @@
 
 - Connect, Exchange And Mesh
 
+[Github](https://github.com/alibaba/kt-connect)
 [Quick start](/en-us/quickstart)
-[Download](/en-us/downloads)
+<!-- [Download](/en-us/downloads) -->
