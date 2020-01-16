@@ -1,14 +1,16 @@
 package main
 
 import (
+	"os"
+
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
-	"os"
 )
 
 func init() {
@@ -32,6 +34,11 @@ func main() {
 		log.Info().Msg(err.Error())
 		command.CleanupWorkspace(options)
 	}
+
+	if util.IsHelpCommand(os.Args) {
+		return
+	}
+
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 }

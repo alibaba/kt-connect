@@ -1,13 +1,14 @@
 package util
 
 import (
-	"os"
 	"fmt"
-	"math/rand"
 	"io/ioutil"
+	"math/rand"
+	"os"
+
+	"time"
 
 	"github.com/rs/zerolog/log"
-	"time"
 )
 
 var (
@@ -91,8 +92,18 @@ func CreateDirIfNotExist(dir string) {
 }
 
 // WritePidFile write pid to file
-func WritePidFile(pidFile string) (pid int, err error){
+func WritePidFile(pidFile string) (pid int, err error) {
 	pid = os.Getpid()
 	err = ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", pid)), 0644)
 	return
+}
+
+// IsHelpCommand IsHelpCommand
+func IsHelpCommand(args []string) bool {
+	for _, arg := range args {
+		if arg == "-h" || arg == "--help" {
+			return true
+		}
+	}
+	return false
 }
