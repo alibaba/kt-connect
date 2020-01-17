@@ -16,6 +16,7 @@ ktctl --debug --namespace=default connect --method=socks5
 --port value    Local SSH Proxy port (default: 2222)
 --disableDNS    Disable Cluster DNS
 --cidr value    Custom CIDR eq '172.2.0.0/16'
+--dump2hosts    Auto write service to local hosts file (客户端版本0.0.10+)
 ```
 
 ### 从父命令集成的参数
