@@ -6,15 +6,12 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
-
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 )
 
 // Action cmd action
@@ -39,23 +36,11 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	serviceListener, err := clusterWatcher.ServiceListener(clientSet)
-	if err != nil {
-		return
+	if options.ConnectOptions.Dump2Hosts {
+		hosts := cluster.LocalHosts(clientSet, options.Namespace)
+		util.DumpHosts(hosts)
+		options.ConnectOptions.Hosts = hosts
 	}
-
-	services, err := serviceListener.Services(options.Namespace).List(labels.Everything())
-	if err != nil {
-		return
-	}
-
-	hosts := make(map[string]string)
-	for _, service := range services {
-		hosts[service.ObjectMeta.Name] = service.Spec.ClusterIP
-	}
-
-	// Dump service to localhost
-	util.DumpToHosts(hosts)
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 	options.RuntimeOptions.Shadow = workload

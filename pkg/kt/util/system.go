@@ -9,8 +9,8 @@ import (
 
 	"time"
 
-	"github.com/rs/zerolog/log"
 	"github.com/lextoumbourou/goodhosts"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -115,11 +115,32 @@ func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
 
-// DumpToHosts DumpToHosts
-func DumpToHosts(hostsMap map[string]string) {
+func DropHosts(hostsMap map[string]string) {
 	hosts, err := goodhosts.NewHosts()
 
-	if err !=nil {
+	if err != nil {
+		log.Printf("Fail to read hosts from host %s, ignore", err.Error())
+		return
+	}
+
+	for name, ip := range hostsMap {
+		if hosts.Has(ip, name) {
+			hosts.Remove(ip, name)
+		}
+	}
+
+	if err := hosts.Flush(); err != nil {
+		log.Info().Msgf("Error Happen when flush hosts")
+	}
+
+	log.Info().Msgf("- Drop hosts successful.")
+}
+
+// DumpToHosts DumpToHosts
+func DumpHosts(hostsMap map[string]string) {
+	hosts, err := goodhosts.NewHosts()
+
+	if err != nil {
 		log.Printf("Fail to read hosts from host %s, ignore", err.Error())
 		return
 	}
@@ -131,7 +152,9 @@ func DumpToHosts(hostsMap map[string]string) {
 	}
 
 	if err := hosts.Flush(); err != nil {
-		log.Info().Msgf("Error Happen when flush hosts")
+		log.Info().Msgf("Error Happen when dump hosts")
 	}
+
+	log.Info().Msgf("Dump hosts successful.")
 
 }

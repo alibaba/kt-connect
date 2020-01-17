@@ -65,13 +65,16 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 				Usage:       "Custom CIDR eq '172.2.0.0/16'",
 				Destination: &options.ConnectOptions.CIDR,
 			},
+			cli.BoolFlag{
+				Name:        "dump2hosts",
+				Usage:       "Auto write service to local hosts file",
+				Destination: &options.ConnectOptions.Dump2Hosts,
+			},
 		},
 		Action: func(c *cli.Context) error {
-
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-
 			action := Action{}
 			action.Connect(options)
 			return nil
@@ -193,7 +196,7 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
 		os.Remove(".jvmrc")
 	}
-
+	util.DropHosts(options.ConnectOptions.Hosts)
 	client, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		log.Error().Msgf("Fails create kubernetes client when clean up workspace")

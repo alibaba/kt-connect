@@ -5,10 +5,13 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 
+	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
+
 	"github.com/rs/zerolog/log"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -139,4 +142,23 @@ func generatorDeployment(namespace string, name string, labels map[string]string
 			},
 		},
 	}
+}
+
+// LocalHosts LocalHosts
+func LocalHosts(clientset *kubernetes.Clientset, namespace string) (hosts map[string]string) {
+	serviceListener, err := clusterWatcher.ServiceListener(clientset)
+	if err != nil {
+		return
+	}
+
+	services, err := serviceListener.Services(namespace).List(labels.Everything())
+	if err != nil {
+		return
+	}
+
+	hosts = map[string]string{}
+	for _, service := range services {
+		hosts[service.ObjectMeta.Name] = service.Spec.ClusterIP
+	}
+	return
 }

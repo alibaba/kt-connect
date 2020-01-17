@@ -12,6 +12,8 @@ type connectOptions struct {
 	Socke5Proxy int
 	CIDR        string
 	Method      string
+	Dump2Hosts  bool
+	Hosts       map[string]string
 }
 
 type exchangeOptions struct {
