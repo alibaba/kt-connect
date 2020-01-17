@@ -11,9 +11,19 @@
 
 ## Dashboard
 
+> Kubernetes Native
+
 * Support Istio network management
 * Support namespace resource visual topology
-* Support kt virtualenv management
+
+> KT Virtual Environment
+
+* Support apply kt VirtualEnv plugin
+* Support VirtualEnv management
+
+## Service Discovery
+
+* Nacos：Shadow Pod should support Registration/Cancellation to Nacos
 
 ## Document
 

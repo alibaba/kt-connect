@@ -21,6 +21,12 @@
 * 支持自动安装KT VirtualEnv扩展
 * 当KT VirtualEnv启用后支持Virtual Env的可视化管理
 
+## 服务发现能力增强
+
+> KT目前只支持Kubernetes原生的服务发现能力
+
+* Nacos服务发现：Shadow容器能够自动向Nacos服务进行服务实例注册和注销（调研）
+
 ## 文档和最佳实践
 
 * 提供各语言的最佳实践帮助文档
