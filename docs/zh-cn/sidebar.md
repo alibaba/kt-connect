@@ -10,6 +10,11 @@
   - [Windows支持](zh-cn/guide/windows-support.md)
   - [可视化](zh-cn/guide/dashboard.md)
 
+- Cli参考
+  - [ktctl connect](zh-cn/cli/connect.md)
+  - [ktctl exchange](zh-cn/cli/exchange.md)
+  - [ktctl exchange](zh-cn/cli/exchange.md)
+
 - [Changelog](zh-cn/changelog.md)
 - [TODO](zh-cn/todo.md)
 <!-- - [Need Help](es-us/needhelp.md) -->

@@ -13,7 +13,8 @@
 
 * 支持可视化配置单个服务Istio流量转发规则
 * 支持Namespace级别拓扑可视化能力
-* 支持KT VirtualEnv集成
+* 支持自动安装KT VirtualEnv扩展
+* 当KT VirtualEnv启用后支持Virtual Env的可视化管理
 
 ## 文档和最佳实践
 
