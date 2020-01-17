@@ -8,6 +8,7 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -24,14 +25,22 @@ func NewCliAuthor() []cli.Author {
 
 // newConnectCommand return new connect command
 func newConnectCommand(options *options.DaemonOptions) cli.Command {
+
+	methodDefaultValue := "vpn"
+	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"
+	if util.IsWindows() {
+		methodDefaultValue = "socks5"
+		methodDefaultUsage = "windows only support socks5"
+	}
+
 	return cli.Command{
 		Name:  "connect",
 		Usage: "connection to kubernetes cluster",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "method",
-				Value:       "vpn",
-				Usage:       "Connect method 'vpn' or 'socks5'",
+				Value:       methodDefaultValue,
+				Usage:       methodDefaultUsage,
 				Destination: &options.ConnectOptions.Method,
 			},
 			cli.IntFlag{

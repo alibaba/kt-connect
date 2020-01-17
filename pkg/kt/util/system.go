@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"runtime"
 
 	"time"
 
@@ -106,4 +107,9 @@ func IsHelpCommand(args []string) bool {
 		}
 	}
 	return false
+}
+
+// IsWindows check runtime is windows
+func IsWindows() bool {
+	return runtime.GOOS == "windows"
 }
