@@ -1,20 +1,20 @@
 ## Command: ktctl mesh
 
-将本地服务混合到集群中
+Mesh local service to cluster
 
-### 示例
+### Usage
 
 ```
 ktctl --debug --namespace=default mesh tomcat --expose 8080
 ```
 
-### 参数
+### Options
 
 ```
 --expose value  expose port
 ```
 
-### 从父命令集成的参数
+### Global Options
 
 ```
 --namespace value, -n value   (default: "default")

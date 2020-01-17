@@ -1,20 +1,24 @@
-## Command: ktctl mesh
+## Command: ktctl connect
 
-将本地服务混合到集群中
+Connection to kubernetes cluster
 
-### 示例
-
-```
-ktctl --debug --namespace=default mesh tomcat --expose 8080
-```
-
-### 参数
+### Usage
 
 ```
---expose value  expose port
+ktctl --debug --namespace=default connect --method=socks5
 ```
 
-### 从父命令集成的参数
+### Options
+
+```
+--method value  Connect method 'vpn' or 'socks5' (default: "vpn")
+--proxy value   when should method socks5, you can choice which port to proxy, default 2223 (default: 2223)
+--port value    Local SSH Proxy port (default: 2222)
+--disableDNS    Disable Cluster DNS
+--cidr value    Custom CIDR eq '172.2.0.0/16'
+```
+
+### Global Options
 
 ```
 --namespace value, -n value   (default: "default")

@@ -2,6 +2,11 @@
   - [Quick Start](en-us/quickstart.md)
   - [Downloads](en-us/downloads.md)
 
+- Cli References
+  - [ktctl connect](en-us/cli/connect.md)
+  - [ktctl exchange](en-us/cli/exchange.md)
+  - [ktctl mesh](en-us/cli/mesh.md)
+
 - Guide
   - [Windows Support](en-us/guide/windows-support.md)
   - [Local dev](en-us/guide/localdev.md)
