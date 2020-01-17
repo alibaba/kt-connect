@@ -10,17 +10,14 @@ kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in 
 service/tomcat created
 deployment.apps/tomcat created
 
-# Deployment info
 $ kubectl get deployments -o wide --selector run=tomcat
 NAME     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES     SELECTOR
 tomcat   1         1         1            1           12m   tomcat       tomcat:7   run=tomcat
 
-# Pods info
 $ kubectl get pods -o wide --selector run=tomcat
 NAME                     READY   STATUS        RESTARTS   AGE   IP             NODE                                NOMINATED NODE
 tomcat-cc7648444-r9tw4   1/1     Running       0          2m    172.16.0.147   cn-beijing.i-2ze11lz4lijf1pmecnwp   <none>
 
-# Service info
 $ kubectl get svc tomcat
 NAME     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
 tomcat   ClusterIP   172.19.143.139   <none>        8080/TCP   4m
@@ -28,12 +25,18 @@ tomcat   ClusterIP   172.19.143.139   <none>        8080/TCP   4m
 
 ## Connect：连接集群网络
 
+使用connect命令建立从本地到集群的网络通道，目前KT Connect支持VPN和Socks5代理两种模式, 不指定`--method`参数时，默认使用VPN模式：
+
+<!-- tabs:start -->
+
+#### ** VPN 模式 **
+
+> VPN模式基于sshuttle目前只支持Mac/Linux环境
+
 使用connect命令建立本地到集群的VPN网络：
 
-![](../_media/demo-1.gif)
-
 ```shell
-$ sudo ktctl connect
+$ sudo ktctl connect --method=vpn
 2019/06/19 11:11:07 Deploying proxy deployment kt-connect-daemon in namespace default
 2019/06/19 11:11:07 Pod status is Pending
 2019/06/19 11:11:09 Pod status is Running
@@ -41,27 +44,53 @@ $ sudo ktctl connect
 2019/06/19 11:11:18 KT proxy start successful
 ```
 
-在本地直接访问PodIP:
+启用VPN后直接访问集群资源：
 
 ```
-$ curl http://172.16.0.147:8080             
+$ curl http://172.16.0.147:8080      #在本地直接访问PodIP
+$ curl http://172.19.143.139:8080   #在本地访问ClusteriIP
+$ curl http://tomcat:8080     #使用Service的域名访问
 ```
 
-在本地访问ClusteriIP:
+#### ** Socks5代理模式 **
+
+> Socks5模式基于ssh目前只支持Windows/Mac/Linux环境
+
+使用`--method=socks5`指定使用socks5代理模式，为了能够在本地直接访问service的DNS域名`--dump2hosts`可以自动同步指定命名空间下的所有Service到本地的hosts文件：
 
 ```
-$ curl http://172.19.143.139:8080             
+$ sudo ktctl connect --method=socks5 --dump2hosts
+6:37PM INF Connect Start At 74032
+6:37PM INF Dump hosts successful.
+6:37PM INF Client address 30.5.124.242
+6:37PM INF Deploying shadow deployment kt-connect-daemon-mkevz in namespace default
+6:37PM INF Shadow is ready.
+6:37PM INF Success deploy proxy deployment kt-connect-daemon-mkevz in namespace default
+
+Forwarding from 127.0.0.1:2222 -> 22
+Forwarding from [::1]:2222 -> 22
+6:38PM INF ==============================================================
+6:38PM INF Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:2223
+6:38PM INF ==============================================================
+Handling connection for 2222
+Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts.
+6:38PM INF KT proxy start successful
 ```
 
-使用Service的域名访问：
+在Shell中按照日志输出提示，设置http_proxy参数：
 
 ```
-$ curl http://tomcat:8080
+$ export http_proxy=socks5://127.0.0.1:2223
+$ curl http://172.16.0.147:8080 #本地直接访问PodIP
+$ curl http://172.19.143.139:8080 # 本地直接访问ClusterIP
+$ curl http://tomcat:8080 #使用Service的域名访问
 ```
+
+> 当命令退出后会自动清理本地的hosts文件
+
+<!-- tabs:end -->
 
 ## Exchange: 将集群流量转发到本地
-
-![](../_media/demo-2.gif)
 
 为了模拟集群联调本地的情况，我们首先在本地运行一个Tomcat:8的容器
 
@@ -95,8 +124,6 @@ $ curl http://tomcat:8080 | grep '<h1>'
 > 查看更多：[Mesh最佳实践](/zh-cn/guide/mesh)
 
 `mesh`与`exchange`的最大区别在于，exchange会完全替换原有的应用实例。mesh命令创建代理容器，但是会保留原应用容器，代理容器会动态生成version标签，以便用于可以通过Istio流量规则将特定的流量转发到本地，同时保证环境正常链路始终可用：
-
-![](../_media/demo-3.gif)
 
 ```
 $ ktctl mesh tomcat --expose 8080
