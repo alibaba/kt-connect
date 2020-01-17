@@ -1,4 +1,4 @@
-# 在IDEA中进行Java开发
+# How To Dev in IDEA
 
 > VPN mode is a global system proxy, this guide is only applicable to `SOCKS5` mode
 

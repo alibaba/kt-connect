@@ -10,4 +10,4 @@
   - [Dashboard](en-us/guide/dashboard.md)
 
 - [Changelog](en-us/changelog.md)
-- [TODO](zh-cn/todo.md)
+- [TODO](en-us/todo.md)
