@@ -8,6 +8,7 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -24,14 +25,22 @@ func NewCliAuthor() []cli.Author {
 
 // newConnectCommand return new connect command
 func newConnectCommand(options *options.DaemonOptions) cli.Command {
+
+	methodDefaultValue := "vpn"
+	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"
+	if util.IsWindows() {
+		methodDefaultValue = "socks5"
+		methodDefaultUsage = "windows only support socks5"
+	}
+
 	return cli.Command{
 		Name:  "connect",
 		Usage: "connection to kubernetes cluster",
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "method",
-				Value:       "vpn",
-				Usage:       "Connect method 'vpn' or 'socks5'",
+				Value:       methodDefaultValue,
+				Usage:       methodDefaultUsage,
 				Destination: &options.ConnectOptions.Method,
 			},
 			cli.IntFlag{
@@ -56,13 +65,16 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 				Usage:       "Custom CIDR eq '172.2.0.0/16'",
 				Destination: &options.ConnectOptions.CIDR,
 			},
+			cli.BoolFlag{
+				Name:        "dump2hosts",
+				Usage:       "Auto write service to local hosts file",
+				Destination: &options.ConnectOptions.Dump2Hosts,
+			},
 		},
 		Action: func(c *cli.Context) error {
-
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-
 			action := Action{}
 			action.Connect(options)
 			return nil
@@ -184,7 +196,7 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
 		os.Remove(".jvmrc")
 	}
-
+	util.DropHosts(options.ConnectOptions.Hosts)
 	client, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		log.Error().Msgf("Fails create kubernetes client when clean up workspace")

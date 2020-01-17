@@ -36,6 +36,12 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
+	if options.ConnectOptions.Dump2Hosts {
+		hosts := cluster.LocalHosts(clientSet, options.Namespace)
+		util.DumpHosts(hosts)
+		options.ConnectOptions.Hosts = hosts
+	}
+
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 	options.RuntimeOptions.Shadow = workload
 
