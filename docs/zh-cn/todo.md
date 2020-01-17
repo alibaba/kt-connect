@@ -1,5 +1,7 @@
 # TODO:
 
+> 如果你有什么其它好的点子，请在[Github](https://github.com/alibaba/kt-connect/issues/new?assignees=&labels=&template=feature_request.md&title=)中反馈
+
 ## 命令行能力增强
 
 * kubectl dashboard: 命令行打开KT Connect Dashboard (自动安装）
