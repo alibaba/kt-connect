@@ -33,6 +33,6 @@ func (c *Connect) StartConnect(name string, podIP string, cidrs []string, debug 
 		return
 	}
 
-	log.Printf("KT proxy start successful")
+	log.Info().Msgf("KT proxy start successful")
 	return
 }

@@ -6,10 +6,12 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+// KTController KTController
 type KTController struct {
 	Context common.Context
 }
 
+// Components Components
 func (c KTController) Components(context *gin.Context) {
 	set := labels.Set{
 		"control-by": "kt",
@@ -25,6 +27,7 @@ func (c KTController) Components(context *gin.Context) {
 	context.JSON(200, pods)
 }
 
+// ComponentsInNamespace ComponentsInNamespace
 func (c KTController) ComponentsInNamespace(context *gin.Context) {
 	namespace := context.Param("namespace")
 	set := labels.Set{

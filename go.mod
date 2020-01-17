@@ -13,6 +13,7 @@ require (
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15 // indirect
 	github.com/kubernetes/dashboard v1.10.1
+	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 	github.com/manucorporat/stats v0.0.0-20180402194714-3ba42d56d227 // indirect
 	github.com/miekg/dns v0.0.0-20190106042521-5beb9624161b
 	github.com/rs/zerolog v0.0.0-20190704061603-77a169535877

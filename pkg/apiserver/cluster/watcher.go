@@ -46,3 +46,13 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 	w.EndpointsLister = endpointLister
 	return
 }
+
+// ServiceListener ServiceListener
+func ServiceListener(client kubernetes.Interface) (lister v1.ServiceLister, err error) {
+	w := Watcher{Client: client}
+	lister, err = w.Services()
+	if err != nil {
+		return
+	}
+	return
+}

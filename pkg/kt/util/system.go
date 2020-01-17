@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
+	"github.com/lextoumbourou/goodhosts"
 )
 
 var (
@@ -112,4 +113,25 @@ func IsHelpCommand(args []string) bool {
 // IsWindows check runtime is windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+// DumpToHosts DumpToHosts
+func DumpToHosts(hostsMap map[string]string) {
+	hosts, err := goodhosts.NewHosts()
+
+	if err !=nil {
+		log.Printf("Fail to read hosts from host %s, ignore", err.Error())
+		return
+	}
+
+	for name, ip := range hostsMap {
+		if !hosts.Has(ip, name) {
+			hosts.Add(ip, name)
+		}
+	}
+
+	if err := hosts.Flush(); err != nil {
+		log.Info().Msgf("Error Happen when flush hosts")
+	}
+
 }
