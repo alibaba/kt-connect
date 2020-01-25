@@ -9,6 +9,8 @@
 
 ### 0.0.8
 
+> Release At 2019-12-13
+
 * Add windows native support
 * Add idea support
 
