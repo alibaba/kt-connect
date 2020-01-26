@@ -16,11 +16,13 @@
   <script>
     window.$docsify = {
       name: 'Kt Connect Docs',
+      repo: 'https://github.com/alibaba/kt-connect',
       loadSidebar: "sidebar.md",
       loadNavbar: "navbar.md",
       coverpage: "coverpage.md",
-      mergeNavbar: true,
       homepage: '/en-us/README.md',
+      alias: { '^/([^/]+)$': '/en-us/$1' },
+      mergeNavbar: true,
       plugins: [
         function (hook, vm) {
           hook.beforeEach(function (html) {
