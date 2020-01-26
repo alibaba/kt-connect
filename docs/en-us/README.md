@@ -26,4 +26,4 @@ Run kt as a kubectl plugin, all you need is kubectl.
 
 Please join `kt-dev` DingTalk group：
 
-<img src="https://github.com/alibaba/kt-connect/raw/master/docs/_media/dingtalk-group.png" width="40%"></img>
+<img src="media/dingtalk-group.png" width="40%"></img>
