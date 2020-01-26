@@ -25,11 +25,11 @@ sudo ktctl -d connect --method=socks5
 
 下载并安装最新版本的[JVM Inject](https://plugins.jetbrains.com/plugin/13482-jvm-inject/versions)插件
 
-![安装插件](../../_media/guide/install_idea_plugin.png)
+![安装插件](../../media/guide/install_idea_plugin.png)
 
 JVM Inject插件会在Java程序启动时自动读取.jvmrc文件，并追加到程序的启动参数中，如下所示:
 
-![安装插件](../../_media/guide/idea_run_application.png)
+![安装插件](../../media/guide/idea_run_application.png)
 
 ```
 java ...省略的其他输出... -Djava.rmi.server.hostname=127.0.0.1 -Dspring.liveBeansView.mbeanDomain -Dspring.application.admin.enabled=true -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=2223 "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=58609:/Applications/IntelliJ IDEA.app/Contents/bin" ...省略的其他输出...  sample.Application

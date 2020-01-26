@@ -9,7 +9,7 @@ The main solution of `Mesh` is that if the team shares a development test enviro
 
 `Mesh` is similar to `Exchange`. The difference is that Exchange will completely replace the original application instance, while Mesh creates a new version based on the original instance, thus enabling users to do more based on Service Mesh capabilities. Multiple custom traffic rule definitions. This enables team members to perform local joint testing on a common development test environment.
 
-![logo](../../_media/logo-large.png)
+![logo](../../media/logo-large.png)
 
 ## Demo:
 
@@ -155,7 +155,7 @@ Add custom DNS in the local Hosts:
 
 通过域名`http://tomcat.mesh.com`访问实例应用:
 
-![](../../_media/guide/demo-tomcat-7.png)
+![](../../media/guide/demo-tomcat-7.png)
 
 ### Mesh： adds a local access endpoint
 
@@ -231,12 +231,12 @@ spec:
 
 At this point, if you access the service through the Firefox browser, you can access the local Tomcat: 8 instance:
 
-![](../../_media/guide/demo-tomcat-8.png)
+![](../../media/guide/demo-tomcat-8.png)
 
 Accessing the application through a non-Firefox browser will give you access to the original Tomcat:7 application:
 
-![](../../_media/guide/demo-tomcat-7.png)
+![](../../media/guide/demo-tomcat-7.png)
 
 Note: User-agent can be viewed through Firefox's browser development tool as follows:
 
-![](../../_media/guide/demo-user-agent.png)
+![](../../media/guide/demo-user-agent.png)

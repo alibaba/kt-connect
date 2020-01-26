@@ -1,4 +1,4 @@
-<!-- ![logo](_media/logo.png) -->
+<!-- ![logo](media/logo.png) -->
 
 # KT Connect<small>0.0.9</small>
 

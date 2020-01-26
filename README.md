@@ -3,11 +3,11 @@ KT Connect
 
 [![Build Status](https://travis-ci.org/alibaba/kt-connect.svg?branch=master)](https://travis-ci.org/alibaba/kt-connect) ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg) 
 
-![Logo](./docs/_media/logo.png)
+![Logo](./docs/media/logo.png)
 
 Management and Integration with your Kubernetes dev environment more efficient.
 
-![Arch](./docs/_media/arch.png)
+![Arch](./docs/media/arch.png)
 
 ## Features
 
@@ -134,7 +134,7 @@ SSH Remote port-forward POD 172.16.0.217 22 to 127.0.0.1:2217 starting
 
 Dashboard can help your know how your dev environemnt is used. 
 
-![Dashboard](./docs/_media/dashboard-demo.png)
+![Dashboard](./docs/media/dashboard-demo.png)
 
 You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
 
@@ -168,7 +168,7 @@ GOARCH=amd64 GOOS=linux go build -o bin/proxy cmd/shadow/main.go
 
 Please contact me with DingTalk:
 
-![image](./docs/_media/dingtalk-group.png)
+![image](./docs/media/dingtalk-group.png)
 
 ## Release Note
 

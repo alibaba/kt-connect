@@ -25,11 +25,11 @@ This command will create .jvmrc that includes all JVM ops should apply to Java a
 
 Download and Install the lastest version of [JVM Inject](https://plugins.jetbrains.com/plugin/13482-jvm-inject/versions)插件
 
-![Instll Plugin](../../_media/guide/install_idea_plugin.png)
+![Instll Plugin](../../media/guide/install_idea_plugin.png)
 
 JVM Inject Plugin will auto read the .jvmrc content from workspace. if present it will append all content to Idea Java Launcher:
 
-![Run Application](../../_media/guide/idea_run_application.png)
+![Run Application](../../media/guide/idea_run_application.png)
 
 ```
 java ...ignore content... -Djava.rmi.server.hostname=127.0.0.1 -Dspring.liveBeansView.mbeanDomain -Dspring.application.admin.enabled=true -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=2223 "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=58609:/Applications/IntelliJ IDEA.app/Contents/bin" ...ignore content...  sample.Application

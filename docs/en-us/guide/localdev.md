@@ -9,7 +9,7 @@ However, in general, the container network used by Kubernetes is not directly co
 
 In order to enable developers to deploy modified code to the cluster test environment more quickly, we will generally introduce a continuous delivery pipeline, which will solve the problem of code compilation, image packaging upload and deployment through automation. As follows:
 
-![](../../_media/guide/local-dev-01.png)
+![](../../media/guide/local-dev-01.png)
 
 
 To a certain extent, this approach can avoid developers doing a lot of repetitive work. However, although the entire process is automated, developers also have to wait for the pipeline to run after each code change. For developers, waiting for the pipeline to run after each code change may have become the worst part of the entire development task.
@@ -21,7 +21,7 @@ Ideally, the developer can start the service directly locally, and the service c
 - I rely on other services: the code running locally can access other applications deployed in the cluster directly through the podIP, clusterIP or even the DNS address in the Kubernetes cluster, as shown below;
 - Other services depend on me: other applications running in the Kubernetes cluster can access my running local code without any changes, as shown below:
 
-![](../../_media/guide/local-dev-02.png)
+![](../../media/guide/local-dev-02.png)
 
 To achieve the two local joint adjustment methods just mentioned, we mainly need to solve the following three problems.：
 

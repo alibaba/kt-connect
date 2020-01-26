@@ -5,7 +5,7 @@ Dashboard
 
 KT Connect 提供了一个可视化控制台用于查看和管理测试环境的整体状态。如下所示：
 
-![](../../_media/guide/kt-dashboard.png)
+![](../../media/guide/kt-dashboard.png)
 
 目前Dashboard提供的主要功能包括：
 

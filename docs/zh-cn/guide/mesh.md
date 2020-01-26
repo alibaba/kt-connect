@@ -9,7 +9,7 @@ Mesh： 基于服务网格的开发测试
 
 `Mesh`与`Exchange`的功能类似，差别在于Exchange会完全替换原有的应用实例，而Mesh则是在原有实例的基础上创建一个新的版本，从而支持用户可以基于Service Mesh的能力做更多自定义的流量规则定义。从而实现团队成员在一套公共开发测试环境上完成本地的联调测试。
 
-![logo](../../_media/logo-large.png)
+![logo](../../media/logo-large.png)
 
 ## 最佳实践示例：
 
@@ -155,7 +155,7 @@ export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -
 
 通过域名`http://tomcat.mesh.com`访问实例应用:
 
-![](../../_media/guide/demo-tomcat-7.png)
+![](../../media/guide/demo-tomcat-7.png)
 
 ### Mesh添加本地访问端点
 
@@ -231,12 +231,12 @@ spec:
 
 此时，如果通过Firefox浏览器访问服务，则可以访问到本地Tomcat:8实例:
 
-![](../../_media/guide/demo-tomcat-8.png)
+![](../../media/guide/demo-tomcat-8.png)
 
 而通过非Firefox浏览器访问应用则能正常访问到原有的Tomcat:7应用。
 
-![](../../_media/guide/demo-tomcat-7.png)
+![](../../media/guide/demo-tomcat-7.png)
 
 备注：user-agent的可以通过Firefox的浏览器开发工具查看，如下所示：
 
-![](../../_media/guide/demo-user-agent.png)
+![](../../media/guide/demo-user-agent.png)
