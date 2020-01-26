@@ -166,7 +166,7 @@ GOARCH=amd64 GOOS=linux go build -o bin/proxy cmd/shadow/main.go
 
 ## Ask For Help
 
-Please contact me with DingTalk:
+Please contact us with DingTalk:
 
 ![image](./docs/media/dingtalk-group.png)
 
@@ -180,6 +180,8 @@ Please contact me with DingTalk:
 * Make sure shadow is clean up after command exit
 
 ### 0.0.8
+
+> Release At 2019-12-13
 
 * Add windows native support
 * Add idea support
