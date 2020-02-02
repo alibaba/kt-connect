@@ -22,8 +22,7 @@ type Action struct {
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		err = fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
-		panic(err)
+		return fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
 	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
 	if err != nil {
@@ -72,28 +71,27 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
+	err = factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
 	return
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
+func (action *Action) Exchange(swap string, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.ExchangeOptions.Expose
 
 	if swap == "" || expose == "" {
-		err := fmt.Errorf("-expose is required")
-		panic(err.Error())
+		return fmt.Errorf("-expose is required")
 	}
 
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	origin, err := clientset.AppsV1().Deployments(options.Namespace).Get(swap, metav1.GetOptions{})
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	replicas := origin.Spec.Replicas
@@ -104,31 +102,26 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) {
 
 	factory := connect.Connect{}
 	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
-	if err != nil {
-		panic(err.Error())
-	}
+	return err
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(swap string, options *options.DaemonOptions) {
+func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.MeshOptions.Expose
 
 	if swap == "" || expose == "" {
-		err := fmt.Errorf("-expose is required")
-		panic(err.Error())
+		return fmt.Errorf("-expose is required")
 	}
 
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
-		panic(err.Error())
+		return err
 	}
 
 	factory := connect.Connect{}
 	_, err = factory.Mesh(swap, options, clientset, util.String2Map(options.Labels))
-	if err != nil {
-		panic(err.Error())
-	}
+	return err
 }
 
 // checkConnectRunning check connect is running and print help msg

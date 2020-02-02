@@ -31,8 +31,9 @@ func main() {
 	ch := command.SetUpCloseHandler(options)
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Info().Msg(err.Error())
+		log.Error().Msg(err.Error())
 		command.CleanupWorkspace(options)
+		os.Exit(-1)
 	}
 
 	if util.IsHelpCommand(os.Args) {
