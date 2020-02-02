@@ -16,7 +16,7 @@ import (
 func (c *Connect) Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
 	workload, podIP, podName, err := c.createMeshShadown(swap, clientset, labels, options.Namespace, options.Image)
 	if err != nil {
-		panic(err.Error())
+		return
 	}
 	options.RuntimeOptions.Shadow = workload
 	err = remotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)

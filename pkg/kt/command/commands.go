@@ -76,8 +76,7 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			action := Action{}
-			action.Connect(options)
-			return nil
+			return action.Connect(options)
 		},
 	}
 }
@@ -100,8 +99,7 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 			}
 
 			action := Action{}
-			action.Exchange(c.Args().First(), options)
-			return nil
+			return action.Exchange(c.Args().First(), options)
 		},
 	}
 }
