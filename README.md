@@ -24,47 +24,57 @@ You can download and install the ktctl from [Downloads And Install](https://rdc-
 
 ```
 $ kubectl run tomcat --image=tomcat:9 --expose --port=8080
-kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
-service/tomcat created
-deployment.apps/tomcat created
+service "tomcat" created
+deployment.apps "tomcat" created
 
 # Deployment info
 $ kubectl get deployments -o wide --selector run=tomcat
-NAME     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES     SELECTOR
-tomcat   1         1         1            1           12m   tomcat       tomcat:9   run=tomcat
+NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE       CONTAINERS   IMAGES     SELECTOR
+tomcat    1         1         1            1           47s       tomcat       tomcat:9   run=tomcat
 
 # Pods info
 $ kubectl get pods -o wide --selector run=tomcat
-NAME                     READY   STATUS        RESTARTS   AGE   IP             NODE                                NOMINATED NODE
-tomcat-cc7648444-r9tw4   1/1     Running       0          2m    172.16.0.147   cn-beijing.i-2ze11lz4lijf1pmecnwp   <none>
+NAME                      READY     STATUS    RESTARTS   AGE       IP             NODE
+tomcat-5b75798b56-228r4   1/1       Running   0          1m        172.23.2.231   cn-beijing.192.168.0.8
 
 # Service info
 $ kubectl get svc tomcat
-NAME     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
-tomcat   ClusterIP   172.19.143.139   <none>        8080/TCP   4m
+NAME      TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+tomcat    ClusterIP   172.21.14.57   <none>        8080/TCP   1m
 ```
 
 ### Connect: Access Kubernetes resource from local
 
 ```
 $ sudo ktctl connect
-2019/06/19 11:11:07 Deploying proxy deployment kt-connect-daemon in namespace default
-2019/06/19 11:11:07 Pod status is Pending
-2019/06/19 11:11:09 Pod status is Running
-2019/06/19 11:11:09 Success deploy proxy deployment kt-connect-daemon in namespace default
-2019/06/19 11:11:18 KT proxy start successful
+11:48PM INF Connect Start At 27758
+11:48PM INF Client address 192.168.3.120
+11:48PM INF Deploying shadow deployment kt-connect-daemon-uhojp in namespace default
+
+11:48PM INF Shadow Pod status is Pending
+11:48PM INF Shadow Pod status is Running
+11:48PM INF Shadow is ready.
+11:48PM INF Success deploy proxy deployment kt-connect-daemon-uhojp in namespace default
+
+Forwarding from 127.0.0.1:2222 -> 22
+Forwarding from [::1]:2222 -> 22
+Handling connection for 2222
+Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts.
+client: Connected.
 ```
 
 Access PodIP:
 
 ```
-curl http://172.16.0.147:8080 
+curl http://172.23.2.231:8080
+<!doctype html><html lang="en"><head><title>HTTP Status 404 – Not Found</title><style type="text/css">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 404 – Not Found</h1><hr class="line" /><p><b>Type</b> Status Report</p><p><b>Message</b> Not found</p><p><b>Description</b> The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.</p><hr class="line" /><h3>Apache Tomcat/9.0.31</h3></body></html>
 ```
 
 Access ClusterIP:
 
 ```
-$ curl http://172.19.143.139:8080
+$ curl http://172.21.14.57:8080
+<!doctype html><html lang="en"><head><title>HTTP Status 404 – Not Found</title><style type="text/css">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 404 – Not Found</h1><hr class="line" /><p><b>Type</b> Status Report</p><p><b>Message</b> Not found</p><p><b>Description</b> The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.</p><hr class="line" /><h3>Apache Tomcat/9.0.31</h3></body></html>
 ```
 
 Access Server internal DNS address
