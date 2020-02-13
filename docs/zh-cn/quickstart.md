@@ -12,7 +12,7 @@ deployment.apps/tomcat created
 
 $ kubectl get deployments -o wide --selector run=tomcat
 NAME     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES     SELECTOR
-tomcat   1         1         1            1           12m   tomcat       tomcat:7   run=tomcat
+tomcat   1         1         1            1           12m   tomcat       tomcat:9   run=tomcat
 
 $ kubectl get pods -o wide --selector run=tomcat
 NAME                     READY   STATUS        RESTARTS   AGE   IP             NODE                                NOMINATED NODE
@@ -110,7 +110,7 @@ SSH Remote port-forward for POD starting
 2019/06/19 11:19:14 ssh remote port-forward start at pid: 3567
 ```
 
-在本地或者集群中访问原本指向Tomcat:7的应用，查看输出结果：
+在本地或者集群中访问原本指向Tomcat:9的应用，查看输出结果：
 
 > 注意如果未运行`ktctl connect`,只能从集群内访问
 

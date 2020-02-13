@@ -31,7 +31,7 @@ deployment.apps/tomcat created
 # Deployment info
 $ kubectl get deployments -o wide --selector run=tomcat
 NAME     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES     SELECTOR
-tomcat   1         1         1            1           12m   tomcat       tomcat:7   run=tomcat
+tomcat   1         1         1            1           12m   tomcat       tomcat:9   run=tomcat
 
 # Pods info
 $ kubectl get pods -o wide --selector run=tomcat
