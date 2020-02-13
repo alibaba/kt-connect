@@ -1,11 +1,11 @@
 # 快速开始
 
-这里，我们通过一个简单的示例，来体验KT的主要能力。 这里我们会在集群中部署一个Tomcat:7的镜像，并且通过KT直接在本地访问该服务，同时也可以将集群中所有原本对该应用的请求转发到本地。
+这里，我们通过一个简单的示例，来体验KT的主要能力。 这里我们会在集群中部署一个Tomcat:9的镜像，并且通过KT直接在本地访问该服务，同时也可以将集群中所有原本对该应用的请求转发到本地。
 
 ## 部署实例应用
 
 ``` shell
-$ kubectl run tomcat --image=tomcat:7 --expose --port=8080
+$ kubectl run tomcat --image=tomcat:9 --expose --port=8080
 kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
 service/tomcat created
 deployment.apps/tomcat created
