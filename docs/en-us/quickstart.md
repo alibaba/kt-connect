@@ -1,11 +1,11 @@
 # Quick Start Guide
 
-In this chapter, we will deployment a sample app(tomcat:7) in Kubernetes cluster. With Kt to access the app from user labtop or exchange the request to user labtop.
+In this chapter, we will deployment a sample app(tomcat:9) in Kubernetes cluster. With Kt to access the app from user labtop or exchange the request to user labtop.
 
 ## Create a Demo APP in Cluster
 
 ``` shell
-$ kubectl run tomcat --image=tomcat:7 --expose --port=8080
+$ kubectl run tomcat --image=tomcat:9 --expose --port=8080
 kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
 service/tomcat created
 deployment.apps/tomcat created
@@ -13,7 +13,7 @@ deployment.apps/tomcat created
 # Deployment info
 $ kubectl get deployments -o wide --selector run=tomcat
 NAME     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS   IMAGES     SELECTOR
-tomcat   1         1         1            1           12m   tomcat       tomcat:7   run=tomcat
+tomcat   1         1         1            1           12m   tomcat       tomcat:9   run=tomcat
 
 # Pods info
 $ kubectl get pods -o wide --selector run=tomcat

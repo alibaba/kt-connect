@@ -23,7 +23,7 @@ You can download and install the ktctl from [Downloads And Install](https://rdc-
 ### Deploy a service in Kubernetes
 
 ```
-$ kubectl run tomcat --image=tomcat:7 --expose --port=8080
+$ kubectl run tomcat --image=tomcat:9 --expose --port=8080
 kubectl run --generator=deployment/apps.v1 is DEPRECATED and will be removed in a future version. Use kubectl run --generator=run-pod/v1 or kubectl create instead.
 service/tomcat created
 deployment.apps/tomcat created
