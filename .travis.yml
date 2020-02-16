@@ -50,6 +50,8 @@ deploy:
     - artifacts/ktctl/ktctl_darwin_amd64.tar.gz
     - artifacts/ktctl/ktctl_linux_386.tar.gz
     - artifacts/ktctl/ktctl_darwin_386.tar.gz
+    - artifacts/ktctl/ktctl_windows_386.tar.gz
+    - artifacts/ktctl/ktctl_windows_amd64.tar.gz
   skip_cleanup: true
   draft: true
   on:
