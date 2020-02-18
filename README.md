@@ -23,64 +23,66 @@ You can download and install the ktctl from [Downloads And Install](https://rdc-
 ### Deploy a service in Kubernetes
 
 ```
-$ kubectl run tomcat --image=tomcat:9 --expose --port=8080
+$ ubectl run tomcat --image=registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0 --expose --port=8080
 service "tomcat" created
 deployment.apps "tomcat" created
 
 # Deployment info
 $ kubectl get deployments -o wide --selector run=tomcat
-NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE       CONTAINERS   IMAGES     SELECTOR
-tomcat    1         1         1            1           47s       tomcat       tomcat:9   run=tomcat
+NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE       CONTAINERS   IMAGES                                                                 SELECTOR
+tomcat    1         1         1            1           18s       tomcat       registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0   run=tomcat
 
 # Pods info
 $ kubectl get pods -o wide --selector run=tomcat
 NAME                      READY     STATUS    RESTARTS   AGE       IP             NODE
-tomcat-5b75798b56-228r4   1/1       Running   0          1m        172.23.2.231   cn-beijing.192.168.0.8
+tomcat-54d87b848c-2mc9b   1/1       Running   0          1m        172.23.2.234   cn-beijing.192.168.0.8
 
 # Service info
 $ kubectl get svc tomcat
-NAME      TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
-tomcat    ClusterIP   172.21.14.57   <none>        8080/TCP   1m
+NAME      TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+tomcat    ClusterIP   172.21.6.39   <none>        8080/TCP   1m
 ```
 
 ### Connect: Access Kubernetes resource from local
 
 ```
-$ sudo ktctl connect
-11:48PM INF Connect Start At 27758
-11:48PM INF Client address 192.168.3.120
-11:48PM INF Deploying shadow deployment kt-connect-daemon-uhojp in namespace default
+$ sudo ktctl connect --method=vpn
+10:44PM INF Connect Start At 80073
+10:44PM INF Client address 192.168.3.120
+10:44PM INF Deploying shadow deployment kt-connect-daemon-rarba in namespace default
 
-11:48PM INF Shadow Pod status is Pending
-11:48PM INF Shadow Pod status is Running
-11:48PM INF Shadow is ready.
-11:48PM INF Success deploy proxy deployment kt-connect-daemon-uhojp in namespace default
+10:44PM INF Shadow Pod status is Pending
+10:44PM INF Shadow Pod status is Running
+10:44PM INF Shadow is ready.
+10:44PM INF Success deploy proxy deployment kt-connect-daemon-rarba in namespace default
 
 Forwarding from 127.0.0.1:2222 -> 22
 Forwarding from [::1]:2222 -> 22
 Handling connection for 2222
 Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts.
 client: Connected.
+10:44PM INF KT proxy start successful
 ```
 
 Access PodIP:
 
 ```
-curl http://172.23.2.231:8080
-<!doctype html><html lang="en"><head><title>HTTP Status 404 – Not Found</title><style type="text/css">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 404 – Not Found</h1><hr class="line" /><p><b>Type</b> Status Report</p><p><b>Message</b> Not found</p><p><b>Description</b> The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.</p><hr class="line" /><h3>Apache Tomcat/9.0.31</h3></body></html>
+curl http://172.23.2.234:8080 #Access PodIP from local
+kt-connect demo from tomcat9
 ```
 
 Access ClusterIP:
 
 ```
-$ curl http://172.21.14.57:8080
-<!doctype html><html lang="en"><head><title>HTTP Status 404 – Not Found</title><style type="text/css">body {font-family:Tahoma,Arial,sans-serif;} h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} a {color:black;} .line {height:1px;background-color:#525D76;border:none;}</style></head><body><h1>HTTP Status 404 – Not Found</h1><hr class="line" /><p><b>Type</b> Status Report</p><p><b>Message</b> Not found</p><p><b>Description</b> The origin server did not find a current representation for the target resource or is not willing to disclose that one exists.</p><hr class="line" /><h3>Apache Tomcat/9.0.31</h3></body></html>
+$ curl http://172.21.6.39:8080 #Access ClusterIP
+kt-connect demo from tomcat9
 ```
 
 Access Server internal DNS address
 
 ```
-$ curl http://tomcat:8080
+$ curl http://tomcat:8080 #Access Server internal DNS address
+kt-connect demo from tomcat9
 ```
 
 ### Exchange: Access local from cluster
