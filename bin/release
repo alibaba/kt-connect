@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e 
 RELEASE_VERSION=$1
+RELEASE_VERSION=${RELEASE_VERSION:-0.0.1}
 RELEASE_BRANCH=release-$RELEASE_VERSION
 
 echo "Release Version: $RELEASE_VERSION"
