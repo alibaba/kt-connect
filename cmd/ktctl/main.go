@@ -5,7 +5,6 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -28,7 +27,7 @@ func main() {
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
 	app.Commands = command.NewCommands(options)
-	ch := command.SetUpCloseHandler(options)
+
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error().Msg(err.Error())
@@ -36,10 +35,4 @@ func main() {
 		os.Exit(-1)
 	}
 
-	if util.IsHelpCommand(os.Args) {
-		return
-	}
-
-	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
 }

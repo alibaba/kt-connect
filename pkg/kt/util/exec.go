@@ -35,6 +35,11 @@ func SSHDynamicPortForward(remoteHost string, remoteSSHPort int, proxyPort int) 
 	)
 }
 
+// KubectlVersion kubectl version
+func KubectlVersion(kubeConifg string) *exec.Cmd {
+	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "version", "--short", "port-forward")
+}
+
 // PortForward kubectl port forward
 func PortForward(kubeConifg string, namespace string, resource string, remotePort int) *exec.Cmd {
 	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "-n", namespace, "port-forward", resource, fmt.Sprintf("%d", remotePort)+":22")

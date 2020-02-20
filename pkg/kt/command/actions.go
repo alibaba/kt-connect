@@ -24,6 +24,9 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
 		return fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
+
+	ch := SetUpCloseHandler(options)
+
 	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
 	if err != nil {
 		return
@@ -72,11 +75,19 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	}
 
 	err = factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
+	if err != nil {
+		return
+	}
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
 	return
 }
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(swap string, options *options.DaemonOptions) error {
+	ch := SetUpCloseHandler(options)
+
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 	expose := options.ExchangeOptions.Expose
 
@@ -102,12 +113,22 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) erro
 
 	factory := connect.Connect{}
 	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
-	return err
+	if err != nil {
+		return err
+	}
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+
+	return nil
 }
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
+
+	ch := SetUpCloseHandler(options)
+
 	expose := options.MeshOptions.Expose
 
 	if swap == "" || expose == "" {
@@ -121,7 +142,25 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 
 	factory := connect.Connect{}
 	_, err = factory.Mesh(swap, options, clientset, util.String2Map(options.Labels))
-	return err
+
+	if err != nil {
+		return err
+	}
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+
+	return nil
+}
+
+func (action *Action) Check(options *options.DaemonOptions) error {
+	command := util.KubectlVersion(options.KubeConfig)
+	log.Info().Msg("kubectl version")
+	err := util.BackgroundRun(command, "kubectl version", true)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // checkConnectRunning check connect is running and print help msg
