@@ -100,16 +100,6 @@ func WritePidFile(pidFile string) (pid int, err error) {
 	return
 }
 
-// IsHelpCommand IsHelpCommand
-func IsHelpCommand(args []string) bool {
-	for _, arg := range args {
-		if arg == "-h" || arg == "--help" {
-			return true
-		}
-	}
-	return false
-}
-
 // IsWindows check runtime is windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"

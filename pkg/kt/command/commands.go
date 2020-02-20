@@ -127,9 +127,25 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 	}
 }
 
+// NewCheckCommand return new check command
+func NewCheckCommand(options *options.DaemonOptions) cli.Command {
+	return cli.Command{
+		Name:  "check",
+		Usage: "check local dependency for ktctl",
+		Action: func(c *cli.Context) error {
+			if options.Debug {
+				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			}
+			action := Action{}
+			return action.Check(options)
+		},
+	}
+}
+
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
+		NewCheckCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
