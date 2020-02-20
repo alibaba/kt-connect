@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e 
 RELEASE_VERSION=$1
 RELEASE_BRANCH=release-$RELEASE_VERSION
 
