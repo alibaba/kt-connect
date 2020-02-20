@@ -1,0 +1,15 @@
+#!/bin/bash
+RELEASE_VERSION=$1
+RELEASE_BRANCH=release-$RELEASE_VERSION
+
+echo "Release Version: $RELEASE_VERSION"
+echo "Checkout to release branch $RELEASE_BRANCH"
+
+git checkout -b $RELEASE_BRANCH
+sed "s/master/$RELEASE_VERSION/g" cmd/ktctl/main.go
+git add .
+git commit -m "update Ktctl version to $RELEASE_VERSION"
+git tag $RELEASE_VERSION
+
+git checkout master
+git branch -d $RELEASE_BRANCH
