@@ -6,7 +6,8 @@ echo "Release Version: $RELEASE_VERSION"
 echo "Checkout to release branch $RELEASE_BRANCH"
 
 git checkout -b $RELEASE_BRANCH
-sed -i "s/master/$RELEASE_VERSION/g" cmd/ktctl/main.go
+sed -i '' "s/master/$RELEASE_VERSION/g" cmd/ktctl/main.go
+
 git add .
 git commit -m "update Ktctl version to $RELEASE_VERSION"
 git tag $RELEASE_VERSION
