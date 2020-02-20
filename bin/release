@@ -12,6 +12,8 @@ sed -i '' "s/master/$RELEASE_VERSION/g" cmd/ktctl/main.go
 git add .
 git commit -m "update Ktctl version to $RELEASE_VERSION"
 git tag $RELEASE_VERSION
+git push origin $RELEASE_VERSION
 
 git checkout master
 git branch -D $RELEASE_BRANCH
+git tag -d $RELEASE_VERSION
