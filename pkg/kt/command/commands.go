@@ -137,8 +137,7 @@ func NewCheckCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			action := Action{}
-			action.Check(options)
-			return nil
+			return action.Check(options)
 		},
 	}
 }
@@ -146,10 +145,10 @@ func NewCheckCommand(options *options.DaemonOptions) cli.Command {
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
+		NewCheckCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
-		NewCheckCommand(options),
 	}
 }
 

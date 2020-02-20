@@ -2,9 +2,9 @@ package command
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/rs/zerolog/log"
+	"runtime"
+	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
@@ -154,12 +154,32 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 }
 
 func (action *Action) Check(options *options.DaemonOptions) error {
-	command := util.KubectlVersion(options.KubeConfig)
-	log.Info().Msg("kubectl version")
-	err := util.BackgroundRun(command, "kubectl version", true)
+	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
+
+	log.Info().Msg("checking ssh version")
+	command := util.SSHVersion()
+	err := util.BackgroundRun(command, "ssh version", true)
 	if err != nil {
+		log.Error().Msg("ssh is missing, please make sure command ssh is work right at your local first")
 		return err
 	}
+
+	log.Info().Msg("checking kubectl version")
+	command = util.KubectlVersion(options.KubeConfig)
+	err = util.BackgroundRun(command, "kubectl version", true)
+	if err != nil {
+		log.Error().Msg("kubectl is missing, please make sure kubectl is working right at your local first")
+		return err
+	}
+
+	log.Info().Msg("checking sshuttle version")
+	command = util.SSHUttleVersion()
+	err1 := util.BackgroundRun(command, "sshuttle version", true)
+	if err1 != nil {
+		log.Warn().Msg("sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode")
+	}
+
+	log.Info().Msg("KT Connect is ready, enjoy it!")
 	return nil
 }
 
