@@ -1,15 +1,32 @@
 package util
 
 import (
-	"bytes"
 	"fmt"
-	"io"
-	"os"
 	"os/exec"
-	"time"
-
-	"github.com/rs/zerolog/log"
 )
+
+// ApplyDashboardToCluster Apply Dashboard to cluster
+func ApplyDashboardToCluster() *exec.Cmd {
+	return exec.Command(
+		"kubectl",
+		"-n",
+		"kube-system",
+		"apply",
+		"-f",
+		"https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/deploy/manifest/all-in-one.yaml")
+}
+
+//PortForwardDashboardToLocal forward dashboardto local
+func PortForwardDashboardToLocal(port string) *exec.Cmd {
+	return exec.Command(
+		"kubectl",
+		"-n",
+		"kube-system",
+		"port-forward",
+		"service/kt-dashboard",
+		port+":80",
+	)
+}
 
 // SSHRemotePortForward ssh remote port forward
 func SSHRemotePortForward(localPort string, remoteHost string, remotePort string, remoteSSHPort int) *exec.Cmd {
@@ -70,40 +87,4 @@ func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bo
 	args = append(args, "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
 	args = append(args, cidrs...)
 	return exec.Command("sshuttle", args...)
-}
-
-// BackgroundRun run cmd in background
-func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
-
-	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
-	log.Debug().Msgf("Child, cmd.Args = %+v", cmd.Args)
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	stdoutIn, _ := cmd.StdoutPipe()
-	stderrIn, _ := cmd.StderrPipe()
-	var errStdout, errStderr error
-	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
-	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
-	go func() {
-		_, errStdout = io.Copy(stdout, stdoutIn)
-	}()
-	go func() {
-		_, errStderr = io.Copy(stderr, stderrIn)
-	}()
-
-	err = cmd.Start()
-
-	if err != nil {
-		return
-	}
-
-	go func() {
-		err = cmd.Wait()
-		log.Printf("%s exited", name)
-	}()
-
-	time.Sleep(time.Duration(2) * time.Second)
-	pid := cmd.Process.Pid
-	log.Printf("%s start at pid: %d", name, pid)
-	return
 }

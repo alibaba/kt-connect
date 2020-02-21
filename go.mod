@@ -17,6 +17,7 @@ require (
 	github.com/manucorporat/stats v0.0.0-20180402194714-3ba42d56d227 // indirect
 	github.com/miekg/dns v0.0.0-20190106042521-5beb9624161b
 	github.com/rs/zerolog v0.0.0-20190704061603-77a169535877
+	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/thinkerou/favicon v0.1.0 // indirect
 	github.com/urfave/cli v0.0.0-20190203184040-693af58b4d51
 	golang.org/x/lint v0.0.0-20181011164241-5906bd5c48cd // indirect

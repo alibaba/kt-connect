@@ -127,8 +127,48 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 	}
 }
 
+// newDashboardCommand dashboard command
+func newDashboardCommand(options *options.DaemonOptions) cli.Command {
+	return cli.Command{
+		Name:  "dashboard",
+		Usage: "kt-connect dashboard",
+		Subcommands: []cli.Command{
+			{
+				Name:  "init",
+				Usage: "install/update dashboard to cluster",
+				Action: func(c *cli.Context) error {
+					if options.Debug {
+						zerolog.SetGlobalLevel(zerolog.DebugLevel)
+					}
+					action := Action{}
+					return action.ApplyDashboard()
+				},
+			},
+			{
+				Name:  "open",
+				Usage: "open dashboard",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:        "port,p",
+						Value:       "8080",
+						Usage:       "port-forward kt dashboard to port",
+						Destination: &options.DashboardOptions.Port,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					if options.Debug {
+						zerolog.SetGlobalLevel(zerolog.DebugLevel)
+					}
+					action := Action{}
+					return action.OpenDashboard(options)
+				},
+			},
+		},
+	}
+}
+
 // NewCheckCommand return new check command
-func NewCheckCommand(options *options.DaemonOptions) cli.Command {
+func newCheckCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",
@@ -145,10 +185,11 @@ func NewCheckCommand(options *options.DaemonOptions) cli.Command {
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
-		NewCheckCommand(options),
+		newDashboardCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
+		newCheckCommand(options),
 	}
 }
 
@@ -182,6 +223,13 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.Labels,
 		},
 	}
+}
+
+// SetUpWaitingChannel registry waiting channel
+func SetUpWaitingChannel() (ch chan os.Signal) {
+	ch = make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	return
 }
 
 // SetUpCloseHandler registry close handeler

@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/skratchdot/open-golang/open"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -153,6 +155,32 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	return nil
 }
 
+func (action *Action) ApplyDashboard() (err error) {
+	command := util.ApplyDashboardToCluster()
+	log.Info().Msg("Install/Upgrade Dashboard to cluster")
+	err = util.RunAndWait(command, "apply kt dashboard", true)
+	if err != nil {
+		log.Error().Msg("Fail to apply dashboard, please check the log")
+		return
+	}
+	return
+}
+
+func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
+	ch := SetUpWaitingChannel()
+	command := util.PortForwardDashboardToLocal(options.DashboardOptions.Port)
+	err = util.BackgroundRun(command, "forward dashboard to localhost", true)
+	if err != nil {
+		return
+	}
+	err = open.Run("http://127.0.0.1:" + options.DashboardOptions.Port)
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+	return
+}
+
+// Check check local denpendency for kt connect
 func (action *Action) Check(options *options.DaemonOptions) error {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
