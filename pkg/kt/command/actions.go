@@ -6,6 +6,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/skratchdot/open-golang/open"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -153,8 +155,9 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	return nil
 }
 
-func (action *Action) OpenDashboard(options *options.DaemonOptions) error {
-	return nil
+func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
+	err = open.Run("https://google.com/")
+	return
 }
 
 // Check check local denpendency for kt connect
