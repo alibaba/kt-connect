@@ -38,6 +38,7 @@ type runtimeOptions struct {
 
 type dashboardOptions struct {
 	Install bool
+	Port    string
 }
 
 // DaemonOptions cli options

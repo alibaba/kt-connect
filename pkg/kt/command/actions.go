@@ -156,7 +156,9 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 }
 
 func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
-	err = open.Run("https://google.com/")
+	// kubectl -n kube-system apply -f all-in-one.yaml
+	// kubectl -n kube-system port-forward service/kt-dashboard :80
+	err = open.Run("http://127.0.0.1:" + options.DashboardOptions.Port)
 	return
 }
 

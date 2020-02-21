@@ -138,6 +138,12 @@ func newDashboardCommand(options *options.DaemonOptions) cli.Command {
 				Usage:       "install or upgrade dashboard in kubernetes",
 				Destination: &options.DashboardOptions.Install,
 			},
+			cli.StringFlag{
+				Name:        "port,p",
+				Value:       "8080",
+				Usage:       "port-forward kt dashboard to port",
+				Destination: &options.DashboardOptions.Port,
+			},
 		},
 		Action: func(c *cli.Context) error {
 			if options.Debug {
