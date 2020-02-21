@@ -153,6 +153,11 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	return nil
 }
 
+func (action *Action) OpenDashboard(options *options.DaemonOptions) error {
+	return nil
+}
+
+// Check check local denpendency for kt connect
 func (action *Action) Check(options *options.DaemonOptions) error {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 

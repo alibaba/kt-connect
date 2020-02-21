@@ -36,17 +36,22 @@ type runtimeOptions struct {
 	Replicas int32
 }
 
+type dashboardOptions struct {
+	Install bool
+}
+
 // DaemonOptions cli options
 type DaemonOptions struct {
-	KubeConfig      string
-	Namespace       string
-	Debug           bool
-	Image           string
-	Labels          string
-	RuntimeOptions  *runtimeOptions
-	ConnectOptions  *connectOptions
-	ExchangeOptions *exchangeOptions
-	MeshOptions     *meshOptions
+	KubeConfig       string
+	Namespace        string
+	Debug            bool
+	Image            string
+	Labels           string
+	RuntimeOptions   *runtimeOptions
+	ConnectOptions   *connectOptions
+	ExchangeOptions  *exchangeOptions
+	MeshOptions      *meshOptions
+	DashboardOptions *dashboardOptions
 }
 
 // NewDaemonOptions return new cli default options
@@ -61,8 +66,9 @@ func NewDaemonOptions() *DaemonOptions {
 			AppHome:  appHome,
 			PidFile:  pidFile,
 		},
-		ConnectOptions:  &connectOptions{},
-		ExchangeOptions: &exchangeOptions{},
-		MeshOptions:     &meshOptions{},
+		ConnectOptions:   &connectOptions{},
+		ExchangeOptions:  &exchangeOptions{},
+		MeshOptions:      &meshOptions{},
+		DashboardOptions: &dashboardOptions{},
 	}
 }

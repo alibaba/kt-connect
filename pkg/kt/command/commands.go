@@ -127,8 +127,30 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 	}
 }
 
+// newDashboardCommand dashboard command
+func newDashboardCommand(options *options.DaemonOptions) cli.Command {
+	return cli.Command{
+		Name:  "dashboard",
+		Usage: "open kt connect dashboard",
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:        "install,i",
+				Usage:       "install or upgrade dashboard in kubernetes",
+				Destination: &options.DashboardOptions.Install,
+			},
+		},
+		Action: func(c *cli.Context) error {
+			if options.Debug {
+				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			}
+			action := Action{}
+			return action.OpenDashboard(options)
+		},
+	}
+}
+
 // NewCheckCommand return new check command
-func NewCheckCommand(options *options.DaemonOptions) cli.Command {
+func newCheckCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",
@@ -145,10 +167,11 @@ func NewCheckCommand(options *options.DaemonOptions) cli.Command {
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
-		NewCheckCommand(options),
+		newDashboardCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
+		newCheckCommand(options),
 	}
 }
 
