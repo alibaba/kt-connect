@@ -13,7 +13,7 @@ func ApplyDashboardToCluster() *exec.Cmd {
 		"kube-system",
 		"apply",
 		"-f",
-		"https://github.com/alibaba/kt-connect/raw/feature/cli-dashboard/docs/deploy/manifest/all-in-one.yaml")
+		"https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/deploy/manifest/all-in-one.yaml")
 }
 
 //PortForwardDashboardToLocal forward dashboardto local
