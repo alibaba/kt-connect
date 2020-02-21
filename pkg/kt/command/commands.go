@@ -131,26 +131,38 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 func newDashboardCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "dashboard",
-		Usage: "open kt connect dashboard",
-		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:        "install,i",
-				Usage:       "install or upgrade dashboard in kubernetes",
-				Destination: &options.DashboardOptions.Install,
+		Usage: "kt-connect dashboard",
+		Subcommands: []cli.Command{
+			{
+				Name:  "init",
+				Usage: "install/update dashboard to cluster",
+				Action: func(c *cli.Context) error {
+					if options.Debug {
+						zerolog.SetGlobalLevel(zerolog.DebugLevel)
+					}
+					action := Action{}
+					return action.ApplyDashboard()
+				},
 			},
-			cli.StringFlag{
-				Name:        "port,p",
-				Value:       "8080",
-				Usage:       "port-forward kt dashboard to port",
-				Destination: &options.DashboardOptions.Port,
+			{
+				Name:  "open",
+				Usage: "open dashboard",
+				Flags: []cli.Flag{
+					cli.StringFlag{
+						Name:        "port,p",
+						Value:       "8080",
+						Usage:       "port-forward kt dashboard to port",
+						Destination: &options.DashboardOptions.Port,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					if options.Debug {
+						zerolog.SetGlobalLevel(zerolog.DebugLevel)
+					}
+					action := Action{}
+					return action.OpenDashboard(options)
+				},
 			},
-		},
-		Action: func(c *cli.Context) error {
-			if options.Debug {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
-			}
-			action := Action{}
-			return action.OpenDashboard(options)
 		},
 	}
 }
@@ -211,6 +223,13 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.Labels,
 		},
 	}
+}
+
+// SetUpWaitingChannel registry waiting channel
+func SetUpWaitingChannel() (ch chan os.Signal) {
+	ch = make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	return
 }
 
 // SetUpCloseHandler registry close handeler

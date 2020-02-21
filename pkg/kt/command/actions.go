@@ -155,10 +155,28 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	return nil
 }
 
+func (action *Action) ApplyDashboard() (err error) {
+	command := util.ApplyDashboardToCluster()
+	log.Info().Msg("Install/Upgrade Dashboard to cluster")
+	err = util.RunAndWait(command, "apply kt dashboard", true)
+	if err != nil {
+		log.Error().Msg("Fail to apply dashboard, please check the log")
+		return
+	}
+	return
+}
+
 func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
-	// kubectl -n kube-system apply -f all-in-one.yaml
-	// kubectl -n kube-system port-forward service/kt-dashboard :80
+	ch := SetUpWaitingChannel()
+	command := util.PortForwardDashboardToLocal(options.DashboardOptions.Port)
+	err = util.BackgroundRun(command, "forward dashboard to localhost", true)
+	if err != nil {
+		return
+	}
 	err = open.Run("http://127.0.0.1:" + options.DashboardOptions.Port)
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
 	return
 }
 
