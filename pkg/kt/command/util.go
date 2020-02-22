@@ -80,3 +80,13 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		log.Info().Msgf("- Successful Clean Shadow %s", options.RuntimeOptions.Shadow)
 	}
 }
+
+// checkConnectRunning check connect is running and print help msg
+func checkConnectRunning(pidFile string) {
+	daemonRunning := util.IsDaemonRunning(pidFile)
+	if !daemonRunning {
+		log.Info().Msgf("'KT Connect' not runing, you can only access local app from cluster")
+	} else {
+		log.Info().Msgf("'KT Connect' is runing, you can access local app from cluster and localhost")
+	}
+}

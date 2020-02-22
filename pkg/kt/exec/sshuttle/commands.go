@@ -8,7 +8,7 @@ import (
 
 // SSHUttleVersion check sshuttle version
 func SSHUttleVersion() *exec.Cmd {
-	return exec.Command("sshutle", "--version")
+	return exec.Command("sshuttle", "--version")
 }
 
 // SSHUttle ssh-baed vpn connect

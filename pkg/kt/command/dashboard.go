@@ -1,6 +1,10 @@
 package command
 
 import (
+	"github.com/rs/zerolog/log"
+	"github.com/skratchdot/open-golang/open"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli"
@@ -44,4 +48,30 @@ func newDashboardCommand(options *options.DaemonOptions) cli.Command {
 			},
 		},
 	}
+}
+
+
+func (action *Action) ApplyDashboard() (err error) {
+	command := kubectl.ApplyDashboardToCluster()
+	log.Info().Msg("Install/Upgrade Dashboard to cluster")
+	err = exec.RunAndWait(command, "apply kt dashboard", true)
+	if err != nil {
+		log.Error().Msg("Fail to apply dashboard, please check the log")
+		return
+	}
+	return
+}
+
+func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
+	ch := SetUpWaitingChannel()
+	command := kubectl.PortForwardDashboardToLocal(options.DashboardOptions.Port)
+	err = exec.BackgroundRun(command, "forward dashboard to localhost", true)
+	if err != nil {
+		return
+	}
+	err = open.Run("http://127.0.0.1:" + options.DashboardOptions.Port)
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+	return
 }

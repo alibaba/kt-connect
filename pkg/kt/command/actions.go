@@ -3,27 +3,15 @@ package command
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
-	"runtime"
 	"strings"
-
-	"github.com/skratchdot/open-golang/open"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// Action cmd action
-type Action struct {
-	Options *options.DaemonOptions
-}
 
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(options *options.DaemonOptions) (err error) {
@@ -157,70 +145,4 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	log.Info().Msgf("Terminal Signal is %s", s)
 
 	return nil
-}
-
-func (action *Action) ApplyDashboard() (err error) {
-	command := kubectl.ApplyDashboardToCluster()
-	log.Info().Msg("Install/Upgrade Dashboard to cluster")
-	err = exec.RunAndWait(command, "apply kt dashboard", true)
-	if err != nil {
-		log.Error().Msg("Fail to apply dashboard, please check the log")
-		return
-	}
-	return
-}
-
-func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
-	ch := SetUpWaitingChannel()
-	command := kubectl.PortForwardDashboardToLocal(options.DashboardOptions.Port)
-	err = exec.BackgroundRun(command, "forward dashboard to localhost", true)
-	if err != nil {
-		return
-	}
-	err = open.Run("http://127.0.0.1:" + options.DashboardOptions.Port)
-
-	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
-	return
-}
-
-// Check check local denpendency for kt connect
-func (action *Action) Check(options *options.DaemonOptions) error {
-	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
-
-	log.Info().Msg("checking ssh version")
-	command := ssh.SSHVersion()
-	err := exec.BackgroundRun(command, "ssh version", true)
-	if err != nil {
-		log.Error().Msg("ssh is missing, please make sure command ssh is work right at your local first")
-		return err
-	}
-
-	log.Info().Msg("checking kubectl version")
-	command = kubectl.KubectlVersion(options.KubeConfig)
-	err = exec.BackgroundRun(command, "kubectl version", true)
-	if err != nil {
-		log.Error().Msg("kubectl is missing, please make sure kubectl is working right at your local first")
-		return err
-	}
-
-	log.Info().Msg("checking sshuttle version")
-	command = sshuttle.SSHUttleVersion()
-	err1 := exec.BackgroundRun(command, "sshuttle version", true)
-	if err1 != nil {
-		log.Warn().Msg("sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode")
-	}
-
-	log.Info().Msg("KT Connect is ready, enjoy it!")
-	return nil
-}
-
-// checkConnectRunning check connect is running and print help msg
-func checkConnectRunning(pidFile string) {
-	daemonRunning := util.IsDaemonRunning(pidFile)
-	if !daemonRunning {
-		log.Info().Msgf("'KT Connect' not runing, you can only access local app from cluster")
-	} else {
-		log.Info().Msgf("'KT Connect' is runing, you can access local app from cluster and localhost")
-	}
 }

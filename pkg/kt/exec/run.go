@@ -14,7 +14,6 @@ import (
 func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 	runCmd(cmd, name, debug)
 	err = cmd.Wait()
-	log.Printf("%s finished", name)
 	return
 }
 
