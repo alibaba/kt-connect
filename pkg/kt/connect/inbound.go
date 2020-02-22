@@ -34,6 +34,6 @@ func remotePortForward(expose string, kubeconfig string, namespace string, targe
 		localPort = ports[1]
 		remotePort = ports[0]
 	}
-	cmd := ssh.SSHRemotePortForward(localPort, "127.0.0.1", remotePort, localSSHPort)
+	cmd := ssh.ForwardRemoteRequestToLocal(localPort, "127.0.0.1", remotePort, localSSHPort)
 	return exec.BackgroundRun(cmd, "ssh remote port-forward", debug)
 }

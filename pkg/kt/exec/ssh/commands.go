@@ -2,8 +2,9 @@ package ssh
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"os/exec"
+
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
 // SSHVersion check sshuttle version
@@ -11,8 +12,8 @@ func Version() *exec.Cmd {
 	return exec.Command("ssh", "-V")
 }
 
-// SSHRemotePortForward ssh remote port forward
-func SSHRemotePortForward(localPort string, remoteHost string, remotePort string, remoteSSHPort int) *exec.Cmd {
+// ForwardRemoteRequestToLocal ssh remote port forward
+func ForwardRemoteRequestToLocal(localPort string, remoteHost string, remotePort string, remoteSSHPort int) *exec.Cmd {
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",
 		"-oUserKnownHostsFile=/dev/null",
@@ -23,8 +24,8 @@ func SSHRemotePortForward(localPort string, remoteHost string, remotePort string
 	)
 }
 
-// SSHDynamicPortForward ssh remote port forward
-func SSHDynamicPortForward(remoteHost string, remoteSSHPort int, proxyPort int) *exec.Cmd {
+// DynamicForwardLocalRequestToRemote ssh remote port forward
+func DynamicForwardLocalRequestToRemote(remoteHost string, remoteSSHPort int, proxyPort int) *exec.Cmd {
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",
 		"-oUserKnownHostsFile=/dev/null",
