@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
