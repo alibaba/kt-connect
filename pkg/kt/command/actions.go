@@ -10,8 +10,12 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -156,9 +160,9 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 }
 
 func (action *Action) ApplyDashboard() (err error) {
-	command := util.ApplyDashboardToCluster()
+	command := kubectl.ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
-	err = util.RunAndWait(command, "apply kt dashboard", true)
+	err = exec.RunAndWait(command, "apply kt dashboard", true)
 	if err != nil {
 		log.Error().Msg("Fail to apply dashboard, please check the log")
 		return
@@ -168,8 +172,8 @@ func (action *Action) ApplyDashboard() (err error) {
 
 func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
 	ch := SetUpWaitingChannel()
-	command := util.PortForwardDashboardToLocal(options.DashboardOptions.Port)
-	err = util.BackgroundRun(command, "forward dashboard to localhost", true)
+	command := kubectl.PortForwardDashboardToLocal(options.DashboardOptions.Port)
+	err = exec.BackgroundRun(command, "forward dashboard to localhost", true)
 	if err != nil {
 		return
 	}
@@ -185,24 +189,24 @@ func (action *Action) Check(options *options.DaemonOptions) error {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
 	log.Info().Msg("checking ssh version")
-	command := util.SSHVersion()
-	err := util.BackgroundRun(command, "ssh version", true)
+	command := ssh.SSHVersion()
+	err := exec.BackgroundRun(command, "ssh version", true)
 	if err != nil {
 		log.Error().Msg("ssh is missing, please make sure command ssh is work right at your local first")
 		return err
 	}
 
 	log.Info().Msg("checking kubectl version")
-	command = util.KubectlVersion(options.KubeConfig)
-	err = util.BackgroundRun(command, "kubectl version", true)
+	command = kubectl.KubectlVersion(options.KubeConfig)
+	err = exec.BackgroundRun(command, "kubectl version", true)
 	if err != nil {
 		log.Error().Msg("kubectl is missing, please make sure kubectl is working right at your local first")
 		return err
 	}
 
 	log.Info().Msg("checking sshuttle version")
-	command = util.SSHUttleVersion()
-	err1 := util.BackgroundRun(command, "sshuttle version", true)
+	command = sshuttle.SSHUttleVersion()
+	err1 := exec.BackgroundRun(command, "sshuttle version", true)
 	if err1 != nil {
 		log.Warn().Msg("sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode")
 	}

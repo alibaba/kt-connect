@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
@@ -16,8 +19,8 @@ func remotePortForward(expose string, kubeconfig string, namespace string, targe
 	if err != nil {
 		return
 	}
-	portforward := util.PortForward(kubeconfig, namespace, target, localSSHPort)
-	err = util.BackgroundRun(portforward, "exchange port forward to local", debug)
+	portforward := kubectl.PortForward(kubeconfig, namespace, target, localSSHPort)
+	err = exec.BackgroundRun(portforward, "exchange port forward to local", debug)
 	if err != nil {
 		return
 	}
@@ -31,6 +34,6 @@ func remotePortForward(expose string, kubeconfig string, namespace string, targe
 		localPort = ports[1]
 		remotePort = ports[0]
 	}
-	cmd := util.SSHRemotePortForward(localPort, "127.0.0.1", remotePort, localSSHPort)
-	return util.BackgroundRun(cmd, "ssh remote port-forward", debug)
+	cmd := ssh.SSHRemotePortForward(localPort, "127.0.0.1", remotePort, localSSHPort)
+	return exec.BackgroundRun(cmd, "ssh remote port-forward", debug)
 }
