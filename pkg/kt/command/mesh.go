@@ -1,9 +1,14 @@
 package command
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"fmt"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
 // newMeshCommand return new mesh command
@@ -27,4 +32,34 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 			return nil
 		},
 	}
+}
+
+//Mesh exchange kubernetes workload
+func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
+	checkConnectRunning(options.RuntimeOptions.PidFile)
+
+	ch := SetUpCloseHandler(options)
+
+	expose := options.MeshOptions.Expose
+
+	if swap == "" || expose == "" {
+		return fmt.Errorf("-expose is required")
+	}
+
+	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
+	if err != nil {
+		return err
+	}
+
+	factory := connect.Connect{}
+	_, err = factory.Mesh(swap, options, clientset, util.String2Map(options.Labels))
+
+	if err != nil {
+		return err
+	}
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+
+	return nil
 }
