@@ -5,8 +5,8 @@ import (
 	"os/exec"
 )
 
-// KubectlVersion kubectl version
-func KubectlVersion(kubeConifg string) *exec.Cmd {
+// Version kubectl version
+func Version(kubeConifg string) *exec.Cmd {
 	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "version", "--short", "port-forward")
 }
 

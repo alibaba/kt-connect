@@ -7,7 +7,7 @@ import (
 )
 
 // SSHVersion check sshuttle version
-func SSHVersion() *exec.Cmd {
+func Version() *exec.Cmd {
 	return exec.Command("ssh", "-V")
 }
 

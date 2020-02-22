@@ -1,6 +1,9 @@
 package command
 
 import (
+
+	osexec "os/exec"
+
 	"runtime"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
@@ -14,7 +17,7 @@ import (
 )
 
 // NewCheckCommand return new check command
-func newCheckCommand(options *options.DaemonOptions) cli.Command {
+func NewCheckCommand(options *options.DaemonOptions) cli.Command {
 	return cli.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",
@@ -22,39 +25,51 @@ func newCheckCommand(options *options.DaemonOptions) cli.Command {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			action := Action{}
-			return action.Check(options)
+			return Check(options)
 		},
 	}
 }
 
 // Check check local denpendency for kt connect
-func (action *Action) Check(options *options.DaemonOptions) error {
+func Check(options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
-	log.Info().Msg("checking ssh version")
-	command := ssh.SSHVersion()
-	err := exec.RunAndWait(command, "ssh version", true)
+	err = runCommandWithMsg(
+		ssh.Version(),
+		"checking ssh version", "ssh is missing, please make sure command ssh is work right at your local first", 
+	)
+
 	if err != nil {
-		log.Error().Msg("ssh is missing, please make sure command ssh is work right at your local first")
-		return err
+		return
 	}
 
-	log.Info().Msg("checking kubectl version")
-	command = kubectl.KubectlVersion(options.KubeConfig)
-	err = exec.RunAndWait(command, "kubectl version", true)
+	err =  runCommandWithMsg(
+		kubectl.Version(options.KubeConfig),
+		"checking kubectl version", "kubectl is missing, please make sure kubectl is working right at your local first", 
+	)
+
 	if err != nil {
-		log.Error().Msg("kubectl is missing, please make sure kubectl is working right at your local first")
-		return err
+		return
 	}
 
-	log.Info().Msg("checking sshuttle version")
-	command = sshuttle.SSHUttleVersion()
-	err1 := exec.RunAndWait(command, "sshuttle version", true)
-	if err1 != nil {
-		log.Warn().Msg("sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode")
+	err = runCommandWithMsg(
+		sshuttle.Version(),
+		"checking sshuttle version", "sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode",
+	)
+
+	if err != nil {
+		return
 	}
 
 	log.Info().Msg("KT Connect is ready, enjoy it!")
 	return nil
+}
+
+func runCommandWithMsg(cmd *osexec.Cmd, title string, msg string) (err error) {
+	log.Info().Msg(title)
+	err = exec.RunAndWait(cmd, title, true)
+	if err != nil {
+		log.Warn().Msg(msg)
+	}
+	return
 }

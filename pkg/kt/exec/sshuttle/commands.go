@@ -6,8 +6,8 @@ import (
 	"os/exec"
 )
 
-// SSHUttleVersion check sshuttle version
-func SSHUttleVersion() *exec.Cmd {
+// Version check sshuttle version
+func Version() *exec.Cmd {
 	return exec.Command("sshuttle", "--version")
 }
 

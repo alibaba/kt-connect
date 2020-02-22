@@ -19,7 +19,7 @@ func NewCommands(options *options.DaemonOptions) []cli.Command {
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
-		newCheckCommand(options),
+		NewCheckCommand(options),
 	}
 }
 
