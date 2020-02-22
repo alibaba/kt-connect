@@ -1,4 +1,4 @@
-package util
+package exec
 
 import (
 	"bytes"
@@ -14,7 +14,6 @@ import (
 func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 	runCmd(cmd, name, debug)
 	err = cmd.Wait()
-	log.Printf("%s finished", name)
 	return
 }
 
@@ -35,14 +34,14 @@ func runCmd(cmd *exec.Cmd, name string, debug bool) (err error) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 	stdoutIn, _ := cmd.StdoutPipe()
 	stderrIn, _ := cmd.StderrPipe()
-	var errStdout, errStderr error
+	// var errStdout, errStderr error
 	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
 	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
 	go func() {
-		_, errStdout = io.Copy(stdout, stdoutIn)
+		_, _ = io.Copy(stdout, stdoutIn)
 	}()
 	go func() {
-		_, errStderr = io.Copy(stderr, stderrIn)
+		_, _ = io.Copy(stderr, stderrIn)
 	}()
 
 	err = cmd.Start()
