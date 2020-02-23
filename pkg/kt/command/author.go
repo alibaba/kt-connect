@@ -1,6 +1,8 @@
 package command
 
-import "github.com/urfave/cli"
+import (
+	"github.com/urfave/cli"
+)
 
 // NewCliAuthor return cli author
 func NewCliAuthor() []cli.Author {
