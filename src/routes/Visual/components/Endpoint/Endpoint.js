@@ -29,6 +29,8 @@ export default class Endpoint extends Component {
               content: <div>
                 <p>If fails to load page. you can use `ktctl connect` connect the cluster from localhost</p>
                 <p className="command-line">ktctl connect</p>
+                <p>Or use HTTP Proxy Mode</p>
+                <p className="command-line">ktctl connect --method=socks5</p>
               </div>
             });
             window.setTimeout(() => {
