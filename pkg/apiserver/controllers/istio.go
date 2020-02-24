@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
@@ -10,10 +11,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// IstioController istio api controller
 type IstioController struct {
 	Context common.Context
 }
 
+// VirtualServices list virtual service
 func (c *IstioController) VirtualServices(context *gin.Context) {
 	namespace := context.Param("namespace")
 
@@ -37,6 +40,7 @@ func (c *IstioController) VirtualServices(context *gin.Context) {
 	context.JSON(200, vsList)
 }
 
+// VirtualService get virtual service instance
 func (c *IstioController) VirtualService(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -62,6 +66,7 @@ func (c *IstioController) VirtualService(context *gin.Context) {
 	context.JSON(200, vs)
 }
 
+// DestinationRules get destination rule
 func (c *IstioController) DestinationRules(context *gin.Context) {
 	namespace := context.Param("namespace")
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
@@ -84,6 +89,7 @@ func (c *IstioController) DestinationRules(context *gin.Context) {
 	context.JSON(200, destinationrules)
 }
 
+// DestinationRule get destination rule instances
 func (c *IstioController) DestinationRule(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -99,7 +105,7 @@ func (c *IstioController) DestinationRule(context *gin.Context) {
 	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
-			"message": "fail get destinationrule",
+			"message": fmt.Sprintf("fail get destinationrule", name),
 		})
 		return
 	}
@@ -107,6 +113,7 @@ func (c *IstioController) DestinationRule(context *gin.Context) {
 	context.JSON(200, destinationrule)
 }
 
+// AddVersionToDestinationRule add version to destination rule
 func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -157,6 +164,7 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 	context.JSON(200, result)
 }
 
+// RemoveVersionToDestinationRule remove version from destination rule
 func (c *IstioController) RemoveVersionToDestinationRule(context *gin.Context) {
 	context.JSON(200, gin.H{
 		"message": "remove version to destinaltion rule",

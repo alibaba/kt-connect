@@ -219,7 +219,7 @@ func (c *ClusterController) PodLog(context *gin.Context) {
 
 	if err != nil {
 		context.JSON(500, gin.H{
-			"message": "fail get pod log",
+			"message": fmt.Sprintf("fail get pod %s log", podID),
 		})
 		return
 	}
