@@ -294,6 +294,7 @@ honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 istio.io/api v0.0.0-20200221025927-228308df3f1b h1:GfMhOMxpbLom+j+yv0MdUH3GBlDqUOSi2sb33MwLayg=
 istio.io/api v0.0.0-20200221025927-228308df3f1b/go.mod h1:bcY3prusO/6vA6zGHz4PNG2v79clPyTw06Xx3fprJSQ=
+istio.io/api v0.0.0-20200222035036-b245c555a47b h1:wxHxBBp52lZQAFxJB4gQvnawCWoOk9l3MOqo6pJw05Q=
 istio.io/client-go v0.0.0-20200221055756-736d3076b458 h1:6O159eX98W1A2vnc87tHpY97SPMoJ4VTOYWYIsR1Kl4=
 istio.io/client-go v0.0.0-20200221055756-736d3076b458/go.mod h1:uJNaAcle14mZEMVuKBQTASAV8ZpotnHYc14D4APKUFU=
 istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a h1:w7zILua2dnYo9CxImhpNW4NE/8ZxEoc/wfBfHrhUhrE=
