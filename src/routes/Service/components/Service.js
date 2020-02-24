@@ -122,7 +122,11 @@ class Service extends Component {
           />
           <div>
             <br />
+            <p>VPN Mode</p>
             <p className="command-line">ktctl -namespace {namespace} connect</p>
+            <br />
+            <p>HTTP Proxy Mode</p>
+            <p className="command-line">ktctl -namespace {namespace} connect --method=socks5</p>
           </div>
         </Card>
         <br />

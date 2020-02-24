@@ -13,10 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 )
 
+// ClusterController provide kubernetes cluster api
 type ClusterController struct {
 	Context common.Context
 }
 
+// Namespaces list namespaces
 func (c *ClusterController) Namespaces(context *gin.Context) {
 	namespaces, err := c.Context.NamespaceLister().List(labels.Everything())
 	if err != nil {
@@ -28,6 +30,7 @@ func (c *ClusterController) Namespaces(context *gin.Context) {
 	context.JSON(200, namespaces)
 }
 
+// Services list services
 func (c *ClusterController) Services(context *gin.Context) {
 	namespace := context.Param("namespace")
 	services, err := c.Context.ServiceLister().Services(namespace).List(labels.Everything())
@@ -40,19 +43,21 @@ func (c *ClusterController) Services(context *gin.Context) {
 	context.JSON(200, services)
 }
 
+// Service get service instance
 func (c *ClusterController) Service(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
 	service, err := c.Context.Client().CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(500, gin.H{
-			"message": "fail get service",
+			"message": "fail get service " + name,
 		})
 		return
 	}
 	context.JSON(200, service)
 }
 
+// Endpoints list endpoints
 func (c *ClusterController) Endpoints(context *gin.Context) {
 	namespace := context.Param("namespace")
 	endpoints, err := c.Context.EndpointsLister().Endpoints(namespace).List(labels.Everything())
@@ -65,6 +70,7 @@ func (c *ClusterController) Endpoints(context *gin.Context) {
 	context.JSON(200, endpoints)
 }
 
+// Endpoint get endpoint instance
 func (c *ClusterController) Endpoint(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -78,6 +84,7 @@ func (c *ClusterController) Endpoint(context *gin.Context) {
 	context.JSON(200, endpoint)
 }
 
+// Deployments list deployments
 func (c *ClusterController) Deployments(context *gin.Context) {
 	namespace := context.Param("namespace")
 	selector := context.Query("selector")
@@ -106,6 +113,7 @@ func (c *ClusterController) Deployments(context *gin.Context) {
 	context.JSON(200, resource)
 }
 
+// Deployment get deployment instance
 func (c *ClusterController) Deployment(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -119,6 +127,7 @@ func (c *ClusterController) Deployment(context *gin.Context) {
 	context.JSON(200, resource)
 }
 
+// ReplicaSet get replicaSet instance
 func (c *ClusterController) ReplicaSet(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -132,6 +141,7 @@ func (c *ClusterController) ReplicaSet(context *gin.Context) {
 	context.JSON(200, resource)
 }
 
+// Pods list pods
 func (c *ClusterController) Pods(context *gin.Context) {
 	namespace := context.Param("namespace")
 	selector := context.Query("selector")
@@ -156,6 +166,7 @@ func (c *ClusterController) Pods(context *gin.Context) {
 	context.JSON(200, pods)
 }
 
+// Pod get pod instance
 func (c *ClusterController) Pod(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
@@ -170,6 +181,7 @@ func (c *ClusterController) Pod(context *gin.Context) {
 	context.JSON(200, pod)
 }
 
+// PodLog get pod log
 func (c *ClusterController) PodLog(context *gin.Context) {
 	namespace := context.Param("namespace")
 	podID := context.Param("name")
@@ -207,7 +219,7 @@ func (c *ClusterController) PodLog(context *gin.Context) {
 
 	if err != nil {
 		context.JSON(500, gin.H{
-			"message": "fail get pod log",
+			"message": fmt.Sprintf("fail get pod %s log", podID),
 		})
 		return
 	}

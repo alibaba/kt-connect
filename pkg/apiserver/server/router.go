@@ -35,6 +35,7 @@ func NewRouter(context common.Context) *gin.Engine {
 	router.GET("/api/cluster/namespaces/:namespace/virtualservices/:name", istioController.VirtualService)
 	router.GET("/api/cluster/namespaces/:namespace/destinationrules", istioController.DestinationRules)
 	router.GET("/api/cluster/namespaces/:namespace/destinationrules/:name", istioController.DestinationRule)
+	router.PUT("/api/cluster/namespaces/:namespace/destinationrules/:name/:version", istioController.AddVersionToDestinationRule)
 
 	router.GET("/ws/terminal", terminalController.Terminal)
 

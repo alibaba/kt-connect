@@ -68,26 +68,26 @@ export default class VirtualService extends Component {
                 })
               }
             },
-            {
-              title: '',
-              key: 'Ops',
-              render: (httpRoute) => {
-                return [
-                  {
-                    name: 'Edit',
-                    icon: 'edit',
-                    onClick: () => { console.log('add version') }
-                  },
-                  {
-                    name: 'Remove',
-                    icon: 'delete',
-                    onClick: () => { console.log('add version') }
-                  }
-                ].map((btn, index) => {
-                  return <Button key={`httpRoute-btn-${index}`} shape="circle"><Icon type={btn.icon} /></Button>
-                })
-              }
-            }
+            // {
+            //   title: '',
+            //   key: 'Ops',
+            //   render: (httpRoute) => {
+            //     return [
+            //       {
+            //         name: 'Edit',
+            //         icon: 'edit',
+            //         onClick: () => { console.log('add version') }
+            //       },
+            //       {
+            //         name: 'Remove',
+            //         icon: 'delete',
+            //         onClick: () => { console.log('add version') }
+            //       }
+            //     ].map((btn, index) => {
+            //       return <Button key={`httpRoute-btn-${index}`} shape="circle"><Icon type={btn.icon} /></Button>
+            //     })
+            //   }
+            // }
           ]} />
         </Card>
       </div>
