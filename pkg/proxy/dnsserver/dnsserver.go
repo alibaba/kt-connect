@@ -49,22 +49,21 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	_ = w.WriteMsg(&msg)
 }
 
-func (s *server) getDomainWithClusterPostfix(origin string) string {
-	dotIndex := strings.Index(origin, ".") + 1
-	return s.getDomain(origin[:dotIndex])
+func (s *server) getFirst2Parts(origin string) string {
+	firstPart := s.getFirstPart(origin)
+	return origin[:len(firstPart)] + s.getFirstPart(origin[len(firstPart):])
 }
 
-func (s *server) getDomain(origin string) string {
-	domain := origin
+func (s *server) getFirstPart(origin string) string {
+	dotIndex := strings.Index(origin, ".") + 1
+	return origin[:dotIndex]
+}
+
+func (s *server) getDomainWithClusterPostfix(origin string) (domain string) {
 	postfix := s.config.Search[0]
-
-	// has only one dot at the end of queried domain name
-	if strings.Index(origin, ".") == (len(domain) - 1) {
-		domain = domain + postfix + "."
-		log.Info().Msgf("Format domain %s to %s\n", origin, domain)
-	}
-
-	return domain
+	domain = origin + postfix + "."
+	log.Info().Msgf("Format domain %s to %s\n", origin, domain)
+	return
 }
 
 func (s *server) query(req *dns.Msg) (rr []dns.RR) {
@@ -76,10 +75,38 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	qtype := req.Question[0].Qtype
 	name := req.Question[0].Name
 
-	rr, err := s.exchange(s.getDomain(name), qtype, name)
-	if IsDomainNotExist(err) {
-		log.Info().Msgf("Retry with cluster domain postfix")
-		rr, _ = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+	count := strings.Count(name, ".")
+	var err error
+	switch count {
+	case 0:
+		// invalid domain
+		log.Warn().Msgf("received invalid domain query: " + name)
+		rr = make([]dns.RR, 0)
+	case 1:
+		// it's service
+		rr, err = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+		if IsDomainNotExist(err) {
+			// it's raw domain
+			rr, _ = s.exchange(name, qtype, name)
+		}
+	case 2:
+		// it's raw domain
+		rr, err = s.exchange(name, qtype, name)
+		if IsDomainNotExist(err) {
+			// it's service.namespace
+			rr, _ = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+		}
+	default:
+		// it's raw domain
+		rr, err = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+		if IsDomainNotExist(err) {
+			// it's service with custom local domain postfix
+			rr, err = s.exchange(s.getDomainWithClusterPostfix(s.getFirstPart(name)), qtype, name)
+			if IsDomainNotExist(err) {
+				// it's service.namespace with custom local domain postfix
+				rr, _ = s.exchange(s.getDomainWithClusterPostfix(s.getFirst2Parts(name)), qtype, name)
+			}
+		}
 	}
 	return
 }
