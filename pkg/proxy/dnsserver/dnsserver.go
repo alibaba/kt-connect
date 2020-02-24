@@ -98,7 +98,7 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 		}
 	default:
 		// it's raw domain
-		rr, err = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+		rr, err = s.exchange(name, qtype, name)
 		if IsDomainNotExist(err) {
 			// it's service with custom local domain postfix
 			rr, err = s.exchange(s.getDomainWithClusterPostfix(s.getFirstPart(name)), qtype, name)

@@ -23,7 +23,7 @@ You can download and install the ktctl from [Downloads And Install](https://rdc-
 ### Deploy a service in Kubernetes
 
 ```
-$ ubectl run tomcat --image=registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0 --expose --port=8080
+$ kubectl run tomcat --image=registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0 --expose --port=8080
 service "tomcat" created
 deployment.apps "tomcat" created
 
