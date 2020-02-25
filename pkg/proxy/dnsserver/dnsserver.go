@@ -60,9 +60,17 @@ func (s *server) getFirstPart(origin string) string {
 }
 
 func (s *server) getDomainWithClusterPostfix(origin string) (domain string) {
-	postfix := s.config.Search[0]
-	domain = origin + postfix + "."
-	log.Info().Msgf("Format domain %s to %s\n", origin, domain)
+	var postfix string
+	for _, search := range s.config.Search {
+		if strings.LastIndex(search, "svc") == 0 {
+			postfix = search
+			break
+		}
+	}
+	if postfix != "" {
+		domain = origin + postfix + "."
+		log.Info().Msgf("Format domain %s to %s\n", origin, domain)
+	}
 	return
 }
 
@@ -95,6 +103,9 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 		if IsDomainNotExist(err) {
 			// it's service.namespace
 			rr, _ = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+			for _, a := range rr {
+				a.Header().Name = name
+			}
 		}
 	default:
 		// it's raw domain
