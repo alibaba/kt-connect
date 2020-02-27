@@ -152,7 +152,7 @@ You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-i
 
 Please contact us with DingTalk:
 
-![image](./docs/media/dingtalk-group.png)
+![image](./docs/media/dingtalk-group-v2.png)
 
 ## Release Note
 
