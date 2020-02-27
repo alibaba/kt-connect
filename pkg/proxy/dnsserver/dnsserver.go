@@ -59,10 +59,22 @@ func (s *server) getFirstPart(origin string) string {
 	return origin[:dotIndex]
 }
 
-func (s *server) getDomainWithClusterPostfix(origin string) (domain string) {
-	postfix := s.config.Search[0]
-	domain = origin + postfix + "."
-	log.Info().Msgf("Format domain %s to %s\n", origin, domain)
+func (s *server) getDomainWithClusterPostfix(origin string, count int) (domain string) {
+	var postfix string
+	if count == 1 {
+		postfix = s.config.Search[0]
+	} else {
+		for _, search := range s.config.Search {
+			if strings.LastIndex(search, "svc") == 0 {
+				postfix = search
+				break
+			}
+		}
+	}
+	if postfix != "" {
+		domain = origin + postfix + "."
+		log.Info().Msgf("Format domain %s to %s\n", origin, domain)
+	}
 	return
 }
 
@@ -84,27 +96,33 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 		rr = make([]dns.RR, 0)
 	case 1:
 		// it's service
-		rr, err = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+		rr, err = s.exchange(s.getDomainWithClusterPostfix(name, count), qtype, name)
 		if IsDomainNotExist(err) {
 			// it's raw domain
 			rr, _ = s.exchange(name, qtype, name)
+		}
+		for _, a := range rr {
+			a.Header().Name = name
 		}
 	case 2:
 		// it's raw domain
 		rr, err = s.exchange(name, qtype, name)
 		if IsDomainNotExist(err) {
 			// it's service.namespace
-			rr, _ = s.exchange(s.getDomainWithClusterPostfix(name), qtype, name)
+			rr, _ = s.exchange(s.getDomainWithClusterPostfix(name, count), qtype, name)
+			for _, a := range rr {
+				a.Header().Name = name
+			}
 		}
 	default:
 		// it's raw domain
 		rr, err = s.exchange(name, qtype, name)
 		if IsDomainNotExist(err) {
 			// it's service with custom local domain postfix
-			rr, err = s.exchange(s.getDomainWithClusterPostfix(s.getFirstPart(name)), qtype, name)
+			rr, err = s.exchange(s.getDomainWithClusterPostfix(s.getFirstPart(name), count), qtype, name)
 			if IsDomainNotExist(err) {
 				// it's service.namespace with custom local domain postfix
-				rr, _ = s.exchange(s.getDomainWithClusterPostfix(s.getFirst2Parts(name)), qtype, name)
+				rr, _ = s.exchange(s.getDomainWithClusterPostfix(s.getFirst2Parts(name), count), qtype, name)
 			}
 		}
 	}
