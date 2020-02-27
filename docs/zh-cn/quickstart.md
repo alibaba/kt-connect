@@ -62,8 +62,14 @@ kt-connect demo from tomcat9
 $ curl http://172.21.6.39:8080    #在本地访问ClusteriIP
 kt-connect demo from tomcat9
 
-$ curl http://tomcat:8080     #使用Service的域名访问
+$ curl http://tomcat:8080     #使用<service>作为域名访问
 kt-connect demo from tomcat9
+
+$ curl http://tomcat.default:8080 # 使用<servicename>.<namespace>域名访问
+kt-connect demo from tomcat9
+
+$ curl http://tomcat.default.svc.cluster.local:8080 # 使用集群内完整域名访问服务
+kt-connect deom from tomcat9
 ```
 
 #### ** Socks5代理模式 **

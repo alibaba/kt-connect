@@ -1,6 +1,6 @@
 # 下载和安装
 
-> 你可以从这里下载最新构建的软件包[Nightly Build](/zh-cn/nightly.md)
+> 你可以从这里下载最新构建的软件包[Github Releases](https://github.com/alibaba/kt-connect/releases)
 
 <!-- tabs:start -->
 

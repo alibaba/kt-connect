@@ -15,10 +15,10 @@ import (
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
-		newDashboardCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
+		newDashboardCommand(options),
 		NewCheckCommand(options),
 	}
 }

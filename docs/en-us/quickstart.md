@@ -63,8 +63,14 @@ kt-connect demo from tomcat9
 $ curl http://172.21.6.39:8080 #Access ClusterIP
 kt-connect demo from tomcat9
 
-$ curl http://tomcat:8080 #Access Server internal DNS address
+$ curl http://tomcat:8080 # Access service 
 kt-connect demo from tomcat9  
+
+$ curl http://tomcat.default:8080 # Access service with namespace
+kt-connect demo from tomcat9
+
+$ curl http://tomcat.default.svc.cluster.local:8080 # Access service with full domain
+kt-connect deom from tomcat9
 ```
 
 #### ** SOCKS5 Mode **

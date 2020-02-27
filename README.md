@@ -3,8 +3,6 @@ KT Connect
 
 [![Build Status](https://travis-ci.org/alibaba/kt-connect.svg?branch=master)](https://travis-ci.org/alibaba/kt-connect) ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg) 
 
-![Logo](./docs/media/logo.png)
-
 Management and Integration with your Kubernetes dev environment more efficient.
 
 ![Arch](./docs/media/arch.png)
@@ -150,39 +148,29 @@ Dashboard can help your know how your dev environemnt is used.
 
 You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
 
-## How To Build
-
-### use go build
-
-```
-go build -o "output/ktctl/ktctl" ./cmd/ktctl
-```
-
-### use gox
-
-Install Gox
-
-```
-go get github.com/mitchellh/gox
-```
-
-```
-gox -output="output/ktctl/ktctl_{{.OS}}_{{.Arch}}" ${GOPATH}/src/github.com/alibaba/kt-connect/cmd/ktctl
-```
-
-## How To Build Shadow
-
-```
-GOARCH=amd64 GOOS=linux go build -o bin/proxy cmd/shadow/main.go
-```
-
 ## Ask For Help
 
 Please contact us with DingTalk:
 
-![image](./docs/media/dingtalk-group.png)
+![image](./docs/media/dingtalk-group-v2.png)
 
 ## Release Note
+
+### 0.0.11
+
+> Release At 2020-02-27
+
+* fixed command not exit issue.
+* add `check` command to help check local denpendencies
+* add `dashboard` command to to install and open dashboard in local
+* add support to access service with <servicename>.<namespace>
+
+### 0.0.10
+
+> Release At 2020-02-02
+
+* Options adaptor windows system
+* Add `--dump2hosts` options to support socks5 use
 
 ### 0.0.9
 

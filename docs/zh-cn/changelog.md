@@ -1,12 +1,28 @@
 ## 更新日志
 
+### 0.0.11
+
+> Release At 2020-02-27
+
+* 支持在本地使用`<servicename>.<namespace>`访问集群中的服务
+* 添加`check`命令，用于校验本地环境依赖
+* 添加`dashboard`命令，支持dashboard的使用
+* 修复部分场景下命令不退出的问题
+
+
+### 0.0.10
+
+> 发布时间 2020-02-02
+
+* ktctl命令参数适配windows操作系统
+* 添加`--dump2hosts`参数用于通过service到本地hosts文件，支持socks5模式下在本地使用域名访问 
+
 ### 0.0.9
 
 > 发布时间： 2020-01-16
 
 * Support Service Name as dns address
 * Make sure shadow is clean up after command exit
-
 
 ### 0.0.8
 
