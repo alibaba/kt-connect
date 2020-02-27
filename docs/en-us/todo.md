@@ -4,10 +4,10 @@
 
 ## Commands
 
-* kubectl dashboard: support open dashboard in local
 * ktctl command should show process state
-* socks5 method should support auto dump dns to local hosts file
 * remote SSH Volume support
+* ~~kubectl dashboard: support open dashboard in local~~
+* ~~socks5 method should support auto dump dns to local hosts file~~
 
 ## Dashboard
 
@@ -28,4 +28,4 @@
 ## Document
 
 * Create best practices docs base on language
-* Cli References
+* ~~Cli References~~

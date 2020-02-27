@@ -14,6 +14,8 @@
   - [ktctl connect](zh-cn/cli/connect.md)
   - [ktctl exchange](zh-cn/cli/exchange.md)
   - [ktctl mesh](zh-cn/cli/mesh.md)
+  - [ktctl dashboard](zh-cn/cli/dashboard.md)
+  - [ktctl check](zh-cn/cli/check.md)
 
 - [Changelog](zh-cn/changelog.md)
 - [TODO](zh-cn/todo.md)

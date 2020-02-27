@@ -13,6 +13,8 @@
   - [ktctl connect](en-us/cli/connect.md)
   - [ktctl exchange](en-us/cli/exchange.md)
   - [ktctl mesh](en-us/cli/mesh.md)
+  - [ktctl dashboard](en-us/cli/dashboard.md)
+  - [ktctl check](en-us/cli/check.md)
 
 - [Changelog](en-us/changelog.md)
 - [TODO](en-us/todo.md)
