@@ -23,7 +23,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "KT Connect"
 	app.Usage = ""
-	app.Version = "master"
+	app.Version = "kt-0.0.11"
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
 	app.Commands = command.NewCommands(options)
