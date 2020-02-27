@@ -3,8 +3,6 @@ KT Connect
 
 [![Build Status](https://travis-ci.org/alibaba/kt-connect.svg?branch=master)](https://travis-ci.org/alibaba/kt-connect) ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg) 
 
-![Logo](./docs/media/logo.png)
-
 Management and Integration with your Kubernetes dev environment more efficient.
 
 ![Arch](./docs/media/arch.png)
@@ -149,32 +147,6 @@ Dashboard can help your know how your dev environemnt is used.
 ![Dashboard](./docs/media/dashboard-demo.png)
 
 You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
-
-## How To Build
-
-### use go build
-
-```
-go build -o "output/ktctl/ktctl" ./cmd/ktctl
-```
-
-### use gox
-
-Install Gox
-
-```
-go get github.com/mitchellh/gox
-```
-
-```
-gox -output="output/ktctl/ktctl_{{.OS}}_{{.Arch}}" ${GOPATH}/src/github.com/alibaba/kt-connect/cmd/ktctl
-```
-
-## How To Build Shadow
-
-```
-GOARCH=amd64 GOOS=linux go build -o bin/proxy cmd/shadow/main.go
-```
 
 ## Ask For Help
 
