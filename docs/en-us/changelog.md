@@ -1,5 +1,22 @@
 ## Changelog
 
+### 0.0.11
+
+> Release At 2020-02-27
+
+* fixed command not exit issue.
+* add `check` command to help check local denpendencies
+* add `dashboard` command to to install and open dashboard in local
+* add support to access service with <servicename>.<namespace>
+
+### 0.0.10
+
+> Release At 2020-02-02
+
+* Options adaptor windows system
+* Add `--dump2hosts` options to support socks5 use
+
+
 ### 0.0.9
 
 > Release At 2020-01-16
