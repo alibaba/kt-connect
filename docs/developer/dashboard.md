@@ -1,7 +1,7 @@
 Dashboard Developer Doc
 -----
 
-## How to develope
+## How to develop
 
 ### API Server
 
