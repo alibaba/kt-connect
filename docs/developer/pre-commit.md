@@ -1,5 +1,4 @@
-Pre Commit Hooks
-----
+# Pre Commit Hooks
 
 ## Install
 

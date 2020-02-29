@@ -1,5 +1,4 @@
-How to contribute
-------
+# How to contribute
 
 👍 Thanks for taking the time to contribute!
 

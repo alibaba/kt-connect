@@ -1,5 +1,4 @@
-Project Struct
-------------
+# Project Struct
 
 ## Introduction
 
