@@ -4,6 +4,21 @@
 
 KT-Connect continue the flow parts:
 
+```
+                                        Usage Visualization
+                                                ^
+                                                |
+                   +---------------------------------------+
+                   |                            |          |
+                   |                            |          |
++----------+       |       +----------+   +-----+----+     |
+|   ktctl  +---------------+  shadow  |   | Dashboard|     |
++----------+       |       +----------+   +----------+     |
+                   |                                       |
+                   |                                       |
+                   +---------------------------------------+
+```
+
 * ktctl: the cli to help user connect to kubernetes cluster
 * shadow: the proxy agent that exhange the network request
 * dashboard: visualization of the client connect
