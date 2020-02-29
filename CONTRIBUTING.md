@@ -7,11 +7,12 @@ How to contribute
 
 * Make sure you have a GitHub account.
 * Fork the repository on GitHub.
-* Project struct.
+* [Project struct](./docs/developer/project-structs.md).
 
 ## Submitting Changes
 
 * Sign the [Contributor License Agreement](https://cla-assistant.io/alibaba/kt-connect).
+* Before write code init [pre-commit](./docs/developer/pre-commit.md) first.
 * Write a [good commit message](https://www.conventionalcommits.org/zh-hans/v1.0.0-beta.4/)
 * Push your changes to a topic branch in your fork of the repository.
 * Submit a pull request to the repository in the alibaba organization.

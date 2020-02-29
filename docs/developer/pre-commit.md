@@ -1,7 +1,5 @@
-Pre Commit
----
-
-> https://pre-commit.com/
+Pre Commit Hooks
+----
 
 ## Install
 
