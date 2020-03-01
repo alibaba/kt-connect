@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
@@ -22,12 +23,12 @@ type ClusterController struct {
 func (c *ClusterController) Namespaces(context *gin.Context) {
 	namespaces, err := c.Context.NamespaceLister().List(labels.Everything())
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail list namespace",
 		})
 		return
 	}
-	context.JSON(200, namespaces)
+	context.JSON(http.StatusOK, namespaces)
 }
 
 // Services list services
@@ -35,12 +36,12 @@ func (c *ClusterController) Services(context *gin.Context) {
 	namespace := context.Param("namespace")
 	services, err := c.Context.ServiceLister().Services(namespace).List(labels.Everything())
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail list service",
 		})
 		return
 	}
-	context.JSON(200, services)
+	context.JSON(http.StatusOK, services)
 }
 
 // Service get service instance
@@ -49,12 +50,12 @@ func (c *ClusterController) Service(context *gin.Context) {
 	name := context.Param("name")
 	service, err := c.Context.Client().CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get service " + name,
 		})
 		return
 	}
-	context.JSON(200, service)
+	context.JSON(http.StatusOK, service)
 }
 
 // Endpoints list endpoints
@@ -62,12 +63,12 @@ func (c *ClusterController) Endpoints(context *gin.Context) {
 	namespace := context.Param("namespace")
 	endpoints, err := c.Context.EndpointsLister().Endpoints(namespace).List(labels.Everything())
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail list service",
 		})
 		return
 	}
-	context.JSON(200, endpoints)
+	context.JSON(http.StatusOK, endpoints)
 }
 
 // Endpoint get endpoint instance
@@ -76,94 +77,88 @@ func (c *ClusterController) Endpoint(context *gin.Context) {
 	name := context.Param("name")
 	endpoint, err := c.Context.Client().CoreV1().Endpoints(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get endpoint",
 		})
 		return
 	}
-	context.JSON(200, endpoint)
+	context.JSON(http.StatusOK, endpoint)
 }
 
 // Deployments list deployments
 func (c *ClusterController) Deployments(context *gin.Context) {
 	namespace := context.Param("namespace")
 	selector := context.Query("selector")
-
 	options := metav1.ListOptions{}
 
 	if selector != "" {
-		var m labels.Set
-		err := json.Unmarshal([]byte(selector), &m)
-		if err == nil {
-			var labelSelector labels.Selector
-			labelSelector = labels.SelectorFromSet(m)
-			options.FieldSelector = fmt.Sprintf("spec.selector.matchLabels=%s", labelSelector.String())
+		labelSelector, err := querySelector(selector)
+		if err != nil {
+			context.JSON(http.StatusBadRequest, gin.H{
+				"message": "bad request",
+			})
+			return
 		}
-
+		options.FieldSelector = fmt.Sprintf("spec.selector.matchLabels=%s", labelSelector.String())
 	}
 
-	resource, err := c.Context.Client().ExtensionsV1beta1().Deployments(namespace).List(options)
-
+	resource, err := c.Context.Client().AppsV1().Deployments(namespace).List(options)
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get deployment",
 		})
 		return
 	}
-	context.JSON(200, resource)
+	context.JSON(http.StatusOK, resource)
 }
 
 // Deployment get deployment instance
 func (c *ClusterController) Deployment(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	resource, err := c.Context.Client().ExtensionsV1beta1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	resource, err := c.Context.Client().AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get deployment",
 		})
 		return
 	}
-	context.JSON(200, resource)
+	context.JSON(http.StatusOK, resource)
 }
 
 // ReplicaSet get replicaSet instance
 func (c *ClusterController) ReplicaSet(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	resource, err := c.Context.Client().ExtensionsV1beta1().ReplicaSets(namespace).Get(name, metav1.GetOptions{})
+	resource, err := c.Context.Client().AppsV1().ReplicaSets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get replicaSet",
 		})
 		return
 	}
-	context.JSON(200, resource)
+	context.JSON(http.StatusOK, resource)
 }
 
 // Pods list pods
 func (c *ClusterController) Pods(context *gin.Context) {
 	namespace := context.Param("namespace")
 	selector := context.Query("selector")
-	var m labels.Set
-	err := json.Unmarshal([]byte(selector), &m)
-	var labelSelector labels.Selector
-	if m != nil {
-		fmt.Println("query by set")
-		labelSelector = labels.SelectorFromSet(m)
-	} else {
-		fmt.Println("everything")
-		labelSelector = labels.Everything()
+	labelSelector, err := querySelector(selector, labels.Everything())
+	if err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{
+			"message": "bad request",
+		})
 	}
 
 	pods, err := c.Context.PodLister().Pods(namespace).List(labelSelector)
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail list pods",
 		})
 		return
 	}
-	context.JSON(200, pods)
+	context.JSON(http.StatusOK, pods)
 }
 
 // Pod get pod instance
@@ -173,12 +168,12 @@ func (c *ClusterController) Pod(context *gin.Context) {
 
 	pod, err := c.Context.Client().CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get pod",
 		})
 		return
 	}
-	context.JSON(200, pod)
+	context.JSON(http.StatusOK, pod)
 }
 
 // PodLog get pod log
@@ -218,11 +213,25 @@ func (c *ClusterController) PodLog(context *gin.Context) {
 	result, err := container.GetLogDetails(c.Context.Client(), namespace, podID, containerID, logSelector, usePreviousLogs)
 
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("fail get pod %s log", podID),
 		})
 		return
 	}
 
-	context.JSON(200, result)
+	context.JSON(http.StatusOK, result)
+}
+
+func querySelector(selector string, defSelector ...labels.Selector) (labels.Selector, error) {
+	set := make(labels.Set)
+	if selector == "" && len(defSelector) != 0 {
+		return defSelector[0], nil
+	}
+	if selector == "" {
+		return set.AsSelector(), nil
+	}
+	if err := json.Unmarshal([]byte(selector), &set); err != nil {
+		return nil, err
+	}
+	return labels.SelectorFromSet(set), nil
 }

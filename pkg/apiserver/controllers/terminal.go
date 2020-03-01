@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
 	"github.com/alibaba/kt-connect/pkg/apiserver/ws"
@@ -11,14 +12,16 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+// TerminalController terminal rest api
 type TerminalController struct {
 	Context common.Context
 }
 
+// Terminal ...
 func (c *TerminalController) Terminal(context *gin.Context) {
 	wsConn, err := ws.Constructor(context.Writer, context.Request)
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail create websocket",
 		})
 		return

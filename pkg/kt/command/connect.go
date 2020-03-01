@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"strings"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -11,7 +12,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	
 )
 
 // newConnectCommand return new connect command
@@ -75,7 +75,7 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		return fmt.Errorf("Connect already running %s exit this", options.RuntimeOptions.PidFile)
+		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
 
 	ch := SetUpCloseHandler(options)

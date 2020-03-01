@@ -49,12 +49,17 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 	log.Info().Msgf("- Start Clean Workspace\n")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
 		log.Info().Msgf("- Remove pid %s", options.RuntimeOptions.PidFile)
-		os.Remove(options.RuntimeOptions.PidFile)
+		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
+			log.Error().Err(err).
+				Msgf("stop process:%d failed", options.RuntimeOptions.PidFile)
+		}
 	}
 
 	if _, err := os.Stat(".jvmrc"); err == nil {
 		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
-		os.Remove(".jvmrc")
+		if err = os.Remove(".jvmrc"); err != nil {
+			log.Error().Err(err).Msg("delete .jvmrc failed")
+		}
 	}
 	util.DropHosts(options.ConnectOptions.Hosts)
 	client, err := cluster.GetKubernetesClient(options.KubeConfig)
@@ -66,12 +71,15 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 	// scale origin app to replicas
 	if len(options.RuntimeOptions.Origin) > 0 {
 		log.Info().Msgf("- Recover Origin App %s", options.RuntimeOptions.Origin)
-		cluster.ScaleTo(
+		err = cluster.ScaleTo(
 			client,
 			options.Namespace,
 			options.RuntimeOptions.Origin,
 			options.RuntimeOptions.Replicas,
 		)
+		log.Error().
+			Str("namespace", options.Namespace).
+			Msgf("scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
 	}
 
 	if len(options.RuntimeOptions.Shadow) > 0 {

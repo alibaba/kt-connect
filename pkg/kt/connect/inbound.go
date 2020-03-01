@@ -13,7 +13,7 @@ import (
 )
 
 // remotePortForward mapping local port from cluster
-func remotePortForward(expose string, kubeconfig string, namespace string, target string, remoteIP string, debug bool) (err error) {
+func remotePortForward(expose, kubeconfig, namespace, target, remoteIP string, debug bool) (err error) {
 	log.Info().Msgf("remote %s forward to local %s", remoteIP, expose)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {

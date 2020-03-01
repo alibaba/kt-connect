@@ -12,15 +12,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-func podCreated(obj interface{}) {
-	pod, ok := obj.(*api.Pod)
-	if ok {
-		fmt.Printf("Pod created: %s\n", pod.ObjectMeta.Name)
-	} else {
-		fmt.Printf("Pod created event: %s\n", obj)
-	}
-}
-
 func podDeleted(obj interface{}) {
 	pod, ok := obj.(*api.Pod)
 	if ok {
@@ -44,7 +35,8 @@ func (w *Watcher) Pods() (lister v1.PodLister, err error) {
 	factory.Start(stopCh)
 
 	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		err = errTimeout
+		runtime.HandleError(err)
 		return
 	}
 

@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var wsUpgrader = websocket.Upgrader{
+var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 	CheckOrigin: func(r *http.Request) bool {
@@ -16,30 +16,30 @@ var wsUpgrader = websocket.Upgrader{
 	},
 }
 
-type WsMessage struct {
+type Message struct {
 	MessageType int
 	Data        []byte
 }
 
-type WsConnection struct {
+type Connection struct {
 	wsSocket *websocket.Conn
-	inChan   chan *WsMessage
-	outChan  chan *WsMessage
+	inChan   chan *Message
+	outChan  chan *Message
 
 	mutex     sync.Mutex
 	isClosed  bool
 	closeChan chan byte
 }
 
-func Constructor(resp http.ResponseWriter, req *http.Request) (wsConn *WsConnection, err error) {
-	wsSocket, err := wsUpgrader.Upgrade(resp, req, nil)
+func Constructor(resp http.ResponseWriter, req *http.Request) (wsConn *Connection, err error) {
+	wsSocket, err := upgrader.Upgrade(resp, req, nil)
 	if err != nil {
 		return
 	}
-	wsConn = &WsConnection{
+	wsConn = &Connection{
 		wsSocket:  wsSocket,
-		inChan:    make(chan *WsMessage, 1000),
-		outChan:   make(chan *WsMessage, 1000),
+		inChan:    make(chan *Message, 1000),
+		outChan:   make(chan *Message, 1000),
 		closeChan: make(chan byte),
 		isClosed:  false,
 	}
@@ -50,18 +50,18 @@ func Constructor(resp http.ResponseWriter, req *http.Request) (wsConn *WsConnect
 	return
 }
 
-func (wsConn *WsConnection) wsReadLoop() {
+func (wsConn *Connection) wsReadLoop() {
 	var (
 		msgType int
 		data    []byte
-		msg     *WsMessage
+		msg     *Message
 		err     error
 	)
 	for {
 		if msgType, data, err = wsConn.wsSocket.ReadMessage(); err != nil {
 			goto ERROR
 		}
-		msg = &WsMessage{
+		msg = &Message{
 			msgType,
 			data,
 		}
@@ -76,9 +76,9 @@ ERROR:
 CLOSED:
 }
 
-func (wsConn *WsConnection) wsWriteLoop() {
+func (wsConn *Connection) wsWriteLoop() {
 	var (
-		msg *WsMessage
+		msg *Message
 		err error
 	)
 	for {
@@ -96,7 +96,7 @@ ERROR:
 CLOSED:
 }
 
-func (wsConn *WsConnection) WsClose() {
+func (wsConn *Connection) WsClose() {
 	wsConn.wsSocket.Close()
 
 	wsConn.mutex.Lock()
@@ -107,16 +107,16 @@ func (wsConn *WsConnection) WsClose() {
 	}
 }
 
-func (wsConn *WsConnection) WsWrite(messageType int, data []byte) (err error) {
+func (wsConn *Connection) WsWrite(messageType int, data []byte) (err error) {
 	select {
-	case wsConn.outChan <- &WsMessage{messageType, data}:
+	case wsConn.outChan <- &Message{messageType, data}:
 	case <-wsConn.closeChan:
 		err = errors.New("websocket closed")
 	}
 	return
 }
 
-func (wsConn *WsConnection) WsRead() (msg *WsMessage, err error) {
+func (wsConn *Connection) WsRead() (msg *Message, err error) {
 	select {
 	case msg = <-wsConn.inChan:
 		return

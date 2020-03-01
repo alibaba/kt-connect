@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"runtime"
-
 	"time"
 
 	"github.com/lextoumbourou/goodhosts"
@@ -105,46 +104,51 @@ func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
 
+// DropHosts ...
 func DropHosts(hostsMap map[string]string) {
 	hosts, err := goodhosts.NewHosts()
 
 	if err != nil {
-		log.Printf("Fail to read hosts from host %s, ignore", err.Error())
+		log.Warn().Msgf("Fail to read hosts from host %s, ignore", err.Error())
 		return
 	}
 
 	for name, ip := range hostsMap {
 		if hosts.Has(ip, name) {
-			hosts.Remove(ip, name)
+			if err = hosts.Remove(ip, name); err != nil {
+				log.Warn().Str("ip", ip).Str("name", name).Msg("remove host failed")
+			}
 		}
 	}
 
 	if err := hosts.Flush(); err != nil {
-		log.Info().Msgf("Error Happen when flush hosts")
+		log.Error().Err(err).Msgf("Error Happen when flush hosts")
 	}
 
 	log.Info().Msgf("- Drop hosts successful.")
 }
 
-// DumpToHosts DumpToHosts
+// DumpHosts DumpToHosts
 func DumpHosts(hostsMap map[string]string) {
 	hosts, err := goodhosts.NewHosts()
 
 	if err != nil {
-		log.Printf("Fail to read hosts from host %s, ignore", err.Error())
+		log.Warn().Msgf("Fail to read hosts from host %s, ignore", err.Error())
 		return
 	}
 
 	for name, ip := range hostsMap {
 		if !hosts.Has(ip, name) {
-			hosts.Add(ip, name)
+			if err = hosts.Add(ip, name); err != nil {
+				log.Warn().Str("ip", ip).Str("name", name).Msg("add host failed")
+			}
 		}
 	}
 
 	if err := hosts.Flush(); err != nil {
-		log.Info().Msgf("Error Happen when dump hosts")
+		log.Error().Err(err).Msg("Error Happen when dump hosts")
 	}
 
-	log.Info().Msgf("Dump hosts successful.")
+	log.Info().Msg("Dump hosts successful.")
 
 }
