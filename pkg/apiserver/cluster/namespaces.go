@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -11,7 +10,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// Namespaces informor
+// Namespaces informer of namespace
 func (w *Watcher) Namespaces() (lister v1.NamespaceLister, err error) {
 	resyncPeriod := 30 * time.Minute
 	stopCh := wait.NeverStop
@@ -24,7 +23,8 @@ func (w *Watcher) Namespaces() (lister v1.NamespaceLister, err error) {
 	factory.Start(stopCh)
 
 	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		err = errTimeout
+		runtime.HandleError(err)
 		return
 	}
 

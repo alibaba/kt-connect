@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"fmt"
 	"time"
 
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -11,7 +10,7 @@ import (
 	"k8s.io/client-go/tools/cache"
 )
 
-// Endpoints informor
+// Endpoints informer of endpoints
 func (w *Watcher) Endpoints() (lister v1.EndpointsLister, err error) {
 
 	resyncPeriod := 30 * time.Minute
@@ -25,7 +24,8 @@ func (w *Watcher) Endpoints() (lister v1.EndpointsLister, err error) {
 	factory.Start(stopCh)
 
 	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
-		runtime.HandleError(fmt.Errorf("Timed out waiting for caches to sync"))
+		err = errTimeout
+		runtime.HandleError(err)
 		return
 	}
 

@@ -35,7 +35,7 @@ func NewDNSServerDefault() (srv *dns.Server) {
 	return
 }
 
-//ServeDNS query DNS rescord
+//ServeDNS query DNS record
 func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(req)
@@ -129,7 +129,7 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	return
 }
 
-func (s *server) getResolvServer() (address string, err error) {
+func (s *server) getResolveServer() (address string, err error) {
 	if len(s.config.Servers) <= 0 {
 		err = errors.New("*** error: dns server is 0")
 		return
@@ -144,7 +144,7 @@ func (s *server) getResolvServer() (address string, err error) {
 
 func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
 	log.Info().Msgf("Received DNS query for %s: \n", domain)
-	address, err := s.getResolvServer()
+	address, err := s.getResolveServer()
 	if err != nil {
 		log.Error().Msgf(err.Error())
 		return
@@ -187,7 +187,7 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 	return
 }
 
-func (s *server) getAnswer(name string, inClusterName string, acutal dns.RR) (tmp dns.RR, err error) {
+func (s *server) getAnswer(name, inClusterName string, acutal dns.RR) (tmp dns.RR, err error) {
 	if name != inClusterName {
 		log.Info().Msgf("origin %s query name is not same %s", inClusterName, name)
 		log.Info().Msgf("origin answer rr to %s", acutal.String())

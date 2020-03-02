@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Run run cmd
+// RunAndWait run cmd
 func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 	runCmd(cmd, name, debug)
 	err = cmd.Wait()

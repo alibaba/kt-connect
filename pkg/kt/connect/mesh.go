@@ -27,8 +27,8 @@ func (c *Connect) createMeshShadown(
 	swap string,
 	clientset *kubernetes.Clientset,
 	extraLabels map[string]string,
-	namespace string, image string,
-) (shadowName string, podIP string, podName string, err error) {
+	namespace, image string,
+) (shadowName, podIP, podName string, err error) {
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 	origin, err := deploymentsClient.Get(swap, metav1.GetOptions{})
 	if err != nil {
