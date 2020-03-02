@@ -8,7 +8,7 @@ import (
 )
 
 type StreamHandler struct {
-	WsConn      *WsConnection
+	WsConn      *Connection
 	ResizeEvent chan remotecommand.TerminalSize
 }
 
@@ -27,7 +27,7 @@ func (handler *StreamHandler) Next() (size *remotecommand.TerminalSize) {
 
 func (handler *StreamHandler) Read(p []byte) (size int, err error) {
 	var (
-		msg      *WsMessage
+		msg      *Message
 		xtermMsg xtermMessage
 	)
 

@@ -2,11 +2,12 @@ package controllers
 
 import (
 	"fmt"
-	"log"
+	"net/http"
 
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
 	"github.com/gin-gonic/gin"
-	v1alpha3 "istio.io/api/networking/v1alpha3"
+	"github.com/rs/zerolog/log"
+	networking "istio.io/api/networking/v1alpha3"
 	versionedclient "istio.io/client-go/pkg/clientset/versioned"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,22 +23,26 @@ func (c *IstioController) VirtualServices(context *gin.Context) {
 
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
 	if err != nil {
-		log.Fatalf("Failed to create istio client: %s", err)
-	}
-
-	vsList, err := ic.NetworkingV1alpha3().VirtualServices(namespace).List(metav1.ListOptions{})
-	if err != nil {
-		log.Fatalf("Failed to get VirtualService in %s namespace: %s", namespace, err)
-	}
-
-	if err != nil {
-		context.JSON(500, gin.H{
+		log.Error().Err(err).Msg("Failed to create istio client")
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail init istioClient",
 		})
 		return
 	}
 
-	context.JSON(200, vsList)
+	vsList, err := ic.NetworkingV1alpha3().VirtualServices(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to get VirtualService in %s namespace", namespace)
+	}
+
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": "fail init istioClient",
+		})
+		return
+	}
+
+	context.JSON(http.StatusOK, vsList)
 }
 
 // VirtualService get virtual service instance
@@ -48,7 +53,7 @@ func (c *IstioController) VirtualService(context *gin.Context) {
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
 
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail init istioClient",
 		})
 		return
@@ -57,13 +62,13 @@ func (c *IstioController) VirtualService(context *gin.Context) {
 	vs, err := ic.NetworkingV1alpha3().VirtualServices(namespace).Get(name, metav1.GetOptions{})
 
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get virtual service",
 		})
 		return
 	}
 
-	context.JSON(200, vs)
+	context.JSON(http.StatusOK, vs)
 }
 
 // DestinationRules get destination rule
@@ -72,7 +77,7 @@ func (c *IstioController) DestinationRules(context *gin.Context) {
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
 
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail init istioClient",
 		})
 		return
@@ -80,13 +85,13 @@ func (c *IstioController) DestinationRules(context *gin.Context) {
 
 	destinationrules, err := ic.NetworkingV1alpha3().DestinationRules(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get destinationrules",
 		})
 		return
 	}
 
-	context.JSON(200, destinationrules)
+	context.JSON(http.StatusOK, destinationrules)
 }
 
 // DestinationRule get destination rule instances
@@ -96,7 +101,7 @@ func (c *IstioController) DestinationRule(context *gin.Context) {
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
 
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail init istioClient",
 		})
 		return
@@ -104,13 +109,13 @@ func (c *IstioController) DestinationRule(context *gin.Context) {
 
 	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
-			"message": fmt.Sprintf("fail get destinationrule", name),
+		context.JSON(http.StatusInternalServerError, gin.H{
+			"message": fmt.Sprintf("fail get destinationrule %s", name),
 		})
 		return
 	}
 
-	context.JSON(200, destinationrule)
+	context.JSON(http.StatusOK, destinationrule)
 }
 
 // AddVersionToDestinationRule add version to destination rule
@@ -122,7 +127,7 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
 
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail init istioClient",
 		})
 		return
@@ -130,7 +135,7 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 
 	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get destinationrule",
 		})
 		return
@@ -138,14 +143,14 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 
 	for _, subset := range destinationrule.Spec.Subsets {
 		if subset.Name == version {
-			context.JSON(422, gin.H{
+			context.JSON(http.StatusUnprocessableEntity, gin.H{
 				"message": "version already present",
 			})
 			return
 		}
 	}
 
-	newSubset := &v1alpha3.Subset{
+	newSubset := &networking.Subset{
 		Name: version,
 		Labels: map[string]string{
 			version: version,
@@ -155,18 +160,18 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 
 	result, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Update(destinationrule)
 	if err != nil {
-		context.JSON(500, gin.H{
+		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
 		})
 		return
 	}
 
-	context.JSON(200, result)
+	context.JSON(http.StatusOK, result)
 }
 
 // RemoveVersionToDestinationRule remove version from destination rule
 func (c *IstioController) RemoveVersionToDestinationRule(context *gin.Context) {
-	context.JSON(200, gin.H{
+	context.JSON(http.StatusOK, gin.H{
 		"message": "remove version to destinaltion rule",
 	})
 }

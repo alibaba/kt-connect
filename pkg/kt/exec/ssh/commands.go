@@ -7,13 +7,13 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
-// SSHVersion check sshuttle version
+// Version check sshuttle version
 func Version() *exec.Cmd {
 	return exec.Command("ssh", "-V")
 }
 
 // ForwardRemoteRequestToLocal ssh remote port forward
-func ForwardRemoteRequestToLocal(localPort string, remoteHost string, remotePort string, remoteSSHPort int) *exec.Cmd {
+func ForwardRemoteRequestToLocal(localPort, remoteHost, remotePort string, remoteSSHPort int) *exec.Cmd {
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",
 		"-oUserKnownHostsFile=/dev/null",

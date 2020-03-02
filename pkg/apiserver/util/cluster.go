@@ -1,10 +1,10 @@
 package util
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -24,11 +24,11 @@ func GetKubernetesClient() (clientset kubernetes.Interface, config *restclient.C
 func GetKubeconfig() (config *restclient.Config, err error) {
 	kubeconfig := filepath.Join(homeDir(), ".kube", "config")
 	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
-		log.Printf("kubeconfig not found, use InCluster Mode")
+		log.Info().Msg("kubeconfig not found, use InCluster Mode")
 		config, err := restclient.InClusterConfig()
 		return config, err
 	}
-	log.Printf("Use OutCluster Config Mode")
+	log.Info().Msg("Use OutCluster Config Mode")
 	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 	return
 }

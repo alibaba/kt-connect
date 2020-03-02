@@ -1,9 +1,15 @@
 package cluster
 
 import (
+	"errors"
+
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
+)
+
+var (
+	errTimeout = errors.New("timed out waiting for caches to sync")
 )
 
 //Watcher Kubernetes resource watch
@@ -19,7 +25,6 @@ type Watcher struct {
 // Construct for watcher
 func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err error) {
 	w = Watcher{Client: client, Config: config}
-	w.Client = client
 
 	namespaceLister, err := w.Namespaces()
 	if err != nil {

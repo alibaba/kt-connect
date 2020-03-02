@@ -1,12 +1,12 @@
 package command
 
 import (
-	"github.com/rs/zerolog/log"
-	"github.com/skratchdot/open-golang/open"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/skratchdot/open-golang/open"
 	"github.com/urfave/cli"
 )
 
@@ -50,7 +50,7 @@ func newDashboardCommand(options *options.DaemonOptions) cli.Command {
 	}
 }
 
-
+// ApplyDashboard ...
 func (action *Action) ApplyDashboard() (err error) {
 	command := kubectl.ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
@@ -62,6 +62,7 @@ func (action *Action) ApplyDashboard() (err error) {
 	return
 }
 
+// OpenDashboard ...
 func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
 	ch := SetUpWaitingChannel()
 	command := kubectl.PortForwardDashboardToLocal(options.DashboardOptions.Port)

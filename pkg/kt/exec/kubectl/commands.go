@@ -34,6 +34,6 @@ func PortForwardDashboardToLocal(port string) *exec.Cmd {
 }
 
 // PortForward kubectl port forward
-func PortForward(kubeConifg string, namespace string, resource string, remotePort int) *exec.Cmd {
+func PortForward(kubeConifg, namespace, resource string, remotePort int) *exec.Cmd {
 	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "-n", namespace, "port-forward", resource, fmt.Sprintf("%d", remotePort)+":22")
 }
