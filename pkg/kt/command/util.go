@@ -77,9 +77,11 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 			options.RuntimeOptions.Origin,
 			options.RuntimeOptions.Replicas,
 		)
-		log.Error().
-			Str("namespace", options.Namespace).
-			Msgf("scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
+		if err != nil {
+			log.Error().
+				Str("namespace", options.Namespace).
+				Msgf("scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
+		}
 	}
 
 	if len(options.RuntimeOptions.Shadow) > 0 {
