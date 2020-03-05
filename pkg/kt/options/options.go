@@ -39,6 +39,7 @@ type runtimeOptions struct {
 	Origin string
 	// The origin repicas
 	Replicas int32
+	Service  string
 }
 
 type dashboardOptions struct {

@@ -71,6 +71,14 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 	}
 	log.Info().Msgf("Success create shadow pod %s ip %s", podName, podIP)
 
+	if options.RunOptions.Expose {
+		err := cluster.CreateService(service, options.Namespace, labels, options.RunOptions.Port, clientset)
+		if err != nil {
+			return err
+		}
+		options.RuntimeOptions.Service = service
+	}
+
 	options.RuntimeOptions.Shadow = service
 	connect.RemotePortForward(strconv.Itoa(options.RunOptions.Port), options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 
