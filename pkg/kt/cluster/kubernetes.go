@@ -94,34 +94,6 @@ func CreateShadow(
 	return
 }
 
-// Deprecated : this implement is not "golang style"
-func waitPodReady(namespace, name string, clientset *kubernetes.Clientset) (pod apiv1.Pod, err error) {
-	pod = apiv1.Pod{}
-	for {
-		pods, err1 := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
-			LabelSelector: "kt=" + name,
-		})
-
-		if err1 != nil {
-			err = err1
-			return
-		}
-
-		if len(pods.Items) <= 0 {
-			log.Printf("Shadow Pods not ready......")
-		} else {
-			pod = pods.Items[0]
-			log.Info().Msgf("Shadow Pod status is %s", pod.Status.Phase)
-			if pod.Status.Phase == "Running" {
-				break
-			}
-		}
-		time.Sleep(time.Duration(2) * time.Second)
-	}
-	log.Info().Msg("Shadow is ready.")
-	return
-}
-
 func waitPodReadyUsingInformer(namespace, name string, clientset *kubernetes.Clientset) (pod apiv1.Pod, err error) {
 	podListener, err := clusterWatcher.PodListener(clientset)
 	if err != nil {
