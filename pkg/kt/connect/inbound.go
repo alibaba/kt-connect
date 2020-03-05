@@ -12,8 +12,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// remotePortForward mapping local port from cluster
-func remotePortForward(expose, kubeconfig, namespace, target, remoteIP string, debug bool) (err error) {
+// RemotePortForward mapping local port from cluster
+func RemotePortForward(expose, kubeconfig, namespace, target, remoteIP string, debug bool) (err error) {
 	log.Info().Msgf("remote %s forward to local %s", remoteIP, expose)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {

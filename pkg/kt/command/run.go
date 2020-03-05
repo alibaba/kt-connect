@@ -1,7 +1,13 @@
 package command
 
 import (
+	"fmt"
+	"strconv"
+
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -29,14 +35,49 @@ func newRunCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			action := Action{}
-			action.Run(c.Args().First(), options)
-			return nil
+			return action.Run(c.Args().First(), options)
 		},
 	}
 }
 
 // Run create a new service in cluster
 func (action *Action) Run(service string, options *options.DaemonOptions) error {
-	log.Info().Msgf("run service %s port %d expose %b", service, options.RunOptions.Port, options.RunOptions.Expose)
+	ch := SetUpCloseHandler(options)
+
+	port := options.RunOptions.Port
+	if port == 0 {
+		return fmt.Errorf("--port is required")
+	}
+
+	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
+	if err != nil {
+		return err
+	}
+
+	labels := map[string]string{
+		"control-by":   "kt",
+		"kt-component": "run",
+		"kt":           service,
+	}
+
+	// extra labels must be applied after origin labels
+	for k, v := range util.String2Map(options.Labels) {
+		labels[k] = v
+	}
+
+	podIP, podName, err := cluster.CreateShadow(clientset, service, labels, options.Namespace, options.Image)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("Success create shadow pod %s ip %s", podName, podIP)
+
+	options.RuntimeOptions.Shadow = service
+	connect.RemotePortForward(strconv.Itoa(options.RunOptions.Port), options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+
+	log.Info().Msgf("forward remote %s:%d -> options.RunOptions.Port", podIP, options.RunOptions.Port)
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+
 	return nil
 }

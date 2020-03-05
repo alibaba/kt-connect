@@ -19,7 +19,7 @@ func (c *Connect) Mesh(swap string, options *options.DaemonOptions, clientset *k
 		return
 	}
 	options.RuntimeOptions.Shadow = workload
-	err = remotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+	err = RemotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 	return
 }
 
