@@ -10,3 +10,4 @@ note/
 
 .jvmrc
 .DS_Store
+vendor/
