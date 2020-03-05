@@ -61,3 +61,13 @@ func ServiceListener(client kubernetes.Interface) (lister v1.ServiceLister, err 
 	}
 	return
 }
+
+// PodListener PodListener
+func PodListener(client kubernetes.Interface) (lister v1.PodLister, err error) {
+	w := Watcher{Client: client}
+	lister, err = w.Pods()
+	if err != nil {
+		return
+	}
+	return
+}

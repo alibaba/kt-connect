@@ -1,10 +1,8 @@
 package cluster
 
 import (
-	"fmt"
 	"time"
 
-	api "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/informers"
@@ -13,12 +11,12 @@ import (
 )
 
 func podDeleted(obj interface{}) {
-	pod, ok := obj.(*api.Pod)
-	if ok {
-		fmt.Printf("Pod deleted: %s\n", pod.ObjectMeta.Name)
-	} else {
-		fmt.Printf("Pod deleted event: %s\n", obj)
-	}
+	// pod, ok := obj.(*api.Pod)
+	// if ok {
+	// 	fmt.Printf("Pod deleted: %s\n", pod.ObjectMeta.Name)
+	// } else {
+	// 	fmt.Printf("Pod deleted event: %s\n", obj)
+	// }
 }
 
 // Pods watch pods change

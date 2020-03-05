@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"errors"
 	"time"
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
@@ -13,12 +12,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
+
+// Signal structure
+type Signal struct {
+}
 
 // GetKubernetesClient get Kubernetes client from config
 func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
@@ -123,11 +123,11 @@ func waitPodReady(namespace, name string, clientset *kubernetes.Clientset) (pod 
 }
 
 func waitPodReadyUsingInformer(namespace, name string, clientset *kubernetes.Clientset) (pod apiv1.Pod, err error) {
+	podListener, err := clusterWatcher.PodListener(clientset)
+	if err != nil {
+		return
+	}
 	pod = apiv1.Pod{}
-	// sharedInformerFactory:=informers.SharedInformerOption()
-	option := informers.WithNamespace(namespace)
-	factory := informers.NewSharedInformerFactoryWithOptions(clientset, 0, option)
-	podInformer := factory.Core().V1().Pods()
 	podLabels := labels.NewSelector()
 	log.Info().Msgf("pod label: kt=%s", name)
 	labelKeys := []string{
@@ -138,23 +138,11 @@ func waitPodReadyUsingInformer(namespace, name string, clientset *kubernetes.Cli
 		return
 	}
 	podLabels.Add(*requirement)
-	// Kubernetes serves an utility to handle API crashes
-	defer runtime.HandleCrash()
-	stopSignal := make(chan struct{})
-	defer close(stopSignal)
-	go factory.Start(stopSignal)
-	if !cache.WaitForNamedCacheSync("attach detach", stopSignal,
-		podInformer.Informer().HasSynced) {
-		err = errors.New("Error waiting for the informer caches to sync")
-		if err != nil {
-			return pod, err
-		}
-	}
-	pods, err := podInformer.Lister().Pods(namespace).List(podLabels)
+
+	pods, err := podListener.Pods(namespace).List(podLabels)
 	if err != nil {
 		return pod, err
 	}
-	log.Info().Msg("podInformer init")
 	getTargetPod := func(podList []*v1.Pod) *v1.Pod {
 		// log.Info().Msgf("len(podList):%d", len(podList))
 		for _, p := range podList {
@@ -196,12 +184,11 @@ wait_loop:
 			}
 		}
 		wait(podName)
-		pods, err = podInformer.Lister().Pods(namespace).List(podLabels)
+		pods, err = podListener.Pods(namespace).List(podLabels)
 		if err != nil {
 			return pod, err
 		}
 	}
-	<-stopSignal
 	return pod, nil
 }
 
