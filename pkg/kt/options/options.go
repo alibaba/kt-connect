@@ -6,6 +6,11 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
+type runOptions struct {
+	Expose bool
+	Port   int
+}
+
 type connectOptions struct {
 	DisableDNS  bool
 	SSHPort     int
@@ -49,6 +54,7 @@ type DaemonOptions struct {
 	Image            string
 	Labels           string
 	RuntimeOptions   *runtimeOptions
+	RunOptions       *runOptions
 	ConnectOptions   *connectOptions
 	ExchangeOptions  *exchangeOptions
 	MeshOptions      *meshOptions
@@ -71,5 +77,6 @@ func NewDaemonOptions() *DaemonOptions {
 		ExchangeOptions:  &exchangeOptions{},
 		MeshOptions:      &meshOptions{},
 		DashboardOptions: &dashboardOptions{},
+		RunOptions:       &runOptions{},
 	}
 }

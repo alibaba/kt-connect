@@ -15,6 +15,7 @@ import (
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
+		newRunCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
