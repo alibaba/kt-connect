@@ -79,7 +79,12 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 	}
 
 	options.RuntimeOptions.Shadow = service
-	connect.RemotePortForward(strconv.Itoa(options.RunOptions.Port), options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+
+	shadow := connect.Create(options)
+	err = shadow.RemotePortForward(strconv.Itoa(options.RunOptions.Port), podName, podIP)
+	if err != nil {
+		return err
+	}
 
 	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 

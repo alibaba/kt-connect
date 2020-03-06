@@ -83,7 +83,8 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 	down := int32(0)
 	kubernetes.Scale(app, &down)
 
-	connect.RemotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+	shadow := connect.Create(options)
+	shadow.RemotePortForward(options.ExchangeOptions.Expose, podName, podIP)
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)

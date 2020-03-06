@@ -82,7 +82,9 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 
 	// record context data
 	options.RuntimeOptions.Shadow = workload
-	err = connect.RemotePortForward(options.MeshOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+
+	shadow := connect.Create(options)
+	err = shadow.RemotePortForward(options.MeshOptions.Expose, podName, podIP)
 
 	if err != nil {
 		return err

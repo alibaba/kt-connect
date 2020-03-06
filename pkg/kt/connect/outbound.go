@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/alibaba/kt-connect/pkg/kt/options"
-
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
@@ -16,12 +14,20 @@ import (
 )
 
 // Connect start vpn connection
-func Connect(name, podIP string, cidrs []string, options *options.DaemonOptions) (err error) {
+func (s *Shadow) Connect(name, podIP string, cidrs []string) (err error) {
+	options := s.Options
 	err = util.PrepareSSHPrivateKey()
 	if err != nil {
 		return
 	}
-	err = exec.BackgroundRun(kubectl.PortForward(options.KubeConfig, options.Namespace, name, options.ConnectOptions.SSHPort), "port-forward", options.Debug)
+	err = exec.BackgroundRun(
+		kubectl.PortForward(
+			options.KubeConfig,
+			options.Namespace,
+			name,
+			options.ConnectOptions.SSHPort),
+		"port-forward",
+		options.Debug)
 	if err != nil {
 		return
 	}
