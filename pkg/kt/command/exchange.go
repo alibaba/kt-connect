@@ -54,8 +54,7 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
-	factory := cluster.KubernetesFactory{}
-	kubernetes, err := factory.Create(options.KubeConfig)
+	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return err
 	}

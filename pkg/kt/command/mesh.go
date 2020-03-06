@@ -60,8 +60,7 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 
 	ch := SetUpCloseHandler(options)
 
-	factory := cluster.KubernetesFactory{}
-	kubernetes, err := factory.Create(options.KubeConfig)
+	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return err
 	}

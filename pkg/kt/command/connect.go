@@ -86,8 +86,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 
 	log.Info().Msgf("Connect Start At %d", pid)
 
-	factory := cluster.KubernetesFactory{}
-	kubernetes, err := factory.Create(options.KubeConfig)
+	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return
 	}

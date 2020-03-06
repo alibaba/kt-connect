@@ -7,12 +7,8 @@ import (
 	v1 "k8s.io/client-go/listers/core/v1"
 )
 
-// KubernetesFactory kubernetes factory
-type KubernetesFactory struct {
-}
-
 // Create kubernetes instance
-func (f *KubernetesFactory) Create(kubeConfig string) (kubernetes Kubernetes, err error) {
+func Create(kubeConfig string) (kubernetes Kubernetes, err error) {
 	clientSet, err := GetKubernetesClient(kubeConfig)
 	if err != nil {
 		return
