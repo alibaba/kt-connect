@@ -68,8 +68,7 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 	options.RuntimeOptions.Origin = exchange
 	options.RuntimeOptions.Replicas = *replicas
 
-	factory := connect.Connect{}
-	_, err = factory.Exchange(options, origin, clientset, util.String2Map(options.Labels))
+	_, err = connect.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		return err
 	}

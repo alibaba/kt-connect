@@ -13,8 +13,8 @@ import (
 )
 
 // Mesh prepare swap deployment
-func (c *Connect) Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
-	workload, podIP, podName, err := c.createMeshShadown(swap, clientset, labels, options.Namespace, options.Image)
+func Mesh(swap string, options *options.DaemonOptions, clientset *kubernetes.Clientset, labels map[string]string) (workload string, err error) {
+	workload, podIP, podName, err := createMeshShadown(swap, clientset, labels, options.Namespace, options.Image)
 	if err != nil {
 		return
 	}
@@ -23,7 +23,7 @@ func (c *Connect) Mesh(swap string, options *options.DaemonOptions, clientset *k
 	return
 }
 
-func (c *Connect) createMeshShadown(
+func createMeshShadown(
 	swap string,
 	clientset *kubernetes.Clientset,
 	extraLabels map[string]string,

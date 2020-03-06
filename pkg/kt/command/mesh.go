@@ -57,8 +57,7 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 		return err
 	}
 
-	factory := connect.Connect{}
-	_, err = factory.Mesh(mesh, options, clientset, util.String2Map(options.Labels))
+	_, err = connect.Mesh(mesh, options, clientset, util.String2Map(options.Labels))
 
 	if err != nil {
 		return err
