@@ -189,7 +189,7 @@ wait_loop:
 func generateService(name, namespace string, labels map[string]string, port int) *v1.Service {
 	var ports []v1.ServicePort
 	ports = append(ports, v1.ServicePort{
-		Name:       "shadow",
+		Name:       name,
 		Port:       int32(port),
 		TargetPort: intstr.FromInt(port),
 	})
