@@ -1,12 +1,13 @@
 package command
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -28,8 +29,19 @@ func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			action.Mesh(c.Args().First(), options)
-			return nil
+
+			swap := c.Args().First()
+			expose := options.MeshOptions.Expose
+
+			if len(swap) == 0 {
+				return errors.New("mesh target is required")
+			}
+
+			if len(expose) == 0 {
+				return errors.New("-expose is required")
+			}
+
+			return action.Mesh(c.Args().First(), options)
 		},
 	}
 }
@@ -39,12 +51,6 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
 	ch := SetUpCloseHandler(options)
-
-	expose := options.MeshOptions.Expose
-
-	if swap == "" || expose == "" {
-		return fmt.Errorf("-expose is required")
-	}
 
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {

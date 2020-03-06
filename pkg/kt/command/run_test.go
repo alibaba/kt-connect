@@ -37,7 +37,9 @@ func Test_runCommand(t *testing.T) {
 
 		context := cli.NewContext(app, set, nil)
 
-		command := newRunCommand(options.NewDaemonOptions(), mockAction)
+		opts := options.NewDaemonOptions()
+		opts.Debug = true
+		command := newRunCommand(opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {
