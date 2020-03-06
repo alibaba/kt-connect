@@ -16,7 +16,7 @@ import (
 )
 
 // newExchangeCommand return new exchange command
-func newExchangeCommand(options *options.DaemonOptions) cli.Command {
+func newExchangeCommand(options *options.DaemonOptions, action Action) cli.Command {
 	return cli.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",
@@ -32,7 +32,6 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := Action{}
 			return action.Exchange(c.Args().First(), options)
 		},
 	}

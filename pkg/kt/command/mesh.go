@@ -13,7 +13,7 @@ import (
 )
 
 // newMeshCommand return new mesh command
-func newMeshCommand(options *options.DaemonOptions) cli.Command {
+func newMeshCommand(options *options.DaemonOptions, action Action) cli.Command {
 	return cli.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",
@@ -28,7 +28,6 @@ func newMeshCommand(options *options.DaemonOptions) cli.Command {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			action := Action{}
 			action.Mesh(c.Args().First(), options)
 			return nil
 		},

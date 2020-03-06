@@ -13,14 +13,14 @@ import (
 )
 
 // NewCommands return new Connect Command
-func NewCommands(options *options.DaemonOptions) []cli.Command {
+func NewCommands(options *options.DaemonOptions, action Action) []cli.Command {
 	return []cli.Command{
-		newRunCommand(options),
-		newConnectCommand(options),
-		newExchangeCommand(options),
-		newMeshCommand(options),
-		newDashboardCommand(options),
-		NewCheckCommand(options),
+		newRunCommand(options, action),
+		newConnectCommand(options, action),
+		newExchangeCommand(options, action),
+		newMeshCommand(options, action),
+		newDashboardCommand(options, action),
+		NewCheckCommand(options, action),
 	}
 }
 

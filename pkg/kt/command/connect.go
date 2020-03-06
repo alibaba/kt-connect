@@ -15,7 +15,7 @@ import (
 )
 
 // newConnectCommand return new connect command
-func newConnectCommand(options *options.DaemonOptions) cli.Command {
+func newConnectCommand(options *options.DaemonOptions, action Action) cli.Command {
 
 	methodDefaultValue := "vpn"
 	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"
@@ -66,7 +66,6 @@ func newConnectCommand(options *options.DaemonOptions) cli.Command {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			action := Action{}
 			return action.Connect(options)
 		},
 	}
