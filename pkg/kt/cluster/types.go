@@ -28,8 +28,8 @@ func Create(kubeConfig string) (kubernetes Kubernetes, err error) {
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
-	Deployment(name, namespace string) (deployment appV1.Deployment, err error)
-	Scale(name, namespace string, replicas *int32) (err error)
+	Deployment(name, namespace string) (deployment *appV1.Deployment, err error)
+	Scale(deployment *appV1.Deployment, replicas *int32) (err error)
 	ServiceHosts(namespace string) (hosts map[string]string)
 	ClusterCrids(podCIDR string) (cidrs []string, err error)
 	CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName string, err error)

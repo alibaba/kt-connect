@@ -1,14 +1,16 @@
 package command
 
 import (
+	"errors"
 	"flag"
 	"io/ioutil"
 	"testing"
 
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/mockd/mock"
 	"github.com/golang/mock/gomock"
-
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/urfave/cli"
 )
 
@@ -50,4 +52,42 @@ func Test_newConnectCommand(t *testing.T) {
 		}
 
 	}
+}
+
+func Test_connectToCluster(t *testing.T) {
+
+	ctl := gomock.NewController(t)
+	kubernetesInterface := mock.NewMockKubernetesInterface(ctl)
+	shadowInterface := mock.NewMockShadowInterface(ctl)
+
+	kubernetesInterface.EXPECT().CreateShadow(
+		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", errors.New("")).AnyTimes()
+
+	type args struct {
+		shadow     connect.ShadowInterface
+		kubernetes cluster.KubernetesInterface
+		options    *options.DaemonOptions
+	}
+
+	type test struct {
+		name    string
+		args    args
+		wantErr bool
+	}
+
+	tt := test{
+		name: "should throw error when fail create shadow",
+		args: args{
+			shadow:     shadowInterface,
+			kubernetes: kubernetesInterface,
+			options:    options.NewDaemonOptions(),
+		},
+		wantErr: true,
+	}
+
+	t.Run(tt.name, func(t *testing.T) {
+		if err := connectToCluster(tt.args.shadow, tt.args.kubernetes, tt.args.options); (err != nil) != tt.wantErr {
+			t.Errorf("connectToCluster() error = %v, wantErr %v", err, tt.wantErr)
+		}
+	})
 }

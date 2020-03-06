@@ -83,13 +83,23 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if err != nil {
 		return
 	}
-
 	log.Info().Msgf("Connect Start At %d", pid)
+
+	shadow := connect.Create(options)
 
 	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return
 	}
+
+	connectToCluster(&shadow, &kubernetes, options)
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+	return
+}
+
+func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
 
 	if options.ConnectOptions.Dump2Hosts {
 		hosts := kubernetes.ServiceHosts(options.Namespace)
@@ -115,15 +125,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	shadow := connect.Create(options)
-	err = shadow.Outbound(podName, endPointIP, cidrs)
-	if err != nil {
-		return
-	}
-
-	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
-	return
+	return shadow.Outbound(podName, endPointIP, cidrs)
 }
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
