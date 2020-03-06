@@ -5,12 +5,12 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	
-	"github.com/urfave/cli"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/urfave/cli"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

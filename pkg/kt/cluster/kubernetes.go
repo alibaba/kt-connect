@@ -3,6 +3,8 @@ package cluster
 import (
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
+
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -50,16 +52,37 @@ func ScaleTo(clientSet *kubernetes.Clientset, namespace, name string, replicas i
 	return
 }
 
-// Remove remove shadow from cluster
-func Remove(client *kubernetes.Clientset, namespace, name string) {
+// RemoveShadow remove shadow from cluster
+func RemoveShadow(client *kubernetes.Clientset, namespace, name string) {
 	deploymentsClient := client.AppsV1().Deployments(namespace)
-	deletePolicy := metav1.DeletePropagationForeground
+	deletePolicy := metav1.DeletePropagationBackground
 	err := deploymentsClient.Delete(name, &metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 	if err != nil {
 		log.Error().Err(err).Msgf("delete deployment %s failed", name)
 	}
+}
+
+// CreateService create service in cluster
+func CreateService(name, namespace string,
+	labels map[string]string,
+	port int,
+	clientset *kubernetes.Clientset,
+) (err error) {
+	client := clientset.CoreV1().Services(namespace)
+	svc := generateService(name, namespace, labels, port)
+	_, err = client.Create(svc)
+	return err
+}
+
+// RemoveService create service in cluster
+func RemoveService(
+	name, namespace string,
+	clientset *kubernetes.Clientset,
+) (err error) {
+	client := clientset.CoreV1().Services(namespace)
+	return client.Delete(name, &metav1.DeleteOptions{})
 }
 
 // CreateShadow create shadow
@@ -81,14 +104,13 @@ func CreateShadow(
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Deploying shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 
 	// pod, err := waitPodReady(namespace, name, clientset)
 	pod, err := waitPodReadyUsingInformer(namespace, name, clientset)
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 	podIP = pod.Status.PodIP
 	podName = pod.GetObjectMeta().GetName()
 	return
@@ -162,6 +184,29 @@ wait_loop:
 		}
 	}
 	return pod, nil
+}
+
+func generateService(name, namespace string, labels map[string]string, port int) *v1.Service {
+	var ports []v1.ServicePort
+	ports = append(ports, v1.ServicePort{
+		Name:       name,
+		Port:       int32(port),
+		TargetPort: intstr.FromInt(port),
+	})
+
+	return &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: v1.ServiceSpec{
+			Selector: labels,
+			Type:     v1.ServiceTypeClusterIP,
+			Ports:    ports,
+		},
+	}
+
 }
 
 func generatorDeployment(namespace, name string, labels map[string]string, image string) *appsv1.Deployment {

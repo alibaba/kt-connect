@@ -19,7 +19,7 @@ func (c *Connect) Exchange(options *options.DaemonOptions, origin *v1.Deployment
 	options.RuntimeOptions.Shadow = workload
 	down := int32(0)
 	scaleTo(origin, options.Namespace, clientset, &down)
-	remotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
+	RemotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 	return
 }
 

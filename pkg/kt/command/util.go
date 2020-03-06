@@ -15,6 +15,7 @@ import (
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
+		newRunCommand(options),
 		newConnectCommand(options),
 		newExchangeCommand(options),
 		newMeshCommand(options),
@@ -46,9 +47,9 @@ func SetUpCloseHandler(options *options.DaemonOptions) (ch chan os.Signal) {
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(options *options.DaemonOptions) {
-	log.Info().Msgf("- Start Clean Workspace\n")
+	log.Info().Msgf("- start Clean Workspace\n")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
-		log.Info().Msgf("- Remove pid %s", options.RuntimeOptions.PidFile)
+		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
 		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
 			log.Error().Err(err).
 				Msgf("stop process:%d failed", options.RuntimeOptions.PidFile)
@@ -61,10 +62,11 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 			log.Error().Err(err).Msg("delete .jvmrc failed")
 		}
 	}
+
 	util.DropHosts(options.ConnectOptions.Hosts)
 	client, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
-		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
+		log.Error().Msgf("fails create kubernetes client when clean up workspace")
 		return
 	}
 
@@ -85,9 +87,13 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 	}
 
 	if len(options.RuntimeOptions.Shadow) > 0 {
-		log.Info().Msgf("- Start Clean Shadow %s", options.RuntimeOptions.Shadow)
-		cluster.Remove(client, options.Namespace, options.RuntimeOptions.Shadow)
-		log.Info().Msgf("- Successful Clean Shadow %s", options.RuntimeOptions.Shadow)
+		log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
+		cluster.RemoveShadow(client, options.Namespace, options.RuntimeOptions.Shadow)
+	}
+
+	if len(options.RuntimeOptions.Service) > 0 {
+		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
+		cluster.RemoveService(options.RuntimeOptions.Service, options.Namespace, client)
 	}
 }
 
