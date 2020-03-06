@@ -84,7 +84,7 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 	options.RuntimeOptions.Shadow = workload
 
 	shadow := connect.Create(options)
-	err = shadow.RemotePortForward(options.MeshOptions.Expose, podName, podIP)
+	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP)
 
 	if err != nil {
 		return err

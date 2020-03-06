@@ -81,7 +81,7 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 	options.RuntimeOptions.Shadow = service
 
 	shadow := connect.Create(options)
-	err = shadow.RemotePortForward(strconv.Itoa(options.RunOptions.Port), podName, podIP)
+	err = shadow.Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP)
 	if err != nil {
 		return err
 	}

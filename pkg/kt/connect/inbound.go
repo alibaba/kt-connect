@@ -12,12 +12,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// RemotePortForward mapping local port from cluster
-func (s *Shadow) RemotePortForward(expose, podName, remoteIP string) (err error) {
+// Inbound mapping local port from cluster
+func (s *Shadow) Inbound(exposePort, podName, remoteIP string) (err error) {
 	debug := s.Options.Debug
 	kubeConfig := s.Options.KubeConfig
 	namespace := s.Options.Namespace
-	log.Info().Msgf("remote %s forward to local %s", remoteIP, expose)
+	log.Info().Msgf("remote %s forward to local %s", remoteIP, exposePort)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
 		return
@@ -34,9 +34,9 @@ func (s *Shadow) RemotePortForward(expose, podName, remoteIP string) (err error)
 		return
 	}
 	log.Printf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
-	localPort := expose
-	remotePort := expose
-	ports := strings.SplitN(expose, ":", 2)
+	localPort := exposePort
+	remotePort := exposePort
+	ports := strings.SplitN(exposePort, ":", 2)
 	if len(ports) > 1 {
 		localPort = ports[1]
 		remotePort = ports[0]

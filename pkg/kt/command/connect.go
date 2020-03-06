@@ -116,7 +116,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	}
 
 	shadow := connect.Create(options)
-	err = shadow.Connect(podName, endPointIP, cidrs)
+	err = shadow.Outbound(podName, endPointIP, cidrs)
 	if err != nil {
 		return
 	}

@@ -13,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Connect start vpn connection
-func (s *Shadow) Connect(name, podIP string, cidrs []string) (err error) {
+// Outbound start vpn connection
+func (s *Shadow) Outbound(name, podIP string, cidrs []string) (err error) {
 	options := s.Options
 	err = util.PrepareSSHPrivateKey()
 	if err != nil {

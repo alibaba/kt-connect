@@ -4,8 +4,8 @@ import "github.com/alibaba/kt-connect/pkg/kt/options"
 
 // ShadowInterface shadow interface
 type ShadowInterface interface {
-	Connect(name, podIP string, cidrs []string, options *options.DaemonOptions) (err error)
-	RemotePortForward(expose, kubeconfig, namespace, target, remoteIP string, debug bool) (err error)
+	Inbound(exposePort, podName, remoteIP string) (err error)
+	Outbound(name, podIP string, cidrs []string) (err error)
 }
 
 // Shadow shadow
