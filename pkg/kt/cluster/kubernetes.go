@@ -52,10 +52,10 @@ func ScaleTo(clientSet *kubernetes.Clientset, namespace, name string, replicas i
 	return
 }
 
-// Remove remove shadow from cluster
-func Remove(client *kubernetes.Clientset, namespace, name string) {
+// RemoveShadow remove shadow from cluster
+func RemoveShadow(client *kubernetes.Clientset, namespace, name string) {
 	deploymentsClient := client.AppsV1().Deployments(namespace)
-	deletePolicy := metav1.DeletePropagationForeground
+	deletePolicy := metav1.DeletePropagationBackground
 	err := deploymentsClient.Delete(name, &metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
@@ -72,10 +72,17 @@ func CreateService(name, namespace string,
 ) (err error) {
 	client := clientset.CoreV1().Services(namespace)
 	svc := generateService(name, namespace, labels, port)
-	svc, err = client.Create(svc)
-	if err != nil {
-		return
-	}
+	_, err = client.Create(svc)
+	return err
+}
+
+// RemoveService create service in cluster
+func RemoveService(
+	name, namespace string,
+	clientset *kubernetes.Clientset,
+) (err error) {
+	client := clientset.CoreV1().Services(namespace)
+	return client.Delete(name, &metav1.DeleteOptions{})
 }
 
 // CreateShadow create shadow
@@ -97,14 +104,13 @@ func CreateShadow(
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Deploying shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 
 	// pod, err := waitPodReady(namespace, name, clientset)
 	pod, err := waitPodReadyUsingInformer(namespace, name, clientset)
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Success deploy proxy deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 	podIP = pod.Status.PodIP
 	podName = pod.GetObjectMeta().GetName()
 	return

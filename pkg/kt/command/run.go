@@ -69,9 +69,10 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("Success create shadow pod %s ip %s", podName, podIP)
+	log.Info().Msgf("create shadow pod %s ip %s", podName, podIP)
 
 	if options.RunOptions.Expose {
+		log.Info().Msgf("expose deployment %s to %s:%v", service, service, options.RunOptions.Port)
 		err := cluster.CreateService(service, options.Namespace, labels, options.RunOptions.Port, clientset)
 		if err != nil {
 			return err
@@ -82,7 +83,7 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 	options.RuntimeOptions.Shadow = service
 	connect.RemotePortForward(strconv.Itoa(options.RunOptions.Port), options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 
-	log.Info().Msgf("forward remote %s:%d -> options.RunOptions.Port", podIP, options.RunOptions.Port)
+	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)

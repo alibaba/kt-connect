@@ -125,7 +125,7 @@ func DropHosts(hostsMap map[string]string) {
 		log.Error().Err(err).Msgf("Error Happen when flush hosts")
 	}
 
-	log.Info().Msgf("- Drop hosts successful.")
+	log.Info().Msgf("- drop hosts successful.")
 }
 
 // DumpHosts DumpToHosts
