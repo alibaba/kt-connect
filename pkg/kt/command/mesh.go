@@ -30,10 +30,10 @@ func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			swap := c.Args().First()
+			mesh := c.Args().First()
 			expose := options.MeshOptions.Expose
 
-			if len(swap) == 0 {
+			if len(mesh) == 0 {
 				return errors.New("mesh target is required")
 			}
 
@@ -41,13 +41,13 @@ func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.
 				return errors.New("-expose is required")
 			}
 
-			return action.Mesh(c.Args().First(), options)
+			return action.Mesh(mesh, options)
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
+func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
 	ch := SetUpCloseHandler(options)
@@ -58,7 +58,7 @@ func (action *Action) Mesh(swap string, options *options.DaemonOptions) error {
 	}
 
 	factory := connect.Connect{}
-	_, err = factory.Mesh(swap, options, clientset, util.String2Map(options.Labels))
+	_, err = factory.Mesh(mesh, options, clientset, util.String2Map(options.Labels))
 
 	if err != nil {
 		return err
