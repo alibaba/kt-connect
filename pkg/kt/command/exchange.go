@@ -1,7 +1,7 @@
 package command
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -16,7 +16,7 @@ import (
 )
 
 // newExchangeCommand return new exchange command
-func newExchangeCommand(options *options.DaemonOptions) cli.Command {
+func newExchangeCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",
@@ -32,29 +32,32 @@ func newExchangeCommand(options *options.DaemonOptions) cli.Command {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 
-			action := Action{}
-			return action.Exchange(c.Args().First(), options)
+			exchange := c.Args().First()
+			expose := options.ExchangeOptions.Expose
+
+			if len(exchange) == 0 {
+				return errors.New("exchange is required")
+			}
+			if len(expose) == 0 {
+				return errors.New("-expose is required")
+			}
+
+			return action.Exchange(exchange, options)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(swap string, options *options.DaemonOptions) error {
+func (action *Action) Exchange(exchange string, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(options)
 
 	checkConnectRunning(options.RuntimeOptions.PidFile)
-	expose := options.ExchangeOptions.Expose
-
-	if swap == "" || expose == "" {
-		return fmt.Errorf("-expose is required")
-	}
-
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		return err
 	}
 
-	origin, err := clientset.AppsV1().Deployments(options.Namespace).Get(swap, metav1.GetOptions{})
+	origin, err := clientset.AppsV1().Deployments(options.Namespace).Get(exchange, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -62,7 +65,7 @@ func (action *Action) Exchange(swap string, options *options.DaemonOptions) erro
 	replicas := origin.Spec.Replicas
 
 	// Prepare context inorder to remove after command exit
-	options.RuntimeOptions.Origin = swap
+	options.RuntimeOptions.Origin = exchange
 	options.RuntimeOptions.Replicas = *replicas
 
 	factory := connect.Connect{}

@@ -13,14 +13,14 @@ import (
 )
 
 // NewCommands return new Connect Command
-func NewCommands(options *options.DaemonOptions) []cli.Command {
+func NewCommands(options *options.DaemonOptions, action ActionInterface) []cli.Command {
 	return []cli.Command{
-		newRunCommand(options),
-		newConnectCommand(options),
-		newExchangeCommand(options),
-		newMeshCommand(options),
-		newDashboardCommand(options),
-		NewCheckCommand(options),
+		newRunCommand(options, action),
+		newConnectCommand(options, action),
+		newExchangeCommand(options, action),
+		newMeshCommand(options, action),
+		newDashboardCommand(options, action),
+		NewCheckCommand(options, action),
 	}
 }
 
@@ -52,7 +52,7 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
 		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
 			log.Error().Err(err).
-				Msgf("stop process:%d failed", options.RuntimeOptions.PidFile)
+				Msgf("stop process:%s failed", options.RuntimeOptions.PidFile)
 		}
 	}
 

@@ -11,7 +11,7 @@ import (
 )
 
 // newDashboardCommand dashboard command
-func newDashboardCommand(options *options.DaemonOptions) cli.Command {
+func newDashboardCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "dashboard",
 		Usage: "kt-connect dashboard",
@@ -23,7 +23,6 @@ func newDashboardCommand(options *options.DaemonOptions) cli.Command {
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					action := Action{}
 					return action.ApplyDashboard()
 				},
 			},
@@ -42,7 +41,6 @@ func newDashboardCommand(options *options.DaemonOptions) cli.Command {
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					action := Action{}
 					return action.OpenDashboard(options)
 				},
 			},

@@ -1,23 +1,23 @@
 package command
 
 import (
-
 	osexec "os/exec"
 
 	"runtime"
+
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 )
 
 // NewCheckCommand return new check command
-func NewCheckCommand(options *options.DaemonOptions) cli.Command {
+func NewCheckCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",
@@ -25,27 +25,27 @@ func NewCheckCommand(options *options.DaemonOptions) cli.Command {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			return Check(options)
+			return action.Check(options)
 		},
 	}
 }
 
 // Check check local denpendency for kt connect
-func Check(options *options.DaemonOptions) (err error) {
+func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
 	err = runCommandWithMsg(
 		ssh.Version(),
-		"checking ssh version", "ssh is missing, please make sure command ssh is work right at your local first", 
+		"checking ssh version", "ssh is missing, please make sure command ssh is work right at your local first",
 	)
 
 	if err != nil {
 		return
 	}
 
-	err =  runCommandWithMsg(
+	err = runCommandWithMsg(
 		kubectl.Version(options.KubeConfig),
-		"checking kubectl version", "kubectl is missing, please make sure kubectl is working right at your local first", 
+		"checking kubectl version", "kubectl is missing, please make sure kubectl is working right at your local first",
 	)
 
 	if err != nil {

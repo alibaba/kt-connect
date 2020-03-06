@@ -1,7 +1,7 @@
 package command
 
 import (
-	"fmt"
+	"errors"
 	"strconv"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -14,10 +14,10 @@ import (
 )
 
 // newRunCommand return new run command
-func newRunCommand(options *options.DaemonOptions) cli.Command {
+func newRunCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "run",
-		Usage: "Create a shadow deployment to redirect request to user local",
+		Usage: "create a shadow deployment to redirect request to user local",
 		Flags: []cli.Flag{
 			cli.IntFlag{
 				Name:        "port",
@@ -34,7 +34,10 @@ func newRunCommand(options *options.DaemonOptions) cli.Command {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			action := Action{}
+			port := options.RunOptions.Port
+			if port == 0 {
+				return errors.New("--port is required")
+			}
 			return action.Run(c.Args().First(), options)
 		},
 	}
@@ -43,11 +46,6 @@ func newRunCommand(options *options.DaemonOptions) cli.Command {
 // Run create a new service in cluster
 func (action *Action) Run(service string, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(options)
-
-	port := options.RunOptions.Port
-	if port == 0 {
-		return fmt.Errorf("--port is required")
-	}
 
 	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {

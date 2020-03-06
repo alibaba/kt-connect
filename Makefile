@@ -8,9 +8,9 @@ BUILDER_IMAGE	  =  builder
 DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
 
+# run unit test
 test:
-	curl http://tomcat.default.svc.cluster.local:8080 | grep title
-	curl http://tomcat:8080 | grep title
+	go test ./...
 
 # build this first,it's the base image 
 build-builder:
