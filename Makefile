@@ -8,8 +8,9 @@ BUILDER_IMAGE	  =  builder
 DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
 
+# run unit test
 test:
-    make -f Makefile -B test
+	go test ./...
 
 # build this first,it's the base image 
 build-builder:
