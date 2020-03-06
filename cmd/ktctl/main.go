@@ -26,7 +26,7 @@ func main() {
 	app.Version = "master"
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
-	app.Commands = command.NewCommands(options)
+	app.Commands = command.NewCommands(options, command.Action{})
 
 	err := app.Run(os.Args)
 	if err != nil {
