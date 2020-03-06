@@ -14,7 +14,7 @@ import (
 )
 
 // newRunCommand return new run command
-func newRunCommand(options *options.DaemonOptions, action Action) cli.Command {
+func newRunCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "run",
 		Usage: "create a shadow deployment to redirect request to user local",

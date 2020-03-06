@@ -17,7 +17,7 @@ import (
 )
 
 // NewCheckCommand return new check command
-func NewCheckCommand(options *options.DaemonOptions, action Action) cli.Command {
+func NewCheckCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",

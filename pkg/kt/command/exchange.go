@@ -16,7 +16,7 @@ import (
 )
 
 // newExchangeCommand return new exchange command
-func newExchangeCommand(options *options.DaemonOptions, action Action) cli.Command {
+func newExchangeCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",

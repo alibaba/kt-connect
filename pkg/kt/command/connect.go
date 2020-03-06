@@ -15,7 +15,7 @@ import (
 )
 
 // newConnectCommand return new connect command
-func newConnectCommand(options *options.DaemonOptions, action Action) cli.Command {
+func newConnectCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 
 	methodDefaultValue := "vpn"
 	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"

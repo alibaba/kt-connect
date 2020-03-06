@@ -11,7 +11,7 @@ import (
 )
 
 // newDashboardCommand dashboard command
-func newDashboardCommand(options *options.DaemonOptions, action Action) cli.Command {
+func newDashboardCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "dashboard",
 		Usage: "kt-connect dashboard",

@@ -13,7 +13,7 @@ import (
 )
 
 // newMeshCommand return new mesh command
-func newMeshCommand(options *options.DaemonOptions, action Action) cli.Command {
+func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",
