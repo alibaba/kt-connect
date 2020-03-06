@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
@@ -83,50 +83,40 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if err != nil {
 		return
 	}
+
 	log.Info().Msgf("Connect Start At %d", pid)
-	factory := connect.Connect{Options: options}
-	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
+
+	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return
 	}
 
 	if options.ConnectOptions.Dump2Hosts {
-		hosts := cluster.LocalHosts(clientSet, options.Namespace)
+		hosts := kubernetes.ServiceHosts(options.Namespace)
 		util.DumpHosts(hosts)
 		options.ConnectOptions.Hosts = hosts
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	options.RuntimeOptions.Shadow = workload
 
-	labels := map[string]string{
-		"kt":           workload,
-		"kt-component": "connect",
-		"control-by":   "kt",
-	}
-
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
-	}
-
-	endPointIP, podName, err := cluster.CreateShadow(
-		clientSet,
-		workload,
-		labels,
-		options.Namespace,
-		options.Image,
+	endPointIP, podName, err := kubernetes.CreateShadow(
+		workload, options.Namespace, options.Image, labels(workload, options),
 	)
 
 	if err != nil {
 		return
 	}
 
-	cidrs, err := util.GetCirds(clientSet, options.ConnectOptions.CIDR)
+	// record shadow name will clean up terminal
+	options.RuntimeOptions.Shadow = workload
+
+	cidrs, err := kubernetes.ClusterCrids(options.ConnectOptions.CIDR)
 	if err != nil {
 		return
 	}
 
-	err = factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
+	shadow := connect.Create(options)
+	err = shadow.Outbound(podName, endPointIP, cidrs)
 	if err != nil {
 		return
 	}
@@ -134,4 +124,16 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return
+}
+
+func labels(workload string, options *options.DaemonOptions) map[string]string {
+	labels := map[string]string{
+		"kt":           workload,
+		"kt-component": "connect",
+		"control-by":   "kt",
+	}
+	for k, v := range util.String2Map(options.Labels) {
+		labels[k] = v
+	}
+	return labels
 }

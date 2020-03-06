@@ -1,26 +1,24 @@
-package util
+package cluster
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
+	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
-// GetCirds Get kubernetes cluster resource crids
-func GetCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []string, err error) {
-	cidrs, err = getPodCirds(clientset, podCIDR)
+// GetKubernetesClient get Kubernetes client from config
+func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
-		return
+		return nil, err
 	}
-	serviceCird, err := getServiceCird(clientset)
-	if err != nil {
-		return
-	}
-	cidrs = append(cidrs, serviceCird...)
+	clientset, err = kubernetes.NewForConfig(config)
 	return
 }
 
@@ -46,20 +44,11 @@ func getPodCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []strin
 	}
 
 	if len(cidrs) == 0 {
-		log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
-		podList, err2 := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+		samples, err2 := getPodCirdByInstance(clientset)
 		if err2 != nil {
-			log.Printf("Fails to get service info of cluster")
+			err = err2
 			return
 		}
-
-		samples := mapset.NewSet()
-		for _, pod := range podList.Items {
-			if pod.Status.PodIP != "" && pod.Status.PodIP != "None" {
-				samples.Add(getCirdFromSample(pod.Status.PodIP))
-			}
-		}
-
 		for _, sample := range samples.ToSlice() {
 			cidrs = append(cidrs, fmt.Sprint(sample))
 		}
@@ -68,15 +57,26 @@ func getPodCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []strin
 	return
 }
 
-func getServiceCird(clientset *kubernetes.Clientset) (cidr []string, err error) {
-	serviceList, err := clientset.CoreV1().Services("").List(metav1.ListOptions{})
+func getPodCirdByInstance(clientset *kubernetes.Clientset) (samples mapset.Set, err error) {
+	log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
+	podList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 	if err != nil {
 		log.Printf("Fails to get service info of cluster")
-		return cidr, err
+		return
 	}
 
+	samples = mapset.NewSet()
+	for _, pod := range podList.Items {
+		if pod.Status.PodIP != "" && pod.Status.PodIP != "None" {
+			samples.Add(getCirdFromSample(pod.Status.PodIP))
+		}
+	}
+	return
+}
+
+func getServiceCird(serviceList []*coreV1.Service) (cidr []string, err error) {
 	samples := mapset.NewSet()
-	for _, service := range serviceList.Items {
+	for _, service := range serviceList {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
 			samples.Add(getCirdFromSample(service.Spec.ClusterIP))
 		}
@@ -85,7 +85,6 @@ func getServiceCird(clientset *kubernetes.Clientset) (cidr []string, err error) 
 	for _, sample := range samples.ToSlice() {
 		cidr = append(cidr, fmt.Sprint(sample))
 	}
-
 	return
 }
 
