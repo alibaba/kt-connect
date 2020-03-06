@@ -19,6 +19,7 @@ env:
    - SERVER_REPO=kt-connect-server
 
 before_script:
+  - make -f Makefile -B test
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
   - docker pull ${NAMESPACE}/${SHADOW_BASE_REPO} || true
   - docker pull ${NAMESPACE}/${SHADOW_REPO} || true
@@ -28,7 +29,6 @@ before_script:
   - docker build -t ${NAMESPACE}/${BUILDER_REPO} -f docker/builder/Dockerfile .
   - docker build -t ${NAMESPACE}/${SHADOW_BASE_REPO} -f docker/shadow/Dockerfile_base .
 script:
-- make -f Makefile -B test
 - docker build -t ${NAMESPACE}/${CTL_REPO}:${TAG} -f docker/kt-connect/Dockerfile .
 - docker build -t ${NAMESPACE}/${SHADOW_REPO}:${TAG} --cache-from ${NAMESPACE}/${SHADOW_REPO} -f docker/shadow/Dockerfile .
 - docker build -t ${NAMESPACE}/${SERVER_REPO}:${TAG} -f docker/apiserver/Dockerfile .
