@@ -10,7 +10,7 @@ require (
 	github.com/gin-gonic/autotls v0.0.0-20180426091246-be87bd5ef97b // indirect
 	github.com/gin-gonic/gin v1.4.0
 	github.com/golang/lint v0.0.0-20180702182130-06c8688daad7 // indirect
-	github.com/golang/mock v1.4.1 // indirect
+	github.com/golang/mock v1.4.1
 	github.com/gorilla/websocket v1.4.1
 	github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15 // indirect
 	github.com/kubernetes/dashboard v1.10.1

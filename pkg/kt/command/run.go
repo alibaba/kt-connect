@@ -1,7 +1,7 @@
 package command
 
 import (
-	"fmt"
+	"errors"
 	"strconv"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -36,7 +36,7 @@ func newRunCommand(options *options.DaemonOptions, action ActionInterface) cli.C
 			}
 			port := options.RunOptions.Port
 			if port == 0 {
-				return fmt.Errorf("--port is required")
+				return errors.New("--port is required")
 			}
 			return action.Run(c.Args().First(), options)
 		},
