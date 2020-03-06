@@ -18,10 +18,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// Signal structure
-type Signal struct {
-}
-
 // GetKubernetesClient get Kubernetes client from config
 func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
@@ -236,23 +232,4 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 			},
 		},
 	}
-}
-
-// LocalHosts LocalHosts
-func LocalHosts(clientset *kubernetes.Clientset, namespace string) (hosts map[string]string) {
-	serviceListener, err := clusterWatcher.ServiceListener(clientset)
-	if err != nil {
-		return
-	}
-
-	services, err := serviceListener.Services(namespace).List(labels.Everything())
-	if err != nil {
-		return
-	}
-
-	hosts = map[string]string{}
-	for _, service := range services {
-		hosts[service.ObjectMeta.Name] = service.Spec.ClusterIP
-	}
-	return
 }

@@ -86,28 +86,32 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 
 	log.Info().Msgf("Connect Start At %d", pid)
 
-	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
+	factory := cluster.KubernetesFactory{}
+	kubernetes, err := factory.Create(options.KubeConfig)
 	if err != nil {
 		return
 	}
 
 	if options.ConnectOptions.Dump2Hosts {
-		hosts := cluster.LocalHosts(clientSet, options.Namespace)
+		hosts := kubernetes.ServiceHosts(options.Namespace)
 		util.DumpHosts(hosts)
 		options.ConnectOptions.Hosts = hosts
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	options.RuntimeOptions.Shadow = workload
 
-	endPointIP, podName, err := cluster.CreateShadow(
-		clientSet, workload, labels(workload, options), options.Namespace, options.Image)
+	endPointIP, podName, err := kubernetes.CreateShadow(
+		workload, options.Namespace, options.Image, labels(workload, options),
+	)
 
 	if err != nil {
 		return
 	}
 
-	cidrs, err := util.GetCirds(clientSet, options.ConnectOptions.CIDR)
+	// record shadow name will clean up terminal
+	options.RuntimeOptions.Shadow = workload
+
+	cidrs, err := kubernetes.ClusterCrids(options.ConnectOptions.CIDR)
 	if err != nil {
 		return
 	}
