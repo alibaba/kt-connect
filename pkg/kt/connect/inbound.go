@@ -3,7 +3,7 @@ package connect
 import (
 	"strconv"
 	"strings"
-	"time"
+	"sync"
 
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
@@ -19,13 +19,17 @@ func RemotePortForward(expose, kubeconfig, namespace, target, remoteIP string, d
 	if err != nil {
 		return
 	}
-	portforward := kubectl.PortForward(kubeconfig, namespace, target, localSSHPort)
-	err = exec.BackgroundRun(portforward, "exchange port forward to local", debug)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		portforward := kubectl.PortForward(kubeconfig, namespace, target, localSSHPort)
+		err = exec.BackgroundRun(portforward, "exchange port forward to local", debug)
+		wg.Done()
+	}(&wg)
+	wg.Wait()
 	if err != nil {
 		return
 	}
-
-	time.Sleep(time.Duration(2) * time.Second)
 	log.Printf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
 	localPort := expose
 	remotePort := expose
