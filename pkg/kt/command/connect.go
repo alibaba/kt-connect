@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
@@ -83,8 +83,9 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if err != nil {
 		return
 	}
+
 	log.Info().Msgf("Connect Start At %d", pid)
-	factory := connect.Connect{Options: options}
+
 	clientSet, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
 		return
@@ -99,23 +100,8 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 	options.RuntimeOptions.Shadow = workload
 
-	labels := map[string]string{
-		"kt":           workload,
-		"kt-component": "connect",
-		"control-by":   "kt",
-	}
-
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
-	}
-
 	endPointIP, podName, err := cluster.CreateShadow(
-		clientSet,
-		workload,
-		labels,
-		options.Namespace,
-		options.Image,
-	)
+		clientSet, workload, labels(workload, options), options.Namespace, options.Image)
 
 	if err != nil {
 		return
@@ -126,7 +112,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	err = factory.StartConnect(podName, endPointIP, cidrs, options.Debug)
+	err = connect.StartConnect(podName, endPointIP, cidrs, options)
 	if err != nil {
 		return
 	}
@@ -134,4 +120,16 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return
+}
+
+func labels(workload string, options *options.DaemonOptions) map[string]string {
+	labels := map[string]string{
+		"kt":           workload,
+		"kt-component": "connect",
+		"control-by":   "kt",
+	}
+	for k, v := range util.String2Map(options.Labels) {
+		labels[k] = v
+	}
+	return labels
 }

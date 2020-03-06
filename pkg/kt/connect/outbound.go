@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"time"
 
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
@@ -14,24 +16,24 @@ import (
 )
 
 // StartConnect start vpn connection
-func (c *Connect) StartConnect(name, podIP string, cidrs []string, debug bool) (err error) {
+func StartConnect(name, podIP string, cidrs []string, options *options.DaemonOptions) (err error) {
 	err = util.PrepareSSHPrivateKey()
 	if err != nil {
 		return
 	}
-	err = exec.BackgroundRun(kubectl.PortForward(c.Options.KubeConfig, c.Options.Namespace, name, c.Options.ConnectOptions.SSHPort), "port-forward", debug)
+	err = exec.BackgroundRun(kubectl.PortForward(options.KubeConfig, options.Namespace, name, options.ConnectOptions.SSHPort), "port-forward", options.Debug)
 	if err != nil {
 		return
 	}
 	time.Sleep(time.Duration(5) * time.Second)
-	if c.Options.ConnectOptions.Method == "socks5" {
+	if options.ConnectOptions.Method == "socks5" {
 		log.Info().Msgf("==============================================================")
-		log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", c.Options.ConnectOptions.Socke5Proxy)
+		log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
 		log.Info().Msgf("==============================================================")
-		_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d", c.Options.ConnectOptions.Socke5Proxy)), 0644)
-		err = exec.BackgroundRun(ssh.DynamicForwardLocalRequestToRemote("127.0.0.1", c.Options.ConnectOptions.SSHPort, c.Options.ConnectOptions.Socke5Proxy), "vpn(ssh)", debug)
+		_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d", options.ConnectOptions.Socke5Proxy)), 0644)
+		err = exec.BackgroundRun(ssh.DynamicForwardLocalRequestToRemote("127.0.0.1", options.ConnectOptions.SSHPort, options.ConnectOptions.Socke5Proxy), "vpn(ssh)", options.Debug)
 	} else {
-		err = exec.BackgroundRun(sshuttle.SSHUttle("127.0.0.1", c.Options.ConnectOptions.SSHPort, podIP, c.Options.ConnectOptions.DisableDNS, cidrs, debug), "vpn(sshuttle)", debug)
+		err = exec.BackgroundRun(sshuttle.SSHUttle("127.0.0.1", options.ConnectOptions.SSHPort, podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug), "vpn(sshuttle)", options.Debug)
 	}
 	if err != nil {
 		return
