@@ -2,6 +2,9 @@ package command
 
 import (
 	"errors"
+	"strings"
+
+	v1 "k8s.io/api/apps/v1"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -11,8 +14,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // newExchangeCommand return new exchange command
@@ -52,29 +53,57 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 	ch := SetUpCloseHandler(options)
 
 	checkConnectRunning(options.RuntimeOptions.PidFile)
-	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
+
+	factory := cluster.KubernetesFactory{}
+	kubernetes, err := factory.Create(options.KubeConfig)
 	if err != nil {
 		return err
 	}
 
-	origin, err := clientset.AppsV1().Deployments(options.Namespace).Get(exchange, metav1.GetOptions{})
+	app, err := kubernetes.Deployment(exchange, options.Namespace)
 	if err != nil {
 		return err
 	}
 
-	replicas := origin.Spec.Replicas
+	// record context inorder to remove after command exit
+	options.RuntimeOptions.Origin = app.GetObjectMeta().GetName()
+	options.RuntimeOptions.Replicas = *app.Spec.Replicas
 
-	// Prepare context inorder to remove after command exit
-	options.RuntimeOptions.Origin = exchange
-	options.RuntimeOptions.Replicas = *replicas
+	workload := app.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+	podIP, podName, err := kubernetes.CreateShadow(
+		workload, options.Namespace, options.Image, getExchangeLables(options.Labels, workload, app))
+	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
-	_, err = connect.Exchange(options, origin, clientset, util.String2Map(options.Labels))
 	if err != nil {
 		return err
 	}
+
+	// record data
+	options.RuntimeOptions.Shadow = workload
+
+	down := int32(0)
+	kubernetes.Scale(app, &down)
+
+	connect.RemotePortForward(options.ExchangeOptions.Expose, options.KubeConfig, options.Namespace, podName, podIP, options.Debug)
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 
 	return nil
+}
+
+func getExchangeLables(customLabels string, workload string, origin *v1.Deployment) map[string]string {
+	labels := map[string]string{
+		"kt":           workload,
+		"kt-component": "exchange",
+		"control-by":   "kt",
+	}
+	for k, v := range origin.Spec.Selector.MatchLabels {
+		labels[k] = v
+	}
+	// extra labels must be applied after origin labels
+	for k, v := range util.String2Map(customLabels) {
+		labels[k] = v
+	}
+	return labels
 }

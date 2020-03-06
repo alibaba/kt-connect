@@ -7,6 +7,7 @@ import (
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
@@ -39,6 +40,8 @@ func (f *KubernetesFactory) Create(kubeConfig string) (kubernetes Kubernetes, er
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
+	Deployment(name, namespace string) (deployment appV1.Deployment, err error)
+	Scale(name, namespace string, replicas *int32) (err error)
 	ServiceHosts(namespace string) (hosts map[string]string)
 	ClusterCrids(podCIDR string) (cidrs []string, err error)
 	CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName string, err error)
@@ -49,6 +52,27 @@ type Kubernetes struct {
 	Clientset       *kubernetes.Clientset
 	ServiceListener v1.ServiceLister
 	PodListener     v1.PodLister
+}
+
+// Scale scale deployment to
+func (k *Kubernetes) Scale(deployment *appV1.Deployment, replicas *int32) (err error) {
+	log.Printf("scale deployment %s to %d\n", deployment.GetObjectMeta().GetName(), *replicas)
+	client := k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace())
+	deployment.Spec.Replicas = replicas
+
+	d, err := client.Update(deployment)
+	if err != nil {
+		log.Printf("%s Fails scale deployment %s to %d\n", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
+		return
+	}
+	log.Printf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
+	return
+}
+
+// Deployment get deployment
+func (k *Kubernetes) Deployment(name, namespace string) (deployment *appV1.Deployment, err error) {
+	deployment, err = k.Clientset.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	return
 }
 
 // CreateShadow create shadow
