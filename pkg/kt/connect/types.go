@@ -18,4 +18,5 @@ func Create(options *options.DaemonOptions) (shadow Shadow) {
 	shadow = Shadow{
 		Options: options,
 	}
+	return
 }
