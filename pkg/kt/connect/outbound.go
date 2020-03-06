@@ -15,8 +15,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// StartConnect start vpn connection
-func StartConnect(name, podIP string, cidrs []string, options *options.DaemonOptions) (err error) {
+// Connect start vpn connection
+func Connect(name, podIP string, cidrs []string, options *options.DaemonOptions) (err error) {
 	err = util.PrepareSSHPrivateKey()
 	if err != nil {
 		return

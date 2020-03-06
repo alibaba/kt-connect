@@ -116,7 +116,7 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	err = connect.StartConnect(podName, endPointIP, cidrs, options)
+	err = connect.Connect(podName, endPointIP, cidrs, options)
 	if err != nil {
 		return
 	}
