@@ -22,7 +22,7 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 	runCmd(cmd, name, debug)
 	go func() {
 		err = cmd.Wait()
-		log.Printf("%s finished", name)
+		log.Info().Msgf("%s finished", name)
 	}()
 	return
 }
@@ -52,6 +52,6 @@ func runCmd(cmd *exec.Cmd, name string, debug bool) (err error) {
 
 	time.Sleep(time.Duration(2) * time.Second)
 	pid := cmd.Process.Pid
-	log.Printf("%s start at pid: %d", name, pid)
+	log.Info().Msgf("%s start at pid: %d", name, pid)
 	return
 }

@@ -18,16 +18,16 @@ import (
 
 // Scale scale deployment to
 func (k *Kubernetes) Scale(deployment *appV1.Deployment, replicas *int32) (err error) {
-	log.Printf("scale deployment %s to %d\n", deployment.GetObjectMeta().GetName(), *replicas)
+	log.Info().Msgf("scale deployment %s to %d\n", deployment.GetObjectMeta().GetName(), *replicas)
 	client := k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace())
 	deployment.Spec.Replicas = replicas
 
 	d, err := client.Update(deployment)
 	if err != nil {
-		log.Printf("%s Fails scale deployment %s to %d\n", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
+		log.Error().Msgf("%s Fails scale deployment %s to %d\n", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
 		return
 	}
-	log.Printf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
+	log.Info().Msgf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
 	return
 }
 

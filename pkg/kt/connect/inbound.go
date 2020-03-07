@@ -33,7 +33,7 @@ func (s *Shadow) Inbound(exposePort, podName, remoteIP string) (err error) {
 	if err != nil {
 		return
 	}
-	log.Printf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
+	log.Info().Msgf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
 	localPort := exposePort
 	remotePort := exposePort
 	ports := strings.SplitN(exposePort, ":", 2)

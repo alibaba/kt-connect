@@ -51,7 +51,7 @@ func init() {
 func PrepareSSHPrivateKey() (err error) {
 	err = ioutil.WriteFile(PrivateKeyPath(), pk, 400)
 	if err != nil {
-		log.Printf("Fails create temp ssh private key")
+		log.Error().Msgf("Fails create temp ssh private key")
 	}
 	return
 }
