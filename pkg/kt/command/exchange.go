@@ -24,7 +24,7 @@ func newExchangeCommand(options *options.DaemonOptions, action ActionInterface) 
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "expose",
-				Usage:       "expose port",
+				Usage:       "expose port [port] or [remote:local]",
 				Destination: &options.ExchangeOptions.Expose,
 			},
 		},

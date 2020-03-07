@@ -29,7 +29,7 @@ func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.
 		Flags: []cli.Flag{
 			cli.StringFlag{
 				Name:        "expose",
-				Usage:       "expose port",
+				Usage:       "expose port [port] or [remote:local]",
 				Destination: &options.MeshOptions.Expose,
 			},
 		},
