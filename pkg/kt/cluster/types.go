@@ -1,9 +1,7 @@
 package cluster
 
 import (
-	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	appV1 "k8s.io/api/apps/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/listers/core/v1"
 )
@@ -14,15 +12,8 @@ func Create(kubeConfig string) (kubernetes Kubernetes, err error) {
 	if err != nil {
 		return
 	}
-	serviceListener, err := clusterWatcher.ServiceListener(clientSet, wait.NeverStop)
-	podListener, err := clusterWatcher.PodListener(clientSet, wait.NeverStop)
-	if err != nil {
-		return
-	}
 	kubernetes = Kubernetes{
-		Clientset:       clientSet,
-		ServiceListener: serviceListener,
-		PodListener:     podListener,
+		Clientset: clientSet,
 	}
 	return
 }
@@ -40,5 +31,4 @@ type KubernetesInterface interface {
 type Kubernetes struct {
 	Clientset       *kubernetes.Clientset
 	ServiceListener v1.ServiceLister
-	PodListener     v1.PodLister
 }

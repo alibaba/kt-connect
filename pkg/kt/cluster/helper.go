@@ -6,7 +6,7 @@ import (
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
-	coreV1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -74,7 +74,7 @@ func getPodCirdByInstance(clientset *kubernetes.Clientset) (samples mapset.Set, 
 	return
 }
 
-func getServiceCird(serviceList []*coreV1.Service) (cidr []string, err error) {
+func getServiceCird(serviceList []v1.Service) (cidr []string, err error) {
 	samples := mapset.NewSet()
 	for _, service := range serviceList {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {

@@ -44,7 +44,7 @@ func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[stri
 
 // ClusterCrids get cluster cirds
 func (k *Kubernetes) ClusterCrids(podCIDR string) (cidrs []string, err error) {
-	serviceList, err := k.ServiceListener.List(labels.Everything())
+	serviceList, err := k.Clientset.CoreV1().Services("").List(metaV1.ListOptions{})
 	if err != nil {
 		return
 	}
@@ -54,7 +54,8 @@ func (k *Kubernetes) ClusterCrids(podCIDR string) (cidrs []string, err error) {
 		return
 	}
 
-	serviceCird, err := getServiceCird(serviceList)
+	services := serviceList.Items
+	serviceCird, err := getServiceCird(services)
 	if err != nil {
 		return
 	}
@@ -64,12 +65,12 @@ func (k *Kubernetes) ClusterCrids(podCIDR string) (cidrs []string, err error) {
 
 // ServiceHosts get service dns map
 func (k *Kubernetes) ServiceHosts(namespace string) (hosts map[string]string) {
-	services, err := k.ServiceListener.Services(namespace).List(labels.Everything())
+	services, err := k.Clientset.CoreV1().Services(namespace).List(metaV1.ListOptions{})
 	if err != nil {
 		return
 	}
 	hosts = map[string]string{}
-	for _, service := range services {
+	for _, service := range services.Items {
 		hosts[service.ObjectMeta.Name] = service.Spec.ClusterIP
 	}
 	return
@@ -160,7 +161,9 @@ func CreateShadow(
 }
 
 func waitPodReadyUsingInformer(namespace, name string, clientset *kubernetes.Clientset) (pod v1.Pod, err error) {
-	podListener, err := clusterWatcher.PodListener(clientset)
+	stopSignal := make(chan struct{})
+	defer close(stopSignal)
+	podListener, err := clusterWatcher.PodListener(clientset, stopSignal)
 	if err != nil {
 		return
 	}
@@ -215,6 +218,8 @@ wait_loop:
 				if p.Status.Phase == "Running" {
 					pod = *p
 					log.Info().Msgf("Shadow pod: %s is ready.", pod.Name)
+					// stop watcher
+					stopSignal <- struct{}{}
 					break wait_loop
 				}
 				podName = p.Name

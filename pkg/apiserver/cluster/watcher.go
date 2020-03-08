@@ -54,16 +54,6 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 	return
 }
 
-// ServiceListener ServiceListener
-func ServiceListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1.ServiceLister, err error) {
-	w := Watcher{Client: client}
-	lister, err = w.Services(stopCh)
-	if err != nil {
-		return
-	}
-	return
-}
-
 // PodListener PodListener
 func PodListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1.PodLister, err error) {
 	w := Watcher{Client: client}
