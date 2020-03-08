@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
@@ -27,13 +28,15 @@ func (s *Shadow) Inbound(exposePort, podName, remoteIP string) (err error) {
 	go func(wg *sync.WaitGroup) {
 		portforward := kubectl.PortForward(kubeConfig, namespace, podName, localSSHPort)
 		err = exec.BackgroundRun(portforward, "exchange port forward to local", debug)
+		// make sure port-forward already success
+		time.Sleep(time.Duration(2) * time.Second)
 		wg.Done()
 	}(&wg)
 	wg.Wait()
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("SSH Remote port-forward POD %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
+	log.Info().Msgf("redirect request from pod %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
 	localPort := exposePort
 	remotePort := exposePort
 	ports := strings.SplitN(exposePort, ":", 2)
