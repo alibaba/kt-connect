@@ -54,14 +54,16 @@ func Test_newConnectCommand(t *testing.T) {
 	}
 }
 
-func Test_connectToCluster(t *testing.T) {
+func Test_shouldConnectToCluster(t *testing.T) {
 
 	ctl := gomock.NewController(t)
-	kubernetesInterface := mock.NewMockKubernetesInterface(ctl)
-	shadowInterface := mock.NewMockShadowInterface(ctl)
+	kubernetes := mock.NewMockKubernetesInterface(ctl)
+	shadow := mock.NewMockShadowInterface(ctl)
 
-	kubernetesInterface.EXPECT().CreateShadow(
-		gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", errors.New("")).AnyTimes()
+	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", nil).AnyTimes()
+	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
+
+	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", []string{"10.10.10.0/24"}).Return(nil)
 
 	type args struct {
 		shadow     connect.ShadowInterface
@@ -69,25 +71,73 @@ func Test_connectToCluster(t *testing.T) {
 		options    *options.DaemonOptions
 	}
 
-	type test struct {
-		name    string
-		args    args
-		wantErr bool
+	opts := options.NewDaemonOptions()
+	opts.Labels = "a:b"
+
+	arg := args{
+		shadow:     shadow,
+		kubernetes: kubernetes,
+		options:    opts,
 	}
 
-	tt := test{
-		name: "should throw error when fail create shadow",
-		args: args{
-			shadow:     shadowInterface,
-			kubernetes: kubernetesInterface,
-			options:    options.NewDaemonOptions(),
-		},
-		wantErr: true,
+	if err := connectToCluster(arg.shadow, arg.kubernetes, arg.options); (err != nil) != false {
+		t.Errorf("connectToCluster() error = %v, wantErr %v", err, false)
 	}
 
-	t.Run(tt.name, func(t *testing.T) {
-		if err := connectToCluster(tt.args.shadow, tt.args.kubernetes, tt.args.options); (err != nil) != tt.wantErr {
-			t.Errorf("connectToCluster() error = %v, wantErr %v", err, tt.wantErr)
-		}
-	})
+}
+
+func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
+
+	ctl := gomock.NewController(t)
+	kubernetesInterface := mock.NewMockKubernetesInterface(ctl)
+	shadowInterface := mock.NewMockShadowInterface(ctl)
+
+	kubernetesInterface.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", errors.New("")).AnyTimes()
+
+	type args struct {
+		shadow     connect.ShadowInterface
+		kubernetes cluster.KubernetesInterface
+		options    *options.DaemonOptions
+	}
+
+	arg := args{
+		shadow:     shadowInterface,
+		kubernetes: kubernetesInterface,
+		options:    options.NewDaemonOptions(),
+	}
+
+	if err := connectToCluster(arg.shadow, arg.kubernetes, arg.options); (err != nil) != true {
+		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
+	}
+
+}
+
+func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
+
+	ctl := gomock.NewController(t)
+	kubernetes := mock.NewMockKubernetesInterface(ctl)
+	shadow := mock.NewMockShadowInterface(ctl)
+
+	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", nil).AnyTimes()
+	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{}, errors.New("fail to get crid"))
+
+	type args struct {
+		shadow     connect.ShadowInterface
+		kubernetes cluster.KubernetesInterface
+		options    *options.DaemonOptions
+	}
+
+	opts := options.NewDaemonOptions()
+	opts.Labels = "a:b"
+
+	arg := args{
+		shadow:     shadow,
+		kubernetes: kubernetes,
+		options:    opts,
+	}
+
+	if err := connectToCluster(arg.shadow, arg.kubernetes, arg.options); (err != nil) != true {
+		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
+	}
+
 }
