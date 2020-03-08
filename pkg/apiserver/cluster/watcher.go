@@ -34,7 +34,7 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 	}
 	w.NamespaceLister = namespaceLister
 
-	podListener, err := w.Pods()
+	podListener, err := w.Pods(wait.NeverStop)
 	if err != nil {
 		return
 	}
@@ -55,9 +55,9 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 }
 
 // ServiceListener ServiceListener
-func ServiceListener(client kubernetes.Interface) (lister v1.ServiceLister, err error) {
+func ServiceListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1.ServiceLister, err error) {
 	w := Watcher{Client: client}
-	lister, err = w.Services(wait.NeverStop)
+	lister, err = w.Services(stopCh)
 	if err != nil {
 		return
 	}
@@ -65,9 +65,9 @@ func ServiceListener(client kubernetes.Interface) (lister v1.ServiceLister, err 
 }
 
 // PodListener PodListener
-func PodListener(client kubernetes.Interface) (lister v1.PodLister, err error) {
+func PodListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1.PodLister, err error) {
 	w := Watcher{Client: client}
-	lister, err = w.Pods()
+	lister, err = w.Pods(stopCh)
 	if err != nil {
 		return
 	}
