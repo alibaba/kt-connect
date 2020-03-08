@@ -1,20 +1,21 @@
-## Command: ktctl exchange
+## Command: ktctl run
 
-Exchange a running deployment to local
+将本地服务暴露到Kubernetes集群
 
-### Usage
-
-```
-ktctl --debug --namespace=default exchange tomcat --expose 8080
-```
-
-### Options
+### 示例
 
 ```
---expose value  expose port
+ktctl run localservice --port 8080 --expose
 ```
 
-### Global Options
+### 参数
+
+```
+--port value  The port that exposes (default: 0)
+--expose      If true, a public, external service is created
+```
+
+### 从父命令集成的参数
 
 ```
 --namespace value, -n value   (default: "default")
