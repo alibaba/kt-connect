@@ -218,8 +218,6 @@ wait_loop:
 				if p.Status.Phase == "Running" {
 					pod = *p
 					log.Info().Msgf("Shadow pod: %s is ready.", pod.Name)
-					// stop watcher
-					stopSignal <- struct{}{}
 					break wait_loop
 				}
 				podName = p.Name
