@@ -1,12 +1,3 @@
-NAMESPACE=${NAMESPACE:-registry.cn-hangzhou.aliyuncs.com/rdc-incubator}
-CTL_REPO=${CTL_REPO:-kt-connect}
-TAG=${TAG:-latest}
-
-echo "======== move artifacts======="
-rm -rf artifacts
-mkdir -p artifacts
-docker run -v $PWD/artifacts:/artifacts --rm --entrypoint cp ${NAMESPACE}/${CTL_REPO}:${TAG} -r /go/src/github.com/alibaba/kt-connect/output/ktctl /artifacts
-
 echo "======== archive artifacts======="
 ls -al artifacts/ktctl
 cd artifacts/ktctl

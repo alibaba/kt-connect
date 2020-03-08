@@ -28,7 +28,8 @@ build-shadow-dlv:
 	bin/build-shadow-dlv
 
 build-connect:
-	docker build -t $(PREFIX)/$(CONNECT_IMAGE):$(TAG) -f docker/kt-connect/Dockerfile .
+	bin/build-ktctl
+	bin/archive
 
 build-dashboard:
 	docker build -t $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG) -f docker/dashboard/Dockerfile . && \
