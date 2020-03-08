@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -56,6 +57,11 @@ func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
+	generator, err := util.GetSSHGenerator()
+	if err != nil {
+		return err
+	}
+
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
 	ch := SetUpCloseHandler(options)
@@ -72,16 +78,27 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 
 	meshVersion := strings.ToLower(util.RandomString(5))
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
+	sshCM := fmt.Sprintf("%s-kt-ssh-key-%s", app.GetName(), strings.ToLower(util.RandomString(5)))
+	if _, err = kubernetes.CreateSSHCM(sshCM,
+		options.Namespace,
+		getMeshLabels(sshCM, meshVersion, app, options),
+		map[string]string{
+			"key": string(generator.PublicKey),
+		},
+	); err != nil {
+		return err
+	}
 
 	labels := getMeshLabels(workload, meshVersion, app, options)
 
-	podIP, podName, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, labels)
+	podIP, podName, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, sshCM, labels)
 	if err != nil {
 		return err
 	}
 
 	// record context data
 	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshCM
 
 	shadow := connect.Create(options)
 	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP)

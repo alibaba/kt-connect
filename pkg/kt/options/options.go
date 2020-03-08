@@ -35,6 +35,8 @@ type runtimeOptions struct {
 	AppHome  string
 	// Shadow deployment name
 	Shadow string
+	// SSH cm name
+	SSHCM string
 	// The origin app name
 	Origin string
 	// The origin repicas

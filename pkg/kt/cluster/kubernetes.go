@@ -1,9 +1,8 @@
 package cluster
 
 import (
+	"errors"
 	"time"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -13,6 +12,7 @@ import (
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -38,8 +38,33 @@ func (k *Kubernetes) Deployment(name, namespace string) (deployment *appV1.Deplo
 }
 
 // CreateShadow create shadow
-func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName string, err error) {
-	return CreateShadow(k.Clientset, name, labels, namespace, image)
+func (k *Kubernetes) CreateShadow(name, namespace, image, volume string, labels map[string]string) (podIP, podName string, err error) {
+	return CreateShadow(k.Clientset, name, labels, namespace, image, volume)
+}
+
+// CreateSSHCM create ssh public key with config map
+func (k *Kubernetes) CreateSSHCM(name, namespace string, labels, data map[string]string) (*v1.ConfigMap, error) {
+	if data == nil {
+		return nil, errors.New("data must be set")
+	}
+	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
+	cm := &v1.ConfigMap{
+		ObjectMeta: metaV1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			Labels:    labels,
+		},
+		Data: data,
+	}
+	_, err := cli.Create(cm)
+	return cm, err
+}
+
+// CreateService create kubernetes service
+func (k *Kubernetes) CreateService(name, namespace string, labels map[string]string, port int) (*v1.Service, error) {
+	svc := generateService(name, namespace, labels, port)
+	_, err := k.Clientset.CoreV1().Services(namespace).Create(svc)
+	return svc, err
 }
 
 // ClusterCrids get cluster cirds
@@ -108,6 +133,18 @@ func RemoveShadow(client *kubernetes.Clientset, namespace, name string) {
 	}
 }
 
+// RemoveSSHCM remove ssh config map
+func RemoveSSHCM(client *kubernetes.Clientset, namespace, name string) {
+	cli := client.CoreV1().ConfigMaps(namespace)
+	deletePolicy := metaV1.DeletePropagationBackground
+	err := cli.Delete(name, &metaV1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+	if err != nil {
+		log.Error().Err(err).Msgf("delete ssh config map %s failed", name)
+	}
+}
+
 // CreateService create service in cluster
 func CreateService(name, namespace string,
 	labels map[string]string,
@@ -135,7 +172,8 @@ func CreateShadow(
 	name string,
 	labels map[string]string,
 	namespace,
-	image string,
+	image,
+	volume string,
 ) (podIP, podName string, err error) {
 
 	localIPAddress := util.GetOutboundIP()
@@ -143,7 +181,7 @@ func CreateShadow(
 	labels["remoteAddress"] = localIPAddress
 
 	client := clientset.AppsV1().Deployments(namespace)
-	deployment := generatorDeployment(namespace, name, labels, image)
+	deployment := generatorDeployment(namespace, name, labels, image, volume)
 	result, err := client.Create(deployment)
 	if err != nil {
 		return
@@ -255,8 +293,9 @@ func generateService(name, namespace string, labels map[string]string, port int)
 
 }
 
-func generatorDeployment(namespace, name string, labels map[string]string, image string) *appV1.Deployment {
-	return &appV1.Deployment{
+func generatorDeployment(namespace, name string, labels map[string]string, image, volume string) *appV1.Deployment {
+	var mod int32 = 400
+	deploy := &appV1.Deployment{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -276,10 +315,27 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 							Name:            "standalone",
 							Image:           image,
 							ImagePullPolicy: "Always",
+							VolumeMounts: []v1.VolumeMount{
+								{Name: "ssh-public-key", MountPath: "/root/.ssh/"},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "ssh-public-key",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									Items: []v1.KeyToPath{
+										{Key: "key", Path: "authorized_keys", Mode: &mod},
+									},
+									LocalObjectReference: v1.LocalObjectReference{Name: volume},
+								},
+							},
 						},
 					},
 				},
 			},
 		},
 	}
+	return deploy
 }

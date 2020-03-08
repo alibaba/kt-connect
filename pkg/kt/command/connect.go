@@ -83,15 +83,17 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Connect Start At %d", pid)
 
+	log.Info().Msgf("Connect Start At %d", pid)
 	shadow := connect.Create(options)
 	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return
 	}
 
-	connectToCluster(&shadow, &kubernetes, options)
+	if err = connectToCluster(&shadow, kubernetes, options); err != nil {
+		return
+	}
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
@@ -99,6 +101,10 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 }
 
 func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
+	generator, err := util.GetSSHGenerator()
+	if err != nil {
+		return
+	}
 
 	if options.ConnectOptions.Dump2Hosts {
 		hosts := kubernetes.ServiceHosts(options.Namespace)
@@ -106,18 +112,24 @@ func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.Kuberne
 		options.ConnectOptions.Hosts = hosts
 	}
 
+	sshCM := fmt.Sprintf("kt-ssh-key-%s", strings.ToLower(util.RandomString(5)))
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 
-	endPointIP, podName, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, labels(workload, options),
-	)
+	_, err = kubernetes.CreateSSHCM(sshCM, options.Namespace, labels(sshCM, options), map[string]string{"key": string(generator.PublicKey)})
+	if err != nil {
+		return
+	}
 
+	endPointIP, podName, err := kubernetes.CreateShadow(
+		workload, options.Namespace, options.Image, sshCM, labels(workload, options),
+	)
 	if err != nil {
 		return
 	}
 
 	// record shadow name will clean up terminal
 	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshCM
 
 	cidrs, err := kubernetes.ClusterCrids(options.ConnectOptions.CIDR)
 	if err != nil {

@@ -2,7 +2,9 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
@@ -45,9 +47,12 @@ func newRunCommand(options *options.DaemonOptions, action ActionInterface) cli.C
 
 // Run create a new service in cluster
 func (action *Action) Run(service string, options *options.DaemonOptions) error {
+	generator, err := util.GetSSHGenerator()
+	if err != nil {
+		return err
+	}
 	ch := SetUpCloseHandler(options)
-
-	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
+	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return err
 	}
@@ -55,7 +60,6 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 	labels := map[string]string{
 		"control-by":   "kt",
 		"kt-component": "run",
-		"kt":           service,
 	}
 
 	// extra labels must be applied after origin labels
@@ -63,7 +67,19 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 		labels[k] = v
 	}
 
-	podIP, podName, err := cluster.CreateShadow(clientset, service, labels, options.Namespace, options.Image)
+	sshCM := fmt.Sprintf("kt-ssh-key-%s", strings.ToLower(util.RandomString(5)))
+	labels["kt"] = sshCM
+	if _, err = kubernetes.CreateSSHCM(sshCM,
+		options.Namespace,
+		labels,
+		map[string]string{
+			"key": string(generator.PublicKey),
+		},
+	); err != nil {
+		return err
+	}
+	labels["kt"] = service
+	podIP, podName, err := kubernetes.CreateShadow(service, options.Namespace, options.Image, sshCM, labels)
 	if err != nil {
 		return err
 	}
@@ -71,14 +87,18 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 
 	if options.RunOptions.Expose {
 		log.Info().Msgf("expose deployment %s to %s:%v", service, service, options.RunOptions.Port)
-		err := cluster.CreateService(service, options.Namespace, labels, options.RunOptions.Port, clientset)
-		if err != nil {
+		if _, err = kubernetes.CreateService(service,
+			options.Namespace,
+			labels,
+			options.RunOptions.Port,
+		); err != nil {
 			return err
 		}
 		options.RuntimeOptions.Service = service
 	}
 
 	options.RuntimeOptions.Shadow = service
+	options.RuntimeOptions.SSHCM = sshCM
 
 	shadow := connect.Create(options)
 	err = shadow.Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP)

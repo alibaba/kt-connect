@@ -91,6 +91,11 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		cluster.RemoveShadow(client, options.Namespace, options.RuntimeOptions.Shadow)
 	}
 
+	if len(options.RuntimeOptions.SSHCM) > 0 {
+		log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.SSHCM)
+		cluster.RemoveSSHCM(client, options.Namespace, options.RuntimeOptions.SSHCM)
+	}
+
 	if len(options.RuntimeOptions.Service) > 0 {
 		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
 		cluster.RemoveService(options.RuntimeOptions.Service, options.Namespace, client)

@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+// GetKubernetesClient get kubernetes client
 func GetKubernetesClient() (clientset kubernetes.Interface, config *restclient.Config, err error) {
 	config, err = GetKubeconfig()
 	if err != nil {
@@ -21,6 +22,7 @@ func GetKubernetesClient() (clientset kubernetes.Interface, config *restclient.C
 	return
 }
 
+// GetKubeconfig get kubernetes rest config
 func GetKubeconfig() (config *restclient.Config, err error) {
 	kubeconfig := filepath.Join(homeDir(), ".kube", "config")
 	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {

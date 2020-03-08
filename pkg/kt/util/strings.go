@@ -7,7 +7,7 @@ import (
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-// RandomString Generate RandomString
+// RandomString generate RandomString
 func RandomString(n int) string {
 	b := make([]rune, n)
 	for i := range b {

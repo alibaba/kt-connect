@@ -5,6 +5,7 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
@@ -18,6 +19,17 @@ func init() {
 }
 
 func main() {
+	inits := map[string]func() error{
+		"ssh": util.InitSSH,
+	}
+	// init service
+	for name, init := range inits {
+		if err := init(); err != nil {
+			panic(err)
+		}
+		log.Debug().Str("service", name).Msg("initialized")
+	}
+
 	options := opt.NewDaemonOptions()
 
 	app := cli.NewApp()

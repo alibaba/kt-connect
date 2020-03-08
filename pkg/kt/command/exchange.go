@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	v1 "k8s.io/api/apps/v1"
@@ -50,6 +51,11 @@ func newExchangeCommand(options *options.DaemonOptions, action ActionInterface) 
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(exchange string, options *options.DaemonOptions) error {
+	generator, err := util.GetSSHGenerator()
+	if err != nil {
+		return err
+	}
+
 	ch := SetUpCloseHandler(options)
 
 	checkConnectRunning(options.RuntimeOptions.PidFile)
@@ -68,9 +74,21 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 	options.RuntimeOptions.Origin = app.GetObjectMeta().GetName()
 	options.RuntimeOptions.Replicas = *app.Spec.Replicas
 
+	sshCM := fmt.Sprintf("%s-kt-ssh-key-%s", app.GetName(), strings.ToLower(util.RandomString(5)))
 	workload := app.GetObjectMeta().GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+
+	if _, err = kubernetes.CreateSSHCM(sshCM,
+		options.Namespace,
+		getExchangeLables(options.Labels, sshCM, app),
+		map[string]string{
+			"key": string(generator.PublicKey),
+		},
+	); err != nil {
+		return err
+	}
+
 	podIP, podName, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, getExchangeLables(options.Labels, workload, app))
+		workload, options.Namespace, options.Image, sshCM, getExchangeLables(options.Labels, workload, app))
 	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
 	if err != nil {
@@ -79,6 +97,7 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 
 	// record data
 	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshCM
 
 	down := int32(0)
 	kubernetes.Scale(app, &down)

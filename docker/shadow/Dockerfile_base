@@ -4,9 +4,6 @@ RUN apt-get update && apt-get install -y openssh-server dnsutils sshuttle iputil
 RUN mkdir /var/run/sshd
 RUN echo 'root:root' | chpasswd
 RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-RUN mkdir -p /root/.ssh && echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9JUB7MkMGGs0OEuG4Joqu920IVN2omYYsbJ8GoRhvenhr3WCXiAPYsbCJGWCnBTihIQJ4ybA/ncLi+t88pjjn/7yWdwiQT/gT7yEeyxeQdqpCuMQW149/\
-Fnr/GLziRRtY01XggYB4XBe2r0azND6RYw1PlCa57E5c6WqrtbgIgBR7e5fb1YKnc4aIF4/g5EOtpFr/VvAEf4KrRTERhP7oS4NTRjMXckXgfwC3o12ASUC57MTAjzinks2vUeZM+d1wcm1fb484oSg1gHE9\
-6QTIluoTEhHZ0tFTK2Vfm0hpwqQwEIlpfsMG0nNZfsHF+NF9ePM06m5+5NT0GySfImUX kt@public_key" > /root/.ssh/authorized_keys && chmod 400 /root/.ssh/authorized_keys
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 

@@ -9,17 +9,12 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
 
 // Outbound start vpn connection
 func (s *Shadow) Outbound(name, podIP string, cidrs []string) (err error) {
 	options := s.Options
-	err = util.PrepareSSHPrivateKey()
-	if err != nil {
-		return
-	}
 	err = exec.BackgroundRun(
 		kubectl.PortForward(
 			options.KubeConfig,
