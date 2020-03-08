@@ -156,6 +156,14 @@ Please contact us with DingTalk:
 
 ## Release Note
 
+### 0.0.12
+
+> Release At 2020-03-08
+
+* add `run` command to support expose local service
+* add mesh/exchange port mapping usage
+* fixed, random local ssh port cal issue
+
 ### 0.0.11
 
 > Release At 2020-02-27
