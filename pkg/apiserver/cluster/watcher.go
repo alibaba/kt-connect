@@ -3,6 +3,8 @@ package cluster
 import (
 	"errors"
 
+	"k8s.io/apimachinery/pkg/util/wait"
+
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/rest"
@@ -26,7 +28,7 @@ type Watcher struct {
 func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err error) {
 	w = Watcher{Client: client, Config: config}
 
-	namespaceLister, err := w.Namespaces()
+	namespaceLister, err := w.Namespaces(wait.NeverStop)
 	if err != nil {
 		return
 	}
@@ -38,13 +40,13 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 	}
 	w.PodLister = podListener
 
-	serviceLister, err := w.Services()
+	serviceLister, err := w.Services(wait.NeverStop)
 	if err != nil {
 		return
 	}
 	w.ServiceLister = serviceLister
 
-	endpointLister, err := w.Endpoints()
+	endpointLister, err := w.Endpoints(wait.NeverStop)
 	if err != nil {
 		return
 	}
@@ -55,7 +57,7 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 // ServiceListener ServiceListener
 func ServiceListener(client kubernetes.Interface) (lister v1.ServiceLister, err error) {
 	w := Watcher{Client: client}
-	lister, err = w.Services()
+	lister, err = w.Services(wait.NeverStop)
 	if err != nil {
 		return
 	}
