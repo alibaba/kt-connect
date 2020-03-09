@@ -120,7 +120,6 @@ rules:
   - watch
 - apiGroups:
   - extensions
-  - apps
   resources:
   - daemonsets
   - deployments
