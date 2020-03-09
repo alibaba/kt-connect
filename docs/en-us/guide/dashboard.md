@@ -36,6 +36,7 @@ rules:
   verbs: ["get", "list", "watch"]
 - apiGroups:
   - extensions
+  - apps
   resources:
   - ingresses
   verbs: ["get", "list", "watch"]
@@ -77,7 +78,7 @@ spec:
     app: kt-dashboard
   type: ClusterIP
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
