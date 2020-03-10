@@ -34,7 +34,9 @@ func SetUpWaitingChannel() (ch chan os.Signal) {
 // SetUpCloseHandler registry close handeler
 func SetUpCloseHandler(options *options.DaemonOptions) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
-	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	// When using 'docker stop' to stop Container，'docker stop' will send SIGTERM to Container main process
+	// After 10 seconds,if container is still alive,Docker Damon will send SIGKILL to Kill Container
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	go func() {
 		<-ch
 		log.Info().Msgf("- Terminal And Clean Workspace\n")
