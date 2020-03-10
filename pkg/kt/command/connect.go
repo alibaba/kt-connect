@@ -91,7 +91,9 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 		return
 	}
 
-	connectToCluster(&shadow, &kubernetes, options)
+	if err = connectToCluster(&shadow, &kubernetes, options); err != nil {
+		return
+	}
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
@@ -107,8 +109,7 @@ func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.Kuberne
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-
-	endPointIP, podName, err := kubernetes.CreateShadow(
+	endPointIP, podName, sshcm, credential, err := kubernetes.CreateShadow(
 		workload, options.Namespace, options.Image, labels(workload, options),
 	)
 
@@ -118,23 +119,25 @@ func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.Kuberne
 
 	// record shadow name will clean up terminal
 	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshcm
 
 	cidrs, err := kubernetes.ClusterCrids(options.ConnectOptions.CIDR)
 	if err != nil {
 		return
 	}
 
-	return shadow.Outbound(podName, endPointIP, cidrs)
+	return shadow.Outbound(podName, endPointIP, credential, cidrs)
 }
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		"kt":           workload,
 		"kt-component": "connect",
 		"control-by":   "kt",
 	}
 	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
+	splits := strings.Split(workload, "-")
+	labels["version"] = splits[len(splits)-1]
 	return labels
 }

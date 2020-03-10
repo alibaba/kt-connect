@@ -1,7 +1,9 @@
 package cluster
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appV1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	v1 "k8s.io/client-go/listers/core/v1"
 )
@@ -24,7 +26,8 @@ type KubernetesInterface interface {
 	Scale(deployment *appV1.Deployment, replicas *int32) (err error)
 	ServiceHosts(namespace string) (hosts map[string]string)
 	ClusterCrids(podCIDR string) (cidrs []string, err error)
-	CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName string, err error)
+	CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
+	CreateService(name, namespace string, port int, labels map[string]string) (*coreV1.Service, error)
 }
 
 // Kubernetes implements KubernetesInterface

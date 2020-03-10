@@ -5,10 +5,11 @@
 package mock
 
 import (
-	reflect "reflect"
-
+	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
+	v10 "k8s.io/api/core/v1"
+	reflect "reflect"
 )
 
 // MockKubernetesInterface is a mock of KubernetesInterface interface
@@ -93,17 +94,34 @@ func (mr *MockKubernetesInterfaceMockRecorder) ClusterCrids(podCIDR interface{})
 }
 
 // CreateShadow mocks base method
-func (m *MockKubernetesInterface) CreateShadow(name, namespace, image string, labels map[string]string) (string, string, error) {
+func (m *MockKubernetesInterface) CreateShadow(name, namespace, image string, labels map[string]string) (string, string, string, *util.SSHCredential, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateShadow", name, namespace, image, labels)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
-	ret2, _ := ret[2].(error)
-	return ret0, ret1, ret2
+	ret2, _ := ret[2].(string)
+	ret3, _ := ret[3].(*util.SSHCredential)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
 }
 
 // CreateShadow indicates an expected call of CreateShadow
 func (mr *MockKubernetesInterfaceMockRecorder) CreateShadow(name, namespace, image, labels interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateShadow", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateShadow), name, namespace, image, labels)
+}
+
+// CreateService mocks base method
+func (m *MockKubernetesInterface) CreateService(name, namespace string, port int, labels map[string]string) (*v10.Service, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateService", name, namespace, port, labels)
+	ret0, _ := ret[0].(*v10.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateService indicates an expected call of CreateService
+func (mr *MockKubernetesInterfaceMockRecorder) CreateService(name, namespace, port, labels interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateService", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateService), name, namespace, port, labels)
 }

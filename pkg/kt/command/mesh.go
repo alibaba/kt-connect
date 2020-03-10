@@ -48,7 +48,6 @@ func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.
 			if len(expose) == 0 {
 				return errors.New("-expose is required")
 			}
-
 			return action.Mesh(mesh, options)
 		},
 	}
@@ -74,17 +73,17 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 
 	labels := getMeshLabels(workload, meshVersion, app, options)
-
-	podIP, podName, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, labels)
+	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, labels)
 	if err != nil {
 		return err
 	}
 
 	// record context data
 	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshcm
 
 	shadow := connect.Create(options)
-	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP)
+	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP, credential)
 
 	if err != nil {
 		return err
@@ -103,8 +102,10 @@ func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, opti
 		"kt-component": ComponentMesh,
 		"control-by":   KubernetesTool,
 	}
-	for k, v := range app.Spec.Selector.MatchLabels {
-		labels[k] = v
+	if app != nil {
+		for k, v := range app.Spec.Selector.MatchLabels {
+			labels[k] = v
+		}
 	}
 	// extra labels must be applied after origin labels
 	for k, v := range util.String2Map(options.Labels) {

@@ -14,7 +14,7 @@ import (
 )
 
 // Inbound mapping local port from cluster
-func (s *Shadow) Inbound(exposePort, podName, remoteIP string) (err error) {
+func (s *Shadow) Inbound(exposePort, podName, remoteIP string, credential *util.SSHCredential) (err error) {
 	debug := s.Options.Debug
 	kubeConfig := s.Options.KubeConfig
 	namespace := s.Options.Namespace
@@ -44,6 +44,6 @@ func (s *Shadow) Inbound(exposePort, podName, remoteIP string) (err error) {
 		localPort = ports[1]
 		remotePort = ports[0]
 	}
-	cmd := ssh.ForwardRemoteRequestToLocal(localPort, "127.0.0.1", remotePort, localSSHPort)
+	cmd := ssh.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
 	return exec.BackgroundRun(cmd, "ssh remote port-forward", debug)
 }

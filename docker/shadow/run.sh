@@ -1,4 +1,7 @@
 #!/bin/bash
+mkdir -p /root/.ssh
+cp /root/authorized/authorized_keys /root/.ssh
+
 /usr/sbin/sshd -D &
 
 if [[ "${1}" = "--debug" ]]; then
