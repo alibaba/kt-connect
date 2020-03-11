@@ -8,8 +8,9 @@ DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
 
 # run unit test
-test:
-	go test ./...
+unit-test:
+	mkdir -p artifacts/report
+	go test -v -json -cover -coverprofile artifacts/report/cover.out ./...
 
 # build this first,it's the base image 
 build-builder:
