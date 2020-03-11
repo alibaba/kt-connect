@@ -19,16 +19,20 @@ env:
 before_script:
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
 #  - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in test/integration/testdata/config.yaml.enc -out test/integration/testdata/config.yaml -d
-  - docker pull ${NAMESPACE}/${SHADOW_BASE_REPO} || true
-  - docker pull ${NAMESPACE}/${SHADOW_REPO} || true
-  - docker pull golang:1.11 || true
-  - docker pull node:9.11.1 || true
-  - docker pull alpine || true
-  - docker build -t ${NAMESPACE}/${BUILDER_REPO} -f docker/builder/Dockerfile .
-  - docker build -t ${NAMESPACE}/${SHADOW_BASE_REPO} -f docker/shadow/Dockerfile_base .
+
 script:
+# Unit Test
 - make -f Makefile -B unit-test
+# ktctl
 - make -f Makefile build-connect
+# Outhers
+- docker pull ${NAMESPACE}/${SHADOW_BASE_REPO} || true
+- docker pull ${NAMESPACE}/${SHADOW_REPO} || true
+- docker pull golang:1.11 || true
+- docker pull node:9.11.1 || true
+- docker pull alpine || true
+- docker build -t ${NAMESPACE}/${BUILDER_REPO} -f docker/builder/Dockerfile .
+- docker build -t ${NAMESPACE}/${SHADOW_BASE_REPO} -f docker/shadow/Dockerfile_base .
 - docker build -t ${NAMESPACE}/${SHADOW_REPO}:${TAG} --cache-from ${NAMESPACE}/${SHADOW_REPO} -f docker/shadow/Dockerfile .
 - docker build -t ${NAMESPACE}/${SERVER_REPO}:${TAG} -f docker/apiserver/Dockerfile .
 - docker build -t ${NAMESPACE}/${DASHBOARD_REPO}:${TAG} -f docker/dashboard/Dockerfile .
@@ -47,7 +51,7 @@ deploy:
   provider: releases
   api_key:
     secure: Bub3t4U4qSrXgxyUEUpjqKdAqoNakj2WvzmdAyIqc4qlFujRJ22Iw2J2fmcFhi5Z+hCaGZUooD7D/9SgVDxgjxZIkgsWspxYWYSgKAvuyH1UiGZaRW1xB9xDxcu5DtVnsLvLa6XANTY4zP8LlawkTRFqY8OdAaItqG3KyyrcWrcMz+tHQLrg19A9ZnCHvYXdugFMJJUouV8J8nwV19vcvrESipf9WfnAcj71Xksx8TsWL9GAWfIbCz8cOj03MUpIgNb5hZt8mFFTv444ZAIo+79YbHR6X+YyOuJplwewBe8VSi7JAVeSlD1TOwLft+IDjQAejNucDgcj+i/d9ENDlHu2cHy4jkdYaXHvizI6og7/nQNofzgx16gJxZGcRU6GXylNcJq918gQPmnuh2LeQmSpQ99NI8+Qp9O5ZfISYXl0UbXIuKBwQSWJyYJ/xuc1QaG3Esch6veZmmm2OfpJZRdI5LeHouaK3RRAt9dB23SXUx/6e8cwVPMVATtajvL9R8o1IFKQK4NLeW0Y7izuK0/mVc8+Wrk5lsim4tT4A+F7fVYKQM99QXYnwy//e1YrWvdS+9TCgmeBRsNBbo5MOSYwdDawZOU1wrbEwNbNI6d2npeC62P0Z2IgrO0BkWtIBBfBnImB3PAtQBSN6Rhc+E52DbWgLxHgYL3usAN9G9k=
-  file: 
+  file:
     - artifacts/ktctl/ktctl_linux_amd64.tar.gz
     - artifacts/ktctl/ktctl_darwin_amd64.tar.gz
     - artifacts/ktctl/ktctl_linux_386.tar.gz
