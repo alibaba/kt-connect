@@ -2,7 +2,6 @@ package sshuttle
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"os/exec"
 )
 
@@ -12,7 +11,7 @@ func Version() *exec.Cmd {
 }
 
 // SSHUttle ssh-baed vpn connect
-func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
+func SSHUttle(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
 	args := []string{}
 	if !disableDNS {
 		args = append(args, "--dns", "--to-ns", DNSServer)
@@ -22,7 +21,7 @@ func SSHUttle(remoteHost string, remotePort int, DNSServer string, disableDNS bo
 		args = append(args, "-v")
 	}
 
-	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", util.PrivateKeyPath())
+	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", privateKeyPath)
 	args = append(args, "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
 	args = append(args, cidrs...)
 	return exec.Command("sshuttle", args...)

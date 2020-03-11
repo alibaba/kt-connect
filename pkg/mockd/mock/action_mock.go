@@ -5,10 +5,9 @@
 package mock
 
 import (
-	reflect "reflect"
-
 	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockActionInterface is a mock of ActionInterface interface

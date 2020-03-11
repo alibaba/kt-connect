@@ -3,8 +3,6 @@ package ssh
 import (
 	"fmt"
 	"os/exec"
-
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
 // Version check sshuttle version
@@ -13,11 +11,11 @@ func Version() *exec.Cmd {
 }
 
 // ForwardRemoteRequestToLocal ssh remote port forward
-func ForwardRemoteRequestToLocal(localPort, remoteHost, remotePort string, remoteSSHPort int) *exec.Cmd {
+func ForwardRemoteRequestToLocal(localPort, remoteHost, remotePort, privateKeyPath string, remoteSSHPort int) *exec.Cmd {
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",
 		"-oUserKnownHostsFile=/dev/null",
-		"-i", util.PrivateKeyPath(),
+		"-i", privateKeyPath,
 		"-R", remotePort+":127.0.0.1:"+localPort,
 		fmt.Sprintf("root@%s", remoteHost), "-p"+fmt.Sprintf("%d", remoteSSHPort),
 		"sh", "loop.sh",
@@ -25,11 +23,11 @@ func ForwardRemoteRequestToLocal(localPort, remoteHost, remotePort string, remot
 }
 
 // DynamicForwardLocalRequestToRemote ssh remote port forward
-func DynamicForwardLocalRequestToRemote(remoteHost string, remoteSSHPort int, proxyPort int) *exec.Cmd {
+func DynamicForwardLocalRequestToRemote(remoteHost, privateKeyPath string, remoteSSHPort int, proxyPort int) *exec.Cmd {
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",
 		"-oUserKnownHostsFile=/dev/null",
-		"-i", util.PrivateKeyPath(),
+		"-i", privateKeyPath,
 		"-D", fmt.Sprintf("%d", proxyPort),
 		fmt.Sprintf("root@%s", remoteHost), "-p"+fmt.Sprintf("%d", remoteSSHPort),
 		"sh", "loop.sh",

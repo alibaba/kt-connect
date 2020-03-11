@@ -29,7 +29,7 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 
 func runCmd(cmd *exec.Cmd, name string, debug bool) (err error) {
 	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
-	log.Debug().Msgf("Child, cmd.Args = %+v", cmd.Args)
+	log.Debug().Msgf("Child, name = %s, cmd.Args = %+v", name, cmd.Args)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	stdoutIn, _ := cmd.StdoutPipe()

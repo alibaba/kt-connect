@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
@@ -46,8 +47,7 @@ func newRunCommand(options *options.DaemonOptions, action ActionInterface) cli.C
 // Run create a new service in cluster
 func (action *Action) Run(service string, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(options)
-
-	clientset, err := cluster.GetKubernetesClient(options.KubeConfig)
+	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return err
 	}
@@ -56,6 +56,7 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 		"control-by":   "kt",
 		"kt-component": "run",
 		"kt":           service,
+		"version":      strings.ToLower(util.RandomString(5)),
 	}
 
 	// extra labels must be applied after origin labels
@@ -63,7 +64,7 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 		labels[k] = v
 	}
 
-	podIP, podName, err := cluster.CreateShadow(clientset, service, labels, options.Namespace, options.Image)
+	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(service, options.Namespace, options.Image, labels)
 	if err != nil {
 		return err
 	}
@@ -71,17 +72,17 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 
 	if options.RunOptions.Expose {
 		log.Info().Msgf("expose deployment %s to %s:%v", service, service, options.RunOptions.Port)
-		err := cluster.CreateService(service, options.Namespace, labels, options.RunOptions.Port, clientset)
-		if err != nil {
+		if _, err = kubernetes.CreateService(service, options.Namespace, options.RunOptions.Port, labels); err != nil {
 			return err
 		}
 		options.RuntimeOptions.Service = service
 	}
 
 	options.RuntimeOptions.Shadow = service
+	options.RuntimeOptions.SSHCM = sshcm
 
 	shadow := connect.Create(options)
-	err = shadow.Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP)
+	err = shadow.Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP, credential)
 	if err != nil {
 		return err
 	}

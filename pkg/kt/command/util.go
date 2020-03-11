@@ -3,6 +3,7 @@ package command
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -92,9 +93,18 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		cluster.RemoveShadow(client, options.Namespace, options.RuntimeOptions.Shadow)
 	}
 
+	if len(options.RuntimeOptions.SSHCM) > 0 {
+		log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
+		cluster.RemoveSSHCM(client, options.Namespace, options.RuntimeOptions.SSHCM)
+	}
+
+	removePrivateKey(options)
 	if len(options.RuntimeOptions.Service) > 0 {
 		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
-		cluster.RemoveService(options.RuntimeOptions.Service, options.Namespace, client)
+		err = cluster.RemoveService(options.RuntimeOptions.Service, options.Namespace, client)
+		if err != nil {
+			log.Error().Err(err).Msg("delete service failed")
+		}
 	}
 }
 
@@ -105,5 +115,18 @@ func checkConnectRunning(pidFile string) {
 		log.Info().Msgf("'KT Connect' not runing, you can only access local app from cluster")
 	} else {
 		log.Info().Msgf("'KT Connect' is runing, you can access local app from cluster and localhost")
+	}
+}
+
+// removePrivateKey remove the private key of ssh
+func removePrivateKey(options *options.DaemonOptions) {
+	if options.RuntimeOptions.SSHCM == "" {
+		return
+	}
+	splits := strings.Split(options.RuntimeOptions.SSHCM, "-")
+	component, version := splits[1], splits[len(splits)-1]
+	file := util.PrivateKeyPath(component, version)
+	if err := os.Remove(file); !os.IsNotExist(err) {
+		log.Error().Err(err).Msgf("can't delete %s", file)
 	}
 }

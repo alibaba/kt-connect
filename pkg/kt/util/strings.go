@@ -3,12 +3,14 @@ package util
 import (
 	"math/rand"
 	"strings"
+	"time"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // RandomString Generate RandomString
 func RandomString(n int) string {
+	rand.Seed(time.Now().Unix())
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]

@@ -1,18 +1,19 @@
 package cluster
 
 import (
+	"fmt"
 	"time"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -38,8 +39,15 @@ func (k *Kubernetes) Deployment(name, namespace string) (deployment *appV1.Deplo
 }
 
 // CreateShadow create shadow
-func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName string, err error) {
+func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
 	return CreateShadow(k.Clientset, name, labels, namespace, image)
+}
+
+// CreateService create kubernetes service
+func (k *Kubernetes) CreateService(name, namespace string, port int, labels map[string]string) (*v1.Service, error) {
+	cli := k.Clientset.CoreV1().Services(namespace)
+	svc := generateService(name, namespace, labels, port)
+	return cli.Create(svc)
 }
 
 // ClusterCrids get cluster cirds
@@ -108,16 +116,15 @@ func RemoveShadow(client *kubernetes.Clientset, namespace, name string) {
 	}
 }
 
-// CreateService create service in cluster
-func CreateService(name, namespace string,
-	labels map[string]string,
-	port int,
-	clientset *kubernetes.Clientset,
-) (err error) {
-	client := clientset.CoreV1().Services(namespace)
-	svc := generateService(name, namespace, labels, port)
-	_, err = client.Create(svc)
-	return err
+// RemoveSSHCM remove ssh public key of config map
+func RemoveSSHCM(client *kubernetes.Clientset, namespace, name string) {
+	cli := client.CoreV1().ConfigMaps(namespace)
+	deletePolicy := metaV1.DeletePropagationBackground
+	if err := cli.Delete(name, &metaV1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	}); err != nil {
+		log.Error().Err(err).Str("config map", name).Msg("delete config map failed")
+	}
 }
 
 // RemoveService create service in cluster
@@ -136,14 +143,39 @@ func CreateShadow(
 	labels map[string]string,
 	namespace,
 	image string,
-) (podIP, podName string, err error) {
+) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+
+	component, version := labels["kt-component"], labels["version"]
+	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
+
+	generator, err := util.Generate(util.PrivateKeyPath(component, version))
+	if err != nil {
+		return
+	}
+
+	labels["kt"] = sshcm
+	cli := clientset.CoreV1().ConfigMaps(namespace)
+	_, err = cli.Create(&v1.ConfigMap{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      sshcm,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Data: map[string]string{
+			vars.SSHAuthKey: string(generator.PublicKey),
+		},
+	})
+	if err != nil {
+		return
+	}
 
 	localIPAddress := util.GetOutboundIP()
 	log.Info().Msgf("Client address %s", localIPAddress)
 	labels["remoteAddress"] = localIPAddress
 
+	labels["kt"] = name
 	client := clientset.AppsV1().Deployments(namespace)
-	deployment := generatorDeployment(namespace, name, labels, image)
+	deployment := generatorDeployment(namespace, name, labels, image, sshcm)
 	result, err := client.Create(deployment)
 	if err != nil {
 		return
@@ -157,6 +189,8 @@ func CreateShadow(
 	}
 	podIP = pod.Status.PodIP
 	podName = pod.GetObjectMeta().GetName()
+	credential = util.NewDefaultSSHCredential()
+	credential.PrivateKeyPath = generator.PrivateKeyPath
 	return
 }
 
@@ -255,7 +289,7 @@ func generateService(name, namespace string, labels map[string]string, port int)
 
 }
 
-func generatorDeployment(namespace, name string, labels map[string]string, image string) *appV1.Deployment {
+func generatorDeployment(namespace, name string, labels map[string]string, image, volume string) *appV1.Deployment {
 	return &appV1.Deployment{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      name,
@@ -276,6 +310,30 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 							Name:            "standalone",
 							Image:           image,
 							ImagePullPolicy: "Always",
+							VolumeMounts: []v1.VolumeMount{
+								{
+									Name:      "ssh-public-key",
+									MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
+								},
+							},
+						},
+					},
+					Volumes: []v1.Volume{
+						{
+							Name: "ssh-public-key",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: volume,
+									},
+									Items: []v1.KeyToPath{
+										{
+											Key:  vars.SSHAuthKey,
+											Path: "authorized_keys",
+										},
+									},
+								},
+							},
 						},
 					},
 				},

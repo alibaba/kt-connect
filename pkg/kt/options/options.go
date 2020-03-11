@@ -35,6 +35,8 @@ type runtimeOptions struct {
 	AppHome  string
 	// Shadow deployment name
 	Shadow string
+	// ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
+	SSHCM string
 	// The origin app name
 	Origin string
 	// The origin repicas
