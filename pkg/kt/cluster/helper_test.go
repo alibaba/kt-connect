@@ -55,6 +55,50 @@ func Test_getPodCirds(t *testing.T) {
 	}
 }
 
+func Test_getServiceCird(t *testing.T) {
+	type args struct {
+		serviceList []v1.Service
+	}
+	tests := []struct {
+		name     string
+		args     args
+		wantCidr []string
+		wantErr  bool
+	}{
+		{
+			name: "should_get_service_crid_by_svc_sample",
+			args: args{
+				[]v1.Service{
+					service("default", "name", "173.168.0.1"),
+				},
+			},
+			wantErr:  false,
+			wantCidr: []string{"173.168.0.0/16"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCidr, err := getServiceCird(tt.args.serviceList)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getServiceCird() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotCidr, tt.wantCidr) {
+				t.Errorf("getServiceCird() = %v, want %v", gotCidr, tt.wantCidr)
+			}
+		})
+	}
+}
+
+func service(namespace, name, clusterIP string) v1.Service {
+	return v1.Service{
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+		Spec: v1.ServiceSpec{
+			ClusterIP: clusterIP,
+		},
+	}
+}
+
 func node(namespace, name, crid string) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
