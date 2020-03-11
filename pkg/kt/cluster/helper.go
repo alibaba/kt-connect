@@ -22,7 +22,7 @@ func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []string, err error) {
+func getPodCirds(clientset kubernetes.Interface, podCIDR string) (cidrs []string, err error) {
 	cidrs = []string{}
 
 	if len(podCIDR) != 0 {
@@ -57,7 +57,7 @@ func getPodCirds(clientset *kubernetes.Clientset, podCIDR string) (cidrs []strin
 	return
 }
 
-func getPodCirdByInstance(clientset *kubernetes.Clientset) (samples mapset.Set, err error) {
+func getPodCirdByInstance(clientset kubernetes.Interface) (samples mapset.Set, err error) {
 	log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
 	podList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 	if err != nil {
