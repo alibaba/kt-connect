@@ -34,8 +34,14 @@ func NewCheckCommand(options *options.DaemonOptions, action ActionInterface) cli
 func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
+	sshCli := ssh.SshCli{}
+	kubernetesCli := kubectl.Kubectl{
+		KubeConfig: options.KubeConfig,
+	}
+	uttle := sshuttle.SSHUttle{}
+
 	err = runCommandWithMsg(
-		ssh.Version(),
+		sshCli.Version(),
 		"checking ssh version", "ssh is missing, please make sure command ssh is work right at your local first",
 	)
 
@@ -44,7 +50,7 @@ func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	}
 
 	err = runCommandWithMsg(
-		kubectl.Version(options.KubeConfig),
+		kubernetesCli.Version(),
 		"checking kubectl version", "kubectl is missing, please make sure kubectl is working right at your local first",
 	)
 
@@ -53,7 +59,7 @@ func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	}
 
 	err = runCommandWithMsg(
-		sshuttle.Version(),
+		uttle.Version(),
 		"checking sshuttle version", "sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode",
 	)
 

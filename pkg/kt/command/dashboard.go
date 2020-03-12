@@ -23,7 +23,7 @@ func newDashboardCommand(options *options.DaemonOptions, action ActionInterface)
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					return action.ApplyDashboard()
+					return action.ApplyDashboard(options)
 				},
 			},
 			{
@@ -49,8 +49,9 @@ func newDashboardCommand(options *options.DaemonOptions, action ActionInterface)
 }
 
 // ApplyDashboard ...
-func (action *Action) ApplyDashboard() (err error) {
-	command := kubectl.ApplyDashboardToCluster()
+func (action *Action) ApplyDashboard(options *options.DaemonOptions) (err error) {
+	kubernetesCli := kubectl.Kubectl{KubeConfig: options.KubeConfig}
+	command := kubernetesCli.ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
 	err = exec.RunAndWait(command, "apply kt dashboard", true)
 	if err != nil {
@@ -63,7 +64,10 @@ func (action *Action) ApplyDashboard() (err error) {
 // OpenDashboard ...
 func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
 	ch := SetUpWaitingChannel()
-	command := kubectl.PortForwardDashboardToLocal(options.DashboardOptions.Port)
+	kubernetesCli := kubectl.Kubectl{
+		KubeConfig: options.KubeConfig,
+	}
+	command := kubernetesCli.PortForwardDashboardToLocal(options.DashboardOptions.Port)
 	err = exec.BackgroundRun(command, "forward dashboard to localhost", true)
 	if err != nil {
 		return

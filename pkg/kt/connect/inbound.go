@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
@@ -15,9 +17,22 @@ import (
 
 // Inbound mapping local port from cluster
 func (s *Shadow) Inbound(exposePort, podName, remoteIP string, credential *util.SSHCredential) (err error) {
-	debug := s.Options.Debug
-	kubeConfig := s.Options.KubeConfig
-	namespace := s.Options.Namespace
+	kubernetesCli := &kubectl.Cli{
+		KubeConfig: s.Options.KubeConfig,
+	}
+	sshCli := &ssh.Cli{}
+	return inbound(exposePort, podName, remoteIP, credential, s.Options, kubernetesCli, sshCli)
+}
+
+func inbound(
+	exposePort, podName, remoteIP string, credential *util.SSHCredential,
+	options *options.DaemonOptions,
+	kubernetesCli kubectl.CliInterface,
+	sshCli ssh.CliInterface,
+) (err error) {
+	debug := options.Debug
+	namespace := options.Namespace
+
 	log.Info().Msgf("remote %s forward to local %s", remoteIP, exposePort)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
@@ -26,7 +41,7 @@ func (s *Shadow) Inbound(exposePort, podName, remoteIP string, credential *util.
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		portforward := kubectl.PortForward(kubeConfig, namespace, podName, localSSHPort)
+		portforward := kubernetesCli.PortForward(namespace, podName, localSSHPort)
 		err = exec.BackgroundRun(portforward, "exchange port forward to local", debug)
 		// make sure port-forward already success
 		time.Sleep(time.Duration(2) * time.Second)
@@ -44,6 +59,6 @@ func (s *Shadow) Inbound(exposePort, podName, remoteIP string, credential *util.
 		localPort = ports[1]
 		remotePort = ports[0]
 	}
-	cmd := ssh.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
+	cmd := sshCli.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
 	return exec.BackgroundRun(cmd, "ssh remote port-forward", debug)
 }

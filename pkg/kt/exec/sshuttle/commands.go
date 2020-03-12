@@ -6,12 +6,12 @@ import (
 )
 
 // Version check sshuttle version
-func Version() *exec.Cmd {
+func (s *Cli) Version() *exec.Cmd {
 	return exec.Command("sshuttle", "--version")
 }
 
-// SSHUttle ssh-baed vpn connect
-func SSHUttle(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
+// Connect ssh-baed vpn connect
+func (s *Cli) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
 	args := []string{}
 	if !disableDNS {
 		args = append(args, "--dns", "--to-ns", DNSServer)

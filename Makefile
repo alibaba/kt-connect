@@ -12,6 +12,9 @@ generate-mock:
 	mockgen -source=pkg/kt/command/types.go -destination=pkg/mockd/mock/action_mock.go -package=mock
 	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/mockd/mock/kubernetes_mock.go -package=mock
 	mockgen -source=pkg/kt/connect/types.go -destination=pkg/mockd/mock/connect_mock.go -package=mock
+	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=pkg/mockd/mock/kubectl_mock.go -package=mock
+	mockgen -source=pkg/kt/exec/ssh/types.go -destination=pkg/mockd/mock/ssh_mock.go -package=mock
+	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=pkg/mockd/mock/sshuttle_mock.go -package=mock
 
 # run unit test
 unit-test:

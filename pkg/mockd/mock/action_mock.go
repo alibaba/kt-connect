@@ -119,15 +119,15 @@ func (mr *MockActionInterfaceMockRecorder) Mesh(service, options interface{}) *g
 }
 
 // ApplyDashboard mocks base method
-func (m *MockActionInterface) ApplyDashboard() error {
+func (m *MockActionInterface) ApplyDashboard(options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApplyDashboard")
+	ret := m.ctrl.Call(m, "ApplyDashboard", options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ApplyDashboard indicates an expected call of ApplyDashboard
-func (mr *MockActionInterfaceMockRecorder) ApplyDashboard() *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) ApplyDashboard(options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyDashboard", reflect.TypeOf((*MockActionInterface)(nil).ApplyDashboard))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyDashboard", reflect.TypeOf((*MockActionInterface)(nil).ApplyDashboard), options)
 }

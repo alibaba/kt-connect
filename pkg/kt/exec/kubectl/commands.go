@@ -5,15 +5,16 @@ import (
 	"os/exec"
 )
 
-// Version kubectl version
-func Version(kubeConifg string) *exec.Cmd {
-	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "version", "--short", "port-forward")
+// Version ...
+func (k *Cli) Version() *exec.Cmd {
+	return exec.Command("kubectl", "--kubeconfig="+k.KubeConfig, "version", "--short", "port-forward")
 }
 
-// ApplyDashboardToCluster Apply Dashboard to cluster
-func ApplyDashboardToCluster() *exec.Cmd {
+// ApplyDashboardToCluster ...
+func (k *Cli) ApplyDashboardToCluster() *exec.Cmd {
 	return exec.Command(
 		"kubectl",
+		"--kubeconfig="+k.KubeConfig,
 		"-n",
 		"kube-system",
 		"apply",
@@ -21,10 +22,11 @@ func ApplyDashboardToCluster() *exec.Cmd {
 		"https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/deploy/manifest/all-in-one.yaml")
 }
 
-//PortForwardDashboardToLocal forward dashboardto local
-func PortForwardDashboardToLocal(port string) *exec.Cmd {
+// PortForwardDashboardToLocal ...
+func (k *Cli) PortForwardDashboardToLocal(port string) *exec.Cmd {
 	return exec.Command(
 		"kubectl",
+		"--kubeconfig="+k.KubeConfig,
 		"-n",
 		"kube-system",
 		"port-forward",
@@ -33,7 +35,7 @@ func PortForwardDashboardToLocal(port string) *exec.Cmd {
 	)
 }
 
-// PortForward kubectl port forward
-func PortForward(kubeConifg, namespace, resource string, remotePort int) *exec.Cmd {
-	return exec.Command("kubectl", "--kubeconfig="+kubeConifg, "-n", namespace, "port-forward", resource, fmt.Sprintf("%d", remotePort)+":22")
+// PortForward ...
+func (k *Cli) PortForward(namespace, resource string, remotePort int) *exec.Cmd {
+	return exec.Command("kubectl", "--kubeconfig="+k.KubeConfig, "-n", namespace, "port-forward", resource, fmt.Sprintf("%d", remotePort)+":22")
 }

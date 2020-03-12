@@ -12,7 +12,7 @@ type ActionInterface interface {
 	Run(service string, options *options.DaemonOptions) error
 	Exchange(service string, options *options.DaemonOptions) error
 	Mesh(service string, options *options.DaemonOptions) error
-	ApplyDashboard() error
+	ApplyDashboard(options *options.DaemonOptions) error
 }
 
 // Action cmd action
