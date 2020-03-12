@@ -64,7 +64,7 @@ func (action *Action) Run(service string, options *options.DaemonOptions) error 
 		labels[k] = v
 	}
 
-	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(service, options.Namespace, options.Image, labels)
+	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(service, options.Namespace, options.Image, labels, options.Debug)
 	if err != nil {
 		return err
 	}

@@ -110,7 +110,7 @@ func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.Kuberne
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 	endPointIP, podName, sshcm, credential, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, labels(workload, options),
+		workload, options.Namespace, options.Image, labels(workload, options), options.Debug,
 	)
 
 	if err != nil {
