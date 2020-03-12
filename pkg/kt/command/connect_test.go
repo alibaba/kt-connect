@@ -24,7 +24,7 @@ func Test_newConnectCommand(t *testing.T) {
 	fakeKtCli := kt.NewMockCliInterface(ctl)
 
 	mockAction := action.NewMockActionInterface(ctl)
-	mockAction.EXPECT().Connect(gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Connect(fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string

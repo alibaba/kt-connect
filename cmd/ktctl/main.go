@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
@@ -27,14 +29,15 @@ func main() {
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
 
+	context := &kt.Cli{Options: options}
 	action := command.Action{}
 
-	app.Commands = command.NewCommands(options, &action)
+	app.Commands = command.NewCommands(context, &action, options)
 
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error().Msg(err.Error())
-		command.CleanupWorkspace(options)
+		command.CleanupWorkspace(context, options)
 		os.Exit(-1)
 	}
 

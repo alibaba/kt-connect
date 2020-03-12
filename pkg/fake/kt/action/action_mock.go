@@ -50,17 +50,17 @@ func (mr *MockActionInterfaceMockRecorder) OpenDashboard(options interface{}) *g
 }
 
 // Connect mocks base method
-func (m *MockActionInterface) Connect(options *options.DaemonOptions) error {
+func (m *MockActionInterface) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Connect", options)
+	ret := m.ctrl.Call(m, "Connect", cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Connect indicates an expected call of Connect
-func (mr *MockActionInterfaceMockRecorder) Connect(options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Connect(cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockActionInterface)(nil).Connect), options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockActionInterface)(nil).Connect), cli, options)
 }
 
 // Check mocks base method
@@ -92,31 +92,31 @@ func (mr *MockActionInterfaceMockRecorder) Run(service, cli, options interface{}
 }
 
 // Exchange mocks base method
-func (m *MockActionInterface) Exchange(service string, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Exchange(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exchange", service, options)
+	ret := m.ctrl.Call(m, "Exchange", service, cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Exchange indicates an expected call of Exchange
-func (mr *MockActionInterfaceMockRecorder) Exchange(service, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Exchange(service, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exchange", reflect.TypeOf((*MockActionInterface)(nil).Exchange), service, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exchange", reflect.TypeOf((*MockActionInterface)(nil).Exchange), service, cli, options)
 }
 
 // Mesh mocks base method
-func (m *MockActionInterface) Mesh(service string, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Mesh(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Mesh", service, options)
+	ret := m.ctrl.Call(m, "Mesh", service, cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Mesh indicates an expected call of Mesh
-func (mr *MockActionInterfaceMockRecorder) Mesh(service, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Mesh(service, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mesh", reflect.TypeOf((*MockActionInterface)(nil).Mesh), service, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mesh", reflect.TypeOf((*MockActionInterface)(nil).Mesh), service, cli, options)
 }
 
 // ApplyDashboard mocks base method

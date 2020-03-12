@@ -17,6 +17,39 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// RemoveService remove sevice
+func (k *Kubernetes) RemoveService(name, namespace string) (err error) {
+	client := k.Clientset.CoreV1().Services(namespace)
+	return client.Delete(name, &metaV1.DeleteOptions{})
+}
+
+// RemoveDeployment remove deployment instances
+func (k *Kubernetes) RemoveDeployment(name, namespace string) (err error) {
+	deploymentsClient := k.Clientset.AppsV1().Deployments(namespace)
+	deletePolicy := metaV1.DeletePropagationBackground
+	return deploymentsClient.Delete(name, &metaV1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
+// RemoveConfigMap remove ConfigMap instance
+func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
+	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
+	deletePolicy := metaV1.DeletePropagationBackground
+	return cli.Delete(name, &metaV1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
+// ScaleTo scale deployment to
+func (k *Kubernetes) ScaleTo(deployment, namespace string, replicas *int32) (err error) {
+	obj, err := k.Clientset.AppsV1().Deployments(namespace).Get(deployment, metaV1.GetOptions{})
+	if err != nil {
+		return
+	}
+	return k.Scale(obj, replicas)
+}
+
 // Scale scale deployment to
 func (k *Kubernetes) Scale(deployment *appV1.Deployment, replicas *int32) (err error) {
 	log.Info().Msgf("scale deployment %s to %d\n", deployment.GetObjectMeta().GetName(), *replicas)
@@ -73,7 +106,7 @@ func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[stri
 
 	labels["kt"] = name
 	client := clientSet.AppsV1().Deployments(namespace)
-	deployment := generatorDeployment(namespace, name, labels, image, sshcm, debug)
+	deployment := deployment(namespace, name, labels, image, sshcm, debug)
 	log.Info().Msg("shadow template is prepare ready.")
 	result, err := client.Create(deployment)
 	if err != nil {
@@ -95,7 +128,7 @@ func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[stri
 // CreateService create kubernetes service
 func (k *Kubernetes) CreateService(name, namespace string, port int, labels map[string]string) (*v1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
-	svc := generateService(name, namespace, labels, port)
+	svc := service(name, namespace, labels, port)
 	return cli.Create(svc)
 }
 
@@ -131,58 +164,6 @@ func (k *Kubernetes) ServiceHosts(namespace string) (hosts map[string]string) {
 		hosts[service.ObjectMeta.Name] = service.Spec.ClusterIP
 	}
 	return
-}
-
-// ScaleTo scale app
-func ScaleTo(clientSet *kubernetes.Clientset, namespace, name string, replicas int32) (err error) {
-	client := clientSet.AppsV1().Deployments(namespace)
-	deployment, err := client.Get(name, metaV1.GetOptions{})
-	if err != nil {
-		return
-	}
-
-	// make sure min replicas
-	if replicas == 0 {
-		replicas = 1
-	}
-
-	log.Info().Msgf("- Scale %s in %s to %d", name, namespace, replicas)
-
-	deployment.Spec.Replicas = &replicas
-	_, err = client.Update(deployment)
-	return
-}
-
-// RemoveShadow remove shadow from cluster
-func RemoveShadow(client *kubernetes.Clientset, namespace, name string) {
-	deploymentsClient := client.AppsV1().Deployments(namespace)
-	deletePolicy := metaV1.DeletePropagationBackground
-	err := deploymentsClient.Delete(name, &metaV1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
-	if err != nil {
-		log.Error().Err(err).Msgf("delete deployment %s failed", name)
-	}
-}
-
-// RemoveSSHCM remove ssh public key of config map
-func RemoveSSHCM(client *kubernetes.Clientset, namespace, name string) {
-	cli := client.CoreV1().ConfigMaps(namespace)
-	deletePolicy := metaV1.DeletePropagationBackground
-	if err := cli.Delete(name, &metaV1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	}); err != nil {
-		log.Error().Err(err).Str("config map", name).Msg("delete config map failed")
-	}
-}
-
-// RemoveService create service in cluster
-func RemoveService(
-	name, namespace string,
-	clientset *kubernetes.Clientset,
-) (err error) {
-	client := clientset.CoreV1().Services(namespace)
-	return client.Delete(name, &metaV1.DeleteOptions{})
 }
 
 func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Interface) (pod v1.Pod, err error) {
@@ -257,7 +238,7 @@ wait_loop:
 	return pod, nil
 }
 
-func generateService(name, namespace string, labels map[string]string, port int) *v1.Service {
+func service(name, namespace string, labels map[string]string, port int) *v1.Service {
 	var ports []v1.ServicePort
 	ports = append(ports, v1.ServicePort{
 		Name:       name,
@@ -280,15 +261,8 @@ func generateService(name, namespace string, labels map[string]string, port int)
 
 }
 
-func generatorDeployment(namespace, name string, labels map[string]string, image, volume string, debug bool) *appV1.Deployment {
-
-	args := []string{}
-	if debug {
-		log.Debug().Msg("create shadow with debug mode")
-		//args = append(args, "--debug")
-	}
-
-	container := v1.Container{
+func container(image string, args []string) v1.Container {
+	return v1.Container{
 		Name:            "standalone",
 		Image:           image,
 		ImagePullPolicy: "Always",
@@ -300,7 +274,14 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 			},
 		},
 	}
+}
 
+func deployment(namespace, name string, labels map[string]string, image, volume string, debug bool) *appV1.Deployment {
+	args := []string{}
+	if debug {
+		log.Debug().Msg("create shadow with debug mode")
+		//args = append(args, "--debug")
+	}
 	sshVolume := v1.Volume{
 		Name: "ssh-public-key",
 		VolumeSource: v1.VolumeSource{
@@ -334,7 +315,7 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						container,
+						container(image, args),
 					},
 					Volumes: []v1.Volume{
 						sshVolume,

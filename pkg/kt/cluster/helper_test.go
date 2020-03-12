@@ -69,7 +69,7 @@ func Test_getServiceCird(t *testing.T) {
 			name: "should_get_service_crid_by_svc_sample",
 			args: args{
 				[]v1.Service{
-					service("default", "name", "173.168.0.1"),
+					serviceTemp("default", "name", "173.168.0.1"),
 				},
 			},
 			wantErr:  false,
@@ -90,7 +90,7 @@ func Test_getServiceCird(t *testing.T) {
 	}
 }
 
-func service(namespace, name, clusterIP string) v1.Service {
+func serviceTemp(namespace, name, clusterIP string) v1.Service {
 	return v1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: v1.ServiceSpec{

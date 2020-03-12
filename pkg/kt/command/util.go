@@ -8,7 +8,6 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -16,16 +15,14 @@ import (
 )
 
 // NewCommands return new Connect Command
-func NewCommands(options *options.DaemonOptions, action ActionInterface) []cli.Command {
-	ktCli := &kt.Cli{Options: options}
-
+func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
-		newRunCommand(ktCli, options, action),
-		newConnectCommand(ktCli, options, action),
-		newExchangeCommand(ktCli, options, action),
-		newMeshCommand(ktCli, options, action),
-		newDashboardCommand(ktCli, options, action),
-		NewCheckCommand(ktCli, options, action),
+		newRunCommand(kt, options, action),
+		newConnectCommand(kt, options, action),
+		newExchangeCommand(kt, options, action),
+		newMeshCommand(kt, options, action),
+		newDashboardCommand(kt, options, action),
+		NewCheckCommand(kt, options, action),
 	}
 }
 
@@ -37,14 +34,14 @@ func SetUpWaitingChannel() (ch chan os.Signal) {
 }
 
 // SetUpCloseHandler registry close handeler
-func SetUpCloseHandler(options *options.DaemonOptions) (ch chan os.Signal) {
+func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	// see https://en.wikipedia.org/wiki/Signal_(IPC)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	go func() {
 		<-ch
 		log.Info().Msgf("- Terminal And Clean Workspace\n")
-		CleanupWorkspace(options)
+		CleanupWorkspace(cli, options)
 		log.Info().Msgf("- Successful Clean Up Workspace\n")
 		os.Exit(0)
 	}()
@@ -52,7 +49,7 @@ func SetUpCloseHandler(options *options.DaemonOptions) (ch chan os.Signal) {
 }
 
 // CleanupWorkspace clean workspace
-func CleanupWorkspace(options *options.DaemonOptions) {
+func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	log.Info().Msgf("- start Clean Workspace\n")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
 		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
@@ -70,21 +67,16 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 	}
 
 	util.DropHosts(options.ConnectOptions.Hosts)
-	client, err := cluster.GetKubernetesClient(options.KubeConfig)
+
+	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		log.Error().Msgf("fails create kubernetes client when clean up workspace")
 		return
 	}
 
-	// scale origin app to replicas
 	if len(options.RuntimeOptions.Origin) > 0 {
 		log.Info().Msgf("- Recover Origin App %s", options.RuntimeOptions.Origin)
-		err = cluster.ScaleTo(
-			client,
-			options.Namespace,
-			options.RuntimeOptions.Origin,
-			options.RuntimeOptions.Replicas,
-		)
+		err := kubernetes.ScaleTo(options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().
 				Str("namespace", options.Namespace).
@@ -94,18 +86,18 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 
 	if len(options.RuntimeOptions.Shadow) > 0 {
 		log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
-		cluster.RemoveShadow(client, options.Namespace, options.RuntimeOptions.Shadow)
+		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 	}
 
 	if len(options.RuntimeOptions.SSHCM) > 0 {
 		log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
-		cluster.RemoveSSHCM(client, options.Namespace, options.RuntimeOptions.SSHCM)
+		kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
 	}
 
 	removePrivateKey(options)
 	if len(options.RuntimeOptions.Service) > 0 {
 		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
-		err = cluster.RemoveService(options.RuntimeOptions.Service, options.Namespace, client)
+		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
 		if err != nil {
 			log.Error().Err(err).Msg("delete service failed")
 		}

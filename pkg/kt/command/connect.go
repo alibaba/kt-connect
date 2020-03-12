@@ -9,7 +9,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli"
+	urfave "github.com/urfave/cli"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -17,7 +17,7 @@ import (
 )
 
 // newConnectCommand return new connect command
-func newConnectCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
+func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 
 	methodDefaultValue := "vpn"
 	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"
@@ -26,60 +26,60 @@ func newConnectCommand(kt kt.CliInterface, options *options.DaemonOptions, actio
 		methodDefaultUsage = "windows only support socks5"
 	}
 
-	return cli.Command{
+	return urfave.Command{
 		Name:  "connect",
 		Usage: "connection to kubernetes cluster",
-		Flags: []cli.Flag{
-			cli.StringFlag{
+		Flags: []urfave.Flag{
+			urfave.StringFlag{
 				Name:        "method",
 				Value:       methodDefaultValue,
 				Usage:       methodDefaultUsage,
 				Destination: &options.ConnectOptions.Method,
 			},
-			cli.IntFlag{
+			urfave.IntFlag{
 				Name:        "proxy",
 				Value:       2223,
 				Usage:       "when should method socks5, you can choice which port to proxy",
 				Destination: &options.ConnectOptions.Socke5Proxy,
 			},
-			cli.IntFlag{
+			urfave.IntFlag{
 				Name:        "port",
 				Value:       2222,
 				Usage:       "Local SSH Proxy port",
 				Destination: &options.ConnectOptions.SSHPort,
 			},
-			cli.BoolFlag{
+			urfave.BoolFlag{
 				Name:        "disableDNS",
 				Usage:       "Disable Cluster DNS",
 				Destination: &options.ConnectOptions.DisableDNS,
 			},
-			cli.StringFlag{
+			urfave.StringFlag{
 				Name:        "cidr",
 				Usage:       "Custom CIDR eq '172.2.0.0/16'",
 				Destination: &options.ConnectOptions.CIDR,
 			},
-			cli.BoolFlag{
+			urfave.BoolFlag{
 				Name:        "dump2hosts",
 				Usage:       "Auto write service to local hosts file",
 				Destination: &options.ConnectOptions.Dump2Hosts,
 			},
 		},
-		Action: func(c *cli.Context) error {
+		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			return action.Connect(options)
+			return action.Connect(cli, options)
 		},
 	}
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(options *options.DaemonOptions) (err error) {
+func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
 		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
 
-	ch := SetUpCloseHandler(options)
+	ch := SetUpCloseHandler(cli, options)
 
 	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
 	if err != nil {

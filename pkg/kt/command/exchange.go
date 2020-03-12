@@ -15,22 +15,22 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/urfave/cli"
+	urfave "github.com/urfave/cli"
 )
 
 // newExchangeCommand return new exchange command
-func newExchangeCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
-	return cli.Command{
+func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+	return urfave.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",
-		Flags: []cli.Flag{
-			cli.StringFlag{
+		Flags: []urfave.Flag{
+			urfave.StringFlag{
 				Name:        "expose",
 				Usage:       "expose port [port] or [remote:local]",
 				Destination: &options.ExchangeOptions.Expose,
 			},
 		},
-		Action: func(c *cli.Context) error {
+		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
@@ -44,14 +44,14 @@ func newExchangeCommand(kt kt.CliInterface, options *options.DaemonOptions, acti
 			if len(expose) == 0 {
 				return errors.New("-expose is required")
 			}
-			return action.Exchange(exchange, options)
+			return action.Exchange(exchange, cli, options)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(exchange string, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(options)
+func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *options.DaemonOptions) error {
+	ch := SetUpCloseHandler(cli, options)
 
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 

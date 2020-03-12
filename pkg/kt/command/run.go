@@ -46,7 +46,7 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 
 // Run create a new service in cluster
 func (action *Action) Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(options)
+	ch := SetUpCloseHandler(cli, options)
 	run(service, cli, options)
 	<-ch
 	return nil

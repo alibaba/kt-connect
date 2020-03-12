@@ -20,7 +20,7 @@ func Test_exchangeCommand(t *testing.T) {
 	fakeKtCli := kt.NewMockCliInterface(ctl)
 	mockAction := action.NewMockActionInterface(ctl)
 
-	mockAction.EXPECT().Exchange(gomock.Eq("service"), gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Exchange(gomock.Eq("service"), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string

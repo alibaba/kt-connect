@@ -20,7 +20,7 @@ func Test_meshCommand(t *testing.T) {
 	fakeKtCli := kt.NewMockCliInterface(ctl)
 	mockAction := action.NewMockActionInterface(ctl)
 
-	mockAction.EXPECT().Mesh(gomock.Eq("service"), gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Mesh(gomock.Eq("service"), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string

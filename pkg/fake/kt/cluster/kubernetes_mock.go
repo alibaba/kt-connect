@@ -36,6 +36,48 @@ func (m *MockKubernetesInterface) EXPECT() *MockKubernetesInterfaceMockRecorder 
 	return m.recorder
 }
 
+// RemoveDeployment mocks base method
+func (m *MockKubernetesInterface) RemoveDeployment(name, namespace string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveDeployment", name, namespace)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveDeployment indicates an expected call of RemoveDeployment
+func (mr *MockKubernetesInterfaceMockRecorder) RemoveDeployment(name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeployment", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveDeployment), name, namespace)
+}
+
+// RemoveConfigMap mocks base method
+func (m *MockKubernetesInterface) RemoveConfigMap(name, namespace string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveConfigMap", name, namespace)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveConfigMap indicates an expected call of RemoveConfigMap
+func (mr *MockKubernetesInterfaceMockRecorder) RemoveConfigMap(name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveConfigMap", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveConfigMap), name, namespace)
+}
+
+// RemoveService mocks base method
+func (m *MockKubernetesInterface) RemoveService(name, namespace string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveService", name, namespace)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveService indicates an expected call of RemoveService
+func (mr *MockKubernetesInterfaceMockRecorder) RemoveService(name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveService", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveService), name, namespace)
+}
+
 // Deployment mocks base method
 func (m *MockKubernetesInterface) Deployment(name, namespace string) (*v1.Deployment, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +105,20 @@ func (m *MockKubernetesInterface) Scale(deployment *v1.Deployment, replicas *int
 func (mr *MockKubernetesInterfaceMockRecorder) Scale(deployment, replicas interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scale", reflect.TypeOf((*MockKubernetesInterface)(nil).Scale), deployment, replicas)
+}
+
+// ScaleTo mocks base method
+func (m *MockKubernetesInterface) ScaleTo(deployment, namespace string, replicas *int32) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ScaleTo", deployment, namespace, replicas)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ScaleTo indicates an expected call of ScaleTo
+func (mr *MockKubernetesInterfaceMockRecorder) ScaleTo(deployment, namespace, replicas interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScaleTo", reflect.TypeOf((*MockKubernetesInterface)(nil).ScaleTo), deployment, namespace, replicas)
 }
 
 // ServiceHosts mocks base method

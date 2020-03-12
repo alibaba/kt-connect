@@ -14,7 +14,7 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli"
+	urfave "github.com/urfave/cli"
 )
 
 // ComponentMesh mesh component
@@ -24,18 +24,18 @@ const ComponentMesh = "mesh"
 const KubernetesTool = "kt"
 
 // newMeshCommand return new mesh command
-func newMeshCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
-	return cli.Command{
+func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+	return urfave.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",
-		Flags: []cli.Flag{
-			cli.StringFlag{
+		Flags: []urfave.Flag{
+			urfave.StringFlag{
 				Name:        "expose",
 				Usage:       "expose port [port] or [remote:local]",
 				Destination: &options.MeshOptions.Expose,
 			},
 		},
-		Action: func(c *cli.Context) error {
+		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
@@ -50,16 +50,16 @@ func newMeshCommand(kt kt.CliInterface, options *options.DaemonOptions, action A
 			if len(expose) == 0 {
 				return errors.New("-expose is required")
 			}
-			return action.Mesh(mesh, options)
+			return action.Mesh(mesh, cli, options)
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
+func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
-	ch := SetUpCloseHandler(options)
+	ch := SetUpCloseHandler(cli, options)
 
 	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
