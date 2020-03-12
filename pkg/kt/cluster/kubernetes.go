@@ -294,7 +294,8 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 
 	args := []string{}
 	if debug {
-		args = append(args, "--debug")
+		log.Debug().Msg("create shadow with debug mode")
+		//args = append(args, "--debug")
 	}
 
 	container := v1.Container{
