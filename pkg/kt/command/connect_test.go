@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/alibaba/kt-connect/pkg/fake/kt/exec"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -67,14 +69,15 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	ktctl := kt.NewMockCliInterface(ctl)
 
 	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
+	exec := exec.NewMockCliInterface(ctl)
 	shadow := fakeConnect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
 	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
 
-	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", gomock.Any(), []string{"10.10.10.0/24"}).Return(nil)
-
+	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", gomock.Any(), []string{"10.10.10.0/24"}, gomock.Any()).Return(nil)
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
+	ktctl.EXPECT().Exec().AnyTimes().Return(exec)
 
 	type args struct {
 		shadow     connect.ShadowInterface

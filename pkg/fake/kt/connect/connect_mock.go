@@ -7,6 +7,7 @@ package connect
 import (
 	reflect "reflect"
 
+	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -49,15 +50,15 @@ func (mr *MockShadowInterfaceMockRecorder) Inbound(exposePort, podName, remoteIP
 }
 
 // Outbound mocks base method
-func (m *MockShadowInterface) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string) error {
+func (m *MockShadowInterface) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, exec exec.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Outbound", name, podIP, credential, cidrs)
+	ret := m.ctrl.Call(m, "Outbound", name, podIP, credential, cidrs, exec)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Outbound indicates an expected call of Outbound
-func (mr *MockShadowInterfaceMockRecorder) Outbound(name, podIP, credential, cidrs interface{}) *gomock.Call {
+func (mr *MockShadowInterfaceMockRecorder) Outbound(name, podIP, credential, cidrs, exec interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Outbound", reflect.TypeOf((*MockShadowInterface)(nil).Outbound), name, podIP, credential, cidrs)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Outbound", reflect.TypeOf((*MockShadowInterface)(nil).Outbound), name, podIP, credential, cidrs, exec)
 }

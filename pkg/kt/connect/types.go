@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
@@ -8,7 +9,7 @@ import (
 // ShadowInterface shadow interface
 type ShadowInterface interface {
 	Inbound(exposePort, podName, remoteIP string, credential *util.SSHCredential) (err error)
-	Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string) (err error)
+	Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, exec exec.CliInterface) (err error)
 }
 
 // Shadow shadow

@@ -124,7 +124,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-	return shadow.Outbound(podName, endPointIP, credential, cidrs)
+	return shadow.Outbound(podName, endPointIP, credential, cidrs, cli.Exec())
 }
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {

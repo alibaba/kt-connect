@@ -38,10 +38,14 @@ func runCmd(cmd *exec.Cmd, name string, debug bool) (err error) {
 	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
 	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
 	go func() {
-		_, _ = io.Copy(stdout, stdoutIn)
+		if stdoutIn != nil {
+			_, _ = io.Copy(stdout, stdoutIn)
+		}
 	}()
 	go func() {
-		_, _ = io.Copy(stderr, stderrIn)
+		if stderrIn != nil {
+			_, _ = io.Copy(stderr, stderrIn)
+		}
 	}()
 
 	err = cmd.Start()
@@ -50,7 +54,7 @@ func runCmd(cmd *exec.Cmd, name string, debug bool) (err error) {
 		return
 	}
 
-	time.Sleep(time.Duration(2) * time.Second)
+	time.Sleep(time.Duration(1) * time.Second)
 	pid := cmd.Process.Pid
 	log.Info().Msgf("%s start at pid: %d", name, pid)
 	return
