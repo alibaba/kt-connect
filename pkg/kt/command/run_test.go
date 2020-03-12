@@ -6,21 +6,24 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/alibaba/kt-connect/pkg/fake/kt"
-
+	fakeKt "github.com/alibaba/kt-connect/pkg/fake/kt"
 	"github.com/alibaba/kt-connect/pkg/fake/kt/action"
+	"github.com/alibaba/kt-connect/pkg/fake/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/fake/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
+	coreV1 "k8s.io/api/core/v1"
 )
 
 func Test_runCommand(t *testing.T) {
 
 	ctl := gomock.NewController(t)
-	mockAction := action.NewMockActionInterface(ctl)
-	fakeKtCli := kt.NewMockCliInterface(ctl)
+	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
-	mockAction.EXPECT().Run(gomock.Eq("service"), gomock.Any()).Return(nil).AnyTimes()
+	mockAction := action.NewMockActionInterface(ctl)
+	mockAction.EXPECT().Run(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -55,4 +58,116 @@ func Test_runCommand(t *testing.T) {
 
 	}
 
+}
+
+func Test_run(t *testing.T) {
+
+	ctl := gomock.NewController(t)
+	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
+	kubernetes := cluster.NewMockKubernetesInterface(ctl)
+	shadow := connect.NewMockShadowInterface(ctl)
+
+	fakeKtCli.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
+	fakeKtCli.EXPECT().Shadow().AnyTimes().Return(shadow)
+
+	type args struct {
+		service         string
+		options         *options.DaemonOptions
+		shadowResponse  createShadowResponse
+		serviceResponse createServiceResponse
+		inboundResponse inboundResponse
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "shouldExposeLocalServiceToCluster",
+			args: args{
+				service: "test",
+				options: options.NewRunDaemonOptions(
+					"aa=bb",
+					&options.RunOptions{
+						Expose: true,
+						Port:   8081,
+					}),
+				shadowResponse: createShadowResponse{
+					podIP:   "172.168.0.1",
+					podName: "shadow",
+					sshcm:   "shadow-ssh-cm",
+					credential: &util.SSHCredential{
+						RemoteHost:     "127.0.0.1",
+						Port:           "2222",
+						PrivateKeyPath: "/tmp/pk",
+					},
+					err: nil,
+				},
+				serviceResponse: createServiceResponse{
+					service: &coreV1.Service{},
+					err:     nil,
+				},
+				inboundResponse: inboundResponse{
+					err: nil,
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "shouldExposeLocalServiceFailWhenShadowCreateFail",
+			args: args{
+				service: "test2",
+				options: options.NewRunDaemonOptions(
+					"aaa=bbb",
+					&options.RunOptions{
+						Expose: true,
+						Port:   8081,
+					}),
+				shadowResponse: createShadowResponse{
+					podIP:   "172.168.0.1",
+					podName: "shadow",
+					sshcm:   "shadow-ssh-cm",
+					credential: &util.SSHCredential{
+						RemoteHost:     "127.0.0.1",
+						Port:           "2222",
+						PrivateKeyPath: "/tmp/pk",
+					},
+					err: errors.New("fail create shadow"),
+				},
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			kubernetes.EXPECT().
+				CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+				Return(tt.args.shadowResponse.podIP, tt.args.shadowResponse.podName, tt.args.shadowResponse.sshcm, tt.args.shadowResponse.credential, tt.args.shadowResponse.err)
+			kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.serviceResponse.service, tt.args.serviceResponse.err)
+			shadow.EXPECT().
+				Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+				Return(tt.args.inboundResponse.err)
+
+			if err := run(tt.args.service, fakeKtCli, tt.args.options); (err != nil) != tt.wantErr {
+				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+type inboundResponse struct {
+	err error
+}
+
+type createServiceResponse struct {
+	service *coreV1.Service
+	err     error
+}
+
+type createShadowResponse struct {
+	podIP      string
+	podName    string
+	sshcm      string
+	credential *util.SSHCredential
+	err        error
 }

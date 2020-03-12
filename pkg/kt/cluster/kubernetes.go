@@ -33,14 +33,63 @@ func (k *Kubernetes) Scale(deployment *appV1.Deployment, replicas *int32) (err e
 }
 
 // Deployment get deployment
-func (k *Kubernetes) Deployment(name, namespace string) (deployment *appV1.Deployment, err error) {
-	deployment, err = k.Clientset.AppsV1().Deployments(namespace).Get(name, metaV1.GetOptions{})
-	return
+func (k *Kubernetes) Deployment(name, namespace string) (*appV1.Deployment, error) {
+	return k.Clientset.AppsV1().Deployments(namespace).Get(name, metaV1.GetOptions{})
 }
 
 // CreateShadow create shadow
 func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string, debug bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
-	return CreateShadow(k.Clientset, name, labels, namespace, image, debug)
+	component, version := labels["kt-component"], labels["version"]
+	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
+
+	generator, err := util.Generate(util.PrivateKeyPath(component, version))
+	if err != nil {
+		return
+	}
+
+	clientSet := k.Clientset
+
+	labels["kt"] = sshcm
+	cli := clientSet.CoreV1().ConfigMaps(namespace)
+	configMap, err := cli.Create(&v1.ConfigMap{
+		ObjectMeta: metaV1.ObjectMeta{
+			Name:      sshcm,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Data: map[string]string{
+			vars.SSHAuthKey: string(generator.PublicKey),
+		},
+	})
+	if err != nil {
+		return
+	}
+
+	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
+
+	localIPAddress := util.GetOutboundIP()
+	log.Info().Msgf("Client address %s", localIPAddress)
+	labels["remoteAddress"] = localIPAddress
+
+	labels["kt"] = name
+	client := clientSet.AppsV1().Deployments(namespace)
+	deployment := generatorDeployment(namespace, name, labels, image, sshcm, debug)
+	log.Info().Msg("shadow template is prepare ready.")
+	result, err := client.Create(deployment)
+	if err != nil {
+		return
+	}
+	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+
+	pod, err := waitPodReadyUsingInformer(namespace, name, clientSet)
+	if err != nil {
+		return
+	}
+	podIP = pod.Status.PodIP
+	podName = pod.GetObjectMeta().GetName()
+	credential = util.NewDefaultSSHCredential()
+	credential.PrivateKeyPath = generator.PrivateKeyPath
+	return
 }
 
 // CreateService create kubernetes service
@@ -136,66 +185,7 @@ func RemoveService(
 	return client.Delete(name, &metaV1.DeleteOptions{})
 }
 
-// CreateShadow create shadow
-func CreateShadow(
-	clientset *kubernetes.Clientset,
-	name string,
-	labels map[string]string,
-	namespace,
-	image string,
-	debug bool,
-) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
-
-	component, version := labels["kt-component"], labels["version"]
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
-
-	generator, err := util.Generate(util.PrivateKeyPath(component, version))
-	if err != nil {
-		return
-	}
-
-	labels["kt"] = sshcm
-	cli := clientset.CoreV1().ConfigMaps(namespace)
-	_, err = cli.Create(&v1.ConfigMap{
-		ObjectMeta: metaV1.ObjectMeta{
-			Name:      sshcm,
-			Namespace: namespace,
-			Labels:    labels,
-		},
-		Data: map[string]string{
-			vars.SSHAuthKey: string(generator.PublicKey),
-		},
-	})
-	if err != nil {
-		return
-	}
-
-	localIPAddress := util.GetOutboundIP()
-	log.Info().Msgf("Client address %s", localIPAddress)
-	labels["remoteAddress"] = localIPAddress
-
-	labels["kt"] = name
-	client := clientset.AppsV1().Deployments(namespace)
-	deployment := generatorDeployment(namespace, name, labels, image, sshcm, debug)
-	result, err := client.Create(deployment)
-	if err != nil {
-		return
-	}
-	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
-
-	// pod, err := waitPodReady(namespace, name, clientset)
-	pod, err := waitPodReadyUsingInformer(namespace, name, clientset)
-	if err != nil {
-		return
-	}
-	podIP = pod.Status.PodIP
-	podName = pod.GetObjectMeta().GetName()
-	credential = util.NewDefaultSSHCredential()
-	credential.PrivateKeyPath = generator.PrivateKeyPath
-	return
-}
-
-func waitPodReadyUsingInformer(namespace, name string, clientset *kubernetes.Clientset) (pod v1.Pod, err error) {
+func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Interface) (pod v1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)
 	podListener, err := clusterWatcher.PodListener(clientset, stopSignal)

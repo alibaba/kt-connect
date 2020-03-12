@@ -9,7 +9,7 @@ import (
 
 // CliInterface ...
 type CliInterface interface {
-	Kubernetes() cluster.KubernetesInterface
+	Kubernetes() (cluster.KubernetesInterface, error)
 	Shadow() connect.ShadowInterface
 	Exec() exec.CliInterface
 }
@@ -20,10 +20,15 @@ type Cli struct {
 }
 
 // Kubernetes ...
-func (c *Cli) Kubernetes() cluster.KubernetesInterface {
+func (c *Cli) Kubernetes() (cluster.KubernetesInterface, error) {
+	clientset, err := cluster.GetKubernetesClient(c.Options.KubeConfig)
+	if err != nil {
+		return nil, err
+	}
 	return &cluster.Kubernetes{
 		KubeConfig: c.Options.KubeConfig,
-	}
+		Clientset:  clientset,
+	}, nil
 }
 
 // Shadow ...

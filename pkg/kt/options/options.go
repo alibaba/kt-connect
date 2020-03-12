@@ -6,7 +6,8 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
-type runOptions struct {
+// RunOptions ...
+type RunOptions struct {
 	Expose bool
 	Port   int
 }
@@ -57,7 +58,7 @@ type DaemonOptions struct {
 	Image            string
 	Labels           string
 	RuntimeOptions   *runtimeOptions
-	RunOptions       *runOptions
+	RunOptions       *RunOptions
 	ConnectOptions   *connectOptions
 	ExchangeOptions  *exchangeOptions
 	MeshOptions      *meshOptions
@@ -80,6 +81,14 @@ func NewDaemonOptions() *DaemonOptions {
 		ExchangeOptions:  &exchangeOptions{},
 		MeshOptions:      &meshOptions{},
 		DashboardOptions: &dashboardOptions{},
-		RunOptions:       &runOptions{},
+		RunOptions:       &RunOptions{},
 	}
+}
+
+// NewRunDaemonOptions ...
+func NewRunDaemonOptions(labels string, options *RunOptions) *DaemonOptions {
+	daemonOptions := NewDaemonOptions()
+	daemonOptions.Labels = labels
+	daemonOptions.RunOptions = options
+	return daemonOptions
 }

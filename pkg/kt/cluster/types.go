@@ -34,7 +34,7 @@ type KubernetesInterface interface {
 type Kubernetes struct {
 	KubeConfig string
 	// TODO: should remove
-	Clientset *kubernetes.Clientset
+	Clientset kubernetes.Interface
 	// TODO: should remove
 	ServiceListener v1.ServiceLister
 }

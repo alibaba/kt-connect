@@ -78,17 +78,17 @@ func (mr *MockActionInterfaceMockRecorder) Check(cli interface{}) *gomock.Call {
 }
 
 // Run mocks base method
-func (m *MockActionInterface) Run(service string, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Run", service, options)
+	ret := m.ctrl.Call(m, "Run", service, cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Run indicates an expected call of Run
-func (mr *MockActionInterfaceMockRecorder) Run(service, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Run(service, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockActionInterface)(nil).Run), service, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Run", reflect.TypeOf((*MockActionInterface)(nil).Run), service, cli, options)
 }
 
 // Exchange mocks base method

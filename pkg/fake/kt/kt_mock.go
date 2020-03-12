@@ -37,11 +37,12 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 }
 
 // Kubernetes mocks base method
-func (m *MockCliInterface) Kubernetes() cluster.KubernetesInterface {
+func (m *MockCliInterface) Kubernetes() (cluster.KubernetesInterface, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Kubernetes")
 	ret0, _ := ret[0].(cluster.KubernetesInterface)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Kubernetes indicates an expected call of Kubernetes
