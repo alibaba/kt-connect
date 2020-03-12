@@ -11,3 +11,4 @@ note/
 .jvmrc
 .DS_Store
 vendor/
+c.out

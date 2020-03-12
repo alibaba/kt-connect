@@ -16,12 +16,19 @@ env:
 
 before_script:
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
+  - echo "TAG=${TAG}"
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 #  - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in test/integration/testdata/config.yaml.enc -out test/integration/testdata/config.yaml -d
 
 script:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
 - make unit-test
 - make build
+
+after_script:
+- ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
 
 deploy:
   provider: releases
