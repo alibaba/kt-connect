@@ -60,7 +60,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(component, identifier string) string {
-	return fmt.Sprintf("%s/ktctl/%s/"+vars.SSHPrivateKeyName, HomeDir(), component, identifier)
+	return fmt.Sprintf("%s/.ktctl/%s/"+vars.SSHPrivateKeyName, HomeDir(), component, identifier)
 }
 
 // generatePrivateKey creates a RSA Private Key of specified byte size

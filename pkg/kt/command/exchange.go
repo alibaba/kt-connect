@@ -70,7 +70,7 @@ func (action *Action) Exchange(exchange string, options *options.DaemonOptions) 
 	workload := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, getExchangeLabels(options.Labels, workload, app))
+		workload, options.Namespace, options.Image, getExchangeLabels(options.Labels, workload, app), options.Debug)
 	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
 	if err != nil {

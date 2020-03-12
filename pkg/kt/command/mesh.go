@@ -73,7 +73,7 @@ func (action *Action) Mesh(mesh string, options *options.DaemonOptions) error {
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 
 	labels := getMeshLabels(workload, meshVersion, app, options)
-	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, labels)
+	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, labels, options.Debug)
 	if err != nil {
 		return err
 	}

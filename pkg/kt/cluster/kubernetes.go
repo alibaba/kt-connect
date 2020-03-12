@@ -39,8 +39,8 @@ func (k *Kubernetes) Deployment(name, namespace string) (deployment *appV1.Deplo
 }
 
 // CreateShadow create shadow
-func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
-	return CreateShadow(k.Clientset, name, labels, namespace, image)
+func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string, debug bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+	return CreateShadow(k.Clientset, name, labels, namespace, image, debug)
 }
 
 // CreateService create kubernetes service
@@ -143,6 +143,7 @@ func CreateShadow(
 	labels map[string]string,
 	namespace,
 	image string,
+	debug bool,
 ) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
 
 	component, version := labels["kt-component"], labels["version"]
@@ -175,7 +176,7 @@ func CreateShadow(
 
 	labels["kt"] = name
 	client := clientset.AppsV1().Deployments(namespace)
-	deployment := generatorDeployment(namespace, name, labels, image, sshcm)
+	deployment := generatorDeployment(namespace, name, labels, image, sshcm, debug)
 	result, err := client.Create(deployment)
 	if err != nil {
 		return
@@ -289,7 +290,44 @@ func generateService(name, namespace string, labels map[string]string, port int)
 
 }
 
-func generatorDeployment(namespace, name string, labels map[string]string, image, volume string) *appV1.Deployment {
+func generatorDeployment(namespace, name string, labels map[string]string, image, volume string, debug bool) *appV1.Deployment {
+
+	args := []string{}
+	if debug {
+		log.Debug().Msg("create shadow with debug mode")
+		//args = append(args, "--debug")
+	}
+
+	container := v1.Container{
+		Name:            "standalone",
+		Image:           image,
+		ImagePullPolicy: "Always",
+		Args:            args,
+		VolumeMounts: []v1.VolumeMount{
+			{
+				Name:      "ssh-public-key",
+				MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
+			},
+		},
+	}
+
+	sshVolume := v1.Volume{
+		Name: "ssh-public-key",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: volume,
+				},
+				Items: []v1.KeyToPath{
+					{
+						Key:  vars.SSHAuthKey,
+						Path: "authorized_keys",
+					},
+				},
+			},
+		},
+	}
+
 	return &appV1.Deployment{
 		ObjectMeta: metaV1.ObjectMeta{
 			Name:      name,
@@ -306,35 +344,10 @@ func generatorDeployment(namespace, name string, labels map[string]string, image
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						{
-							Name:            "standalone",
-							Image:           image,
-							ImagePullPolicy: "Always",
-							VolumeMounts: []v1.VolumeMount{
-								{
-									Name:      "ssh-public-key",
-									MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
-								},
-							},
-						},
+						container,
 					},
 					Volumes: []v1.Volume{
-						{
-							Name: "ssh-public-key",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: volume,
-									},
-									Items: []v1.KeyToPath{
-										{
-											Key:  vars.SSHAuthKey,
-											Path: "authorized_keys",
-										},
-									},
-								},
-							},
-						},
+						sshVolume,
 					},
 				},
 			},

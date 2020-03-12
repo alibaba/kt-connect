@@ -10,4 +10,4 @@ RUN apt-get install -y net-tools
 ADD docker/shadow/run.sh /run.sh
 RUN chmod 755 /run.sh
 
-CMD ["/run.sh"]
+ENTRYPOINT ["/run.sh"]

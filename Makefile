@@ -1,20 +1,26 @@
 
 PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
-TAG				  ?= latest
+TAG				  ?= $(shell date +%s)
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 BUILDER_IMAGE	  =  builder
 DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
 
+# generate mock
+generate-mock:
+	mockgen -source=pkg/kt/command/types.go -destination=pkg/mockd/mock/action_mock.go -package=mock
+	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/mockd/mock/kubernetes_mock.go -package=mock
+	mockgen -source=pkg/kt/connect/types.go -destination=pkg/mockd/mock/connect_mock.go -package=mock
+
 # run unit test
 unit-test:
 	mkdir -p artifacts/report/coverage
-	go test -v -json -cover -coverprofile artifacts/report/coverage/cover.out ./...
-	go tool cover -html=artifacts/report/coverage/cover.out -o artifacts/report/coverage/index.html
+	go test -v -json -cover -coverprofile c.out ./...
+	go tool cover -html=c.out -o artifacts/report/coverage/index.html
 
 # build kt project
-build: build-connect build-shadow
+build: build-connect build-shadow build-server build-dashboard
 
 # build ktctl
 build-connect:
@@ -31,23 +37,18 @@ build-shadow:
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f docker/shadow/Dockerfile .
 	docker push $(PREFIX)/$(SHADOW_IMAGE):$(TAG)
 
-# build this first,it's the base image 
-build-builder:
-	docker build -t $(PREFIX)/$(BUILDER_IMAGE):$(TAG) -f docker/builder/Dockerfile .
-
 # dlv for debug
 build-shadow-dlv:
 	bin/build-shadow-dlv
 
 build-dashboard:
-	docker build -t $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG) -f docker/dashboard/Dockerfile . && \
+	docker build -t $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG) -f docker/dashboard/Dockerfile .
+	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 
 build-server:
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o artifacts/apiserver/apiserver-linux-amd64 cmd/server/main.go
 	docker build -t $(PREFIX)/$(SERVER_IMAGE):$(TAG) -f docker/apiserver/Dockerfile .
-
-release-docker: build-builder build-shadow-base build-shadow build-connect build-dashboard build-server
-	docker push $(PREFIX)/$(SHADOW_IMAGE)	
-	# todo: push as you want 
+	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)
 
 git-release:
 	bin/release

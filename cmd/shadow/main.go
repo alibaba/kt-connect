@@ -14,11 +14,13 @@ func init() {
 }
 
 func main() {
-	log.Info().Msg("Start kt connect proxy")
+	log.Info().Msg("shadow staring...")
 	srv := dnsserver.NewDNSServerDefault()
 	err := srv.ListenAndServe()
 	if err != nil {
+		log.Error().Msg(err.Error())
 		panic(err.Error())
 	}
-	log.Info().Msgf("DNS Server Start At 53...\n")
+	log.Info().Msg("shadow(DNS) start at 53 successful")
+	log.Info().Msg("shadow start successful")
 }
