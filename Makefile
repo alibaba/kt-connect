@@ -7,6 +7,12 @@ BUILDER_IMAGE	  =  builder
 DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
 
+# generate mock
+generate-mock:
+	mockgen -source=pkg/kt/command/types.go -destination=pkg/mockd/mock/action_mock.go -package=mock
+	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/mockd/mock/kubernetes_mock.go -package=mock
+	mockgen -source=pkg/kt/connect/types.go -destination=pkg/mockd/mock/connect_mock.go -package=mock
+
 # run unit test
 unit-test:
 	mkdir -p artifacts/report/coverage
