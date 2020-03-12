@@ -1,6 +1,6 @@
 
 PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
-TAG				  ?= latest
+TAG				  ?= $(shell date +%s)
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 BUILDER_IMAGE	  =  builder
