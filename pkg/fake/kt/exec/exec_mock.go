@@ -36,44 +36,44 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
 }
 
-// KubectlInterface mocks base method
-func (m *MockCliInterface) KubectlInterface() kubectl.CliInterface {
+// Kubectl mocks base method
+func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "KubectlInterface")
+	ret := m.ctrl.Call(m, "Kubectl")
 	ret0, _ := ret[0].(kubectl.CliInterface)
 	return ret0
 }
 
-// KubectlInterface indicates an expected call of KubectlInterface
-func (mr *MockCliInterfaceMockRecorder) KubectlInterface() *gomock.Call {
+// Kubectl indicates an expected call of Kubectl
+func (mr *MockCliInterfaceMockRecorder) Kubectl() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KubectlInterface", reflect.TypeOf((*MockCliInterface)(nil).KubectlInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubectl", reflect.TypeOf((*MockCliInterface)(nil).Kubectl))
 }
 
-// SSHUttleInterface mocks base method
-func (m *MockCliInterface) SSHUttleInterface() sshuttle.CliInterface {
+// SSHUttle mocks base method
+func (m *MockCliInterface) SSHUttle() sshuttle.CliInterface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SSHUttleInterface")
+	ret := m.ctrl.Call(m, "SSHUttle")
 	ret0, _ := ret[0].(sshuttle.CliInterface)
 	return ret0
 }
 
-// SSHUttleInterface indicates an expected call of SSHUttleInterface
-func (mr *MockCliInterfaceMockRecorder) SSHUttleInterface() *gomock.Call {
+// SSHUttle indicates an expected call of SSHUttle
+func (mr *MockCliInterfaceMockRecorder) SSHUttle() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHUttleInterface", reflect.TypeOf((*MockCliInterface)(nil).SSHUttleInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHUttle", reflect.TypeOf((*MockCliInterface)(nil).SSHUttle))
 }
 
-// SSHInterface mocks base method
-func (m *MockCliInterface) SSHInterface() ssh.CliInterface {
+// SSH mocks base method
+func (m *MockCliInterface) SSH() ssh.CliInterface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SSHInterface")
+	ret := m.ctrl.Call(m, "SSH")
 	ret0, _ := ret[0].(ssh.CliInterface)
 	return ret0
 }
 
-// SSHInterface indicates an expected call of SSHInterface
-func (mr *MockCliInterfaceMockRecorder) SSHInterface() *gomock.Call {
+// SSH indicates an expected call of SSH
+func (mr *MockCliInterfaceMockRecorder) SSH() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHInterface", reflect.TypeOf((*MockCliInterface)(nil).SSHInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSH", reflect.TypeOf((*MockCliInterface)(nil).SSH))
 }

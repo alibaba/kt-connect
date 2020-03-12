@@ -9,9 +9,9 @@ import (
 
 // CliInterface ...
 type CliInterface interface {
-	KubernetesInterface() cluster.KubernetesInterface
-	ShadowInterface() connect.ShadowInterface
-	ExecInterface() exec.CliInterface
+	Kubernetes() cluster.KubernetesInterface
+	Shadow() connect.ShadowInterface
+	Exec() exec.CliInterface
 }
 
 // Cli ...
@@ -19,22 +19,22 @@ type Cli struct {
 	Options *options.DaemonOptions
 }
 
-// KubernetesInterface ...
-func (c *Cli) KubernetesInterface() cluster.KubernetesInterface {
+// Kubernetes ...
+func (c *Cli) Kubernetes() cluster.KubernetesInterface {
 	return &cluster.Kubernetes{
 		KubeConfig: c.Options.KubeConfig,
 	}
 }
 
-// ShadowInterface ...
-func (c *Cli) ShadowInterface() connect.ShadowInterface {
+// Shadow ...
+func (c *Cli) Shadow() connect.ShadowInterface {
 	return &connect.Shadow{
 		Options: c.Options,
 	}
 }
 
-// ExecInterface ...
-func (c *Cli) ExecInterface() exec.CliInterface {
+// Exec ...
+func (c *Cli) Exec() exec.CliInterface {
 	return &exec.Cli{
 		KubeConfig: c.Options.KubeConfig,
 	}

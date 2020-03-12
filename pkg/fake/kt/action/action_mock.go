@@ -7,6 +7,7 @@ package action
 import (
 	reflect "reflect"
 
+	kt "github.com/alibaba/kt-connect/pkg/kt"
 	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -63,17 +64,17 @@ func (mr *MockActionInterfaceMockRecorder) Connect(options interface{}) *gomock.
 }
 
 // Check mocks base method
-func (m *MockActionInterface) Check(options *options.DaemonOptions) error {
+func (m *MockActionInterface) Check(cli kt.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Check", options)
+	ret := m.ctrl.Call(m, "Check", cli)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Check indicates an expected call of Check
-func (mr *MockActionInterfaceMockRecorder) Check(options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Check(cli interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockActionInterface)(nil).Check), options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockActionInterface)(nil).Check), cli)
 }
 
 // Run mocks base method

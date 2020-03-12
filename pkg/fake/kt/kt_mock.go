@@ -36,44 +36,44 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
 }
 
-// KubernetesInterface mocks base method
-func (m *MockCliInterface) KubernetesInterface() cluster.KubernetesInterface {
+// Kubernetes mocks base method
+func (m *MockCliInterface) Kubernetes() cluster.KubernetesInterface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "KubernetesInterface")
+	ret := m.ctrl.Call(m, "Kubernetes")
 	ret0, _ := ret[0].(cluster.KubernetesInterface)
 	return ret0
 }
 
-// KubernetesInterface indicates an expected call of KubernetesInterface
-func (mr *MockCliInterfaceMockRecorder) KubernetesInterface() *gomock.Call {
+// Kubernetes indicates an expected call of Kubernetes
+func (mr *MockCliInterfaceMockRecorder) Kubernetes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "KubernetesInterface", reflect.TypeOf((*MockCliInterface)(nil).KubernetesInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubernetes", reflect.TypeOf((*MockCliInterface)(nil).Kubernetes))
 }
 
-// ShadowInterface mocks base method
-func (m *MockCliInterface) ShadowInterface() connect.ShadowInterface {
+// Shadow mocks base method
+func (m *MockCliInterface) Shadow() connect.ShadowInterface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ShadowInterface")
+	ret := m.ctrl.Call(m, "Shadow")
 	ret0, _ := ret[0].(connect.ShadowInterface)
 	return ret0
 }
 
-// ShadowInterface indicates an expected call of ShadowInterface
-func (mr *MockCliInterfaceMockRecorder) ShadowInterface() *gomock.Call {
+// Shadow indicates an expected call of Shadow
+func (mr *MockCliInterfaceMockRecorder) Shadow() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShadowInterface", reflect.TypeOf((*MockCliInterface)(nil).ShadowInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shadow", reflect.TypeOf((*MockCliInterface)(nil).Shadow))
 }
 
-// ExecInterface mocks base method
-func (m *MockCliInterface) ExecInterface() exec.CliInterface {
+// Exec mocks base method
+func (m *MockCliInterface) Exec() exec.CliInterface {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExecInterface")
+	ret := m.ctrl.Call(m, "Exec")
 	ret0, _ := ret[0].(exec.CliInterface)
 	return ret0
 }
 
-// ExecInterface indicates an expected call of ExecInterface
-func (mr *MockCliInterfaceMockRecorder) ExecInterface() *gomock.Call {
+// Exec indicates an expected call of Exec
+func (mr *MockCliInterfaceMockRecorder) Exec() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecInterface", reflect.TypeOf((*MockCliInterface)(nil).ExecInterface))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockCliInterface)(nil).Exec))
 }

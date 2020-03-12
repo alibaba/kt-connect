@@ -10,40 +10,31 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli"
+	urfave "github.com/urfave/cli"
 
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 )
 
 // NewCheckCommand return new check command
-func NewCheckCommand(ktcli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
-	return cli.Command{
+func NewCheckCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+	return urfave.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",
-		Action: func(c *cli.Context) error {
+		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			return action.Check(options)
+			return action.Check(cli)
 		},
 	}
 }
 
 // Check check local denpendency for kt connect
-func (action *Action) Check(options *options.DaemonOptions) (err error) {
+func (action *Action) Check(cli kt.CliInterface) (err error) {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
-	sshCli := ssh.Cli{}
-	kubernetesCli := kubectl.Cli{
-		KubeConfig: options.KubeConfig,
-	}
-	uttle := sshuttle.Cli{}
-
 	err = runCommandWithMsg(
-		sshCli.Version(),
+		cli.Exec().SSH().Version(),
 		"checking ssh version", "ssh is missing, please make sure command ssh is work right at your local first",
 	)
 
@@ -52,7 +43,7 @@ func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	}
 
 	err = runCommandWithMsg(
-		kubernetesCli.Version(),
+		cli.Exec().Kubectl().Version(),
 		"checking kubectl version", "kubectl is missing, please make sure kubectl is working right at your local first",
 	)
 
@@ -61,7 +52,7 @@ func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	}
 
 	err = runCommandWithMsg(
-		uttle.Version(),
+		cli.Exec().SSHUttle().Version(),
 		"checking sshuttle version", "sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode",
 	)
 

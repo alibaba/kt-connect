@@ -8,9 +8,9 @@ import (
 
 // CliInterface ...
 type CliInterface interface {
-	KubectlInterface() kubectl.CliInterface
-	SSHUttleInterface() sshuttle.CliInterface
-	SSHInterface() ssh.CliInterface
+	Kubectl() kubectl.CliInterface
+	SSHUttle() sshuttle.CliInterface
+	SSH() ssh.CliInterface
 }
 
 // Cli ...
@@ -18,17 +18,17 @@ type Cli struct {
 	KubeConfig string
 }
 
-// KubectlInterface ...
-func (c *Cli) KubectlInterface() kubectl.CliInterface {
+// Kubectl ...
+func (c *Cli) Kubectl() kubectl.CliInterface {
 	return &kubectl.Cli{KubeConfig: c.KubeConfig}
 }
 
-// SSHUttleInterface ...
-func (c *Cli) SSHUttleInterface() sshuttle.CliInterface {
+// SSHUttle ...
+func (c *Cli) SSHUttle() sshuttle.CliInterface {
 	return &sshuttle.Cli{}
 }
 
-// SSHInterface ...
-func (c *Cli) SSHInterface() ssh.CliInterface {
+// SSH ...
+func (c *Cli) SSH() ssh.CliInterface {
 	return &ssh.Cli{}
 }
