@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
+// StreamHandler ...
 type StreamHandler struct {
 	WsConn      *Connection
 	ResizeEvent chan remotecommand.TerminalSize
@@ -19,6 +20,7 @@ type xtermMessage struct {
 	Cols    uint16 `json:"cols"`
 }
 
+// Next ...
 func (handler *StreamHandler) Next() (size *remotecommand.TerminalSize) {
 	ret := <-handler.ResizeEvent
 	size = &ret

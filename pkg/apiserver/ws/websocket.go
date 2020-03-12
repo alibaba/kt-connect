@@ -16,11 +16,13 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+// Message ...
 type Message struct {
 	MessageType int
 	Data        []byte
 }
 
+// Connection ...
 type Connection struct {
 	wsSocket *websocket.Conn
 	inChan   chan *Message
@@ -31,6 +33,7 @@ type Connection struct {
 	closeChan chan byte
 }
 
+// Constructor ...
 func Constructor(resp http.ResponseWriter, req *http.Request) (wsConn *Connection, err error) {
 	wsSocket, err := upgrader.Upgrade(resp, req, nil)
 	if err != nil {
@@ -96,6 +99,7 @@ ERROR:
 CLOSED:
 }
 
+// WsClose ...
 func (wsConn *Connection) WsClose() {
 	wsConn.wsSocket.Close()
 
@@ -107,6 +111,7 @@ func (wsConn *Connection) WsClose() {
 	}
 }
 
+// WsWrite ...
 func (wsConn *Connection) WsWrite(messageType int, data []byte) (err error) {
 	select {
 	case wsConn.outChan <- &Message{messageType, data}:
@@ -116,6 +121,7 @@ func (wsConn *Connection) WsWrite(messageType int, data []byte) (err error) {
 	return
 }
 
+// WsRead ...
 func (wsConn *Connection) WsRead() (msg *Message, err error) {
 	select {
 	case msg = <-wsConn.inChan:
