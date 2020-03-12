@@ -126,7 +126,7 @@ func removePrivateKey(options *options.DaemonOptions) {
 	splits := strings.Split(options.RuntimeOptions.SSHCM, "-")
 	component, version := splits[1], splits[len(splits)-1]
 	file := util.PrivateKeyPath(component, version)
-	if err := os.Remove(file); !os.IsNotExist(err) {
+	if err := os.Remove(file); os.IsNotExist(err) {
 		log.Error().Err(err).Msgf("can't delete %s", file)
 	}
 }
