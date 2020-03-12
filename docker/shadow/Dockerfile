@@ -1,11 +1,11 @@
-FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/builder
+FROM golang:1.13
 ENV GO111MODULE on
-WORKDIR /go/src/github.com/alibaba/kt-connect/
-COPY . .
-RUN GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o bin/kt-shadow cmd/shadow/main.go
+# Install go debugger
+RUN go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base
-COPY --from=0 /go/src/github.com/alibaba/kt-connect/bin/kt-shadow /usr/sbin/kt-shadow
+COPY artifacts/shadow/shadow-linux-amd64 /usr/sbin/shadow-linux-amd64
+COPY --from=0 /go/bin/dlv /usr/sbin/dlv
 RUN apt-get install -y net-tools
 ADD docker/shadow/run.sh /run.sh
 RUN chmod 755 /run.sh

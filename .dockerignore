@@ -4,7 +4,6 @@ output
 docs
 build
 .vscode
-artifacts
 bin
 node_modules
 .DS_Store
