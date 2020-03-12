@@ -36,17 +36,17 @@ func (m *MockActionInterface) EXPECT() *MockActionInterfaceMockRecorder {
 }
 
 // OpenDashboard mocks base method
-func (m *MockActionInterface) OpenDashboard(options *options.DaemonOptions) error {
+func (m *MockActionInterface) OpenDashboard(cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OpenDashboard", options)
+	ret := m.ctrl.Call(m, "OpenDashboard", cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // OpenDashboard indicates an expected call of OpenDashboard
-func (mr *MockActionInterfaceMockRecorder) OpenDashboard(options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) OpenDashboard(cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenDashboard", reflect.TypeOf((*MockActionInterface)(nil).OpenDashboard), options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenDashboard", reflect.TypeOf((*MockActionInterface)(nil).OpenDashboard), cli, options)
 }
 
 // Connect mocks base method
@@ -120,15 +120,15 @@ func (mr *MockActionInterfaceMockRecorder) Mesh(service, cli, options interface{
 }
 
 // ApplyDashboard mocks base method
-func (m *MockActionInterface) ApplyDashboard(options *options.DaemonOptions) error {
+func (m *MockActionInterface) ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApplyDashboard", options)
+	ret := m.ctrl.Call(m, "ApplyDashboard", cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ApplyDashboard indicates an expected call of ApplyDashboard
-func (mr *MockActionInterfaceMockRecorder) ApplyDashboard(options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) ApplyDashboard(cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyDashboard", reflect.TypeOf((*MockActionInterface)(nil).ApplyDashboard), options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyDashboard", reflect.TypeOf((*MockActionInterface)(nil).ApplyDashboard), cli, options)
 }

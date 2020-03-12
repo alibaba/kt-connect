@@ -3,7 +3,6 @@ package command
 import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -24,7 +23,7 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					return action.ApplyDashboard(options)
+					return action.ApplyDashboard(ktCli, options)
 				},
 			},
 			{
@@ -42,7 +41,7 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					return action.OpenDashboard(options)
+					return action.OpenDashboard(ktCli, options)
 				},
 			},
 		},
@@ -50,9 +49,8 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 }
 
 // ApplyDashboard ...
-func (action *Action) ApplyDashboard(options *options.DaemonOptions) (err error) {
-	kubernetesCli := kubectl.Cli{KubeConfig: options.KubeConfig}
-	command := kubernetesCli.ApplyDashboardToCluster()
+func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
+	command := cli.Exec().Kubectl().ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
 	err = exec.RunAndWait(command, "apply kt dashboard", true)
 	if err != nil {
@@ -63,12 +61,9 @@ func (action *Action) ApplyDashboard(options *options.DaemonOptions) (err error)
 }
 
 // OpenDashboard ...
-func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
+func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	ch := SetUpWaitingChannel()
-	kubernetesCli := kubectl.Cli{
-		KubeConfig: options.KubeConfig,
-	}
-	command := kubernetesCli.PortForwardDashboardToLocal(options.DashboardOptions.Port)
+	command := ktCli.Exec().Kubectl().PortForwardDashboardToLocal(options.DashboardOptions.Port)
 	err = exec.BackgroundRun(command, "forward dashboard to localhost", true)
 	if err != nil {
 		return
