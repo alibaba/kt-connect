@@ -8,12 +8,6 @@ services:
 
 env:
   global:
-   - REGISTRY=registry.cn-hangzhou.aliyuncs.com
-   - NAMESPACE=registry.cn-hangzhou.aliyuncs.com/rdc-incubator
-   - BUILDER_REPO=builder
-   - SHADOW_BASE_REPO=shadow-base
-   - SHADOW_REPO=kt-connect-shadow
-   - DASHBOARD_REPO=kt-connect-dashboard
    - SERVER_REPO=kt-connect-server
 
 before_script:
@@ -21,31 +15,9 @@ before_script:
 #  - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in test/integration/testdata/config.yaml.enc -out test/integration/testdata/config.yaml -d
 
 script:
-# Unit Test
-- make -f Makefile -B unit-test
-# ktctl
-- make -f Makefile build-connect
-# Outhers
-- docker pull ${NAMESPACE}/${SHADOW_BASE_REPO} || true
-- docker pull ${NAMESPACE}/${SHADOW_REPO} || true
-- docker pull golang:1.11 || true
-- docker pull node:9.11.1 || true
-- docker pull alpine || true
-- docker build -t ${NAMESPACE}/${BUILDER_REPO} -f docker/builder/Dockerfile .
-- docker build -t ${NAMESPACE}/${SHADOW_BASE_REPO} -f docker/shadow/Dockerfile_base .
-- docker build -t ${NAMESPACE}/${SHADOW_REPO}:${TAG} --cache-from ${NAMESPACE}/${SHADOW_REPO} -f docker/shadow/Dockerfile .
-- docker build -t ${NAMESPACE}/${SERVER_REPO}:${TAG} -f docker/apiserver/Dockerfile .
-- docker build -t ${NAMESPACE}/${DASHBOARD_REPO}:${TAG} -f docker/dashboard/Dockerfile .
-- docker tag ${NAMESPACE}/${SHADOW_REPO}:${TAG} ${NAMESPACE}/${SHADOW_REPO}
-
-after_success:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
-- docker push ${NAMESPACE}/${SHADOW_REPO}:${TAG}
-- docker push ${NAMESPACE}/${SHADOW_REPO}
-- docker push ${NAMESPACE}/${DASHBOARD_REPO}:${TAG}
-- docker push ${NAMESPACE}/${SERVER_REPO}:${TAG}
-- docker push ${NAMESPACE}/${BUILDER_REPO}
-- docker push ${NAMESPACE}/${SHADOW_BASE_REPO}
+- make unit-test
+- make build
 
 deploy:
   provider: releases
