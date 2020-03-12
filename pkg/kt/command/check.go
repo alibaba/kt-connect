@@ -3,6 +3,8 @@ package command
 import (
 	osexec "os/exec"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	"runtime"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -17,7 +19,7 @@ import (
 )
 
 // NewCheckCommand return new check command
-func NewCheckCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
+func NewCheckCommand(ktcli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",
@@ -34,11 +36,11 @@ func NewCheckCommand(options *options.DaemonOptions, action ActionInterface) cli
 func (action *Action) Check(options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
 
-	sshCli := ssh.SshCli{}
-	kubernetesCli := kubectl.Kubectl{
+	sshCli := ssh.Cli{}
+	kubernetesCli := kubectl.Cli{
 		KubeConfig: options.KubeConfig,
 	}
-	uttle := sshuttle.SSHUttle{}
+	uttle := sshuttle.Cli{}
 
 	err = runCommandWithMsg(
 		sshCli.Version(),

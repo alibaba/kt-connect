@@ -9,12 +9,15 @@ SERVER_IMAGE	  =  kt-connect-server
 
 # generate mock
 generate-mock:
-	mockgen -source=pkg/kt/command/types.go -destination=pkg/mockd/mock/action_mock.go -package=mock
-	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/mockd/mock/kubernetes_mock.go -package=mock
-	mockgen -source=pkg/kt/connect/types.go -destination=pkg/mockd/mock/connect_mock.go -package=mock
-	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=pkg/mockd/mock/kubectl_mock.go -package=mock
-	mockgen -source=pkg/kt/exec/ssh/types.go -destination=pkg/mockd/mock/ssh_mock.go -package=mock
-	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=pkg/mockd/mock/sshuttle_mock.go -package=mock
+	mkdir -p pkg/fake/kt
+	mockgen -source=pkg/kt/command/types.go -destination=pkg/fake/kt/action/action_mock.go -package=action
+	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/fake/kt/cluster/kubernetes_mock.go -package=cluster
+	mockgen -source=pkg/kt/connect/types.go -destination=pkg/fake/kt/connect/connect_mock.go -package=connect
+	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=pkg/fake/kt/exec/kubectl/kubectl_mock.go -package=kubectl
+	mockgen -source=pkg/kt/exec/ssh/types.go -destination=pkg/fake/kt/exec/ssh/ssh_mock.go -package=ssh
+	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=pkg/fake/kt/exec/sshuttle/sshuttle_mock.go -package=sshuttle
+	mockgen -source=pkg/kt/exec/types.go -destination=pkg/fake/kt/exec/exec_mock.go -package=exec
+	mockgen -source=pkg/kt/types.go -destination=pkg/fake/kt/kt_mock.go -package=kt
 
 # run unit test
 unit-test:

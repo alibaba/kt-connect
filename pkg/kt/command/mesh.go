@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -22,7 +24,7 @@ const ComponentMesh = "mesh"
 const KubernetesTool = "kt"
 
 // newMeshCommand return new mesh command
-func newMeshCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
+func newMeshCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",

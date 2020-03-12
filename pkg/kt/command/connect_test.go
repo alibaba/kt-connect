@@ -9,15 +9,21 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/mockd/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
+
+	"github.com/alibaba/kt-connect/pkg/fake/kt"
+	"github.com/alibaba/kt-connect/pkg/fake/kt/action"
+	fakeCluster "github.com/alibaba/kt-connect/pkg/fake/kt/cluster"
+	fakeConnect "github.com/alibaba/kt-connect/pkg/fake/kt/connect"
 )
 
 func Test_newConnectCommand(t *testing.T) {
 	ctl := gomock.NewController(t)
-	mockAction := mock.NewMockActionInterface(ctl)
 
+	fakeKtCli := kt.NewMockCliInterface(ctl)
+
+	mockAction := action.NewMockActionInterface(ctl)
 	mockAction.EXPECT().Connect(gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
@@ -40,7 +46,7 @@ func Test_newConnectCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions()
 		opts.Debug = true
-		command := newConnectCommand(opts, mockAction)
+		command := newConnectCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {
@@ -57,8 +63,8 @@ func Test_newConnectCommand(t *testing.T) {
 func Test_shouldConnectToCluster(t *testing.T) {
 
 	ctl := gomock.NewController(t)
-	kubernetes := mock.NewMockKubernetesInterface(ctl)
-	shadow := mock.NewMockShadowInterface(ctl)
+	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
+	shadow := fakeConnect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
 	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
 
@@ -88,8 +94,8 @@ func Test_shouldConnectToCluster(t *testing.T) {
 func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 
 	ctl := gomock.NewController(t)
-	kubernetesInterface := mock.NewMockKubernetesInterface(ctl)
-	shadowInterface := mock.NewMockShadowInterface(ctl)
+	kubernetesInterface := fakeCluster.NewMockKubernetesInterface(ctl)
+	shadowInterface := fakeConnect.NewMockShadowInterface(ctl)
 	kubernetesInterface.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", "", nil, errors.New("")).AnyTimes()
 
 	type args struct {
@@ -113,8 +119,8 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 
 	ctl := gomock.NewController(t)
-	kubernetes := mock.NewMockKubernetesInterface(ctl)
-	shadow := mock.NewMockShadowInterface(ctl)
+	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
+	shadow := fakeConnect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
 	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{}, errors.New("fail to get crid"))
 

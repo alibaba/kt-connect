@@ -4,7 +4,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/alibaba/kt-connect/pkg/mockd/mock"
+	"github.com/alibaba/kt-connect/pkg/fake/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/fake/kt/exec/ssh"
 	"github.com/golang/mock/gomock"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -42,8 +43,8 @@ func Test_inbound(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			kubectl := mock.NewMockKubernetesCliInterface(ctl)
-			ssh := mock.NewMockSshClIInterface(ctl)
+			kubectl := kubectl.NewMockCliInterface(ctl)
+			ssh := ssh.NewMockCliInterface(ctl)
 
 			kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))
 			ssh.EXPECT().ForwardRemoteRequestToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))

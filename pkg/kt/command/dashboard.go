@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -11,7 +12,7 @@ import (
 )
 
 // newDashboardCommand dashboard command
-func newDashboardCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
+func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "dashboard",
 		Usage: "kt-connect dashboard",
@@ -50,7 +51,7 @@ func newDashboardCommand(options *options.DaemonOptions, action ActionInterface)
 
 // ApplyDashboard ...
 func (action *Action) ApplyDashboard(options *options.DaemonOptions) (err error) {
-	kubernetesCli := kubectl.Kubectl{KubeConfig: options.KubeConfig}
+	kubernetesCli := kubectl.Cli{KubeConfig: options.KubeConfig}
 	command := kubernetesCli.ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
 	err = exec.RunAndWait(command, "apply kt dashboard", true)
@@ -64,7 +65,7 @@ func (action *Action) ApplyDashboard(options *options.DaemonOptions) (err error)
 // OpenDashboard ...
 func (action *Action) OpenDashboard(options *options.DaemonOptions) (err error) {
 	ch := SetUpWaitingChannel()
-	kubernetesCli := kubectl.Kubectl{
+	kubernetesCli := kubectl.Cli{
 		KubeConfig: options.KubeConfig,
 	}
 	command := kubernetesCli.PortForwardDashboardToLocal(options.DashboardOptions.Port)

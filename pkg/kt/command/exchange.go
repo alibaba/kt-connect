@@ -4,6 +4,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	v1 "k8s.io/api/apps/v1"
 
 	"github.com/rs/zerolog"
@@ -17,7 +19,7 @@ import (
 )
 
 // newExchangeCommand return new exchange command
-func newExchangeCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
+func newExchangeCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",

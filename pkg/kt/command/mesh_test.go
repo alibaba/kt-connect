@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/alibaba/kt-connect/pkg/fake/kt"
+
+	"github.com/alibaba/kt-connect/pkg/fake/kt/action"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/mockd/mock"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
 )
@@ -15,7 +17,8 @@ import (
 func Test_meshCommand(t *testing.T) {
 
 	ctl := gomock.NewController(t)
-	mockAction := mock.NewMockActionInterface(ctl)
+	fakeKtCli := kt.NewMockCliInterface(ctl)
+	mockAction := action.NewMockActionInterface(ctl)
 
 	mockAction.EXPECT().Mesh(gomock.Eq("service"), gomock.Any()).Return(nil).AnyTimes()
 
@@ -40,7 +43,7 @@ func Test_meshCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions()
 		opts.Debug = true
-		command := newMeshCommand(opts, mockAction)
+		command := newMeshCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

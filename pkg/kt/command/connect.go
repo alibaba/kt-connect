@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -15,7 +17,7 @@ import (
 )
 
 // newConnectCommand return new connect command
-func newConnectCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
+func newConnectCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 
 	methodDefaultValue := "vpn"
 	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"

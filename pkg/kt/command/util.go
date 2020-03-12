@@ -6,6 +6,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -15,13 +17,15 @@ import (
 
 // NewCommands return new Connect Command
 func NewCommands(options *options.DaemonOptions, action ActionInterface) []cli.Command {
+	ktCli := &kt.Cli{Options: options}
+
 	return []cli.Command{
-		newRunCommand(options, action),
-		newConnectCommand(options, action),
-		newExchangeCommand(options, action),
-		newMeshCommand(options, action),
-		newDashboardCommand(options, action),
-		NewCheckCommand(options, action),
+		newRunCommand(ktCli, options, action),
+		newConnectCommand(ktCli, options, action),
+		newExchangeCommand(ktCli, options, action),
+		newMeshCommand(ktCli, options, action),
+		newDashboardCommand(ktCli, options, action),
+		NewCheckCommand(ktCli, options, action),
 	}
 }
 

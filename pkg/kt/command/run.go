@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -15,7 +17,7 @@ import (
 )
 
 // newRunCommand return new run command
-func newRunCommand(options *options.DaemonOptions, action ActionInterface) cli.Command {
+func newRunCommand(kt kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "run",
 		Usage: "create a shadow deployment to redirect request to user local",

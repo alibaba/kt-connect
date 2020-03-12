@@ -6,7 +6,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/alibaba/kt-connect/pkg/mockd/mock"
+	"github.com/alibaba/kt-connect/pkg/fake/kt"
+
+	"github.com/alibaba/kt-connect/pkg/fake/kt/action"
 	"github.com/golang/mock/gomock"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -15,7 +17,8 @@ import (
 
 func Test_exchangeCommand(t *testing.T) {
 	ctl := gomock.NewController(t)
-	mockAction := mock.NewMockActionInterface(ctl)
+	fakeKtCli := kt.NewMockCliInterface(ctl)
+	mockAction := action.NewMockActionInterface(ctl)
 
 	mockAction.EXPECT().Exchange(gomock.Eq("service"), gomock.Any()).Return(nil).AnyTimes()
 
@@ -40,7 +43,7 @@ func Test_exchangeCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions()
 		opts.Debug = true
-		command := newExchangeCommand(opts, mockAction)
+		command := newExchangeCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {
