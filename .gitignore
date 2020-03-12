@@ -12,3 +12,4 @@ note/
 .DS_Store
 vendor/
 c.out
+c.out.tmp

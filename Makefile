@@ -16,8 +16,8 @@ generate-mock:
 # run unit test
 unit-test:
 	mkdir -p artifacts/report/coverage
-	go test -v -json -cover -coverprofile c.out ./...
-	go tool cover -html=c.out -o artifacts/report/coverage/index.html
+	go test -v -json -cover -coverprofile c.out.tmp ./...
+	cat c.out.tmp | grep -v "_mock.go" > c.out
 
 # build kt project
 build: build-connect build-shadow build-server build-dashboard
