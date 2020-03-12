@@ -12,7 +12,7 @@ services:
 
 env:
   global:
-   - SERVER_REPO=kt-connect-server
+    - REGISTRY=registry.cn-hangzhou.aliyuncs.com
 
 before_script:
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
