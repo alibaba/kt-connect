@@ -1,4 +1,9 @@
-FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/builder
+FROM golang:1.13
+LABEL MAINTAINER yunlong <zhenmu.zyl@alibaba-inc.com>
+ENV GO111MODULE on
+
+# Install go debugger
+RUN go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest
 COPY --from=0 /go/bin/dlv /usr/sbin/dlv
