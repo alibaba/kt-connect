@@ -6,12 +6,10 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
@@ -78,8 +76,16 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
 		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
-
 	ch := SetUpCloseHandler(cli, options)
+	if err = connectToCluster(cli, options); err != nil {
+		return
+	}
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+	return
+}
+
+func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 
 	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
 	if err != nil {
@@ -87,22 +93,12 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}
 	log.Info().Msgf("Connect Start At %d", pid)
 
-	shadow := connect.Create(options)
-	kubernetes, err := cluster.Create(options.KubeConfig)
+	shadow := cli.Shadow()
+	kubernetes, err := cli.Kubernetes()
+
 	if err != nil {
 		return
 	}
-
-	if err = connectToCluster(&shadow, &kubernetes, options); err != nil {
-		return
-	}
-
-	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
-	return
-}
-
-func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
 
 	if options.ConnectOptions.Dump2Hosts {
 		hosts := kubernetes.ServiceHosts(options.Namespace)
