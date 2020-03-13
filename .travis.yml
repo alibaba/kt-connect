@@ -17,7 +17,7 @@ env:
 before_script:
   - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
   - echo "TAG=${TAG}"
-  - go get github.com/golang/mock/mockgen@latest
+  - go install github.com/golang/mock/mockgen
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
