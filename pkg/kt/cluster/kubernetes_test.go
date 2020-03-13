@@ -129,3 +129,42 @@ func TestKubernetes_ClusterCrids(t *testing.T) {
 		})
 	}
 }
+
+func TestKubernetes_CreateService(t *testing.T) {
+	type args struct {
+		name      string
+		namespace string
+		port      int
+		labels    map[string]string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "shouldCreateService",
+			args: args{
+				name:      "svc-name",
+				namespace: "default",
+				port:      8080,
+				labels: map[string]string{
+					"label": "value",
+				},
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := &Kubernetes{
+				Clientset: testclient.NewSimpleClientset(),
+			}
+			_, err := k.CreateService(tt.args.name, tt.args.namespace, tt.args.port, tt.args.labels)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Kubernetes.CreateService() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
