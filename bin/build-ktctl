@@ -1,3 +1,4 @@
+#!/bin/bash
 export GO111MODULE on
 GOARCH=amd64 GOOS=linux go build -o "artifacts/ktctl/ktctl_linux_amd64" ./cmd/ktctl
 GOARCH=386 GOOS=linux go build -o "artifacts/ktctl/ktctl_linux_386" ./cmd/ktctl

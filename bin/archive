@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "======== archive artifacts======="
 ls -al artifacts/ktctl
 cd artifacts/ktctl
