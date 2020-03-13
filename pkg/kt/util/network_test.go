@@ -1,6 +1,8 @@
 package util
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestGetRandomSSHPort(t *testing.T) {
 	type args struct {
@@ -37,6 +39,25 @@ func TestGetRandomSSHPort(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetRandomSSHPort(tt.args.podIP); got != tt.want {
 				t.Errorf("GetRandomSSHPort() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetOutboundIP(t *testing.T) {
+	tests := []struct {
+		name        string
+		wantAddress bool
+	}{
+		{
+			name:        "shouldGetOutboundIp",
+			wantAddress: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if gotAddress := GetOutboundIP(); (gotAddress != "") != tt.wantAddress {
+				t.Errorf("GetOutboundIP() = %v, want %v", gotAddress, tt.wantAddress)
 			}
 		})
 	}

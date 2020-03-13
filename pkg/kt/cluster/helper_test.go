@@ -20,7 +20,7 @@ func Test_getPodCirds(t *testing.T) {
 		{
 			name: "should_get_pod_cird_from_pods",
 			objs: []runtime.Object{
-				pod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
+				buildPod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
 			},
 			wantCidrs: []string{
 				"172.168.0.0/16",
@@ -30,7 +30,7 @@ func Test_getPodCirds(t *testing.T) {
 		{
 			name: "should_get_pod_cird_from_nodes",
 			objs: []runtime.Object{
-				node("default", "a", "172.168.1.0/24"),
+				buildNode("default", "a", "172.168.1.0/24"),
 			},
 			wantCidrs: []string{
 				"172.168.1.0/24",
@@ -69,7 +69,7 @@ func Test_getServiceCird(t *testing.T) {
 			name: "should_get_service_crid_by_svc_sample",
 			args: args{
 				[]v1.Service{
-					serviceTemp("default", "name", "173.168.0.1"),
+					buildService("default", "name", "173.168.0.1"),
 				},
 			},
 			wantErr:  false,
@@ -90,7 +90,7 @@ func Test_getServiceCird(t *testing.T) {
 	}
 }
 
-func serviceTemp(namespace, name, clusterIP string) v1.Service {
+func buildService(namespace, name, clusterIP string) v1.Service {
 	return v1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: v1.ServiceSpec{
@@ -99,7 +99,16 @@ func serviceTemp(namespace, name, clusterIP string) v1.Service {
 	}
 }
 
-func node(namespace, name, crid string) *v1.Node {
+func buildService2(namespace, name, clusterIP string) *v1.Service {
+	return &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
+		Spec: v1.ServiceSpec{
+			ClusterIP: clusterIP,
+		},
+	}
+}
+
+func buildNode(namespace, name, crid string) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: v1.NodeSpec{
@@ -108,7 +117,7 @@ func node(namespace, name, crid string) *v1.Node {
 	}
 }
 
-func pod(name, namespace, image string, ip string, labels map[string]string) *v1.Pod {
+func buildPod(name, namespace, image string, ip string, labels map[string]string) *v1.Pod {
 	return &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,

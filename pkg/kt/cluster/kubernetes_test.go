@@ -1,11 +1,11 @@
 package cluster
 
 import (
+	"reflect"
 	"testing"
 
-	. "k8s.io/apimachinery/pkg/runtime"
-
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	. "k8s.io/apimachinery/pkg/runtime"
 	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
@@ -45,7 +45,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 				debug: true,
 			},
 			objs: []Object{
-				pod(
+				buildPod(
 					"shadow-pod",
 					"default",
 					"a",
@@ -78,6 +78,53 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			}
 			if gotSshcm != tt.wantSshcm {
 				t.Errorf("Kubernetes.CreateShadow() gotSshcm = %v, want %v", gotSshcm, tt.wantSshcm)
+			}
+		})
+	}
+}
+
+func TestKubernetes_ClusterCrids(t *testing.T) {
+	type args struct {
+		podCIDR string
+	}
+	tests := []struct {
+		name      string
+		args      args
+		objs      []Object
+		wantCidrs []string
+		wantErr   bool
+	}{
+		{
+			name: "shouldGetClusterCrid",
+			args: args{
+				podCIDR: "172.168.0.0/24",
+			},
+			objs: []Object{
+				buildNode("default", "node1", ""),
+				buildPod("pod1", "default", "image", "192.168.0.7", map[string]string{
+					"labe": "value",
+				}),
+				buildService2("default", "name", "172.168.0.18"),
+			},
+			wantCidrs: []string{
+				"172.168.0.0/24",
+				"172.168.0.0/16",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			k := &Kubernetes{
+				Clientset: testclient.NewSimpleClientset(tt.objs...),
+			}
+			gotCidrs, err := k.ClusterCrids(tt.args.podCIDR)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Kubernetes.ClusterCrids() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(gotCidrs, tt.wantCidrs) {
+				t.Errorf("Kubernetes.ClusterCrids() = %v, want %v", gotCidrs, tt.wantCidrs)
 			}
 		})
 	}
