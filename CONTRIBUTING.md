@@ -13,6 +13,7 @@
 * Sign the [Contributor License Agreement](https://cla-assistant.io/alibaba/kt-connect).
 * Before write code init [pre-commit](./docs/developer/pre-commit.md) first.
 * Write a [good commit message](https://www.conventionalcommits.org/zh-hans/v1.0.0-beta.4/)
+* Make sure all test case is successful: *make unit-test*
 * Push your changes to a topic branch in your fork of the repository.
 * Submit a pull request to the repository in the alibaba organization.
 * Make sure the [travis ci status](https://travis-ci.org/alibaba/kt-connect) is passed.
