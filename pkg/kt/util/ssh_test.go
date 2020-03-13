@@ -2,7 +2,6 @@ package util
 
 import (
 	"crypto/rsa"
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -31,8 +30,6 @@ func TestGenerate(t *testing.T) {
 				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			fmt.Printf("%v", got)
-
 			if len(got.PrivateKey) == 0 {
 				t.Errorf("fail generate private key")
 			}
