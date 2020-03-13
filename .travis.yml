@@ -48,4 +48,5 @@ deploy:
     tags: true
 
 notifications:
-  webhooks: $DINGTALK_WEBHOOK
+  webhooks:
+    - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
