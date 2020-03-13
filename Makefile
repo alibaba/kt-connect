@@ -9,6 +9,7 @@ SERVER_IMAGE	  =  kt-connect-server
 
 # generate mock
 generate-mock:
+	GO111MODULE=on go get github.com/golang/mock/mockgen@latest
 	mkdir -p fake/kt/action
 	mockgen -source=pkg/kt/command/types.go -destination=fake/kt/action/action_mock.go -package=action
 	mkdir -p fake/kt/cluster
