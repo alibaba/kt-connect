@@ -20,7 +20,7 @@ generate-mock:
 	mockgen -source=pkg/kt/types.go -destination=pkg/fake/kt/kt_mock.go -package=kt
 
 # run unit test
-unit-test:
+unit-test: generate-mock
 	mkdir -p artifacts/report/coverage
 	go test -v -cover -coverprofile c.out.tmp ./...
 	cat c.out.tmp | grep -v "_mock.go" > c.out
