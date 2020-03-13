@@ -21,14 +21,7 @@ type Cli struct {
 
 // Kubernetes ...
 func (c *Cli) Kubernetes() (cluster.KubernetesInterface, error) {
-	clientset, err := cluster.GetKubernetesClient(c.Options.KubeConfig)
-	if err != nil {
-		return nil, err
-	}
-	return &cluster.Kubernetes{
-		KubeConfig: c.Options.KubeConfig,
-		Clientset:  clientset,
-	}, nil
+	return cluster.Create(c.Options.KubeConfig)
 }
 
 // Shadow ...

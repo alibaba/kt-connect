@@ -3,17 +3,21 @@ package cluster
 import (
 	"fmt"
 	"strings"
+	"time"
+
+	"github.com/alibaba/kt-connect/pkg/kt/vars"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
+	appV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-// GetKubernetesClient get Kubernetes client from config
-func GetKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
+func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
 	if err != nil {
 		return nil, err
@@ -90,4 +94,117 @@ func getServiceCird(serviceList []v1.Service) (cidr []string, err error) {
 
 func getCirdFromSample(sample string) string {
 	return strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
+}
+
+func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
+	// log.Info().Msgf("len(podList):%d", len(podList))
+	for _, p := range podList {
+		if len(p.Labels) <= 0 {
+			// almost impossible
+			continue
+		}
+		item, containKey := p.Labels[labelsKeys[0]]
+		if !containKey || item != name {
+			continue
+		}
+		return p
+	}
+	return nil
+}
+
+func wait(podName string) {
+	time.Sleep(time.Second)
+	if len(podName) >= 0 {
+		log.Info().Msgf("pod: %s is running,but not ready", podName)
+		return
+	}
+	log.Info().Msg("Shadow Pods not ready......")
+}
+
+func service(name, namespace string, labels map[string]string, port int) *v1.Service {
+	var ports []v1.ServicePort
+	ports = append(ports, v1.ServicePort{
+		Name:       name,
+		Port:       int32(port),
+		TargetPort: intstr.FromInt(port),
+	})
+
+	return &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: v1.ServiceSpec{
+			Selector: labels,
+			Type:     v1.ServiceTypeClusterIP,
+			Ports:    ports,
+		},
+	}
+
+}
+
+func container(image string, args []string) v1.Container {
+	return v1.Container{
+		Name:            "standalone",
+		Image:           image,
+		ImagePullPolicy: "Always",
+		Args:            args,
+		VolumeMounts: []v1.VolumeMount{
+			{
+				Name:      "ssh-public-key",
+				MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
+			},
+		},
+	}
+}
+
+func deployment(namespace, name string, labels map[string]string, image, volume string, debug bool) *appV1.Deployment {
+	args := []string{}
+	if debug {
+		log.Debug().Msg("create shadow with debug mode")
+		//args = append(args, "--debug")
+	}
+	sshVolume := v1.Volume{
+		Name: "ssh-public-key",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: volume,
+				},
+				Items: []v1.KeyToPath{
+					{
+						Key:  vars.SSHAuthKey,
+						Path: "authorized_keys",
+					},
+				},
+			},
+		},
+	}
+
+	return &appV1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: appV1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{
+						container(image, args),
+					},
+					Volumes: []v1.Volume{
+						sshVolume,
+					},
+				},
+			},
+		},
+	}
 }

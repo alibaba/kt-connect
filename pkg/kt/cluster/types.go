@@ -8,15 +8,14 @@ import (
 )
 
 // Create kubernetes instance
-func Create(kubeConfig string) (kubernetes Kubernetes, err error) {
-	clientSet, err := GetKubernetesClient(kubeConfig)
+func Create(kubeConfig string) (kubernetes KubernetesInterface, err error) {
+	clientSet, err := getKubernetesClient(kubeConfig)
 	if err != nil {
 		return
 	}
-	kubernetes = Kubernetes{
+	return &Kubernetes{
 		Clientset: clientSet,
-	}
-	return
+	}, nil
 }
 
 // KubernetesInterface kubernetes interface
