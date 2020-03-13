@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/alibaba/kt-connect/pkg/fake/kt/exec"
+	"github.com/alibaba/kt-connect/fake/kt/exec"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
@@ -14,10 +14,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
 
-	"github.com/alibaba/kt-connect/pkg/fake/kt"
-	"github.com/alibaba/kt-connect/pkg/fake/kt/action"
-	fakeCluster "github.com/alibaba/kt-connect/pkg/fake/kt/cluster"
-	fakeConnect "github.com/alibaba/kt-connect/pkg/fake/kt/connect"
+	"github.com/alibaba/kt-connect/fake/kt"
+	"github.com/alibaba/kt-connect/fake/kt/action"
+	fakeCluster "github.com/alibaba/kt-connect/fake/kt/cluster"
+	fakeConnect "github.com/alibaba/kt-connect/fake/kt/connect"
 )
 
 func Test_newConnectCommand(t *testing.T) {

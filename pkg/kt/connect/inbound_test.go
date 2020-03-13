@@ -4,8 +4,8 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/alibaba/kt-connect/pkg/fake/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/pkg/fake/kt/exec/ssh"
+	"github.com/alibaba/kt-connect/fake/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/fake/kt/exec/ssh"
 	"github.com/golang/mock/gomock"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
