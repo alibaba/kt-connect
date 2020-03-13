@@ -45,3 +45,6 @@ deploy:
   draft: true
   on:
     tags: true
+
+notifications:
+  webhooks: $DINGTALK_WEBHOOK
