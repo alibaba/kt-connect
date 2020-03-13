@@ -5,7 +5,6 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
-	v1 "k8s.io/client-go/listers/core/v1"
 )
 
 // Create kubernetes instance
@@ -37,8 +36,5 @@ type KubernetesInterface interface {
 // Kubernetes implements KubernetesInterface
 type Kubernetes struct {
 	KubeConfig string
-	// TODO: should remove
-	Clientset kubernetes.Interface
-	// TODO: should remove
-	ServiceListener v1.ServiceLister
+	Clientset  kubernetes.Interface
 }

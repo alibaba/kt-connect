@@ -20,7 +20,7 @@ func Test_getPodCirds(t *testing.T) {
 		{
 			name: "should_get_pod_cird_from_pods",
 			objs: []runtime.Object{
-				pod("default", "a", "172.168.1.2"),
+				pod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
 			},
 			wantCidrs: []string{
 				"172.168.0.0/16",
@@ -108,14 +108,19 @@ func node(namespace, name, crid string) *v1.Node {
 	}
 }
 
-func pod(namespace, image string, ip string) *v1.Pod {
+func pod(name, namespace, image string, ip string, labels map[string]string) *v1.Pod {
 	return &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			Labels:    labels,
+		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{{Image: image}},
 		},
 		Status: v1.PodStatus{
 			PodIP: ip,
+			Phase: v1.PodRunning,
 		},
 	}
 }
