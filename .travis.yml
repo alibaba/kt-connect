@@ -56,11 +56,12 @@ jobs:
           tags: true
     - stage: build-shadow
       before_script:
-        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
         - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
         - echo "TAG=${TAG}"
       script:
        - make build-shadow
+      before_deploy:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
       deploy:
         provider: script
         script: make release-shadow
@@ -69,11 +70,12 @@ jobs:
           tags: true
     - stage: build-dashboard
       before_script:
-        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
         - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
         - echo "TAG=${TAG}"
       script:
         - make build-dashboard
+      before_deploy:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
       deploy:
         provider: script
         script: make release-dashboard
