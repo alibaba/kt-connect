@@ -16,6 +16,12 @@ env:
 
 jobs:
   include:
+    - stage: code-analysis
+      before_script:
+        - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.8
+        - golangci-lint --version
+      script:
+        - golangci-lint run ./...
     - stage: unit-test
       before_script:
         - go install github.com/golang/mock/mockgen
