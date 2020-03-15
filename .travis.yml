@@ -60,8 +60,8 @@ jobs:
         provider: script
         script: make release-shadow
         skip_cleanup: true
-        on:
-          tags: true
+#        on:
+#          tags: true
     - stage: build-dashboard
       before_script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
@@ -73,14 +73,14 @@ jobs:
         provider: script
         script: make release-dashboard
         skip_cleanup: true
-          on:
-            tags: true
+#        on:
+#          tags: true
 
-notifications:
-  webhooks:
-    urls:
-      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
-    on_success: change
-    on_failure: always
-    on_cancel:  never
-    on_error:   always
+#notifications:
+#  webhooks:
+#    urls:
+#      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
+#    on_success: change
+#    on_failure: always
+#    on_cancel:  never
+#    on_error:   always
