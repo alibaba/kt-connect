@@ -16,12 +16,6 @@ env:
 
 jobs:
   include:
-#    - stage: code-analysis
-#      before_script:
-#        - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.8
-#        - golangci-lint --version
-#      script:
-#        - golangci-lint run ./...
     - stage: unit-test
       before_script:
         - go install github.com/golang/mock/mockgen
@@ -32,14 +26,14 @@ jobs:
         - make test
       after_script:
         - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-    - stage: build
+    - stage: integration-test
       before_script:
-        - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
-        - echo "TAG=${TAG}"
         - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in testing/integration/testdata/config.yaml.enc -out testing/integration/testdata/config.yaml -d
       script:
-      - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
-      - make build
+        - echo "success prepare the integration test environment"
+    - stage: build-cli
+      script:
+        - make build-connect
       deploy:
         provider: releases
         api_key:
@@ -55,12 +49,38 @@ jobs:
         draft: true
         on:
           tags: true
+    - stage: build-shadow
+      before_script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
+        - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
+        - echo "TAG=${TAG}"
+      script:
+       - make build-shadow
+      deploy:
+        provider: script
+        script: make release-shadow
+        skip_cleanup: true
+        on:
+          tags: true
+    - stage: build-dashboard
+      before_script:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
+        - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
+        - echo "TAG=${TAG}"
+      script:
+        - make build-dashboard
+      deploy:
+        provider: script
+        script: make release-dashboard
+        skip_cleanup: true
+          on:
+            tags: true
 
-notifications:
-  webhooks:
-    urls:
-      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
-    on_success: change
-    on_failure: always
-    on_cancel:  never
-    on_error:   always
+#notifications:
+#  webhooks:
+#    urls:
+#      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
+#    on_success: change
+#    on_failure: always
+#    on_cancel:  never
+#    on_error:   always
