@@ -65,7 +65,7 @@ jobs:
         script: make release-shadow
         skip_cleanup: true
         on:
-          tags: true
+#          tags: true
           all_branches: true
     - stage: build-dashboard
       before_script:
@@ -79,7 +79,7 @@ jobs:
         script: make release-dashboard
         skip_cleanup: true
         on:
-          tags: true
+#          tags: true
           all_branches: true
 
 #notifications:
