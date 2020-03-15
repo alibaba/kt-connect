@@ -37,7 +37,7 @@ func main() {
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error().Msg(err.Error())
-		command.CleanupWorkspace(context, options)
+		command.CleanupWorkspace(context, options, os.Args[0])
 		os.Exit(-1)
 	}
 

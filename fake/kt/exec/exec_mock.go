@@ -5,12 +5,11 @@
 package exec
 
 import (
-	reflect "reflect"
-
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockCliInterface is a mock of CliInterface interface

@@ -1,7 +1,9 @@
 package cluster
 
 import (
+	"errors"
 	"fmt"
+	"strconv"
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -10,7 +12,7 @@ import (
 	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
+	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 
 	"k8s.io/client-go/kubernetes"
@@ -69,8 +71,8 @@ func (k *Kubernetes) Deployment(name, namespace string) (*appv1.Deployment, erro
 	return k.Clientset.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 }
 
-// CreateShadow create shadow
-func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[string]string, debug bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+// GetOrCreateShadow create shadow
+func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map[string]string, debug, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
 	component, version := labels["kt-component"], labels["version"]
 	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
 
@@ -79,10 +81,69 @@ func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[stri
 		return
 	}
 
+	if reuseShadow {
+		podList, err2 := k.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+			LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: labels}.MatchLabels).String(),
+		})
+		if err2 != nil {
+			err = err2
+			return
+		}
+		if len(podList.Items) > 1 {
+			err = errors.New("Found more than one pod with name " + name + ", please make sure these is only one in namespace " + namespace)
+			return
+		}
+		if len(podList.Items) == 1 {
+			log.Info().Msgf("Found shared shadow, reuse it")
+			err = increaseRefCount(name, k.Clientset, namespace)
+			if err != nil {
+				return
+			}
+			podIP, podName, credential = shadowResult(podList.Items[0], generator)
+			return
+		}
+		labels[vars.RefCount] = "1"
+	}
+
+	pod, err := k.createShadowPod(labels, sshcm, namespace, generator, name, image, debug, reuseShadow)
+	if err != nil {
+		return
+	}
+	podIP, podName, credential = shadowResult(pod, generator)
+	return
+}
+
+func increaseRefCount(name string, clientSet kubernetes.Interface, namespace string) error {
+	deployment, err := clientSet.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	label := deployment.ObjectMeta.Labels
+	count, err := strconv.Atoi(label[vars.RefCount])
+	if err != nil {
+		return err
+	}
+
+	deployment.ObjectMeta.Labels[vars.RefCount] = strconv.Itoa(count + 1)
+
+	_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
+	return err
+}
+
+func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *util.SSHCredential) {
+	podIP := pod.Status.PodIP
+	podName := pod.GetObjectMeta().GetName()
+	credential := util.NewDefaultSSHCredential()
+	credential.PrivateKeyPath = generator.PrivateKeyPath
+	return podIP, podName, credential
+}
+
+func (k *Kubernetes) createShadowPod(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator, name string, image string, debug bool, reuse bool) (pod v1.Pod, err error) {
 	clientSet := k.Clientset
 
 	labels["kt"] = sshcm
 	cli := clientSet.CoreV1().ConfigMaps(namespace)
+
 	configMap, err := cli.Create(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sshcm,
@@ -93,6 +154,7 @@ func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[stri
 			vars.SSHAuthKey: string(generator.PublicKey),
 		},
 	})
+
 	if err != nil {
 		return
 	}
@@ -113,15 +175,7 @@ func (k *Kubernetes) CreateShadow(name, namespace, image string, labels map[stri
 	}
 	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
 
-	pod, err := waitPodReadyUsingInformer(namespace, name, clientSet)
-	if err != nil {
-		return
-	}
-	podIP = pod.Status.PodIP
-	podName = pod.GetObjectMeta().GetName()
-	credential = util.NewDefaultSSHCredential()
-	credential.PrivateKeyPath = generator.PrivateKeyPath
-	return
+	return waitPodReadyUsingInformer(namespace, name, clientSet)
 }
 
 // CreateService create kubernetes service
@@ -173,12 +227,12 @@ func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Inte
 		return
 	}
 	pod = v1.Pod{}
-	podLabels := labels.NewSelector()
+	podLabels := k8sLabels.NewSelector()
 	log.Info().Msgf("pod label: kt=%s", name)
 	labelKeys := []string{
 		"kt",
 	}
-	requirement, err := labels.NewRequirement(labelKeys[0], selection.Equals, []string{name})
+	requirement, err := k8sLabels.NewRequirement(labelKeys[0], selection.Equals, []string{name})
 	if err != nil {
 		return
 	}
@@ -212,4 +266,12 @@ wait_loop:
 		}
 	}
 	return pod, nil
+}
+
+func (k *Kubernetes) GetDeployment(name string, namespace string) (*appv1.Deployment, error) {
+	return k.Clientset.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+}
+
+func (k *Kubernetes) UpdateDeployment(namespace string, deployment *appv1.Deployment) (*appv1.Deployment, error) {
+	return k.Clientset.AppsV1().Deployments(namespace).Update(deployment)
 }

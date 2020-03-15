@@ -20,6 +20,7 @@ type connectOptions struct {
 	Method      string
 	Dump2Hosts  bool
 	Hosts       map[string]string
+	ShareShadow bool
 }
 
 type exchangeOptions struct {

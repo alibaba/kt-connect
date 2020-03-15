@@ -67,19 +67,19 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 
-			gotPodIP, gotPodName, gotSshcm, _, err := k.CreateShadow(tt.args.name, tt.args.namespace, tt.args.image, tt.args.labels, tt.args.debug)
+			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(tt.args.name, tt.args.namespace, tt.args.image, tt.args.labels, tt.args.debug, false)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Kubernetes.CreateShadow() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if gotPodIP != tt.wantPodIP {
-				t.Errorf("Kubernetes.CreateShadow() gotPodIP = %v, want %v", gotPodIP, tt.wantPodIP)
+				t.Errorf("Kubernetes.GetOrCreateShadow() gotPodIP = %v, want %v", gotPodIP, tt.wantPodIP)
 			}
 			if gotPodName != tt.wantPodName {
-				t.Errorf("Kubernetes.CreateShadow() gotPodName = %v, want %v", gotPodName, tt.wantPodName)
+				t.Errorf("Kubernetes.GetOrCreateShadow() gotPodName = %v, want %v", gotPodName, tt.wantPodName)
 			}
 			if gotSshcm != tt.wantSshcm {
-				t.Errorf("Kubernetes.CreateShadow() gotSshcm = %v, want %v", gotSshcm, tt.wantSshcm)
+				t.Errorf("Kubernetes.GetOrCreateShadow() gotSshcm = %v, want %v", gotSshcm, tt.wantSshcm)
 			}
 		})
 	}

@@ -1,8 +1,10 @@
 package command
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -34,14 +36,14 @@ func SetUpWaitingChannel() (ch chan os.Signal) {
 }
 
 // SetUpCloseHandler registry close handeler
-func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
+func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, action string) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	// see https://en.wikipedia.org/wiki/Signal_(IPC)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	go func() {
 		<-ch
 		log.Info().Msgf("- Terminal And Clean Workspace\n")
-		CleanupWorkspace(cli, options)
+		CleanupWorkspace(cli, options, action)
 		log.Info().Msgf("- Successful Clean Up Workspace\n")
 		os.Exit(0)
 	}()
@@ -49,7 +51,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch 
 }
 
 // CleanupWorkspace clean workspace
-func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
+func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, action string) {
 	log.Info().Msgf("- start Clean Workspace\n")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
 		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
@@ -85,8 +87,31 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 
 	if len(options.RuntimeOptions.Shadow) > 0 {
-		log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
-		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
+			deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+			if err != nil {
+				return
+			}
+			refCount := deployment.ObjectMeta.Labels[vars.RefCount]
+			if refCount == "1" {
+				log.Info().Msgf("Shared shadow has only one ref, delete it")
+				kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+			} else {
+				log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
+				count, err := strconv.Atoi(refCount)
+				if err != nil {
+					return
+				}
+				deployment.ObjectMeta.Labels[vars.RefCount] = strconv.Itoa(count - 1)
+				_, err = kubernetes.UpdateDeployment(options.Namespace, deployment)
+				if err != nil {
+					return
+				}
+			}
+		} else {
+			log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
+			kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+		}
 	}
 
 	if len(options.RuntimeOptions.SSHCM) > 0 {
