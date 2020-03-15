@@ -8,8 +8,6 @@ import (
 
 	"github.com/alibaba/kt-connect/fake/kt/exec"
 
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
@@ -79,22 +77,10 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 	ktctl.EXPECT().Exec().AnyTimes().Return(exec)
 
-	type args struct {
-		shadow     connect.ShadowInterface
-		kubernetes cluster.KubernetesInterface
-		options    *options.DaemonOptions
-	}
-
 	opts := options.NewDaemonOptions()
 	opts.Labels = "a:b"
 
-	arg := args{
-		shadow:     shadow,
-		kubernetes: kubernetes,
-		options:    opts,
-	}
-
-	if err := connectToCluster(ktctl, arg.options); (err != nil) != false {
+	if err := connectToCluster(ktctl, opts); err != nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, false)
 	}
 
@@ -112,19 +98,7 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 
-	type args struct {
-		shadow     connect.ShadowInterface
-		kubernetes cluster.KubernetesInterface
-		options    *options.DaemonOptions
-	}
-
-	arg := args{
-		shadow:     shadow,
-		kubernetes: kubernetes,
-		options:    options.NewDaemonOptions(),
-	}
-
-	if err := connectToCluster(ktctl, arg.options); (err != nil) != true {
+	if err := connectToCluster(ktctl, options.NewDaemonOptions()); err == nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
 	}
 
@@ -144,22 +118,10 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 
-	type args struct {
-		shadow     connect.ShadowInterface
-		kubernetes cluster.KubernetesInterface
-		options    *options.DaemonOptions
-	}
-
 	opts := options.NewDaemonOptions()
 	opts.Labels = "a:b"
 
-	arg := args{
-		shadow:     shadow,
-		kubernetes: kubernetes,
-		options:    opts,
-	}
-
-	if err := connectToCluster(ktctl, arg.options); (err != nil) != true {
+	if err := connectToCluster(ktctl, opts); err == nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
 	}
 
