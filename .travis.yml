@@ -32,6 +32,10 @@ jobs:
       script:
         - echo "success prepare the integration test environment"
     - stage: build-cli
+      env:
+        - GOOS=linux
+        - GOOS=darwin
+        - GOOS=windows
       script:
         - make build-connect
       deploy:
