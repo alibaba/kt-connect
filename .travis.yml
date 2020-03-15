@@ -60,8 +60,9 @@ jobs:
         provider: script
         script: make release-shadow
         skip_cleanup: true
-#        on:
-#          tags: true
+        on:
+          tags: true
+          all_branches: true
     - stage: build-dashboard
       before_script:
         - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
@@ -73,8 +74,9 @@ jobs:
         provider: script
         script: make release-dashboard
         skip_cleanup: true
-#        on:
-#          tags: true
+        on:
+          tags: true
+          all_branches: true
 
 #notifications:
 #  webhooks:
