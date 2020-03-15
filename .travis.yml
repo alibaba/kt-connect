@@ -37,8 +37,8 @@ jobs:
         - GOOS=darwin
         - GOOS=windows
       script:
+        - echo "$GOOS"
         - make build-connect
-        - echo "GOOS"
       deploy:
         provider: releases
         api_key:
