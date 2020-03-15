@@ -38,6 +38,7 @@ jobs:
         - GOOS=windows
       script:
         - make build-connect
+        - echo "GOOS"
       deploy:
         provider: releases
         api_key:
