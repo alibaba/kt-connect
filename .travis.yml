@@ -26,11 +26,11 @@ jobs:
         - make test
       after_script:
         - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
-    - stage: integration-test
-      before_script:
-        - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in testing/integration/testdata/config.yaml.enc -out testing/integration/testdata/config.yaml -d
-      script:
-        - echo "success prepare the integration test environment"
+#    - stage: integration-test
+#      before_script:
+#        - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in testing/integration/testdata/config.yaml.enc -out testing/integration/testdata/config.yaml -d
+#      script:
+#        - echo "success prepare the integration test environment"
     - stage: build-cli
       env:
         - GOOS=linux
