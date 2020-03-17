@@ -45,20 +45,28 @@ build-shadow-base:
 build-shadow:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-linux-amd64 cmd/shadow/main.go
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f docker/shadow/Dockerfile .
+
+# release shadow
+release-shadow:
 	docker push $(PREFIX)/$(SHADOW_IMAGE):$(TAG)
 
 # dlv for debug
 build-shadow-dlv:
 	bin/build-shadow-dlv
 
-build-dashboard:
+build-dashboard: build-frontend build-server
+
+build-frontend:
 	docker build -t $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG) -f docker/dashboard/Dockerfile .
-	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 
 build-server:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o artifacts/apiserver/apiserver-linux-amd64 cmd/server/main.go
 	docker build -t $(PREFIX)/$(SERVER_IMAGE):$(TAG) -f docker/apiserver/Dockerfile .
+
+release-dashboard:
+	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)
+
 
 git-release:
 	bin/release
