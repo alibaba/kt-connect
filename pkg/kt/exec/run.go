@@ -19,10 +19,7 @@ func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 
 // BackgroundRun run cmd in background
 func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
-	err = runCmd(cmd, name, debug)
-	if err != nil {
-		return
-	}
+	runCmd(cmd, name, debug)
 	go func() {
 		err = cmd.Wait()
 		log.Info().Msgf("%s finished", name)

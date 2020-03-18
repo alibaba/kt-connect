@@ -69,7 +69,7 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
 	exec := exec.NewMockCliInterface(ctl)
 	shadow := fakeConnect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
+	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
 	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
 
 	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", gomock.Any(), []string{"10.10.10.0/24"}, gomock.Any()).Return(nil)
@@ -93,7 +93,7 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 
 	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
 	shadow := fakeConnect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", "", nil, errors.New("")).AnyTimes()
+	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Return("", "", "", nil, errors.New("")).AnyTimes()
 
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
@@ -112,7 +112,7 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 
 	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
 	shadow := fakeConnect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().CreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
+	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
 	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{}, errors.New("fail to get crid"))
 
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
