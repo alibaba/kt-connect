@@ -86,6 +86,8 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 		}
 	}
 
+	shouldCleanSharedShadowResource := false
+
 	if len(options.RuntimeOptions.Shadow) > 0 {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 			deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
@@ -94,6 +96,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 			}
 			refCount := deployment.ObjectMeta.Labels[vars.RefCount]
 			if refCount == "1" {
+				shouldCleanSharedShadowResource = true
 				log.Info().Msgf("Shared shadow has only one ref, delete it")
 				kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 			} else {
@@ -115,11 +118,14 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 	}
 
 	if len(options.RuntimeOptions.SSHCM) > 0 {
-		log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
-		kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
+		if shouldCleanSharedShadowResource {
+			log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
+			kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
+		}
 	}
 
 	removePrivateKey(options)
+
 	if len(options.RuntimeOptions.Service) > 0 {
 		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
 		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)

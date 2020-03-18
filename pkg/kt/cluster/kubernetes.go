@@ -82,30 +82,51 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 	}
 
 	if reuseShadow {
-		podList, err2 := k.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
-			LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: labels}.MatchLabels).String(),
-		})
-		if err2 != nil {
-			err = err2
-			return
-		}
-		if len(podList.Items) > 1 {
-			err = errors.New("Found more than one pod with name " + name + ", please make sure these is only one in namespace " + namespace)
-			return
-		}
-		if len(podList.Items) == 1 {
-			log.Info().Msgf("Found shared shadow, reuse it")
-			err = increaseRefCount(name, k.Clientset, namespace)
+		_, shadowError := k.GetDeployment(name, namespace)
+		if shadowError == nil {
+			cli := k.Clientset.CoreV1().ConfigMaps(namespace)
+
+			configMap, configMapError := cli.Get(sshcm, metav1.GetOptions{})
+
+			if configMapError != nil {
+				err = errors.New("Found shadow deployment but no configMap. Please delete the deployment #{shadow}")
+				return
+			}
+
+			generator.UpdateKeys(configMap.Data[vars.SSHAuthPrivateKey], configMap.Data[vars.SSHAuthKey])
+
+			err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[vars.SSHAuthPrivateKey]))
 			if err != nil {
 				return
 			}
-			podIP, podName, credential = shadowResult(podList.Items[0], generator)
-			return
+
+			podList, err2 := k.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
+				LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: labels}.MatchLabels).String(),
+			})
+			if err2 != nil {
+				err = err2
+				return
+			}
+			if len(podList.Items) > 1 {
+				err = errors.New("Found more than one pod with name " + name + ", please make sure these is only one in namespace " + namespace)
+				return
+			}
+			if len(podList.Items) == 1 {
+				log.Info().Msgf("Found shared shadow, reuse it")
+				err = increaseRefCount(name, k.Clientset, namespace)
+				if err != nil {
+					return
+				}
+				podIP, podName, credential = shadowResult(podList.Items[0], generator)
+				return
+			}
 		}
-		labels[vars.RefCount] = "1"
+		log.Info().Msgf("No shared shadow found, create new one.")
 	}
 
-	pod, err := k.createShadowPod(labels, sshcm, namespace, generator, name, image, debug, reuseShadow)
+	labels[vars.RefCount] = "1"
+
+	pod, err := k.createShadowDeployment(labels, sshcm, namespace, generator, name, image, debug, reuseShadow)
 	if err != nil {
 		return
 	}
@@ -138,7 +159,7 @@ func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *ut
 	return podIP, podName, credential
 }
 
-func (k *Kubernetes) createShadowPod(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator, name string, image string, debug bool, reuse bool) (pod v1.Pod, err error) {
+func (k *Kubernetes) createShadowDeployment(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator, name string, image string, debug bool, reuse bool) (pod v1.Pod, err error) {
 	clientSet := k.Clientset
 
 	labels["kt"] = sshcm
@@ -151,7 +172,8 @@ func (k *Kubernetes) createShadowPod(labels map[string]string, sshcm string, nam
 			Labels:    labels,
 		},
 		Data: map[string]string{
-			vars.SSHAuthKey: string(generator.PublicKey),
+			vars.SSHAuthKey:        string(generator.PublicKey),
+			vars.SSHAuthPrivateKey: string(generator.PrivateKey),
 		},
 	})
 
