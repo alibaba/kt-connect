@@ -80,7 +80,7 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 
 	if reuseShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(name, namespace, sshcm, privateKeyPath, labels)
-		if err2 == nil {
+		if err2 != nil {
 			err = err2
 			return
 		}
