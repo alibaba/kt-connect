@@ -28,9 +28,12 @@ type SSHGenerator struct {
 	PrivateKeyPath        string
 }
 
-func (g *SSHGenerator) UpdateKeys(privateKey string, publicKey string) {
-	g.PrivateKey = []byte(privateKey)
-	g.PublicKey = []byte(publicKey)
+func NewSSHGenerator(privateKey string, publicKey string, privateKeyPath string) *SSHGenerator {
+	return &SSHGenerator{
+		PrivateKey:     []byte(privateKey),
+		PublicKey:      []byte(publicKey),
+		PrivateKeyPath: privateKeyPath,
+	}
 }
 
 // NewDefaultSSHCredential ...
