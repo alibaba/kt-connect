@@ -187,6 +187,9 @@ func deployment(namespace, name string, labels map[string]string, image, volume 
 			Name:      name,
 			Namespace: namespace,
 			Labels:    labels,
+			Annotations: map[string]string{
+				vars.RefCount: "1",
+			},
 		},
 		Spec: appV1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
@@ -195,9 +198,6 @@ func deployment(namespace, name string, labels map[string]string, image, volume 
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
-					Annotations: map[string]string{
-						vars.RefCount: "1",
-					},
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{

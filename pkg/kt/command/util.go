@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"os"
 	"os/signal"
@@ -86,30 +87,28 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 		}
 	}
 
+	err = tryCleanShadowRelatedObjs(options, kubernetes)
+	if err != nil {
+		return
+	}
+
+	if len(options.RuntimeOptions.Service) > 0 {
+		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
+		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
+		if err != nil {
+			log.Error().Err(err).Msg("delete service failed")
+		}
+	}
+}
+
+func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) (err error) {
 	shouldCleanSharedShadowResource := false
 
 	if len(options.RuntimeOptions.Shadow) > 0 {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-			deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+			shouldCleanSharedShadowResource, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
 			if err != nil {
 				return
-			}
-			refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
-			if refCount == "1" {
-				shouldCleanSharedShadowResource = true
-				log.Info().Msgf("Shared shadow has only one ref, delete it")
-				kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
-			} else {
-				log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
-				count, err := strconv.Atoi(refCount)
-				if err != nil {
-					return
-				}
-				deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count - 1)
-				_, err = kubernetes.UpdateDeployment(options.Namespace, deployment)
-				if err != nil {
-					return
-				}
 			}
 		} else {
 			log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
@@ -125,14 +124,32 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 	}
 
 	removePrivateKey(options)
+	return
+}
 
-	if len(options.RuntimeOptions.Service) > 0 {
-		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
-		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
+func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (shouldCleanSharedShadowResource bool, err error) {
+	deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+	if err != nil {
+		return false, err
+	}
+	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
+	if refCount == "1" {
+		shouldCleanSharedShadowResource = true
+		log.Info().Msgf("Shared shadow has only one ref, delete it")
+		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+	} else {
+		log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
+		count, err := strconv.Atoi(refCount)
 		if err != nil {
-			log.Error().Err(err).Msg("delete service failed")
+			return false, err
+		}
+		deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count - 1)
+		_, err = kubernetes.UpdateDeployment(options.Namespace, deployment)
+		if err != nil {
+			return false, err
 		}
 	}
+	return true, nil
 }
 
 // checkConnectRunning check connect is running and print help msg
