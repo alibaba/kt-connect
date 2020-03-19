@@ -2,4 +2,3 @@
 TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
 TAG=${TAG:-latest}
 docker build -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:$TAG -f docker/shadow/Dockerfile . && \
-docker push registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:$TAG

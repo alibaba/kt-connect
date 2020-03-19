@@ -45,6 +45,9 @@ build-shadow-base:
 build-shadow:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-linux-amd64 cmd/shadow/main.go
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f docker/shadow/Dockerfile .
+
+# release shadow
+release-shadow:
 	docker push $(PREFIX)/$(SHADOW_IMAGE):$(TAG)
 
 # dlv for debug
