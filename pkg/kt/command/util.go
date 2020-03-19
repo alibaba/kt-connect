@@ -94,7 +94,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 			if err != nil {
 				return
 			}
-			refCount := deployment.ObjectMeta.Labels[vars.RefCount]
+			refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
 			if refCount == "1" {
 				shouldCleanSharedShadowResource = true
 				log.Info().Msgf("Shared shadow has only one ref, delete it")
@@ -105,7 +105,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, actio
 				if err != nil {
 					return
 				}
-				deployment.ObjectMeta.Labels[vars.RefCount] = strconv.Itoa(count - 1)
+				deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count - 1)
 				_, err = kubernetes.UpdateDeployment(options.Namespace, deployment)
 				if err != nil {
 					return

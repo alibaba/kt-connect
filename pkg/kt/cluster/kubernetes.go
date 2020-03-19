@@ -146,13 +146,13 @@ func increaseRefCount(name string, clientSet kubernetes.Interface, namespace str
 	if err != nil {
 		return err
 	}
-	label := deployment.ObjectMeta.Labels
-	count, err := strconv.Atoi(label[vars.RefCount])
+	annotations := deployment.ObjectMeta.Annotations
+	count, err := strconv.Atoi(annotations[vars.RefCount])
 	if err != nil {
 		return err
 	}
 
-	deployment.ObjectMeta.Labels[vars.RefCount] = strconv.Itoa(count + 1)
+	deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count + 1)
 
 	_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
 	return err
@@ -171,8 +171,6 @@ func (k *Kubernetes) createShadowDeployment(labels map[string]string, sshcm stri
 	if err != nil {
 		return
 	}
-	labels[vars.RefCount] = "1"
-
 	clientSet := k.Clientset
 
 	labels["kt"] = sshcm
