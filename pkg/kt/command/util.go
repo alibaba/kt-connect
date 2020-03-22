@@ -44,7 +44,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 	go func() {
 		<-ch
 		log.Info().Msgf("- Terminal And Clean Workspace\n")
-		CleanupWorkspace(cli, options, action)
+		CleanupWorkspace(cli, options)
 		log.Info().Msgf("- Successful Clean Up Workspace\n")
 		os.Exit(0)
 	}()
@@ -52,7 +52,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 }
 
 // CleanupWorkspace clean workspace
-func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions, action string) {
+func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	log.Info().Msgf("- start Clean Workspace\n")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
 		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
