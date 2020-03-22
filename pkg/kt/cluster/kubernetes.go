@@ -139,7 +139,7 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta,
 	configMap, configMapError := cli.Get(sshKeyMeta.Sshcm, metav1.GetOptions{})
 
 	if configMapError != nil {
-		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment #{shadow}")
+		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment " + resourceMeta.Name)
 		return
 	}
 
@@ -184,6 +184,7 @@ func increaseRefCount(name string, clientSet kubernetes.Interface, namespace str
 	annotations := deployment.ObjectMeta.Annotations
 	count, err := strconv.Atoi(annotations[vars.RefCount])
 	if err != nil {
+		log.Error().Msgf("Failed to parse annotations[vars.RefCount] of deployment %s with value %s", name, annotations[vars.RefCount])
 		return err
 	}
 

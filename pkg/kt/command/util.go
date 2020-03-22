@@ -128,9 +128,11 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 }
 
 func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (shouldCleanSharedShadowResource bool, err error) {
+	shouldCleanSharedShadowResource = false
+
 	deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 	if err != nil {
-		return false, err
+		return
 	}
 	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
 	if refCount == "1" {
@@ -139,17 +141,19 @@ func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, option
 		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 	} else {
 		log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
-		count, err := strconv.Atoi(refCount)
-		if err != nil {
-			return false, err
+		count, err2 := strconv.Atoi(refCount)
+		if err2 != nil {
+			err = err2
+			return
 		}
 		deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count - 1)
-		_, err = kubernetes.UpdateDeployment(options.Namespace, deployment)
-		if err != nil {
-			return false, err
+		_, err2 = kubernetes.UpdateDeployment(options.Namespace, deployment)
+		if err2 != nil {
+			err = err2
+			return
 		}
 	}
-	return true, nil
+	return
 }
 
 // checkConnectRunning check connect is running and print help msg
