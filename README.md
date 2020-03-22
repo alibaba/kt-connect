@@ -4,23 +4,23 @@ KT Connect
 [![Build Status](https://travis-ci.org/alibaba/kt-connect.svg?branch=master)](https://travis-ci.org/alibaba/kt-connect)
 [![Go Report Card](https://goreportcard.com/badge/github.com/alibaba/kt-connect)](https://goreportcard.com/report/github.com/alibaba/kt-connect)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/eb13b3946784bd7c67cc/test_coverage)](https://codeclimate.com/github/alibaba/kt-connect/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/eb13b3946784bd7c67cc/maintainability)](https://codeclimate.com/github/alibaba/kt-connect/maintainability) 
-![License](https://img.shields.io/github/license/alibaba/kt-connect.svg) 
+[![Maintainability](https://api.codeclimate.com/v1/badges/eb13b3946784bd7c67cc/maintainability)](https://codeclimate.com/github/alibaba/kt-connect/maintainability)
+![License](https://img.shields.io/github/license/alibaba/kt-connect.svg)
 
-Management and Integration with your Kubernetes dev environment more efficient.
+Manage and integrate with your Kubernetes dev environment more efficiently.
 
 ![Arch](./docs/media/arch.png)
 
 ## Features
 
-* Connect: Direct access remote Kubernetes cluster: KT Connect use `sshuttle` as the vpn tool to access remote Kubernetes cluster network.
-* Exchange: Developer can exchange the workload to redirect the request to local app.
+* Connect: Directly Access a remote Kubernetes cluster. KT Connect use `sshuttle` as the vpn tool to access remote Kubernetes cluster networks.
+* Exchange: Developer can exchange the workload to redirect the requests to a local app.
 * Mesh: You can create a mesh version in local host and redirect to your local
-* Dashboard: A Dashboard view you can know how the environment is use.
+* Dashboard: A dashboard view can help you know how the environment is been used.
 
 ## QuickStart
 
-You can download and install the ktctl from [Downloads And Install](https://rdc-incubator.github.io/kt-docs/#/downloads)
+You can download and install the `ktctl` from [Downloads And Install](https://rdc-incubator.github.io/kt-docs/#/downloads)
 
 ### Deploy a service in Kubernetes
 
@@ -112,7 +112,7 @@ tips:
 if your remote port diffrent local port, you can user ${remotePort}:{localPort} set expose parameter
 ```
 
-Access local tomcat by internal service DNS address:
+Access the local tomcat by internal service DNS address:
 
 > Note: if `kubectl connect` not running, you can only access from cluster
 
@@ -125,7 +125,7 @@ $ curl http://tomcat:8080 | grep '<h1>'
 
 > You can know more from [Mesh Best Practices](https://rdc-incubator.github.io/kt-docs/#/guide/mesh)
 
-The most different from mesh and exchange is exchange will scale the origin workload replicas to zero. And messh will keep it and create a pod instance with random version, after this user can modifi the Istio route rule let the specific request redirect to local, and the environment is working as normal:
+The biggest difference from mesh and exchange is exchange will scale the origin workload replicas down to zero, and mesh will keep it and create a pod instance with an random version. After this, user can modify the `Istio` route rule to let the specific request redirect to your local, and the environment can keep working as normal:
 
 ```
 $ sudo ktctl mesh tomcat --expose 8080
@@ -146,11 +146,11 @@ SSH Remote port-forward POD 172.16.0.217 22 to 127.0.0.1:2217 starting
 
 ### Dashboard
 
-Dashboard can help your know how your dev environemnt is used. 
+The dashboard can help your know how your dev environment is been used.
 
 ![Dashboard](./docs/media/dashboard-demo.png)
 
-You can install KT Connect Dashboard As Follow [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
+You can install KT Connect Dashboard by following [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
 
 ## Ask For Help
 
@@ -158,7 +158,7 @@ Please contact us with DingTalk:
 
 ![image](./docs/media/dingtalk-group-v2.png)
 
-## Release Note
+## Release Notes
 
 ### 0.0.12
 
@@ -238,7 +238,7 @@ Please contact us with DingTalk:
 * Fixed issue if istio inject is enable in namespace, and the request can't redirect to local
 * Support exchange run standalone.
 
-### 0.0.1 
+### 0.0.1
 
 > Release At 2019-06-18
 

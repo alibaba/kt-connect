@@ -18,6 +18,8 @@
   - [ktctl dashboard](zh-cn/cli/dashboard.md)
   - [ktctl check](zh-cn/cli/check.md)
 
-- [Changelog](zh-cn/changelog.md)
+- 问题排查：
+  - [connect](zh-cn/troubleshoot.md)
+- [版本日志](zh-cn/changelog.md)
 - [TODO](zh-cn/todo.md)
 <!-- - [Need Help](es-us/needhelp.md) -->
