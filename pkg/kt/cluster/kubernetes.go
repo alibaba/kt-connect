@@ -18,6 +18,17 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+type ResourceMeta struct {
+	Name      string
+	Namespace string
+	Labels    map[string]string
+}
+
+type SSHkeyMeta struct {
+	Sshcm          string
+	PrivateKeyPath string
+}
+
 // RemoveService remove sevice
 func (k *Kubernetes) RemoveService(name, namespace string) (err error) {
 	client := k.Clientset.CoreV1().Services(namespace)
@@ -79,7 +90,14 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 	privateKeyPath := util.PrivateKeyPath(component, version)
 
 	if reuseShadow {
-		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(name, namespace, sshcm, privateKeyPath, labels)
+		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&ResourceMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		}, &SSHkeyMeta{
+			Sshcm:          sshcm,
+			PrivateKeyPath: privateKeyPath,
+		})
 		if err2 != nil {
 			err = err2
 			return
@@ -90,48 +108,65 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 		}
 	}
 
-	pod, generator, err := k.createShadowDeployment(labels, sshcm, namespace, privateKeyPath, name, image, debug)
-	if err != nil {
+	generator, err2 := util.Generate(privateKeyPath)
+	if err2 != nil {
+		err = err2
 		return
 	}
-	podIP, podName, credential = shadowResult(*pod, generator)
+	configMap, err2 := k.createConfigMap(labels, sshcm, namespace, generator)
+
+	if err2 != nil {
+		err = err2
+		return
+	}
+	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
+
+	pod, err2 := k.createAndGetPod(labels, name, namespace, image, sshcm, debug)
+	if err2 != nil {
+		err = err2
+		return
+	}
+	podIP, podName, credential = shadowResult(pod, generator)
 	return
 }
 
-func (k *Kubernetes) tryGetExistingShadowRelatedObjs(name string, namespace string, sshcm string, privateKeyPath string, labels map[string]string) (pod *v1.Pod, generator *util.SSHGenerator, err error) {
-	_, shadowError := k.GetDeployment(name, namespace)
+func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *v1.Pod, generator *util.SSHGenerator, err error) {
+	_, shadowError := k.GetDeployment(resourceMeta.Name, resourceMeta.Namespace)
 	if shadowError != nil {
 		return
 	}
-	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
-	configMap, configMapError := cli.Get(sshcm, metav1.GetOptions{})
+	cli := k.Clientset.CoreV1().ConfigMaps(resourceMeta.Namespace)
+	configMap, configMapError := cli.Get(sshKeyMeta.Sshcm, metav1.GetOptions{})
 
 	if configMapError != nil {
 		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment #{shadow}")
 		return
 	}
 
-	generator = util.NewSSHGenerator(configMap.Data[vars.SSHAuthPrivateKey], configMap.Data[vars.SSHAuthKey], privateKeyPath)
+	generator = util.NewSSHGenerator(configMap.Data[vars.SSHAuthPrivateKey], configMap.Data[vars.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
 
 	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[vars.SSHAuthPrivateKey]))
 	if err != nil {
 		return
 	}
 
-	podList, err2 := k.Clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{
-		LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: labels}.MatchLabels).String(),
+	return k.getShadowPod(resourceMeta, generator)
+}
+
+func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta, generator *util.SSHGenerator) (pod *v1.Pod, sshGenerator *util.SSHGenerator, err error) {
+	podList, err := k.Clientset.CoreV1().Pods(resourceMeta.Namespace).List(metav1.ListOptions{
+		LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: resourceMeta.Labels}.MatchLabels).String(),
 	})
-	if err2 != nil {
-		err = err2
+	if err != nil {
 		return
 	}
 	if len(podList.Items) > 1 {
-		err = errors.New("Found more than one pod with name " + name + ", please make sure these is only one in namespace " + namespace)
+		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
 		return
 	}
 	if len(podList.Items) == 1 {
 		log.Info().Msgf("Found shared shadow, reuse it")
-		err = increaseRefCount(name, k.Clientset, namespace)
+		err = increaseRefCount(resourceMeta.Name, k.Clientset, resourceMeta.Namespace)
 		if err != nil {
 			return
 		}
@@ -166,17 +201,31 @@ func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *ut
 	return podIP, podName, credential
 }
 
-func (k *Kubernetes) createShadowDeployment(labels map[string]string, sshcm string, namespace string, privateKeyPath string, name string, image string, debug bool) (pod *v1.Pod, generator *util.SSHGenerator, err error) {
-	generator, err = util.Generate(privateKeyPath)
+func (k *Kubernetes) createAndGetPod(labels map[string]string, name string, namespace string, image string, sshcm string, debug bool) (pod v1.Pod, err error) {
+	localIPAddress := util.GetOutboundIP()
+	log.Info().Msgf("Client address %s", localIPAddress)
+	labels["remoteAddress"] = localIPAddress
+
+	labels["kt"] = name
+	client := k.Clientset.AppsV1().Deployments(namespace)
+	deployment := deployment(namespace, name, labels, image, sshcm, debug)
+	log.Info().Msg("shadow template is prepare ready.")
+	result, err := client.Create(deployment)
 	if err != nil {
 		return
 	}
+	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+
+	return waitPodReadyUsingInformer(namespace, name, k.Clientset)
+}
+
+func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *v1.ConfigMap, err error) {
 	clientSet := k.Clientset
 
 	labels["kt"] = sshcm
 	cli := clientSet.CoreV1().ConfigMaps(namespace)
 
-	configMap, err := cli.Create(&v1.ConfigMap{
+	return cli.Create(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      sshcm,
 			Namespace: namespace,
@@ -187,29 +236,6 @@ func (k *Kubernetes) createShadowDeployment(labels map[string]string, sshcm stri
 			vars.SSHAuthPrivateKey: string(generator.PrivateKey),
 		},
 	})
-
-	if err != nil {
-		return
-	}
-
-	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
-
-	localIPAddress := util.GetOutboundIP()
-	log.Info().Msgf("Client address %s", localIPAddress)
-	labels["remoteAddress"] = localIPAddress
-
-	labels["kt"] = name
-	client := clientSet.AppsV1().Deployments(namespace)
-	deployment := deployment(namespace, name, labels, image, sshcm, debug)
-	log.Info().Msg("shadow template is prepare ready.")
-	result, err := client.Create(deployment)
-	if err != nil {
-		return
-	}
-	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
-
-	pod1, err := waitPodReadyUsingInformer(namespace, name, clientSet)
-	return &pod1, generator, err
 }
 
 // CreateService create kubernetes service
