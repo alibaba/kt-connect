@@ -108,12 +108,19 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 		}
 	}
 
-	generator, err2 := util.Generate(privateKeyPath)
-	if err2 != nil {
-		err = err2
+	return k.createShadow(&ResourceMeta{
+		Name:      name,
+		Namespace: namespace,
+		Labels:    labels,
+	}, privateKeyPath, image, debug)
+}
+
+func (k *Kubernetes) createShadow(resourceMeta *ResourceMeta, privateKeyPath string, image string, debug bool) (podIP string, podName string, sshcm string, credential *util.SSHCredential, err error) {
+	generator, err := util.Generate(privateKeyPath)
+	if err != nil {
 		return
 	}
-	configMap, err2 := k.createConfigMap(labels, sshcm, namespace, generator)
+	configMap, err2 := k.createConfigMap(resourceMeta.Labels, sshcm, resourceMeta.Namespace, generator)
 
 	if err2 != nil {
 		err = err2
@@ -121,7 +128,7 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 	}
 	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
 
-	pod, err2 := k.createAndGetPod(labels, name, namespace, image, sshcm, debug)
+	pod, err2 := k.createAndGetPod(resourceMeta, image, sshcm, debug)
 	if err2 != nil {
 		err = err2
 		return
@@ -160,10 +167,6 @@ func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta, generator *util.SS
 	if err != nil {
 		return
 	}
-	if len(podList.Items) > 1 {
-		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
-		return
-	}
 	if len(podList.Items) == 1 {
 		log.Info().Msgf("Found shared shadow, reuse it")
 		err = increaseRefCount(resourceMeta.Name, k.Clientset, resourceMeta.Namespace)
@@ -172,7 +175,11 @@ func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta, generator *util.SS
 		}
 		return &(podList.Items[0]), generator, nil
 	}
-	err = errors.New("No Shadow pod found while shadow deployment present. You may need to clean up the deployment by yourself")
+	if len(podList.Items) > 1 {
+		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
+	} else {
+		err = errors.New("No Shadow pod found while shadow deployment present. You may need to clean up the deployment by yourself")
+	}
 	return
 }
 
@@ -202,22 +209,22 @@ func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *ut
 	return podIP, podName, credential
 }
 
-func (k *Kubernetes) createAndGetPod(labels map[string]string, name string, namespace string, image string, sshcm string, debug bool) (pod v1.Pod, err error) {
+func (k *Kubernetes) createAndGetPod(resourceMeta *ResourceMeta, image string, sshcm string, debug bool) (pod v1.Pod, err error) {
 	localIPAddress := util.GetOutboundIP()
 	log.Info().Msgf("Client address %s", localIPAddress)
-	labels["remoteAddress"] = localIPAddress
+	resourceMeta.Labels["remoteAddress"] = localIPAddress
 
-	labels["kt"] = name
-	client := k.Clientset.AppsV1().Deployments(namespace)
-	deployment := deployment(namespace, name, labels, image, sshcm, debug)
+	resourceMeta.Labels["kt"] = resourceMeta.Name
+	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
+	deployment := deployment(resourceMeta.Namespace, resourceMeta.Name, resourceMeta.Labels, image, sshcm, debug)
 	log.Info().Msg("shadow template is prepare ready.")
 	result, err := client.Create(deployment)
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), namespace)
+	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
-	return waitPodReadyUsingInformer(namespace, name, k.Clientset)
+	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
 }
 
 func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *v1.ConfigMap, err error) {
