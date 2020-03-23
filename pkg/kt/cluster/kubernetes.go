@@ -108,19 +108,23 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 		}
 	}
 
-	return k.createShadow(&ResourceMeta{
-		Name:      name,
-		Namespace: namespace,
-		Labels:    labels,
-	}, privateKeyPath, image, debug)
+    podIP, podName, credential, err = k.createShadow(&ResourceMeta{
+        Name:      name,
+        Namespace: namespace,
+        Labels:    labels,
+    }, &SSHkeyMeta{
+        Sshcm: sshcm,
+        PrivateKeyPath: privateKeyPath,
+    }, image, debug)
+    return
 }
 
-func (k *Kubernetes) createShadow(resourceMeta *ResourceMeta, privateKeyPath string, image string, debug bool) (podIP string, podName string, sshcm string, credential *util.SSHCredential, err error) {
-	generator, err := util.Generate(privateKeyPath)
+func (k *Kubernetes) createShadow(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta, image string, debug bool) (podIP string, podName string, credential *util.SSHCredential, err error) {
+	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
 	if err != nil {
 		return
 	}
-	configMap, err2 := k.createConfigMap(resourceMeta.Labels, sshcm, resourceMeta.Namespace, generator)
+	configMap, err2 := k.createConfigMap(resourceMeta.Labels, sshKeyMeta.Sshcm, resourceMeta.Namespace, generator)
 
 	if err2 != nil {
 		err = err2
@@ -128,7 +132,7 @@ func (k *Kubernetes) createShadow(resourceMeta *ResourceMeta, privateKeyPath str
 	}
 	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
 
-	pod, err2 := k.createAndGetPod(resourceMeta, image, sshcm, debug)
+	pod, err2 := k.createAndGetPod(resourceMeta, image, sshKeyMeta.Sshcm, debug)
 	if err2 != nil {
 		err = err2
 		return
