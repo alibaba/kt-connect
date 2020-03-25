@@ -2,9 +2,8 @@ package command
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
+	"strings"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -61,6 +60,11 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 				Usage:       "Auto write service to local hosts file",
 				Destination: &options.ConnectOptions.Dump2Hosts,
 			},
+			urfave.BoolFlag{
+				Name:        "shareShadow",
+				Usage:       "Multi clients try to use existing shadow",
+				Destination: &options.ConnectOptions.ShareShadow,
+			},
 		},
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
@@ -76,7 +80,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
 		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
-	ch := SetUpCloseHandler(cli, options)
+	ch := SetUpCloseHandler(cli, options, "connect")
 	if err = connectToCluster(cli, options); err != nil {
 		return
 	}
@@ -107,9 +111,11 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	endPointIP, podName, sshcm, credential, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, labels(workload, options), options.Debug,
-	)
+	if options.ConnectOptions.ShareShadow {
+		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
+	}
+	endPointIP, podName, sshcm, credential, err :=
+		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), options.Debug, options.ConnectOptions.ShareShadow)
 
 	if err != nil {
 		return

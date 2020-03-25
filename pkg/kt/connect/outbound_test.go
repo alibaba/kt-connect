@@ -23,7 +23,9 @@ func TestShadow_Outbound(t *testing.T) {
 	sshuttle := sshuttle.NewMockCliInterface(ctl)
 	kubectl := kubectl.NewMockCliInterface(ctl)
 
-	kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "kubectl portforward"))
+	kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(func(namespace, resource, remotePort interface{}) *exec.Cmd {
+		return exec.Command("echo", "kubectl portforward")
+	})
 	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
 	ssh.EXPECT().DynamicForwardLocalRequestToRemote(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "ssh dynamic forward"))
 

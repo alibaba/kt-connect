@@ -1,8 +1,11 @@
 package command
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -34,7 +37,7 @@ func SetUpWaitingChannel() (ch chan os.Signal) {
 }
 
 // SetUpCloseHandler registry close handeler
-func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
+func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, action string) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	// see https://en.wikipedia.org/wiki/Signal_(IPC)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
@@ -84,17 +87,11 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 	}
 
-	if len(options.RuntimeOptions.Shadow) > 0 {
-		log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
-		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+	err = tryCleanShadowRelatedObjs(options, kubernetes)
+	if err != nil {
+		return
 	}
 
-	if len(options.RuntimeOptions.SSHCM) > 0 {
-		log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
-		kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
-	}
-
-	removePrivateKey(options)
 	if len(options.RuntimeOptions.Service) > 0 {
 		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
 		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
@@ -102,6 +99,61 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 			log.Error().Err(err).Msg("delete service failed")
 		}
 	}
+}
+
+func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) (err error) {
+	shouldCleanSharedShadowResource := false
+
+	if len(options.RuntimeOptions.Shadow) > 0 {
+		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
+			shouldCleanSharedShadowResource, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
+			if err != nil {
+				return
+			}
+		} else {
+			log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
+			kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+		}
+	}
+
+	if len(options.RuntimeOptions.SSHCM) > 0 {
+		if shouldCleanSharedShadowResource {
+			log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
+			kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
+		}
+	}
+
+	removePrivateKey(options)
+	return
+}
+
+func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (shouldCleanSharedShadowResource bool, err error) {
+	shouldCleanSharedShadowResource = false
+
+	deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+	if err != nil {
+		return
+	}
+	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
+	if refCount == "1" {
+		shouldCleanSharedShadowResource = true
+		log.Info().Msgf("Shared shadow has only one ref, delete it")
+		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+	} else {
+		log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
+		count, err2 := strconv.Atoi(refCount)
+		if err2 != nil {
+			err = err2
+			return
+		}
+		deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count - 1)
+		_, err2 = kubernetes.UpdateDeployment(options.Namespace, deployment)
+		if err2 != nil {
+			err = err2
+			return
+		}
+	}
+	return
 }
 
 // checkConnectRunning check connect is running and print help msg
