@@ -56,7 +56,11 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 				Usage:       "Custom CIDR eq '172.2.0.0/16'",
 				Destination: &options.ConnectOptions.CIDR,
 			},
+<<<<<<< HEAD
 			urfave.BoolFlag{
+=======
+			cli.StringFlag{
+>>>>>>> 8becc1a... dump2hosts改为输入namespace列表，用逗号分隔
 				Name:        "dump2hosts",
 				Usage:       "Auto write service to local hosts file",
 				Destination: &options.ConnectOptions.Dump2Hosts,
@@ -100,8 +104,36 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
+<<<<<<< HEAD
 	if options.ConnectOptions.Dump2Hosts {
+=======
+	connectToCluster(&shadow, &kubernetes, options)
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+	return
+}
+
+func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
+
+	if options.ConnectOptions.Dump2Hosts != "" {
+>>>>>>> 8becc1a... dump2hosts改为输入namespace列表，用逗号分隔
 		hosts := kubernetes.ServiceHosts(options.Namespace)
+
+		namespaces := strings.Split(options.ConnectOptions.Dump2Hosts, ",")
+		for _, namespace := range namespaces {
+			if namespace == options.Namespace {
+				continue
+			}
+			singleHosts := kubernetes.ServiceHosts(namespace)
+			for k, v := range singleHosts {
+				if v == "" || v == "None" {
+					continue
+				}
+				hosts[k+"."+namespace] = v
+			}
+		}
+
 		util.DumpHosts(hosts)
 		options.ConnectOptions.Hosts = hosts
 	}
