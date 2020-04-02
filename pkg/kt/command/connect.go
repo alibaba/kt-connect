@@ -56,7 +56,7 @@ func newConnectCommand(options *options.DaemonOptions, action ActionInterface) c
 				Usage:       "Custom CIDR eq '172.2.0.0/16'",
 				Destination: &options.ConnectOptions.CIDR,
 			},
-			cli.BoolFlag{
+			cli.StringFlag{
 				Name:        "dump2hosts",
 				Usage:       "Auto write service to local hosts file",
 				Destination: &options.ConnectOptions.Dump2Hosts,
@@ -100,8 +100,23 @@ func (action *Action) Connect(options *options.DaemonOptions) (err error) {
 
 func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
 
-	if options.ConnectOptions.Dump2Hosts {
+	if options.ConnectOptions.Dump2Hosts != "" {
 		hosts := kubernetes.ServiceHosts(options.Namespace)
+
+		namespaces := strings.Split(options.ConnectOptions.Dump2Hosts, ",")
+		for _, namespace := range namespaces {
+			if namespace == options.Namespace {
+				continue
+			}
+			singleHosts := kubernetes.ServiceHosts(namespace)
+			for k, v := range singleHosts {
+				if v == "" || v == "None" {
+					continue
+				}
+				hosts[k+"."+namespace] = v
+			}
+		}
+
 		util.DumpHosts(hosts)
 		options.ConnectOptions.Hosts = hosts
 	}
