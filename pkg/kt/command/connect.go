@@ -57,13 +57,22 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 				Destination: &options.ConnectOptions.CIDR,
 			},
 <<<<<<< HEAD
+<<<<<<< HEAD
 			urfave.BoolFlag{
 =======
 			cli.StringFlag{
 >>>>>>> 8becc1a... dump2hosts改为输入namespace列表，用逗号分隔
+=======
+			cli.BoolFlag{
+>>>>>>> 8420380... 修改dump2hosts参数，新增dump2hostsNS参数，向下兼容
 				Name:        "dump2hosts",
 				Usage:       "Auto write service to local hosts file",
 				Destination: &options.ConnectOptions.Dump2Hosts,
+			},
+			cli.StringSliceFlag{
+				Name:  "dump2hostsNS",
+				Usage: "Which namespaces service to local hosts file, support multiple namespaces.",
+				Value: &options.ConnectOptions.Dump2HostsNamespaces,
 			},
 		},
 		Action: func(c *urfave.Context) error {
@@ -116,24 +125,33 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 
 func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
 
+<<<<<<< HEAD
 	if options.ConnectOptions.Dump2Hosts != "" {
 >>>>>>> 8becc1a... dump2hosts改为输入namespace列表，用逗号分隔
+=======
+	if options.ConnectOptions.Dump2Hosts {
+		log.Debug().Msgf("Serach service in %s namespace...", options.Namespace)
+>>>>>>> 8420380... 修改dump2hosts参数，新增dump2hostsNS参数，向下兼容
 		hosts := kubernetes.ServiceHosts(options.Namespace)
-
-		namespaces := strings.Split(options.ConnectOptions.Dump2Hosts, ",")
-		for _, namespace := range namespaces {
-			if namespace == options.Namespace {
-				continue
-			}
-			singleHosts := kubernetes.ServiceHosts(namespace)
-			for k, v := range singleHosts {
-				if v == "" || v == "None" {
+		for k, v := range hosts {
+			log.Debug().Msgf("Service found: %s %s", k, v)
+		}
+		if options.ConnectOptions.Dump2HostsNamespaces != nil {
+			for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
+				if namespace == options.Namespace {
 					continue
 				}
-				hosts[k+"."+namespace] = v
+				log.Debug().Msgf("Serach service in %s namespace...", namespace)
+				singleHosts := kubernetes.ServiceHosts(namespace)
+				for k, v := range singleHosts {
+					if v == "" || v == "None" {
+						continue
+					}
+					log.Debug().Msgf("Service found: %s.%s %s", k, namespace, v)
+					hosts[k+"."+namespace] = v
+				}
 			}
 		}
-
 		util.DumpHosts(hosts)
 		options.ConnectOptions.Hosts = hosts
 	}

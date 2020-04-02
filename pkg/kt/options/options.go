@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/urfave/cli"
 )
 
 // RunOptions ...
@@ -13,13 +14,14 @@ type RunOptions struct {
 }
 
 type connectOptions struct {
-	DisableDNS  bool
-	SSHPort     int
-	Socke5Proxy int
-	CIDR        string
-	Method      string
-	Dump2Hosts  string
-	Hosts       map[string]string
+	DisableDNS           bool
+	SSHPort              int
+	Socke5Proxy          int
+	CIDR                 string
+	Method               string
+	Dump2Hosts           bool
+	Dump2HostsNamespaces cli.StringSlice
+	Hosts                map[string]string
 }
 
 type exchangeOptions struct {
