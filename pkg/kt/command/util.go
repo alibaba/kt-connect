@@ -1,8 +1,6 @@
 package command
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"os"
 	"os/signal"
 	"strconv"
@@ -10,14 +8,15 @@ import (
 	"syscall"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
-
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 )
 
-// NewCommands return new Connect Command
+// NewCommands return new Connect Action
 func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
 		newRunCommand(kt, options, action),
@@ -102,8 +101,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 }
 
 func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) (err error) {
-	shouldCleanSharedShadowResource := false
-
+	var shouldCleanSharedShadowResource bool
 	if len(options.RuntimeOptions.Shadow) > 0 {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 			shouldCleanSharedShadowResource, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
@@ -117,7 +115,8 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 	}
 
 	if len(options.RuntimeOptions.SSHCM) > 0 {
-		if shouldCleanSharedShadowResource {
+		shouldDelWithShared := options.ConnectOptions != nil && options.ConnectOptions.ShareShadow && shouldCleanSharedShadowResource
+		if shouldDelWithShared || (options.ConnectOptions != nil && !options.ConnectOptions.ShareShadow) {
 			log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
 			kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
 		}
@@ -128,8 +127,6 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 }
 
 func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (shouldCleanSharedShadowResource bool, err error) {
-	shouldCleanSharedShadowResource = false
-
 	deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 	if err != nil {
 		return

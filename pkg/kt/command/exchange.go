@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -92,6 +93,12 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 		return err
 	}
 
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-util.Interrupt()
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 

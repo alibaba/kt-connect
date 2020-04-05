@@ -32,6 +32,10 @@ test:
 # build kt project
 build: build-connect build-shadow build-server build-dashboard
 
+# check the style
+check:
+	golint ./pkg/... ./cmd/...
+
 # build ktctl
 build-connect:
 	bin/build-ktctl

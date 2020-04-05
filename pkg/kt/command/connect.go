@@ -2,8 +2,10 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt"
+	"os"
 	"strings"
+
+	"github.com/alibaba/kt-connect/pkg/kt"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -84,6 +86,12 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	if err = connectToCluster(cli, options); err != nil {
 		return
 	}
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-util.Interrupt()
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return
