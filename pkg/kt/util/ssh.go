@@ -28,6 +28,7 @@ type SSHGenerator struct {
 	PrivateKeyPath        string
 }
 
+// NewSSHGenerator create ssh generator
 func NewSSHGenerator(privateKey string, publicKey string, privateKeyPath string) *SSHGenerator {
 	return &SSHGenerator{
 		PrivateKey:     []byte(privateKey),

@@ -18,12 +18,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// ResourceMeta ...
 type ResourceMeta struct {
 	Name      string
 	Namespace string
 	Labels    map[string]string
 }
 
+// SSHkeyMeta ...
 type SSHkeyMeta struct {
 	Sshcm          string
 	PrivateKeyPath string
@@ -108,15 +110,15 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels map
 		}
 	}
 
-    podIP, podName, credential, err = k.createShadow(&ResourceMeta{
-        Name:      name,
-        Namespace: namespace,
-        Labels:    labels,
-    }, &SSHkeyMeta{
-        Sshcm: sshcm,
-        PrivateKeyPath: privateKeyPath,
-    }, image, debug)
-    return
+	podIP, podName, credential, err = k.createShadow(&ResourceMeta{
+		Name:      name,
+		Namespace: namespace,
+		Labels:    labels,
+	}, &SSHkeyMeta{
+		Sshcm:          sshcm,
+		PrivateKeyPath: privateKeyPath,
+	}, image, debug)
+	return
 }
 
 func (k *Kubernetes) createShadow(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta, image string, debug bool) (podIP string, podName string, credential *util.SSHCredential, err error) {
@@ -182,7 +184,7 @@ func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta, generator *util.SS
 	if len(podList.Items) > 1 {
 		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
 	} else {
-		err = errors.New("No Shadow pod found while shadow deployment present. You may need to clean up the deployment by yourself")
+		err = errors.New("no Shadow pod found while shadow deployment present. You may need to clean up the deployment by yourself")
 	}
 	return
 }
@@ -340,10 +342,12 @@ wait_loop:
 	return pod, nil
 }
 
+// GetDeployment ...
 func (k *Kubernetes) GetDeployment(name string, namespace string) (*appv1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
 }
 
+// UpdateDeployment ...
 func (k *Kubernetes) UpdateDeployment(namespace string, deployment *appv1.Deployment) (*appv1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Update(deployment)
 }

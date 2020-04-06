@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -13,14 +14,25 @@ import (
 // Outbound start vpn connection
 func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
 	options := s.Options
+	stop := make(chan bool)
+	rootCtx, cancel := context.WithCancel(context.Background())
+	// one of the background process start failed and will cancel the started process
+	go func() {
+		util.StopBackendProcess(<-stop, cancel)
+	}()
 
-	err = exec.BackgroundRun(
-		cli.Kubectl().PortForward(
-			options.Namespace,
-			name,
-			options.ConnectOptions.SSHPort),
-		"port-forward",
-		options.Debug)
+	err = exec.BackgroundRunWithCtx(
+		&exec.CMDContext{
+			Ctx: rootCtx,
+			Cmd: cli.Kubectl().PortForward(
+				options.Namespace,
+				name,
+				options.ConnectOptions.SSHPort),
+			Name: "port-forward",
+			Stop: stop,
+		},
+		options.Debug,
+	)
 	if err != nil {
 		return
 	}
@@ -30,9 +42,22 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 		log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
 		log.Info().Msgf("==============================================================")
 		_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d", options.ConnectOptions.Socke5Proxy)), 0644)
-		err = exec.BackgroundRun(cli.SSH().DynamicForwardLocalRequestToRemote(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort, options.ConnectOptions.Socke5Proxy), "vpn(ssh)", options.Debug)
+		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+			Ctx:  rootCtx,
+			Cmd:  cli.SSH().DynamicForwardLocalRequestToRemote(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort, options.ConnectOptions.Socke5Proxy),
+			Name: "vpn(ssh)",
+			Stop: stop,
+		}, options.Debug)
 	} else {
-		err = exec.BackgroundRun(cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort, podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug), "vpn(sshuttle)", options.Debug)
+		err = exec.BackgroundRunWithCtx(
+			&exec.CMDContext{
+				Ctx:  rootCtx,
+				Cmd:  cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort, podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug),
+				Name: "vpn(sshuttle)",
+				Stop: stop,
+			},
+			options.Debug,
+		)
 	}
 	if err != nil {
 		return

@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"context"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,6 +32,13 @@ func inbound(
 ) (err error) {
 	debug := options.Debug
 	namespace := options.Namespace
+	stop := make(chan bool)
+	rootCtx, cancel := context.WithCancel(context.Background())
+
+	// one of the background process start failed and will cancel the started process
+	go func() {
+		util.StopBackendProcess(<-stop, cancel)
+	}()
 
 	log.Info().Msgf("remote %s forward to local %s", remoteIP, exposePort)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
@@ -41,7 +49,15 @@ func inbound(
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		portforward := kubernetesCli.PortForward(namespace, podName, localSSHPort)
-		err = exec.BackgroundRun(portforward, "exchange port forward to local", debug)
+		err = exec.BackgroundRunWithCtx(
+			&exec.CMDContext{
+				Ctx:  rootCtx,
+				Cmd:  portforward,
+				Name: "exchange port forward to local",
+				Stop: stop,
+			},
+			debug,
+		)
 		// make sure port-forward already success
 		time.Sleep(time.Duration(2) * time.Second)
 		wg.Done()
@@ -59,5 +75,13 @@ func inbound(
 		remotePort = ports[0]
 	}
 	cmd := sshCli.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
-	return exec.BackgroundRun(cmd, "ssh remote port-forward", debug)
+	return exec.BackgroundRunWithCtx(
+		&exec.CMDContext{
+			Ctx:  rootCtx,
+			Cmd:  cmd,
+			Name: "ssh remote port-forward",
+			Stop: stop,
+		},
+		debug,
+	)
 }
