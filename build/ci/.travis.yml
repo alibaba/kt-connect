@@ -1,0 +1,93 @@
+language: go
+
+go:
+  - 1.13.x
+
+cache:
+  directories:
+  - $GOPATH/pkg/mod
+
+services:
+- docker
+
+env:
+  global:
+    - REGISTRY=registry.cn-hangzhou.aliyuncs.com
+
+jobs:
+  include:
+    - stage: unit-test
+      before_script:
+        - go install github.com/golang/mock/mockgen
+        - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        - chmod +x ./cc-test-reporter
+        - ./cc-test-reporter before-build
+      script:
+        - make test
+      after_script:
+        - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+#    - stage: integration-test
+#      before_script:
+#        - openssl aes-256-cbc -K $encrypted_b5106b5f3da7_key -iv $encrypted_b5106b5f3da7_iv -in testing/integration/testdata/config.yaml.enc -out testing/integration/testdata/config.yaml -d
+#      script:
+#        - echo "success prepare the integration test environment"
+    - stage: build-cli
+      env:
+        - GOOS=linux
+        - GOOS=darwin
+        - GOOS=windows
+      script:
+        - echo "$GOOS"
+        - make build-connect
+      deploy:
+        provider: releases
+        api_key:
+          secure: Bub3t4U4qSrXgxyUEUpjqKdAqoNakj2WvzmdAyIqc4qlFujRJ22Iw2J2fmcFhi5Z+hCaGZUooD7D/9SgVDxgjxZIkgsWspxYWYSgKAvuyH1UiGZaRW1xB9xDxcu5DtVnsLvLa6XANTY4zP8LlawkTRFqY8OdAaItqG3KyyrcWrcMz+tHQLrg19A9ZnCHvYXdugFMJJUouV8J8nwV19vcvrESipf9WfnAcj71Xksx8TsWL9GAWfIbCz8cOj03MUpIgNb5hZt8mFFTv444ZAIo+79YbHR6X+YyOuJplwewBe8VSi7JAVeSlD1TOwLft+IDjQAejNucDgcj+i/d9ENDlHu2cHy4jkdYaXHvizI6og7/nQNofzgx16gJxZGcRU6GXylNcJq918gQPmnuh2LeQmSpQ99NI8+Qp9O5ZfISYXl0UbXIuKBwQSWJyYJ/xuc1QaG3Esch6veZmmm2OfpJZRdI5LeHouaK3RRAt9dB23SXUx/6e8cwVPMVATtajvL9R8o1IFKQK4NLeW0Y7izuK0/mVc8+Wrk5lsim4tT4A+F7fVYKQM99QXYnwy//e1YrWvdS+9TCgmeBRsNBbo5MOSYwdDawZOU1wrbEwNbNI6d2npeC62P0Z2IgrO0BkWtIBBfBnImB3PAtQBSN6Rhc+E52DbWgLxHgYL3usAN9G9k=
+        file:
+          - artifacts/ktctl/ktctl_linux_amd64.tar.gz
+          - artifacts/ktctl/ktctl_darwin_amd64.tar.gz
+          - artifacts/ktctl/ktctl_linux_386.tar.gz
+          - artifacts/ktctl/ktctl_darwin_386.tar.gz
+          - artifacts/ktctl/ktctl_windows_386.tar.gz
+          - artifacts/ktctl/ktctl_windows_amd64.tar.gz
+        skip_cleanup: true
+        draft: true
+        on:
+          tags: true
+    - stage: build-shadow
+      before_script:
+        - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
+        - echo "TAG=${TAG}"
+      script:
+       - make build-shadow
+      before_deploy:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
+      deploy:
+        provider: script
+        script: make release-shadow
+        skip_cleanup: true
+        on:
+          tags: true
+    - stage: build-dashboard
+      before_script:
+        - export TAG=$(echo $TRAVIS_BRANCH | sed "s/\//-/")
+        - echo "TAG=${TAG}"
+      script:
+        - make build-dashboard
+      before_deploy:
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin ${REGISTRY}
+      deploy:
+        provider: script
+        script: make release-dashboard
+        skip_cleanup: true
+        on:
+          tags: true
+
+notifications:
+  webhooks:
+    urls:
+      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
+    on_success: change
+    on_failure: always
+    on_cancel:  never
+    on_error:   always
