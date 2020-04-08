@@ -2,8 +2,11 @@ output
 .github
 .git
 docs
-build
+
 .vscode
 bin
-node_modules
 .DS_Store
+
+# web build and modules
+web/build
+web/node_modules
