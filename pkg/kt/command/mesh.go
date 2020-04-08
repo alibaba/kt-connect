@@ -59,7 +59,6 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
-
 	ch := SetUpCloseHandler(cli, options, "mesh")
 
 	kubernetes, err := cluster.Create(options.KubeConfig)
@@ -76,18 +75,8 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 
 	labels := getMeshLabels(workload, meshVersion, app, options)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels, options.Debug, false)
-	if err != nil {
-		return err
-	}
 
-	// record context data
-	options.RuntimeOptions.Shadow = workload
-	options.RuntimeOptions.SSHCM = sshcm
-
-	shadow := connect.Create(options)
-	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP, credential)
-
+	err = createShadowAndInbound(workload, labels, options, kubernetes)
 	if err != nil {
 		return err
 	}
@@ -102,6 +91,27 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 
+	return nil
+}
+
+func createShadowAndInbound(
+	workload string, labels map[string]string, options *options.DaemonOptions,
+	kubernetes cluster.KubernetesInterface) error {
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
+		workload, options.Namespace, options.Image, labels, options.Debug, false)
+	if err != nil {
+		return err
+	}
+	// record context data
+	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshcm
+
+	shadow := connect.Create(options)
+	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP, credential)
+
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

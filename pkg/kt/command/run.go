@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+
 	"github.com/alibaba/kt-connect/pkg/kt"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -80,7 +82,16 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 		labels[k] = v
 	}
 
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(service, options.Namespace, options.Image, labels, options.Debug, false)
+	return runAndExposeLocalService(service, labels, options, kubernetes, cli)
+}
+
+// runAndExposeLocalService create shadow and expose service if need
+func runAndExposeLocalService(
+	service string, labels map[string]string, options *options.DaemonOptions,
+	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
+
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
+		service, options.Namespace, options.Image, labels, options.Debug, false)
 	if err != nil {
 		return err
 	}
@@ -105,4 +116,5 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 
 	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 	return nil
+
 }
