@@ -28,6 +28,15 @@ type SSHGenerator struct {
 	PrivateKeyPath        string
 }
 
+// NewSSHGenerator create ssh generator
+func NewSSHGenerator(privateKey string, publicKey string, privateKeyPath string) *SSHGenerator {
+	return &SSHGenerator{
+		PrivateKey:     []byte(privateKey),
+		PublicKey:      []byte(publicKey),
+		PrivateKeyPath: privateKeyPath,
+	}
+}
+
 // NewDefaultSSHCredential ...
 func NewDefaultSSHCredential() *SSHCredential {
 	return &SSHCredential{
@@ -54,7 +63,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 		PrivateKeyPath: privateKeyPath,
 		PublicKey:      publicKeyBytes,
 	}
-	err = writePrivateKey(ssh.PrivateKeyPath, ssh.PrivateKey)
+	err = WritePrivateKey(ssh.PrivateKeyPath, ssh.PrivateKey)
 	return ssh, err
 }
 
@@ -112,8 +121,8 @@ func generatePublicKey(privatekey *rsa.PublicKey) ([]byte, error) {
 	return pubKeyBytes, nil
 }
 
-// writePrivateKey write ssh private key to privateKeyPath
-func writePrivateKey(privateKeyPath string, data []byte) error {
+// WritePrivateKey write ssh private key to privateKeyPath
+func WritePrivateKey(privateKeyPath string, data []byte) error {
 	dir := filepath.Dir(privateKeyPath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0700); err != nil {

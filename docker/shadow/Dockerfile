@@ -1,7 +1,7 @@
 FROM golang:1.13
 ENV GO111MODULE on
 # Install go debugger
-RUN go get -u github.com/go-delve/delve/cmd/dlv
+RUN GO111MODULE=off go get -u github.com/go-delve/delve/cmd/dlv
 
 FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base
 COPY artifacts/shadow/shadow-linux-amd64 /usr/sbin/shadow-linux-amd64

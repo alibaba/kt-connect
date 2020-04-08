@@ -10,6 +10,22 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var interrupt = make(chan bool)
+
+// StopBackendProcess ...
+func StopBackendProcess(stop bool, cancel func()) {
+	if cancel == nil {
+		return
+	}
+	cancel()
+	interrupt <- stop
+}
+
+// Interrupt ...
+func Interrupt() chan bool {
+	return interrupt
+}
+
 // IsDaemonRunning check daemon is running or not
 func IsDaemonRunning(pidFile string) bool {
 	if _, err := os.Stat(pidFile); os.IsNotExist(err) {

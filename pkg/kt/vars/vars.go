@@ -7,4 +7,8 @@ var (
 	SSHBitSize = 2048
 	// SSHAuthKey auth key name
 	SSHAuthKey = "authorized"
+	// SSHAuthPrivateKey ssh private key
+	SSHAuthPrivateKey = "privateKey"
+	// RefCount the count of shared
+	RefCount = "refCount"
 )

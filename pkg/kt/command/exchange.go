@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -51,7 +52,7 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(cli, options)
+	ch := SetUpCloseHandler(cli, options, "exchange")
 
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
@@ -71,8 +72,7 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 
 	workload := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
-	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, getExchangeLabels(options.Labels, workload, app), options.Debug)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, getExchangeLabels(options.Labels, workload, app), options.Debug, false)
 	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
 	if err != nil {
@@ -93,6 +93,12 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 		return err
 	}
 
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-util.Interrupt()
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 

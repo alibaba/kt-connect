@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -56,23 +57,20 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 				Usage:       "Custom CIDR eq '172.2.0.0/16'",
 				Destination: &options.ConnectOptions.CIDR,
 			},
-<<<<<<< HEAD
-<<<<<<< HEAD
 			urfave.BoolFlag{
-=======
-			cli.StringFlag{
->>>>>>> 8becc1a... dump2hosts改为输入namespace列表，用逗号分隔
-=======
-			cli.BoolFlag{
->>>>>>> 8420380... 修改dump2hosts参数，新增dump2hostsNS参数，向下兼容
 				Name:        "dump2hosts",
 				Usage:       "Auto write service to local hosts file",
 				Destination: &options.ConnectOptions.Dump2Hosts,
 			},
-			cli.StringSliceFlag{
+			urfave.StringSliceFlag{
 				Name:  "dump2hostsNS",
 				Usage: "Which namespaces service to local hosts file, support multiple namespaces.",
 				Value: &options.ConnectOptions.Dump2HostsNamespaces,
+			},
+			urfave.BoolFlag{
+				Name:        "shareShadow",
+				Usage:       "Multi clients try to use existing shadow",
+				Destination: &options.ConnectOptions.ShareShadow,
 			},
 		},
 		Action: func(c *urfave.Context) error {
@@ -89,10 +87,16 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
 		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
 	}
-	ch := SetUpCloseHandler(cli, options)
+	ch := SetUpCloseHandler(cli, options, "connect")
 	if err = connectToCluster(cli, options); err != nil {
 		return
 	}
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-util.Interrupt()
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return
@@ -113,25 +117,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-<<<<<<< HEAD
 	if options.ConnectOptions.Dump2Hosts {
-=======
-	connectToCluster(&shadow, &kubernetes, options)
-
-	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
-	return
-}
-
-func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (err error) {
-
-<<<<<<< HEAD
-	if options.ConnectOptions.Dump2Hosts != "" {
->>>>>>> 8becc1a... dump2hosts改为输入namespace列表，用逗号分隔
-=======
-	if options.ConnectOptions.Dump2Hosts {
-		log.Debug().Msgf("Serach service in %s namespace...", options.Namespace)
->>>>>>> 8420380... 修改dump2hosts参数，新增dump2hostsNS参数，向下兼容
 		hosts := kubernetes.ServiceHosts(options.Namespace)
 		for k, v := range hosts {
 			log.Debug().Msgf("Service found: %s %s", k, v)
@@ -157,9 +143,11 @@ func connectToCluster(shadow connect.ShadowInterface, kubernetes cluster.Kuberne
 	}
 
 	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	endPointIP, podName, sshcm, credential, err := kubernetes.CreateShadow(
-		workload, options.Namespace, options.Image, labels(workload, options), options.Debug,
-	)
+	if options.ConnectOptions.ShareShadow {
+		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
+	}
+	endPointIP, podName, sshcm, credential, err :=
+		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), options.Debug, options.ConnectOptions.ShareShadow)
 
 	if err != nil {
 		return

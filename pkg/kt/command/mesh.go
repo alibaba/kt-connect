@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"os"
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -59,7 +60,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	checkConnectRunning(options.RuntimeOptions.PidFile)
 
-	ch := SetUpCloseHandler(cli, options)
+	ch := SetUpCloseHandler(cli, options, "mesh")
 
 	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
@@ -75,7 +76,7 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 
 	labels := getMeshLabels(workload, meshVersion, app, options)
-	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(workload, options.Namespace, options.Image, labels, options.Debug)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels, options.Debug, false)
 	if err != nil {
 		return err
 	}
@@ -90,6 +91,13 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 	if err != nil {
 		return err
 	}
+
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-util.Interrupt()
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)

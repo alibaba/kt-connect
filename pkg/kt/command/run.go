@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"os"
 	"strconv"
 	"strings"
 
@@ -46,8 +47,16 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 
 // Run create a new service in cluster
 func (action *Action) Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(cli, options)
-	run(service, cli, options)
+	ch := SetUpCloseHandler(cli, options, "run")
+	if err := run(service, cli, options); err != nil {
+		return err
+	}
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-util.Interrupt()
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
 	<-ch
 	return nil
 }
@@ -71,7 +80,7 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 		labels[k] = v
 	}
 
-	podIP, podName, sshcm, credential, err := kubernetes.CreateShadow(service, options.Namespace, options.Image, labels, options.Debug)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(service, options.Namespace, options.Image, labels, options.Debug, false)
 	if err != nil {
 		return err
 	}

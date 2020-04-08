@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
-
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
@@ -33,12 +32,10 @@ func main() {
 	action := command.Action{}
 
 	app.Commands = command.NewCommands(context, &action, options)
-
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		command.CleanupWorkspace(context, options)
 		os.Exit(-1)
 	}
-
 }
