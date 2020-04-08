@@ -372,8 +372,9 @@ func decreaseOrRemove(k *Kubernetes, deployment *appv1.Deployment) (cleanup bool
 			return
 		}
 	} else {
-		err := decreaseDeploymentRef(refCount, k, deployment)
-		if err != nil {
+		err2 := decreaseDeploymentRef(refCount, k, deployment)
+		if err2 != nil {
+			err = err2
 			return
 		}
 	}
