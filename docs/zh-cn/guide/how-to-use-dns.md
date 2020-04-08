@@ -67,7 +67,7 @@ spec:
 构建DNS服务调试镜像：
 
 ```
-$ bin/build-shadow-dlv
+$ scripts/build-shadow-dlv
 ```
 
 部署调试版本DNS服务：

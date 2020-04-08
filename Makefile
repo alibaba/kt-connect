@@ -38,8 +38,8 @@ check:
 
 # build ktctl
 build-connect:
-	bin/build-ktctl
-	bin/archive
+	scripts/build-ktctl
+	scripts/archive
 
 # build this image before shadow
 build-shadow-base:
@@ -56,7 +56,7 @@ release-shadow:
 
 # dlv for debug
 build-shadow-dlv:
-	bin/build-shadow-dlv
+	scripts/build-shadow-dlv
 
 build-dashboard: build-frontend build-server
 
@@ -73,4 +73,4 @@ release-dashboard:
 
 
 git-release:
-	bin/release
+	scripts/release
