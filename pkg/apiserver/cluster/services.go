@@ -1,19 +1,14 @@
 package cluster
 
 import (
-	"time"
-
 	"k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/informers"
 	v1 "k8s.io/client-go/listers/core/v1"
 	"k8s.io/client-go/tools/cache"
 )
 
 // Services informer of service
 func (w *Watcher) Services(stopCh <-chan struct{}) (lister v1.ServiceLister, err error) {
-
-	resyncPeriod := 30 * time.Minute
-	factory := informers.NewSharedInformerFactory(w.Client, resyncPeriod)
+	factory := informerFactory(w)
 	serviceformer := factory.Core().V1().Services()
 	informer := serviceformer.Informer()
 

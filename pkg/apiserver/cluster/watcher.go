@@ -2,6 +2,9 @@ package cluster
 
 import (
 	"errors"
+	"time"
+
+	"k8s.io/client-go/informers"
 
 	"k8s.io/apimachinery/pkg/util/wait"
 
@@ -62,4 +65,9 @@ func PodListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1
 		return
 	}
 	return
+}
+
+func informerFactory(w *Watcher) (factory informers.SharedInformerFactory) {
+	resyncPeriod := 30 * time.Minute
+	factory = informers.NewSharedInformerFactory(w.Client, resyncPeriod)
 }
