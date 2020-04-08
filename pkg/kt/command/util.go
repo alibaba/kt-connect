@@ -110,7 +110,10 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 			}
 		} else {
 			log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
-			kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+			err = kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -118,7 +121,10 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 		shouldDelWithShared := options.ConnectOptions != nil && options.ConnectOptions.ShareShadow && shouldCleanSharedShadowResource
 		if shouldDelWithShared || (options.ConnectOptions != nil && !options.ConnectOptions.ShareShadow) {
 			log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
-			kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
+			err = kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
+			if err != nil {
+				return
+			}
 		}
 	}
 
@@ -135,7 +141,10 @@ func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, option
 	if refCount == "1" {
 		shouldCleanSharedShadowResource = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
-		kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+		err = kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+		if err != nil {
+			return
+		}
 	} else {
 		log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
 		count, err2 := strconv.Atoi(refCount)

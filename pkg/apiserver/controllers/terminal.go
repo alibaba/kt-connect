@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
 	"github.com/alibaba/kt-connect/pkg/apiserver/ws"
 	"github.com/gin-gonic/gin"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -63,12 +63,17 @@ func (c *TerminalController) Terminal(context *gin.Context) {
 
 	handler := &ws.StreamHandler{WsConn: wsConn, ResizeEvent: make(chan remotecommand.TerminalSize)}
 
-	executor.Stream(remotecommand.StreamOptions{
+	err = executor.Stream(remotecommand.StreamOptions{
 		Stdin:             handler,
 		Stdout:            handler,
 		Stderr:            handler,
 		TerminalSizeQueue: handler,
 		Tty:               true,
 	})
+
+	if err != nil {
+		fmt.Printf("error happen when executor get stream: %s", err.Error())
+		return
+	}
 
 }

@@ -26,7 +26,10 @@ func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 		Cmd:  cmd,
 		Name: name,
 	}
-	runCmd(ctx, debug)
+	err = runCmd(ctx, debug)
+	if err != nil {
+		return
+	}
 	err = cmd.Wait()
 	return
 }
@@ -106,7 +109,10 @@ func runCmd(cmdCtx *CMDContext, debug bool) (err error) {
 		if cmdCtx.Ctx != nil {
 			select {
 			case <-cmdCtx.Ctx.Done():
-				cmd.Process.Kill()
+				err := cmd.Process.Kill()
+				if err != nil {
+					log.Error().Msgf(err.Error())
+				}
 			}
 		}
 	}()

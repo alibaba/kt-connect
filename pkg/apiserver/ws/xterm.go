@@ -51,11 +51,7 @@ func (handler *StreamHandler) Read(p []byte) (size int, err error) {
 }
 
 func (handler *StreamHandler) Write(p []byte) (size int, err error) {
-	var (
-		copyData []byte
-	)
-
-	copyData = make([]byte, len(p))
+	var copyData = make([]byte, len(p))
 	copy(copyData, p)
 	size = len(p)
 	err = handler.WsConn.WsWrite(websocket.TextMessage, copyData)
