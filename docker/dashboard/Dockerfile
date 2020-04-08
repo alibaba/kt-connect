@@ -1,9 +1,9 @@
 FROM node:9.11.1 as build-deps
 WORKDIR /usr/src/app
-COPY package.json ./
+COPY web/package.json ./
 RUN npm install -g cnpm 
 RUN cnpm install
-COPY . ./
+COPY web ./
 RUN cnpm run build
 
 FROM nginx:1.15
