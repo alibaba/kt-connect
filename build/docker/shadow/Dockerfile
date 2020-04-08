@@ -7,7 +7,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base
 COPY artifacts/shadow/shadow-linux-amd64 /usr/sbin/shadow-linux-amd64
 COPY --from=0 /go/bin/dlv /usr/sbin/dlv
 RUN apt-get install -y net-tools
-ADD docker/shadow/run.sh /run.sh
+ADD build/docker/shadow/run.sh /run.sh
 RUN chmod 755 /run.sh
 
 ENTRYPOINT ["/run.sh"]

@@ -9,6 +9,6 @@ RUN cnpm run build
 FROM nginx:1.15
 ENV APP_ENV PROD
 COPY --from=build-deps /usr/src/app/build /usr/share/nginx/html
-ADD docker/dashboard/nginx/default.conf /etc/nginx/conf.d/default.conf
+ADD build/docker/dashboard/nginx/default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
