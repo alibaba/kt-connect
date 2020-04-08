@@ -4,6 +4,9 @@ import (
 	"errors"
 	"time"
 
+	"k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/tools/cache"
+
 	"k8s.io/client-go/informers"
 
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -70,4 +73,101 @@ func PodListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1
 func informerFactory(w *Watcher) (factory informers.SharedInformerFactory) {
 	resyncPeriod := 30 * time.Minute
 	factory = informers.NewSharedInformerFactory(w.Client, resyncPeriod)
+	return
+}
+
+// Endpoints informer of endpoints
+func (w *Watcher) Endpoints(stopCh <-chan struct{}) (lister v1.EndpointsLister, err error) {
+	factory := informerFactory(w)
+	informerFactory := factory.Core().V1().Endpoints()
+	informer := informerFactory.Informer()
+
+	defer runtime.HandleCrash()
+
+	factory.Start(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
+		err = errTimeout
+		runtime.HandleError(err)
+		return
+	}
+
+	lister = informerFactory.Lister()
+	return
+}
+
+// Namespaces informer of namespace
+func (w *Watcher) Namespaces(stopCh <-chan struct{}) (lister v1.NamespaceLister, err error) {
+	factory := informerFactory(w)
+	informerFactory := factory.Core().V1().Namespaces()
+	informer := informerFactory.Informer()
+
+	defer runtime.HandleCrash()
+
+	factory.Start(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
+		err = errTimeout
+		runtime.HandleError(err)
+		return
+	}
+
+	lister = informerFactory.Lister()
+	return
+}
+
+func podDeleted(obj interface{}) {
+	// pod, ok := obj.(*api.Pod)
+	// if ok {
+	// 	fmt.Printf("Pod deleted: %s\n", pod.ObjectMeta.Name)
+	// } else {
+	// 	fmt.Printf("Pod deleted event: %s\n", obj)
+	// }
+}
+
+// Pods watch pods change
+func (w *Watcher) Pods(stopCh <-chan struct{}) (lister v1.PodLister, err error) {
+	factory := informerFactory(w)
+	podInformer := factory.Core().V1().Pods()
+	informer := podInformer.Informer()
+
+	defer runtime.HandleCrash()
+
+	factory.Start(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
+		err = errTimeout
+		runtime.HandleError(err)
+		return
+	}
+
+	informer.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			// AddFunc:    podCreated,
+			DeleteFunc: podDeleted,
+		},
+	)
+
+	lister = podInformer.Lister()
+	return
+}
+
+// Services informer of service
+func (w *Watcher) Services(stopCh <-chan struct{}) (lister v1.ServiceLister, err error) {
+	factory := informerFactory(w)
+	serviceformer := factory.Core().V1().Services()
+	informer := serviceformer.Informer()
+
+	defer runtime.HandleCrash()
+
+	factory.Start(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
+		err = errTimeout
+		runtime.HandleError(err)
+		return
+	}
+
+	lister = serviceformer.Lister()
+	return
 }
