@@ -5,11 +5,12 @@
 package cluster
 
 import (
+	reflect "reflect"
+
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
-	reflect "reflect"
 )
 
 // MockKubernetesInterface is a mock of KubernetesInterface interface
@@ -210,4 +211,19 @@ func (m *MockKubernetesInterface) UpdateDeployment(namespace string, deployment 
 func (mr *MockKubernetesInterfaceMockRecorder) UpdateDeployment(namespace, deployment interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeployment", reflect.TypeOf((*MockKubernetesInterface)(nil).UpdateDeployment), namespace, deployment)
+}
+
+// DecreaseRef mocks base method
+func (m *MockKubernetesInterface) DecreaseRef(namespace, deployment string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DecreaseRef", namespace, deployment)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DecreaseRef indicates an expected call of DecreaseRef
+func (mr *MockKubernetesInterfaceMockRecorder) DecreaseRef(namespace, deployment interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecreaseRef", reflect.TypeOf((*MockKubernetesInterface)(nil).DecreaseRef), namespace, deployment)
 }
