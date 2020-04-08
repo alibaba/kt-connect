@@ -37,6 +37,6 @@ func GetOutboundIP() (address string) {
 		return
 	}
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	address = string(localAddr.IP)
+	address = fmt.Sprintf("%s", localAddr.IP)
 	return
 }

@@ -17,62 +17,10 @@ import (
 
 // newConnectCommand return new connect command
 func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
-
-	methodDefaultValue := "vpn"
-	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"
-	if util.IsWindows() {
-		methodDefaultValue = "socks5"
-		methodDefaultUsage = "windows only support socks5"
-	}
-
 	return urfave.Command{
 		Name:  "connect",
 		Usage: "connection to kubernetes cluster",
-		Flags: []urfave.Flag{
-			urfave.StringFlag{
-				Name:        "method",
-				Value:       methodDefaultValue,
-				Usage:       methodDefaultUsage,
-				Destination: &options.ConnectOptions.Method,
-			},
-			urfave.IntFlag{
-				Name:        "proxy",
-				Value:       2223,
-				Usage:       "when should method socks5, you can choice which port to proxy",
-				Destination: &options.ConnectOptions.Socke5Proxy,
-			},
-			urfave.IntFlag{
-				Name:        "port",
-				Value:       2222,
-				Usage:       "Local SSH Proxy port",
-				Destination: &options.ConnectOptions.SSHPort,
-			},
-			urfave.BoolFlag{
-				Name:        "disableDNS",
-				Usage:       "Disable Cluster DNS",
-				Destination: &options.ConnectOptions.DisableDNS,
-			},
-			urfave.StringFlag{
-				Name:        "cidr",
-				Usage:       "Custom CIDR eq '172.2.0.0/16'",
-				Destination: &options.ConnectOptions.CIDR,
-			},
-			urfave.BoolFlag{
-				Name:        "dump2hosts",
-				Usage:       "Auto write service to local hosts file",
-				Destination: &options.ConnectOptions.Dump2Hosts,
-			},
-			urfave.StringSliceFlag{
-				Name:  "dump2hostsNS",
-				Usage: "Which namespaces service to local hosts file, support multiple namespaces.",
-				Value: &options.ConnectOptions.Dump2HostsNamespaces,
-			},
-			urfave.BoolFlag{
-				Name:        "shareShadow",
-				Usage:       "Multi clients try to use existing shadow",
-				Destination: &options.ConnectOptions.ShareShadow,
-			},
-		},
+		Flags: ConnectActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
