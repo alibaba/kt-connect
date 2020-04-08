@@ -63,6 +63,13 @@ func CleanupWorkspace(options *options.DaemonOptions) {
 		}
 	}
 
+	if _, err := os.Stat(".envrc"); err == nil {
+		log.Info().Msgf("- Remove .envrc %s", options.RuntimeOptions.PidFile)
+		if err = os.Remove(".envrc"); err != nil {
+			log.Error().Err(err).Msg("delete .envrc failed")
+		}
+	}
+
 	util.DropHosts(options.ConnectOptions.Hosts)
 	client, err := cluster.GetKubernetesClient(options.KubeConfig)
 	if err != nil {
