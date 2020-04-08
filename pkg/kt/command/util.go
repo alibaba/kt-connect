@@ -3,7 +3,6 @@ package command
 import (
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 )
@@ -132,34 +130,9 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 	return
 }
 
-func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (shouldCleanSharedShadowResource bool, err error) {
-	deployment, err := kubernetes.GetDeployment(options.RuntimeOptions.Shadow, options.Namespace)
-	if err != nil {
-		return
-	}
-	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
-	if refCount == "1" {
-		shouldCleanSharedShadowResource = true
-		log.Info().Msgf("Shared shadow has only one ref, delete it")
-		err = kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
-		if err != nil {
-			return
-		}
-	} else {
-		log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
-		count, err2 := strconv.Atoi(refCount)
-		if err2 != nil {
-			err = err2
-			return
-		}
-		deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count - 1)
-		_, err2 = kubernetes.UpdateDeployment(options.Namespace, deployment)
-		if err2 != nil {
-			err = err2
-			return
-		}
-	}
-	return
+// decreaseRefOrRemoveTheShadow
+func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (bool, error) {
+	return kubernetes.DecreaseRef(options.Namespace, options.RuntimeOptions.Shadow)
 }
 
 // checkConnectRunning check connect is running and print help msg

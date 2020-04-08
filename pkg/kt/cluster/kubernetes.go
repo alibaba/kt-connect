@@ -351,3 +351,51 @@ func (k *Kubernetes) GetDeployment(name string, namespace string) (*appv1.Deploy
 func (k *Kubernetes) UpdateDeployment(namespace string, deployment *appv1.Deployment) (*appv1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Update(deployment)
 }
+
+// DecreaseRef ...
+func (k *Kubernetes) DecreaseRef(namespace string, app string) (cleanup bool, err error) {
+	deployment, err := k.GetDeployment(app, namespace)
+	if err != nil {
+		return
+	}
+	cleanup, err = decreaseOrRemove(k, deployment)
+	return
+}
+
+func decreaseOrRemove(k *Kubernetes, deployment *appv1.Deployment) (cleanup bool, err error) {
+	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
+	if refCount == "1" {
+		cleanup = true
+		log.Info().Msgf("Shared shadow has only one ref, delete it")
+		err = k.RemoveDeployment(deployment.GetObjectMeta().GetName(), deployment.GetObjectMeta().GetNamespace())
+		if err != nil {
+			return
+		}
+	} else {
+		err := decreaseDeploymentRef(refCount, k, deployment)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func decreaseDeploymentRef(refCount string, k *Kubernetes, deployment *appv1.Deployment) (err error) {
+	log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
+	count, err := decreaseRef(refCount)
+	if err != nil {
+		return
+	}
+	deployment.ObjectMeta.Annotations[vars.RefCount] = count
+	_, err = k.UpdateDeployment(deployment.GetObjectMeta().GetNamespace(), deployment)
+	return
+}
+
+func decreaseRef(refCount string) (count string, err error) {
+	currentCount, err := strconv.Atoi(refCount)
+	if err != nil {
+		return
+	}
+	count = strconv.Itoa(currentCount - 1)
+	return
+}

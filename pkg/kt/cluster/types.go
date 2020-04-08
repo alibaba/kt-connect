@@ -32,6 +32,7 @@ type KubernetesInterface interface {
 	CreateService(name, namespace string, port int, labels map[string]string) (*coreV1.Service, error)
 	GetDeployment(name string, namespace string) (*appV1.Deployment, error)
 	UpdateDeployment(namespace string, deployment *appV1.Deployment) (*appV1.Deployment, error)
+	DecreaseRef(namespace string, deployment string) (cleanup bool, err error)
 }
 
 // Kubernetes implements KubernetesInterface
