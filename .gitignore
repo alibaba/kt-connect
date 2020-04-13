@@ -9,6 +9,7 @@ node_modules/
 note/
 
 .jvmrc
+.envrc
 .DS_Store
 vendor/
 c.out
