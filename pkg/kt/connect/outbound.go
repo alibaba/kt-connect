@@ -37,6 +37,7 @@ func (s *Shadow) Outbound(name, podIP string, cidrs []string) (err error) {
 		log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
 		log.Info().Msgf("==============================================================")
 		_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d", options.ConnectOptions.Socke5Proxy)), 0644)
+		_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s", options.Namespace)), 0644)
 		err = exec.BackgroundRun(ssh.DynamicForwardLocalRequestToRemote("127.0.0.1", options.ConnectOptions.SSHPort, options.ConnectOptions.Socke5Proxy), "vpn(ssh)", options.Debug)
 	} else {
 		err = exec.BackgroundRun(sshuttle.SSHUttle("127.0.0.1", options.ConnectOptions.SSHPort, podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug), "vpn(sshuttle)", options.Debug)
