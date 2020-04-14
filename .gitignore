@@ -14,3 +14,5 @@ note/
 vendor/
 c.out
 c.out.tmp
+
+cmd/kubectl-connect/kubectl-connect

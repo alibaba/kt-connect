@@ -73,7 +73,9 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 	}
 
-	util.DropHosts(options.ConnectOptions.Hosts)
+	if len(options.ConnectOptions.Hosts) > 0 {
+		util.DropHosts(options.ConnectOptions.Hosts)
+	}
 
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {

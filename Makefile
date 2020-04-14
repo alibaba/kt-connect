@@ -41,6 +41,11 @@ build-connect:
 	scripts/build-ktctl
 	scripts/archive
 
+# build connect plugin
+build-connect-plugin:
+	scripts/build-kubectl-plugin-connect
+	scripts/archive-plugins
+
 # build this image before shadow
 build-shadow-base:
 	docker build -t $(PREFIX)/$(SHADOW_BASE_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile_base .

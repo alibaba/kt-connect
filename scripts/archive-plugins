@@ -1,0 +1,12 @@
+#!/bin/bash
+echo "======== archive artifacts======="
+cp LICENSE artifacts/kubectl-connect/LICENSE
+ls -al artifacts/kubectl-connect
+cd artifacts/kubectl-connect
+rm -rf *.gz
+tar zcvf kubectl-connect-darwin-amd64.tar.gz kubectl-connect-darwin-amd64 LICENSE
+tar zcvf kubectl-connect-darwin-386.tar.gz kubectl-connect-darwin-386 LICENSE
+tar zcvf kubectl-connect-linux-amd64.tar.gz kubectl-connect-linux-amd64 LICENSE
+tar zcvf kubectl-connect-linux-386.tar.gz kubectl-connect-linux-386 LICENSE
+tar zcvf kubectl-connect-windows-386.tar.gz kubectl-connect-windows-386.exe LICENSE
+tar zcvf kubectl-connect-windows-amd64.tar.gz kubectl-connect-windows-amd64.exe LICENSE
