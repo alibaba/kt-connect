@@ -18,6 +18,13 @@ func Create(kubeConfig string) (kubernetes KubernetesInterface, err error) {
 	}, nil
 }
 
+// CreateFromClientSet kubernetes instance
+func CreateFromClientSet(clientSet kubernetes.Interface) (kubernetes KubernetesInterface, err error) {
+	return &Kubernetes{
+		Clientset: clientSet,
+	}, nil
+}
+
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
 	RemoveDeployment(name, namespace string) (err error)

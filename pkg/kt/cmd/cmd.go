@@ -3,6 +3,11 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/command"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
@@ -29,15 +34,15 @@ type ConnectOptions struct {
 
 	userSpecifiedNamespace string
 	genericclioptions.IOStreams
-	clientset  *kubernetes.Clientset
-	image      string
-	method     string
-	debug      bool
-	labels     string
-	proxy      int
-	disableDNS bool
-	cidr       string
-	dump2hosts string
+	clientset  kubernetes.Interface
+	Image      string
+	Method     string
+	Debug      bool
+	Labels     string
+	Proxy      int
+	DisableDNS bool
+	Cidr       string
+	Dump2hosts string
 }
 
 // NewConnectCommand ...
@@ -61,16 +66,16 @@ func NewConnectCommand(streams genericclioptions.IOStreams) *cobra.Command {
 		},
 	}
 	// globals options
-	cmd.Flags().BoolVarP(&opt.debug, "debug", "d", false, "debug mode")
-	cmd.Flags().StringVarP(&opt.image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow", "shadow image")
-	cmd.Flags().StringVarP(&opt.labels, "labels", "l", "", "custom labels on shadow pod")
+	cmd.Flags().BoolVarP(&opt.Debug, "debug", "d", false, "debug mode")
+	cmd.Flags().StringVarP(&opt.Image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow", "shadow image")
+	cmd.Flags().StringVarP(&opt.Labels, "labels", "l", "", "custom labels on shadow pod")
 
 	// connect options
-	cmd.Flags().StringVarP(&opt.method, "method", "m", "", "connect provider vpn/socks5")
-	cmd.Flags().IntVarP(&opt.proxy, "proxy", "p", 2222, "when should method socks5, you can choice which port to proxy")
-	cmd.Flags().BoolVarP(&opt.disableDNS, "disableDNS", "", false, "disable Cluster DNS")
-	cmd.Flags().StringVarP(&opt.cidr, "cidr", "c", "", "Custom CIDR eq '172.2.0.0/16")
-	cmd.Flags().StringVarP(&opt.dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
+	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks5")
+	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "p", 2222, "when should method socks5, you can choice which port to proxy")
+	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
+	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR eq '172.2.0.0/16")
+	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
 
 	return cmd
 
@@ -107,7 +112,16 @@ func (o *ConnectOptions) Run() error {
 
 	currentNS := o.rawConfig.Contexts[o.rawConfig.CurrentContext].Namespace
 	fmt.Println(currentNS)
-	return nil
+
+	ops := CloneDaemonOptions(o)
+	context := &kt.Cli{Options: ops}
+	action := command.Action{}
+
+	if ops.Debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
+	return action.Connect(context, ops)
 }
 
 func (o *ConnectOptions) checkContext() error {
@@ -123,5 +137,30 @@ func NewConnectOptions(streams genericclioptions.IOStreams) *ConnectOptions {
 	return &ConnectOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
 		IOStreams:   streams,
+	}
+}
+
+// CloneDaemonOptions ...
+func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
+	userHome := util.HomeDir()
+	appHome := fmt.Sprintf("%s/.ktctl", userHome)
+	util.CreateDirIfNotExist(appHome)
+	pidFile := fmt.Sprintf("%s/pid", appHome)
+	return &options.DaemonOptions{
+		Image:  o.Image,
+		Debug:  o.Debug,
+		Labels: o.Labels,
+		RuntimeOptions: &options.RuntimeOptions{
+			UserHome:  userHome,
+			AppHome:   appHome,
+			PidFile:   pidFile,
+			Clientset: o.clientset,
+		},
+		ConnectOptions: &options.ConnectOptions{
+			DisableDNS:  o.DisableDNS,
+			Method:      o.Method,
+			Socke5Proxy: o.Proxy,
+			CIDR:        o.Cidr,
+		},
 	}
 }

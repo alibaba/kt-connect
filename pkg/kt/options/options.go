@@ -5,6 +5,7 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
+	"k8s.io/client-go/kubernetes"
 )
 
 // RunOptions ...
@@ -13,7 +14,8 @@ type RunOptions struct {
 	Port   int
 }
 
-type connectOptions struct {
+// ConnectOptions ...
+type ConnectOptions struct {
 	DisableDNS           bool
 	SSHPort              int
 	Socke5Proxy          int
@@ -33,7 +35,8 @@ type meshOptions struct {
 	Expose string
 }
 
-type runtimeOptions struct {
+// RuntimeOptions ...
+type RuntimeOptions struct {
 	PidFile  string
 	UserHome string
 	AppHome  string
@@ -44,8 +47,9 @@ type runtimeOptions struct {
 	// The origin app name
 	Origin string
 	// The origin repicas
-	Replicas int32
-	Service  string
+	Replicas  int32
+	Service   string
+	Clientset kubernetes.Interface
 }
 
 type dashboardOptions struct {
@@ -60,9 +64,9 @@ type DaemonOptions struct {
 	Debug            bool
 	Image            string
 	Labels           string
-	RuntimeOptions   *runtimeOptions
+	RuntimeOptions   *RuntimeOptions
 	RunOptions       *RunOptions
-	ConnectOptions   *connectOptions
+	ConnectOptions   *ConnectOptions
 	ExchangeOptions  *exchangeOptions
 	MeshOptions      *meshOptions
 	DashboardOptions *dashboardOptions
@@ -75,12 +79,12 @@ func NewDaemonOptions() *DaemonOptions {
 	util.CreateDirIfNotExist(appHome)
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &DaemonOptions{
-		RuntimeOptions: &runtimeOptions{
+		RuntimeOptions: &RuntimeOptions{
 			UserHome: userHome,
 			AppHome:  appHome,
 			PidFile:  pidFile,
 		},
-		ConnectOptions:   &connectOptions{},
+		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &exchangeOptions{},
 		MeshOptions:      &meshOptions{},
 		DashboardOptions: &dashboardOptions{},
