@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
@@ -26,6 +29,11 @@ var (
 `
 )
 
+func init() {
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+}
+
 // ConnectOptions ...
 type ConnectOptions struct {
 	configFlags *genericclioptions.ConfigFlags
@@ -44,6 +52,7 @@ type ConnectOptions struct {
 	Cidr       string
 	Dump2hosts string
 	currentNs  string
+	Port       int
 }
 
 // NewConnectCommand ...
@@ -71,11 +80,16 @@ func NewConnectCommand(streams genericclioptions.IOStreams) *cobra.Command {
 	cmd.Flags().StringVarP(&opt.Image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow", "shadow image")
 	cmd.Flags().StringVarP(&opt.Labels, "labels", "l", "", "custom labels on shadow pod")
 
-	// connect options
+	// method
 	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks5")
-	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "p", 2222, "when should method socks5, you can choice which port to proxy")
+	cmd.Flags().IntVarP(&opt.Port, "port", "p", 2222, "Local SSH Proxy port ")
+
+	// vpn
 	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
 	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR eq '172.2.0.0/16")
+
+	// socks5
+	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks5, you can choice which port to proxy")
 	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
 
 	return cmd
@@ -167,6 +181,7 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 			Method:      o.Method,
 			Socke5Proxy: o.Proxy,
 			CIDR:        o.Cidr,
+			SSHPort:     o.Port,
 		},
 	}
 }
