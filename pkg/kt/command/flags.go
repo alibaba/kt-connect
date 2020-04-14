@@ -9,17 +9,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-// PluginConnectFlags kubectl-connect flags
-func PluginConnectFlags(options *options.DaemonOptions) []cli.Flag {
-	globalFlags := AppFlags(options)
-	connectFlags := ConnectActionFlag(options)
-
-	flags := []cli.Flag{}
-	flags = append(flags, globalFlags...)
-	flags = append(flags, connectFlags...)
-	return flags
-}
-
 // AppFlags return app flags
 func AppFlags(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
@@ -54,13 +43,7 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 
 // ConnectActionFlag ...
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
-	methodDefaultValue := "vpn"
-	methodDefaultUsage := "Connect method 'vpn' or 'socks5'"
-	if util.IsWindows() {
-		methodDefaultValue = "socks5"
-		methodDefaultUsage = "windows only support socks5"
-	}
-
+	methodDefaultValue, methodDefaultUsage := defaultMethod()
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "method",
@@ -106,4 +89,14 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
 	}
+}
+
+func defaultMethod() (value string, usage string) {
+	value = "vpn"
+	usage = "Connect method 'vpn' or 'socks5'"
+	if util.IsWindows() {
+		value = "socks5"
+		usage = "windows only support socks5"
+	}
+	return
 }
