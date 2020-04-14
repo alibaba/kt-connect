@@ -67,6 +67,9 @@ build-server:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o artifacts/apiserver/apiserver-linux-amd64 cmd/server/main.go
 	docker build -t $(PREFIX)/$(SERVER_IMAGE):$(TAG) -f build/docker/apiserver/Dockerfile .
 
+build-connect-plugin:
+	go build -o /usr/local/bin/kubectl-connect cmd/kubectl-connect/main.go
+
 release-dashboard:
 	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)

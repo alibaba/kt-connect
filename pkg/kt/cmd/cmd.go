@@ -43,6 +43,7 @@ type ConnectOptions struct {
 	DisableDNS bool
 	Cidr       string
 	Dump2hosts string
+	currentNs  string
 }
 
 // NewConnectCommand ...
@@ -91,6 +92,13 @@ func (o *ConnectOptions) Complete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	currentNS := o.rawConfig.Contexts[o.rawConfig.CurrentContext].Namespace
+	if currentNS == "" {
+		currentNS = "default"
+	}
+
+	o.currentNs = currentNS
+
 	restConfig, err := o.configFlags.ToRESTConfig()
 	if err != nil {
 		return err
@@ -109,9 +117,6 @@ func (o *ConnectOptions) Run() error {
 	if err := o.checkContext(); err != nil {
 		return err
 	}
-
-	currentNS := o.rawConfig.Contexts[o.rawConfig.CurrentContext].Namespace
-	fmt.Println(currentNS)
 
 	ops := CloneDaemonOptions(o)
 	context := &kt.Cli{Options: ops}
@@ -147,9 +152,10 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 	util.CreateDirIfNotExist(appHome)
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &options.DaemonOptions{
-		Image:  o.Image,
-		Debug:  o.Debug,
-		Labels: o.Labels,
+		Image:     o.Image,
+		Debug:     o.Debug,
+		Labels:    o.Labels,
+		Namespace: o.currentNs,
 		RuntimeOptions: &options.RuntimeOptions{
 			UserHome:  userHome,
 			AppHome:   appHome,
