@@ -1,0 +1,42 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: connect
+spec:
+  version: "v0.0.1"
+  homepage: https://github.com/alibaba/kt-connect
+  # 'shortDescription' explains what the plugin does in only a few words
+  shortDescription: "Connect to remote cluster with ssh based vpn"
+  description: |
+    Connect to remote cluster, and direct access to the podIp，clusterIp and svc
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    uri: https://github.com/alibaba/kt-connect/releases/download/kubectl-connect-0.0.1.beta/kubectl-connect-darwin-amd64.tar.gz
+    sha256: 52c539c8287b391742e4f457484bce2468d791c621d35d9ba1184bd097a9c181
+    files:
+    - from: "*"
+      to: "."
+    bin: kubectl-connect-darwin-amd64
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    uri: https://github.com/alibaba/kt-connect/releases/download/kubectl-connect-0.0.1.beta/kubectl-connect-linux-amd64.tar.gz
+    sha256: 75ac9b1c612ce6ea033e577c6c0dbcc1cdea07bd10dd6f78fca6ac397e2cbcf7
+    files:
+    - from: "*"
+      to: "."
+    bin: kubectl-connect-linux-amd64
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    uri: https://github.com/alibaba/kt-connect/releases/download/kubectl-connect-0.0.1.beta/kubectl-connect-windows-amd64.tar.gz
+    sha256: b2e16b55cbbe2d8ed15d4bea85ae9a4cc43c5f5ea7f6a7b9a35c1431a683027f
+    files:
+    - from: "*"
+      to: "."
+    bin: kubectl-connect-windows-amd64.exe
