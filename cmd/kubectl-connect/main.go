@@ -6,6 +6,8 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cmd"
 	"github.com/spf13/pflag"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 func main() {
