@@ -5,7 +5,7 @@ cd artifacts/kubectl-connect
 rm -rf *.gz
 tar zcvf kubectl-connect-darwin-amd64.tar.gz kubectl-connect-linux-amd64
 tar zcvf kubectl-connect-darwin-386.tar.gz kubectl-connect-darwin-386
-tar zcvf kubectl-connect-linux-amd64.tar.gz ktctl-linux-amd64
-tar zcvf kubectl-connect-linux-386.tar.gz ktctl-linux-386
-tar zcvf kubectl-connect-windows-386.tar.gz ktctl-windows-386.exe
-tar zcvf kubectl-connect-windows-amd64.tar.gz ktctl-windows-amd64.exe
+tar zcvf kubectl-connect-linux-amd64.tar.gz kubectl-connect-linux-amd64
+tar zcvf kubectl-connect-linux-386.tar.gz kubectl-connect-linux-386
+tar zcvf kubectl-connect-windows-386.tar.gz kubectl-connect-windows-386.exe
+tar zcvf kubectl-connect-windows-amd64.tar.gz kubectl-connect-windows-amd64.exe
