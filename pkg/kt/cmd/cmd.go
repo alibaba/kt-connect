@@ -76,6 +76,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams) *cobra.Command {
 		},
 	}
 	// globals options
+	cmd.Flags().StringVarP(&opt.currentNs, "namespace", "n", "", "current namespace")
 	cmd.Flags().BoolVarP(&opt.Debug, "debug", "d", false, "debug mode")
 	cmd.Flags().StringVarP(&opt.Image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow", "shadow image")
 	cmd.Flags().StringVarP(&opt.Labels, "labels", "l", "", "custom labels on shadow pod")
@@ -106,12 +107,13 @@ func (o *ConnectOptions) Complete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	currentNS := o.rawConfig.Contexts[o.rawConfig.CurrentContext].Namespace
-	if currentNS == "" {
-		currentNS = "default"
+	if o.currentNs == "" {
+		currentNS := o.rawConfig.Contexts[o.rawConfig.CurrentContext].Namespace
+		if currentNS == "" {
+			currentNS = "default"
+		}
+		o.currentNs = currentNS
 	}
-
-	o.currentNs = currentNS
 
 	restConfig, err := o.configFlags.ToRESTConfig()
 	if err != nil {
