@@ -15,7 +15,7 @@ spec:
         os: darwin
         arch: amd64
     uri: https://github.com/alibaba/kt-connect/releases/download/kubectl-connect-0.0.1.beta/kubectl-connect-darwin-amd64.tar.gz
-    sha256: 52c539c8287b391742e4f457484bce2468d791c621d35d9ba1184bd097a9c181
+    sha256: 99472ec84b6aa68f9bbd6af1adb23841693bcb87decc4e688defea37219b1dc0
     files:
     - from: "*"
       to: "."
@@ -25,7 +25,7 @@ spec:
         os: linux
         arch: amd64
     uri: https://github.com/alibaba/kt-connect/releases/download/kubectl-connect-0.0.1.beta/kubectl-connect-linux-amd64.tar.gz
-    sha256: 75ac9b1c612ce6ea033e577c6c0dbcc1cdea07bd10dd6f78fca6ac397e2cbcf7
+    sha256: aa1c33b8c77b9d609896a7c765e7f249b051a263eaf7ae56fd3007cb7e1a1f28
     files:
     - from: "*"
       to: "."
@@ -35,7 +35,7 @@ spec:
         os: windows
         arch: amd64
     uri: https://github.com/alibaba/kt-connect/releases/download/kubectl-connect-0.0.1.beta/kubectl-connect-windows-amd64.tar.gz
-    sha256: b2e16b55cbbe2d8ed15d4bea85ae9a4cc43c5f5ea7f6a7b9a35c1431a683027f
+    sha256: 23d368741d17a54582fad9fdcfdd62bcc4008b810d0dc7bf494895c682bcc78b
     files:
     - from: "*"
       to: "."
