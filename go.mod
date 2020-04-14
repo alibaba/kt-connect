@@ -3,7 +3,6 @@ module github.com/alibaba/kt-connect
 go 1.12
 
 require (
-	github.com/Azure/go-autorest v11.1.2+incompatible // indirect
 	github.com/campoy/embedmd v0.0.0-20171205015432-c59ce00e0296 // indirect
 	github.com/deckarep/golang-set v1.7.1
 	github.com/dustin/go-broadcast v0.0.0-20171205050544-f664265f5a66 // indirect
