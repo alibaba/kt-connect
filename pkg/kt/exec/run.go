@@ -63,7 +63,7 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext, debug bool) (err error) {
 	go func() {
 		if err = cmdCtx.Cmd.Wait(); err != nil {
 			if !strings.Contains(err.Error(), "signal:") {
-				log.Error().Err(err).Msgf("background process of %s failed", cmdCtx.Name)
+				log.Info().Msgf("background process of %s failed", cmdCtx.Name)
 			}
 			cmdCtx.Stop <- true
 			return
