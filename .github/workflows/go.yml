@@ -30,5 +30,17 @@ jobs:
             dep ensure
         fi
 
-    - name: Unit Test
+    - name: Run unit test
       run: make test
+
+    - name: Build ktctl cli
+      run: make build-connect
+
+    - name: Build kubectl connect plugin
+      run: make build-connect-plugin
+
+    - name: Build shadow container
+      run: make build-shadow
+
+    - name: Build KT Connect Dashboard
+      run: make build-dashboard
