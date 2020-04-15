@@ -30,6 +30,14 @@ jobs:
             dep ensure
         fi
 
+    - name: Cache go mod
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
     - name: Run unit test
       run: make test
 
