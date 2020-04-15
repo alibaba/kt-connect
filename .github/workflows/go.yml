@@ -33,8 +33,8 @@ jobs:
     - name: Run unit test
       run: make test
 
-  build:
-    name: Build
+  build-cli:
+    name: Build cli
     runs-on: ubuntu-latest
     steps:
 
@@ -60,9 +60,3 @@ jobs:
 
     - name: Build kubectl connect plugin
       run: make build-connect-plugin
-
-    - name: Build shadow container
-      run: make build-shadow
-
-    - name: Build KT Connect Dashboard
-      run: make build-dashboard
