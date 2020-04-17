@@ -24,18 +24,24 @@ rules:
   - ""
   resources:
   - configmaps
+  - endpoints
+  - serviceaccounts
   - services
+  - services/proxy
   verbs:
   - create
   - delete
   - deletecollection
   - get
   - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
   - events
-  - replicationcontrollers/status
+  - namespaces/status
   - pods/log
   - pods/status
   verbs:
@@ -43,11 +49,25 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+- apiGroups:
   - apps
   resources:
   - daemonsets
   - deployments
+  - deployments/rollback
   - deployments/scale
+  - replicasets
+  - replicasets/scale
+  - statefulsets
   verbs:
   - create
   - delete
@@ -60,9 +80,14 @@ rules:
 - apiGroups:
   - extensions
   resources:
+  - daemonsets
   - deployments
   - deployments/rollback
   - deployments/scale
+  - ingresses
+  - replicasets
+  - replicasets/scale
+  - replicationcontrollers/scale
   verbs:
   - create
   - delete
@@ -71,13 +96,4 @@ rules:
   - list
   - patch
   - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - create
-  - get
-  - list
   - watch
