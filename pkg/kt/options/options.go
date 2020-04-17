@@ -2,8 +2,10 @@ package options
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
 	"k8s.io/client-go/kubernetes"
 )
@@ -64,6 +66,7 @@ type DaemonOptions struct {
 	Debug            bool
 	Image            string
 	Labels           string
+	KubeOptions      cli.StringSlice
 	RuntimeOptions   *RuntimeOptions
 	RunOptions       *RunOptions
 	ConnectOptions   *ConnectOptions
@@ -79,6 +82,8 @@ func NewDaemonOptions() *DaemonOptions {
 	util.CreateDirIfNotExist(appHome)
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &DaemonOptions{
+		Namespace:  vars.DefNamespace,
+		KubeConfig: filepath.Join(userHome, ".kube", "config"),
 		RuntimeOptions: &RuntimeOptions{
 			UserHome: userHome,
 			AppHome:  appHome,

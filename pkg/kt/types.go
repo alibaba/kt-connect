@@ -37,6 +37,6 @@ func (c *Cli) Shadow() connect.ShadowInterface {
 // Exec ...
 func (c *Cli) Exec() exec.CliInterface {
 	return &exec.Cli{
-		KubeConfig: c.Options.KubeConfig,
+		KubeOptions: c.Options.KubeOptions,
 	}
 }

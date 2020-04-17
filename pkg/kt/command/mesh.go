@@ -40,7 +40,9 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-
+			if err := combineKubeOpts(options); err != nil {
+				return err
+			}
 			mesh := c.Args().First()
 			expose := options.MeshOptions.Expose
 

@@ -6,13 +6,11 @@ import (
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
-
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
-
-	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
 // newConnectCommand return new connect command
@@ -24,6 +22,9 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			}
+			if err := combineKubeOpts(options); err != nil {
+				return err
 			}
 			return action.Connect(cli, options)
 		},

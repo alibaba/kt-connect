@@ -1,0 +1,36 @@
+run:
+  deadline: 5m
+
+linters-settings:
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  gocyclo:
+    min-complecity: 10
+  goimports:
+    local-prefixes: github.com/alibaba/kt-connect
+  funlen:
+    lines: 100
+    statements: 50
+  lll:
+    line-length: 140
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
+
+linters:
+  enable-all: true
+  disable:
+    - gosec
+    - prealloc
+    - dupl

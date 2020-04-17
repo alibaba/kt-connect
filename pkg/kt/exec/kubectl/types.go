@@ -12,5 +12,5 @@ type CliInterface interface {
 
 // Cli ...
 type Cli struct {
-	KubeConfig string
+	KubeOptions []string
 }

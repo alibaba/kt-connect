@@ -15,12 +15,12 @@ type CliInterface interface {
 
 // Cli ...
 type Cli struct {
-	KubeConfig string
+	KubeOptions []string
 }
 
 // Kubectl ...
 func (c *Cli) Kubectl() kubectl.CliInterface {
-	return &kubectl.Cli{KubeConfig: c.KubeConfig}
+	return &kubectl.Cli{KubeOptions: c.KubeOptions}
 }
 
 // SSHUttle ...

@@ -38,6 +38,9 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
+			if err := combineKubeOpts(options); err != nil {
+				return err
+			}
 			port := options.RunOptions.Port
 			if port == 0 {
 				return errors.New("--port is required")
