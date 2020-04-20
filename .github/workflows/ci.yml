@@ -145,3 +145,9 @@ jobs:
         key: ${{ secrets.YOUR_PRIVATE_KEY }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist
+        path: dist
