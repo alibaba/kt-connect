@@ -1,3 +1,4 @@
+# permissions for ktctl command
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -7,7 +8,6 @@ rules:
   - ""
   resources:
   - pods
-  - pods/attach
   - pods/exec
   - pods/portforward
   - pods/proxy
@@ -24,8 +24,6 @@ rules:
   - ""
   resources:
   - configmaps
-  - endpoints
-  - serviceaccounts
   - services
   - services/proxy
   verbs:
@@ -42,7 +40,6 @@ rules:
   resources:
   - events
   - namespaces/status
-  - pods/log
   - pods/status
   verbs:
   - get
@@ -57,17 +54,12 @@ rules:
   - get
   - list
   - watch
-  - patch
 - apiGroups:
   - apps
   resources:
-  - daemonsets
   - deployments
   - deployments/rollback
   - deployments/scale
-  - replicasets
-  - replicasets/scale
-  - statefulsets
   verbs:
   - create
   - delete
@@ -80,14 +72,9 @@ rules:
 - apiGroups:
   - extensions
   resources:
-  - daemonsets
   - deployments
   - deployments/rollback
   - deployments/scale
-  - ingresses
-  - replicasets
-  - replicasets/scale
-  - replicationcontrollers/scale
   verbs:
   - create
   - delete
