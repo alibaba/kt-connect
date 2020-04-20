@@ -4,6 +4,7 @@ output/**
 .idea/
 .vscode/
 artifacts
+dist
 
 node_modules/
 note/

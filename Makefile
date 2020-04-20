@@ -79,3 +79,6 @@ release-dashboard:
 
 git-release:
 	scripts/release
+
+dryrun-release:
+	goreleaser release --skip-publish
