@@ -3,6 +3,7 @@ package kubectl
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 // KUBECTL the path to kubectl
@@ -55,16 +56,20 @@ func (k *Cli) PortForward(namespace, resource string, remotePort int) *exec.Cmd 
 }
 
 func kubectl(k *Cli, namespace string) []string {
-	var args []string
-
-	if k.KubeConfig != "" {
-		args = append(args, "--kubeconfig="+k.KubeConfig)
+	var (
+		args             []string
+		isNamespaceField bool
+	)
+	if len(k.KubeOptions) != 0 {
+		for _, opt := range k.KubeOptions {
+			// instead namespace options
+			isNamespaceField = strings.Contains(opt, "-n") || strings.Contains(opt, "--namespace")
+			if isNamespaceField && namespace != "" {
+				args = append(args, "-n", namespace)
+				continue
+			}
+			args = append(args, strings.Fields(opt)...)
+		}
 	}
-
-	if namespace != "" {
-		args = append(args, "-n")
-		args = append(args, namespace)
-	}
-
 	return args
 }

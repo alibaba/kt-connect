@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"

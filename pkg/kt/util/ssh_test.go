@@ -22,6 +22,11 @@ func TestGenerate(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name:    "supportZNDirSSHKeyPair",
+			args:    args{privateKeyPath: "/tmp/目录/sshkeypair"},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -51,7 +56,7 @@ func Test_generatePrivateKey(t *testing.T) {
 		want    *rsa.PrivateKey
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+	// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,7 +82,7 @@ func Test_generatePublicKey(t *testing.T) {
 		want    []byte
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+	// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
