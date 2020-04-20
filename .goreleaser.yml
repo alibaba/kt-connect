@@ -1,21 +1,69 @@
-# This is an example goreleaser.yaml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
+env:
+- GO_VERSION=1.13.5
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod download
-    # you may remove this if you don't need go generate
-    - go generate ./...
 builds:
-- env:
+- id: "ktctl"
+  main: ./cmd/ktctl/main.go
+  binary: ktctl
+  goos:
+  - linux
+  - darwin
+  - windows
+  env:
   - CGO_ENABLED=0
+- id: "kubectl-connect"
+  main: ./cmd/kubectl-connect/main.go
+  binary: kubectl-connect
+  goos:
+  - linux
+  - darwin
+  - windows
+- id: "shadow"
+  main: ./cmd/shadow/main.go
+  binary: shadow
+  goos:
+  - linux
+  goarch:
+  - amd64
+- id: "apiserver"
+  main: ./cmd/server/main.go
+  binary: apiserver
+  goos:
+  - linux
+  goarch:
+  - amd64
+dockers:
+- goos: linux
+  goarch: amd64
+  binaries:
+  - shadow
+  builds:
+  - shadow
+  image_templates:
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}-{{ .Env.GO_VERSION }}"
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
+  dockerfile: build/docker/shadow/Dockerfile_releaser
+  skip_push: true
+  extra_files:
+    - build/docker/shadow/run.sh
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
+- id: ktctl
+  builds:
+  - ktctl
+  name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+  format: tar.gz
+- id: kubectl-connect
+  builds:
+  - ktctl
+  name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+  format: tar.gz
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -26,3 +74,4 @@ changelog:
     exclude:
     - '^docs:'
     - '^test:'
+

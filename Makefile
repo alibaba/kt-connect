@@ -81,4 +81,4 @@ git-release:
 	scripts/release
 
 dryrun-release:
-	goreleaser release --skip-publish
+	goreleaser --snapshot --skip-publish --rm-dist
