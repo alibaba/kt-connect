@@ -87,6 +87,10 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Build dashboard
+      run: |
+        make build-frontend
+
     - name: Archive artifacts
       uses: actions/upload-artifact@v1
       with:
