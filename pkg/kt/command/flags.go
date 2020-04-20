@@ -1,8 +1,6 @@
 package command
 
 import (
-	"path/filepath"
-
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -12,16 +10,6 @@ import (
 // AppFlags return app flags
 func AppFlags(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
-		cli.StringFlag{
-			Name:        "namespace,n",
-			Value:       "default",
-			Destination: &options.Namespace,
-		},
-		cli.StringFlag{
-			Name:        "kubeconfig,c",
-			Value:       filepath.Join(options.RuntimeOptions.UserHome, ".kube", "config"),
-			Destination: &options.KubeConfig,
-		},
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
@@ -37,6 +25,11 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 			Name:        "label,l",
 			Usage:       "Extra labels on proxy pod e.g. 'label1=val1,label2=val2'",
 			Destination: &options.Labels,
+		},
+		cli.StringSliceFlag{
+			Name:  "e",
+			Usage: "support kubectl options e.g. -e '-n default' -e '--context=kubernetes-admin' -e '--kubeconfig=/path/to/kube/config'",
+			Value: &options.KubeOptions,
 		},
 	}
 }

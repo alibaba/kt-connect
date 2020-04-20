@@ -1,6 +1,8 @@
 package command
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -165,4 +167,52 @@ func removePrivateKey(options *options.DaemonOptions) {
 	if err := os.Remove(file); os.IsNotExist(err) {
 		log.Error().Err(err).Msgf("can't delete %s", file)
 	}
+}
+
+// validateKubeOpts support like '-n default | --kubeconfig=/path/to/kubeconfig'
+func validateKubeOpts(opts []string) error {
+	errMsg := "kubectl option %s invalid, check it by 'kubectl options'"
+	for _, opt := range opts {
+		// validate like '--kubeconfig=/path/to/kube/config'
+		if strings.Contains(opt, "=") && len(strings.Fields(opt)) != 1 {
+			return errors.New(fmt.Sprintf(errMsg, opt))
+		}
+		// validate like '-n default'
+		if strings.Contains(opt, " ") && len(strings.Fields(opt)) != 2 {
+			return errors.New(fmt.Sprintf(errMsg, opt))
+		}
+	}
+	return nil
+}
+
+// combineKubeOpts set default options of kubectl if not assign
+func combineKubeOpts(options *options.DaemonOptions) error {
+	if err := validateKubeOpts(options.KubeOptions); err != nil {
+		return err
+	}
+
+	var configured, namespaced bool
+	for _, opt := range options.KubeOptions {
+		strs := strings.Fields(opt)
+		if len(strs) == 1 {
+			strs = strings.Split(opt, "=")
+		}
+		switch strs[0] {
+		case "-n", "--namespace":
+			options.Namespace = strs[1]
+			namespaced = true
+		case "--kubeconfig":
+			options.KubeConfig = strs[1]
+			configured = true
+		}
+	}
+
+	if !configured {
+		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--kubeconfig=%s", options.KubeConfig))
+	}
+
+	if !namespaced {
+		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", options.Namespace))
+	}
+	return nil
 }

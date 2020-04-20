@@ -35,6 +35,7 @@ build: build-connect build-shadow build-server build-dashboard
 # check the style
 check:
 	golint ./pkg/... ./cmd/...
+# 	golangci-lint run ./pkg/...
 
 # build ktctl
 build-connect:

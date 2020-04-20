@@ -11,4 +11,6 @@ var (
 	SSHAuthPrivateKey = "privateKey"
 	// RefCount the count of shared
 	RefCount = "refCount"
+	// DefNamespace default namespace
+	DefNamespace = "default"
 )

@@ -23,6 +23,9 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
+					if err := combineKubeOpts(options); err != nil {
+						return err
+					}
 					return action.ApplyDashboard(ktCli, options)
 				},
 			},
@@ -40,6 +43,9 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 				Action: func(c *cli.Context) error {
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
+					}
+					if err := combineKubeOpts(options); err != nil {
+						return err
 					}
 					return action.OpenDashboard(ktCli, options)
 				},

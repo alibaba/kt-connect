@@ -35,7 +35,9 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-
+			if err := combineKubeOpts(options); err != nil {
+				return err
+			}
 			exchange := c.Args().First()
 			expose := options.ExchangeOptions.Expose
 
