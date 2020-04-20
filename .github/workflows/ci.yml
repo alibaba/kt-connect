@@ -89,6 +89,7 @@ jobs:
 
     - name: Build dashboard
       run: |
+        export TAG=$GITHUB_SHA
         make build-frontend
 
     - name: Archive artifacts
