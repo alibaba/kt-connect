@@ -104,11 +104,11 @@ jobs:
         on:
           tags: true
 
-notifications:
-  webhooks:
-    urls:
-      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
-    on_success: change
-    on_failure: always
-    on_cancel:  never
-    on_error:   always
+#notifications:
+#  webhooks:
+#    urls:
+#      - https://oapi.dingtalk.com/robot/send?access_token=5e5672e5117875518f29d1b60ab91aa8fb9675cb4f9ca88233fd235f70da7927
+#    on_success: change
+#    on_failure: always
+#    on_cancel:  never
+#    on_error:   always
