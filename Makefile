@@ -76,7 +76,6 @@ release-dashboard:
 	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)
 
-
 git-release:
 	scripts/release
 
