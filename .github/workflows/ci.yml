@@ -50,11 +50,11 @@ jobs:
         make build-dashboard
 
     - name: Docker login
-        uses: azure/docker-login@v1
-        with:
-          login-server: registry.cn-hangzhou.aliyuncs.com
-          username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
-          password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
+      uses: azure/docker-login@v1
+      with:
+        login-server: registry.cn-hangzhou.aliyuncs.com
+        username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
+        password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
 
     - name: Publish Dashboard
       run: |
