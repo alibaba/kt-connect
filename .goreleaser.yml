@@ -28,13 +28,13 @@ builds:
   - linux
   goarch:
   - amd64
-- id: "apiserver"
-  main: ./cmd/server/main.go
-  binary: apiserver
-  goos:
-  - linux
-  goarch:
-  - amd64
+#- id: "apiserver"
+#  main: ./cmd/server/main.go
+#  binary: apiserver
+#  goos:
+#  - linux
+#  goarch:
+#  - amd64
 dockers:
 - goos: linux
   goarch: amd64
@@ -51,21 +51,21 @@ dockers:
   skip_push: true
   extra_files:
     - build/docker/shadow/run.sh
-- goos: linux
-  goarch: amd64
-  binaries:
-  - apiserver
-  builds:
-  - apiserver
-  image_templates:
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:latest"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}-{{ .Env.GO_VERSION }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
-  dockerfile: build/docker/apiserver/Dockerfile_releaser
-  skip_push: true
-  extra_files:
-  - build/docker/shadow/run.sh
+#- goos: linux
+#  goarch: amd64
+#  binaries:
+#  - apiserver
+#  builds:
+#  - apiserver
+#  image_templates:
+#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:latest"
+#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}"
+#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}-{{ .Env.GO_VERSION }}"
+#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
+#  dockerfile: build/docker/apiserver/Dockerfile_releaser
+#  skip_push: true
+#  extra_files:
+#  - build/docker/shadow/run.sh
 archives:
 - id: ktctl
   builds:

@@ -86,7 +86,7 @@ jobs:
         export TAG=$GITHUB_SHA
         make release-dashboard
 
-  build-all:
+  build-cli:
     name: Build biranarys
     runs-on: ubuntu-latest
     steps:
