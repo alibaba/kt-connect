@@ -44,6 +44,9 @@ jobs:
     name: Build Dashboard
     runs-on: ubuntu-latest
     steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
     - name: Build dashboard
       run: |
         export TAG=$GITHUB_SHA
@@ -59,7 +62,7 @@ jobs:
     - name: Publish Dashboard
       run: |
         export TAG=$GITHUB_SHA
-        release-dashboard
+        make release-dashboard
 
   build-all:
     name: Build biranarys
