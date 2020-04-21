@@ -40,7 +40,7 @@ jobs:
     - name: Run unit test
       run: make test
 
-  build-all:
+  release-cli:
     name: Build biranarys
     runs-on: ubuntu-latest
     steps:
