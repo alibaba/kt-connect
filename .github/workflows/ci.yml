@@ -40,6 +40,27 @@ jobs:
     - name: Run unit test
       run: make test
 
+  build-dashbaord:
+    name: Build Dashboard
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build dashboard
+      run: |
+        export TAG=$GITHUB_SHA
+        make build-dashboard
+
+    - name: Docker login
+        uses: azure/docker-login@v1
+        with:
+          login-server: registry.cn-hangzhou.aliyuncs.com
+          username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
+          password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
+
+    - name: Publish Dashboard
+      run: |
+        export TAG=$GITHUB_SHA
+        release-dashboard
+
   build-all:
     name: Build biranarys
     runs-on: ubuntu-latest
@@ -81,16 +102,9 @@ jobs:
       uses: goreleaser/goreleaser-action@v1
       with:
         version: latest
-        # args: release --rm-dist
         args: --snapshot --skip-publish --rm-dist
-        key: ${{ secrets.YOUR_PRIVATE_KEY }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Build dashboard
-      run: |
-        export TAG=$GITHUB_SHA
-        make build-frontend
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v1
