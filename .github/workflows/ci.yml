@@ -1,8 +1,7 @@
-name: Go
+name: ci
 
 on:
   push:
-    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -41,8 +40,54 @@ jobs:
     - name: Run unit test
       run: make test
 
+  build-dashbaord:
+    name: Build Dashboard
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+      id: go
+
+    - name: Get go mod cache
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+
+    - name: Build dashboard
+      run: |
+        export TAG=$GITHUB_SHA
+        make build-dashboard
+
+    - name: Docker login
+      uses: azure/docker-login@v1
+      with:
+        login-server: registry.cn-hangzhou.aliyuncs.com
+        username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
+        password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
+
+    - name: Publish Dashboard
+      run: |
+        export TAG=$GITHUB_SHA
+        make release-dashboard
+
   build-cli:
-    name: Build cli
+    name: Build biranarys
     runs-on: ubuntu-latest
     steps:
 
@@ -71,38 +116,23 @@ jobs:
             dep ensure
         fi
 
-    - name: Build ktctl cli
-      run: make build-connect
-
-  build-connect-plugin:
-    name: Build kubectl connect plugin
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Set up Go 1.13
-      uses: actions/setup-go@v1
+    - name: Docker login
+      uses: azure/docker-login@v1
       with:
-        go-version: 1.13
-      id: go
+        login-server: registry.cn-hangzhou.aliyuncs.com
+        username: ${{ secrets.ALIYUN_DOCKER_USERNAME }}
+        password: ${{ secrets.ALIYUN_DOCKER_PASSWORD }}
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-
-    - name: Get go mod cache
-      uses: actions/cache@v1
+    - name: Run go releaser
+      uses: goreleaser/goreleaser-action@v1
       with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+        version: latest
+        args: --snapshot --skip-publish --rm-dist
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
-
-    - name: Build kubectl connect plugin
-      run: make build-connect-plugin
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist
+        path: dist

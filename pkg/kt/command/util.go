@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -146,16 +145,6 @@ func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, option
 	return kubernetes.DecreaseRef(options.Namespace, options.RuntimeOptions.Shadow)
 }
 
-// checkConnectRunning check connect is running and print help msg
-func checkConnectRunning(pidFile string) {
-	daemonRunning := util.IsDaemonRunning(pidFile)
-	if !daemonRunning {
-		log.Info().Msgf("'KT Connect' not running, you can only access local app from cluster")
-	} else {
-		log.Info().Msgf("'KT Connect' is running, you can access local app from cluster and localhost")
-	}
-}
-
 // removePrivateKey remove the private key of ssh
 func removePrivateKey(options *options.DaemonOptions) {
 	if options.RuntimeOptions.SSHCM == "" {
@@ -175,11 +164,11 @@ func validateKubeOpts(opts []string) error {
 	for _, opt := range opts {
 		// validate like '--kubeconfig=/path/to/kube/config'
 		if strings.Contains(opt, "=") && len(strings.Fields(opt)) != 1 {
-			return errors.New(fmt.Sprintf(errMsg, opt))
+			return fmt.Errorf(errMsg, opt)
 		}
 		// validate like '-n default'
 		if strings.Contains(opt, " ") && len(strings.Fields(opt)) != 2 {
-			return errors.New(fmt.Sprintf(errMsg, opt))
+			return fmt.Errorf(errMsg, opt)
 		}
 	}
 	return nil

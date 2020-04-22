@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
+	v1 "k8s.io/api/apps/v1"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	v1 "k8s.io/api/apps/v1"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -31,9 +31,14 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 		Usage: "mesh kubernetes deployment to local",
 		Flags: []urfave.Flag{
 			urfave.StringFlag{
-				Name:        "expose",
+				Name:        "expose,e",
 				Usage:       "expose port [port] or [remote:local]",
 				Destination: &options.MeshOptions.Expose,
+			},
+			urfave.StringFlag{
+				Name:        "version,v",
+				Usage:       "the version of mesh service eq '0.0.1'",
+				Destination: &options.MeshOptions.Version,
 			},
 		},
 		Action: func(c *urfave.Context) error {
@@ -60,7 +65,6 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	checkConnectRunning(options.RuntimeOptions.PidFile)
 	ch := SetUpCloseHandler(cli, options, "mesh")
 
 	kubernetes, err := cluster.Create(options.KubeConfig)
@@ -73,15 +77,19 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 		return err
 	}
 
-	meshVersion := strings.ToLower(util.RandomString(5))
-	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
+	meshVersion := getVersion(options)
 
+	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 	labels := getMeshLabels(workload, meshVersion, app, options)
 
 	err = createShadowAndInbound(workload, labels, options, kubernetes)
 	if err != nil {
 		return err
 	}
+
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule       ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
@@ -134,4 +142,11 @@ func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, opti
 		labels[k] = v
 	}
 	return labels
+}
+
+func getVersion(options *options.DaemonOptions) string {
+	if len(options.MeshOptions.Version) != 0 {
+		return options.MeshOptions.Version
+	}
+	return strings.ToLower(util.RandomString(5))
 }

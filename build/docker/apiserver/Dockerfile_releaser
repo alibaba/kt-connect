@@ -1,0 +1,3 @@
+FROM alpine
+COPY apiserver /usr/local/bin/kt-apiserver
+CMD ["kt-apiserver"]
