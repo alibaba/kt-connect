@@ -78,7 +78,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
-			Usage:       "Multi clients try to use existing shadow",
+			Usage:       "Multi clients try to use existing shadow (Beta)",
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
 	}

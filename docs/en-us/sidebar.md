@@ -18,7 +18,8 @@
   - [ktctl check](en-us/cli/check.md)
 
 - Troubleshot
-  - [connect](zh-cn/troubleshoot.md)
+  - [connect](en-us/troubleshoot.md)
+  - [FAQ](en-us/faq.md)
 
 - [Changelog](en-us/changelog.md)
 - [TODO](en-us/todo.md)
