@@ -34,7 +34,8 @@ type exchangeOptions struct {
 }
 
 type meshOptions struct {
-	Expose string
+	Expose  string
+	Version string
 }
 
 // RuntimeOptions ...

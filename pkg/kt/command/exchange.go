@@ -56,8 +56,6 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "exchange")
 
-	checkConnectRunning(options.RuntimeOptions.PidFile)
-
 	kubernetes, err := cluster.Create(options.KubeConfig)
 	if err != nil {
 		return err
