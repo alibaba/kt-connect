@@ -79,10 +79,6 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 
 	meshVersion := getVersion(options)
 
-	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule       ", meshVersion)
-	log.Info().Msg("---------------------------------------------------------")
-
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 	labels := getMeshLabels(workload, meshVersion, app, options)
 
@@ -90,6 +86,10 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 	if err != nil {
 		return err
 	}
+
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule       ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
