@@ -48,7 +48,7 @@ dockers:
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}-{{ .Env.GO_VERSION }}"
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
   dockerfile: build/docker/shadow/Dockerfile_releaser
-  skip_push: true
+  skip_push: false
   extra_files:
     - build/docker/shadow/run.sh
 #- goos: linux
