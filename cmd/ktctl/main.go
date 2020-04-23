@@ -13,6 +13,10 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
+var (
+	version = "dev"
+)
+
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -24,7 +28,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "KT Connect"
 	app.Usage = ""
-	app.Version = "v0.0.13"
+	app.Version = version
 	app.Authors = command.NewCliAuthor()
 	app.Flags = command.AppFlags(options)
 
