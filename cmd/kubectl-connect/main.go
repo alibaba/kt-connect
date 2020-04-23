@@ -10,11 +10,15 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
+var (
+	version = "dev"
+)
+
 func main() {
 	flags := pflag.NewFlagSet("kubectl-connect", pflag.ExitOnError)
 	pflag.CommandLine = flags
 
-	root := cmd.NewConnectCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr})
+	root := cmd.NewConnectCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}, version)
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
