@@ -28,13 +28,6 @@ builds:
   - linux
   goarch:
   - amd64
-#- id: "apiserver"
-#  main: ./cmd/server/main.go
-#  binary: apiserver
-#  goos:
-#  - linux
-#  goarch:
-#  - amd64
 dockers:
 - goos: linux
   goarch: amd64
@@ -45,27 +38,11 @@ dockers:
   image_templates:
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}-{{ .Env.GO_VERSION }}"
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
   dockerfile: build/docker/shadow/Dockerfile_releaser
-  skip_push: true
+  skip_push: false
   extra_files:
     - build/docker/shadow/run.sh
-#- goos: linux
-#  goarch: amd64
-#  binaries:
-#  - apiserver
-#  builds:
-#  - apiserver
-#  image_templates:
-#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:latest"
-#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}"
-#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}-{{ .Env.GO_VERSION }}"
-#  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
-#  dockerfile: build/docker/apiserver/Dockerfile_releaser
-#  skip_push: true
-#  extra_files:
-#  - build/docker/shadow/run.sh
 archives:
 - id: ktctl
   builds:
@@ -73,20 +50,41 @@ archives:
   name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
   format: tar.gz
+  files:
+  - LICENSE
+  - README.md
 - id: kubectl-connect
   builds:
-  - ktctl
+  - kubectl-connect
   name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
   format: tar.gz
+  files:
+  - LICENSE
+  - README.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "SNAPSHOT"
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
+release:
+  github:
+    owner: alibaba
+    name: kt-connect
+  ids:
+    - ktctl
+    - kubectl-connect
+  draft: true
+  # If set to auto, will mark the release as not ready for production
+  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
+  # If set to true, will mark the release as not ready for production.
+  # Default is false.
+  prerelease: auto
+
+
 

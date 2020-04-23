@@ -55,7 +55,7 @@ type ConnectOptions struct {
 }
 
 // NewConnectCommand ...
-func NewConnectCommand(streams genericclioptions.IOStreams) *cobra.Command {
+func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
 	opt := NewConnectOptions(streams)
 
 	cmd := &cobra.Command{
@@ -63,7 +63,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams) *cobra.Command {
 		Short:        "connect to cluster",
 		Example:      connectExample,
 		SilenceUsage: true,
-		Version:      "0.0.1",
+		Version:      version,
 		RunE: func(c *cobra.Command, args []string) error {
 			if err := opt.Complete(c, args); err != nil {
 				return err
