@@ -55,7 +55,7 @@ archives:
   - README.md
 - id: kubectl-connect
   builds:
-  - ktctl
+  - kubectl-connect
   name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
   format: tar.gz
