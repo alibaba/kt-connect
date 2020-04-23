@@ -38,7 +38,6 @@ dockers:
   image_templates:
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}-{{ .Env.GO_VERSION }}"
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
   dockerfile: build/docker/shadow/Dockerfile_releaser
   skip_push: false
@@ -66,11 +65,26 @@ archives:
 checksum:
   name_template: 'checksums.txt'
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  name_template: "SNAPSHOT"
 changelog:
   sort: asc
   filters:
     exclude:
     - '^docs:'
     - '^test:'
+release:
+  github:
+    owner: alibaba
+    name: kt-connect
+  ids:
+    - ktctl
+    - kubectl-connect
+  draft: true
+  # If set to auto, will mark the release as not ready for production
+  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
+  # If set to true, will mark the release as not ready for production.
+  # Default is false.
+  prerelease: auto
+
+
 
