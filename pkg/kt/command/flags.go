@@ -1,6 +1,8 @@
 package command
 
 import (
+	"path/filepath"
+
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -10,6 +12,16 @@ import (
 // AppFlags return app flags
 func AppFlags(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
+		cli.StringFlag{
+			Name:        "namespace,n",
+			Value:       "default",
+			Destination: &options.Namespace,
+		},
+		cli.StringFlag{
+			Name:        "kubeconfig,c",
+			Value:       filepath.Join(options.RuntimeOptions.UserHome, ".kube", "config"),
+			Destination: &options.KubeConfig,
+		},
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
