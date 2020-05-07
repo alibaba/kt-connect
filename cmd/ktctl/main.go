@@ -30,7 +30,7 @@ func main() {
 	app.Usage = ""
 	app.Version = version
 	app.Authors = command.NewCliAuthor()
-	app.Flags = command.AppFlags(options)
+	app.Flags = command.AppFlags(options, version)
 
 	context := &kt.Cli{Options: options}
 	action := command.Action{}

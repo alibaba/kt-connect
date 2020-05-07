@@ -10,7 +10,7 @@ import (
 )
 
 // AppFlags return app flags
-func AppFlags(options *options.DaemonOptions) []cli.Flag {
+func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
@@ -25,7 +25,7 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest",
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:" + version,
 			Destination: &options.Image,
 		},
 		cli.BoolFlag{
