@@ -43,6 +43,11 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Usage: "support kubectl options e.g. -e '-n default' -e '--context=kubernetes-admin' -e '--kubeconfig=/path/to/kube/config'",
 			Value: &options.KubeOptions,
 		},
+		cli.IntFlag{
+			Name:        "waitTime",
+			Usage:       "custom wait time for kubectl port-forward to support slow network environment",
+			Destination: &options.WaitTime,
+		},
 	}
 }
 

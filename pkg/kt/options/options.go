@@ -74,6 +74,7 @@ type DaemonOptions struct {
 	ExchangeOptions  *exchangeOptions
 	MeshOptions      *meshOptions
 	DashboardOptions *dashboardOptions
+	WaitTime         int
 }
 
 // NewDaemonOptions return new cli default options
@@ -85,6 +86,7 @@ func NewDaemonOptions() *DaemonOptions {
 	return &DaemonOptions{
 		Namespace:  vars.DefNamespace,
 		KubeConfig: filepath.Join(userHome, ".kube", "config"),
+		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{
 			UserHome: userHome,
 			AppHome:  appHome,

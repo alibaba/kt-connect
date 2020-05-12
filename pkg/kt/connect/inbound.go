@@ -58,8 +58,8 @@ func inbound(
 			},
 			debug,
 		)
-		// make sure port-forward already success
-		time.Sleep(time.Duration(2) * time.Second)
+		log.Info().Msgf("wait(%ds) port-forward successful", options.WaitTime)
+		time.Sleep(time.Duration(options.WaitTime) * time.Second)
 		wg.Done()
 	}(&wg)
 	wg.Wait()
@@ -67,7 +67,7 @@ func inbound(
 		return
 	}
 	log.Info().Msgf("redirect request from pod %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
-	
+
 	// supports multi port pairs
 	portPairs := strings.SplitN(exposePorts, ",", 2)
 	for _, exposePort := range portPairs {
