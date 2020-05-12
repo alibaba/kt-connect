@@ -69,7 +69,7 @@ func inbound(
 	log.Info().Msgf("redirect request from pod %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
 
 	// supports multi port pairs
-	portPairs := strings.SplitN(exposePorts, ",", 2)
+	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
 		localPort := exposePort
 		remotePort := exposePort
