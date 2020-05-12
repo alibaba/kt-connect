@@ -296,7 +296,7 @@ func (k *Kubernetes) ServiceHosts(namespace string) (hosts map[string]string) {
 func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Interface) (pod v1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)
-	podListener, err := clusterWatcher.PodListener(clientset, stopSignal)
+	podListener, err := clusterWatcher.PodListenerWithNamespace(clientset, namespace, stopSignal)
 	if err != nil {
 		return
 	}
