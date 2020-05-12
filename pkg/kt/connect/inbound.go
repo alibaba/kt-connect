@@ -25,7 +25,7 @@ func (s *Shadow) Inbound(exposePort, podName, remoteIP string, credential *util.
 }
 
 func inbound(
-	exposePort, podName, remoteIP string, credential *util.SSHCredential,
+	exposePorts, podName, remoteIP string, credential *util.SSHCredential,
 	options *options.DaemonOptions,
 	kubernetesCli kubectl.CliInterface,
 	sshCli ssh.CliInterface,
@@ -40,7 +40,7 @@ func inbound(
 		util.StopBackendProcess(<-stop, cancel)
 	}()
 
-	log.Info().Msgf("remote %s forward to local %s", remoteIP, exposePort)
+	log.Info().Msgf("remote %s forward to local %s", remoteIP, exposePorts)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
 		return
@@ -67,21 +67,31 @@ func inbound(
 		return
 	}
 	log.Info().Msgf("redirect request from pod %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
-	localPort := exposePort
-	remotePort := exposePort
-	ports := strings.SplitN(exposePort, ":", 2)
-	if len(ports) > 1 {
-		localPort = ports[1]
-		remotePort = ports[0]
+	
+	// supports multi port pairs
+	portPairs := strings.SplitN(exposePorts, ",", 2)
+	for _, exposePort := range portPairs {
+		localPort := exposePort
+		remotePort := exposePort
+		ports := strings.SplitN(exposePort, ":", 2)
+		if len(ports) > 1 {
+			localPort = ports[1]
+			remotePort = ports[0]
+		}
+		cmd := sshCli.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
+		err := exec.BackgroundRunWithCtx(
+			&exec.CMDContext{
+				Ctx:  rootCtx,
+				Cmd:  cmd,
+				Name: "ssh remote port-forward",
+				Stop: stop,
+			},
+			debug,
+		)
+
+		if err != nil {
+			return err
+		}
 	}
-	cmd := sshCli.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
-	return exec.BackgroundRunWithCtx(
-		&exec.CMDContext{
-			Ctx:  rootCtx,
-			Cmd:  cmd,
-			Name: "ssh remote port-forward",
-			Stop: stop,
-		},
-		debug,
-	)
+	return nil
 }
