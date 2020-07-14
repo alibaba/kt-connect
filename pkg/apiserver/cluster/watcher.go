@@ -60,13 +60,19 @@ func Construct(client kubernetes.Interface, config *rest.Config) (w Watcher, err
 	return
 }
 
-// PodListener PodListener
-func PodListener(client kubernetes.Interface, stopCh <-chan struct{}) (lister v1.PodLister, err error) {
+// PodListenerWithNamespace PodListener
+func PodListenerWithNamespace(client kubernetes.Interface, namespace string, stopCh <-chan struct{}) (lister v1.PodLister, err error) {
 	w := Watcher{Client: client}
-	lister, err = w.Pods(stopCh)
+	lister, err = w.PodsWithNamespace(namespace, stopCh)
 	if err != nil {
 		return
 	}
+	return
+}
+
+func informerFactoryWithNamespace(w *Watcher, namespace string) (factory informers.SharedInformerFactory) {
+	resyncPeriod := 30 * time.Minute
+	factory = informers.NewSharedInformerFactoryWithOptions(w.Client, resyncPeriod, informers.WithNamespace(namespace))
 	return
 }
 
@@ -123,6 +129,33 @@ func podDeleted(obj interface{}) {
 	// } else {
 	// 	fmt.Printf("Pod deleted event: %s\n", obj)
 	// }
+}
+
+// PodsWithNamespace watch pods change
+func (w *Watcher) PodsWithNamespace(namespace string, stopCh <-chan struct{}) (lister v1.PodLister, err error) {
+	factory := informerFactoryWithNamespace(w, namespace)
+	podInformer := factory.Core().V1().Pods()
+	informer := podInformer.Informer()
+
+	defer runtime.HandleCrash()
+
+	factory.Start(stopCh)
+
+	if !cache.WaitForCacheSync(stopCh, informer.HasSynced) {
+		err = errTimeout
+		runtime.HandleError(err)
+		return
+	}
+
+	informer.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			// AddFunc:    podCreated,
+			DeleteFunc: podDeleted,
+		},
+	)
+
+	lister = podInformer.Lister()
+	return
 }
 
 // Pods watch pods change

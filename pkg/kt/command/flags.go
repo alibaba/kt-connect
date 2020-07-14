@@ -1,6 +1,8 @@
 package command
 
 import (
+	"path/filepath"
+
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -8,12 +10,22 @@ import (
 )
 
 // AppFlags return app flags
-func AppFlags(options *options.DaemonOptions) []cli.Flag {
+func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 	return []cli.Flag{
+		cli.StringFlag{
+			Name:        "namespace,n",
+			Value:       "default",
+			Destination: &options.Namespace,
+		},
+		cli.StringFlag{
+			Name:        "kubeconfig,c",
+			Value:       filepath.Join(options.RuntimeOptions.UserHome, ".kube", "config"),
+			Destination: &options.KubeConfig,
+		},
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest",
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:" + version,
 			Destination: &options.Image,
 		},
 		cli.BoolFlag{
@@ -30,6 +42,12 @@ func AppFlags(options *options.DaemonOptions) []cli.Flag {
 			Name:  "e",
 			Usage: "support kubectl options e.g. -e '-n default' -e '--context=kubernetes-admin' -e '--kubeconfig=/path/to/kube/config'",
 			Value: &options.KubeOptions,
+		},
+		cli.IntFlag{
+			Name:        "waitTime",
+			Usage:       "custom wait time for kubectl port-forward to support slow network environment",
+			Destination: &options.WaitTime,
+			Value:       5,
 		},
 	}
 }
