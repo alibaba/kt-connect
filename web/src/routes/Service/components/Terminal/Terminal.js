@@ -56,15 +56,20 @@ export default class TerminalExexutor extends Component {
     }
     this.socket.onopen = () => {
       console.log("onopen")
+      this.resize()
     }
     this.socket.onclose = () => {
       console.log('Good bye');
     }
-    window.addEventListener("resize", () => {
+    window.addEventListener("resize", this.resize)
+  }
+
+  resize = () => {
+    if (this.socket && this.term) {
       this.term.fit()
       var msg = { type: "resize", rows: this.term.rows, cols: this.term.cols }
       this.socket.send(JSON.stringify(msg))
-    })
+    }
   }
 
   close = () => {
