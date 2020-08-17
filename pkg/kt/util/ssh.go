@@ -130,7 +130,7 @@ func WritePrivateKey(privateKeyPath string, data []byte) error {
 			return err
 		}
 	}
-	if err := ioutil.WriteFile(privateKeyPath, data, 0700); err != nil {
+	if err := ioutil.WriteFile(privateKeyPath, data, 0600); err != nil {
 		log.Error().Err(err).Str("file", privateKeyPath).Msg("write ssh private key failed")
 		return err
 	}
