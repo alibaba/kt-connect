@@ -148,7 +148,7 @@ func container(image string, args []string) v1.Container {
 	return v1.Container{
 		Name:            "standalone",
 		Image:           image,
-		ImagePullPolicy: "Always",
+		ImagePullPolicy: "IfNotPresent",
 		Args:            args,
 		VolumeMounts: []v1.VolumeMount{
 			{

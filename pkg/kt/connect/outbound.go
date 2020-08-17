@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"sync"
 	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
@@ -21,22 +22,31 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 		util.StopBackendProcess(<-stop, cancel)
 	}()
 
-	err = exec.BackgroundRunWithCtx(
-		&exec.CMDContext{
-			Ctx: rootCtx,
-			Cmd: cli.Kubectl().PortForward(
-				options.Namespace,
-				name,
-				options.ConnectOptions.SSHPort),
-			Name: "port-forward",
-			Stop: stop,
-		},
-		options.Debug,
-	)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		err = exec.BackgroundRunWithCtx(
+			&exec.CMDContext{
+				Ctx: rootCtx,
+				Cmd: cli.Kubectl().PortForward(
+					options.Namespace,
+					name,
+					options.ConnectOptions.SSHPort),
+				Name: "port-forward",
+				Stop: stop,
+			},
+			options.Debug,
+		)
+		log.Info().Msgf("wait(%ds) port-forward successful", options.WaitTime)
+		time.Sleep(time.Duration(options.WaitTime) * time.Second)
+		wg.Done()
+	}(&wg)
+
+	wg.Wait()
 	if err != nil {
 		return
 	}
-	time.Sleep(time.Duration(5) * time.Second)
+
 	if options.ConnectOptions.Method == "socks5" {
 		log.Info().Msgf("==============================================================")
 		log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
