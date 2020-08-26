@@ -76,7 +76,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 				if namespace == options.Namespace {
 					continue
 				}
-				log.Debug().Msgf("Serach service in %s namespace...", namespace)
+				log.Debug().Msgf("Search service in %s namespace...", namespace)
 				singleHosts := kubernetes.ServiceHosts(namespace)
 				for k, v := range singleHosts {
 					if v == "" || v == "None" {

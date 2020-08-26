@@ -72,7 +72,12 @@ func (s *server) getDomainWithClusterPostfix(origin string, count int) (domain s
 		}
 	}
 	if postfix != "" {
-		domain = origin + postfix + "."
+		// @see https://github.com/alibaba/kt-connect/issues/153
+		if strings.HasSuffix(postfix, ".") {
+			domain = origin + postfix
+		} else {
+			domain = origin + postfix + "."
+		}
 		log.Info().Msgf("Format domain %s to %s\n", origin, domain)
 	}
 	return
