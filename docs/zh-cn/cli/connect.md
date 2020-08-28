@@ -15,7 +15,7 @@ ktctl --debug --namespace=default connect --method=socks5
 --proxy value   when should method socks5, you can choice which port to proxy, default 2223 (default: 2223)
 --port value    Local SSH Proxy port (default: 2222)
 --disableDNS    Disable Cluster DNS
---cidr value    Custom CIDR eq '172.2.0.0/16'
+--cidr value    Custom CIDR, e.g. '172.2.0.0/16'
 --dump2hosts    Auto write service to local hosts file (客户端版本0.0.10+)
 ```
 

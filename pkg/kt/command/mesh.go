@@ -32,12 +32,12 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 		Flags: []urfave.Flag{
 			urfave.StringFlag{
 				Name:        "expose,e",
-				Usage:       "expose port [port] or [remote:local]",
+				Usage:       "ports to expose separate by comma, in [port] or [remote:local] format, e.g. 7001,80:8080",
 				Destination: &options.MeshOptions.Expose,
 			},
 			urfave.StringFlag{
-				Name:        "version,v",
-				Usage:       "the version of mesh service eq '0.0.1'",
+				Name:        "version-label",
+				Usage:       "specify the version of mesh service, e.g. '0.0.1'",
 				Destination: &options.MeshOptions.Version,
 			},
 		},

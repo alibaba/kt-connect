@@ -81,7 +81,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "cidr",
-			Usage:       "Custom CIDR eq '172.2.0.0/16'",
+			Usage:       "Custom CIDR, e.g. '172.2.0.0/16'",
 			Destination: &options.ConnectOptions.CIDR,
 		},
 		cli.BoolFlag{
