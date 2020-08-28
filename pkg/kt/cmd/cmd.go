@@ -86,7 +86,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 
 	// vpn
 	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
-	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR eq '172.2.0.0/16")
+	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR, e.g. '172.2.0.0/16")
 
 	// socks5
 	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks5, you can choice which port to proxy")

@@ -17,15 +17,14 @@ import (
 )
 
 // Inbound mapping local port from cluster
-func (s *Shadow) Inbound(exposePort, podName, remoteIP string, credential *util.SSHCredential) (err error) {
+func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredential) (err error) {
 	kubernetesCli := &kubectl.Cli{KubeOptions: s.Options.KubeOptions}
 	sshCli := &ssh.Cli{}
 	log.Info().Msg("creating shadow inbound(remote->local)")
-	return inbound(exposePort, podName, remoteIP, credential, s.Options, kubernetesCli, sshCli)
+	return inbound(exposePorts, podName, remoteIP, credential, s.Options, kubernetesCli, sshCli)
 }
 
-func inbound(
-	exposePorts, podName, remoteIP string, credential *util.SSHCredential,
+func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredential,
 	options *options.DaemonOptions,
 	kubernetesCli kubectl.CliInterface,
 	sshCli ssh.CliInterface,
