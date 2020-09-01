@@ -135,7 +135,7 @@ SSH Remote port-forward for POD starting
 
 Access local tomcat by internal service DNS address:
 
-> Note: if `kubectl connect` not running, you can only access from cluster
+> Note: if `ktctl connect` not running, you can only access from cluster
 
 ```
 $ curl http://tomcat:8080 | grep '<h1>'

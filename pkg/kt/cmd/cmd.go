@@ -19,11 +19,11 @@ import (
 var (
 	connectExample = `
   # connect to kubernetes cluster
-  kubectl connect
+  ktctl connect
   # connect with debug mode
-  kubectl connect -d
+  ktctl connect -d
   # connect with socks5
-  kubectl connect -m socks5 --dump2hosts=default,dev
+  ktctl connect -m socks5 --dump2hosts=default,dev
   # connect with socks5 and dump service to local hosts file
 `
 )
