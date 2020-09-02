@@ -1,6 +1,8 @@
 #!/bin/bash
 mkdir -p /root/.ssh
-cp /root/authorized/authorized_keys /root/.ssh
+if [ -r /root/authorized/authorized_keys ]; then
+    cp /root/authorized/authorized_keys /root/.ssh
+fi
 
 /usr/sbin/sshd -D &
 

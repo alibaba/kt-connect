@@ -25,12 +25,12 @@ func NewDNSServerDefault() (srv *dns.Server) {
 
 	srv.Handler = &server{config}
 
-	log.Info().Msgf("Successful load local " + resolvFile)
+	log.Info().Msgf("successful load local " + resolvFile)
 	for _, server := range config.Servers {
-		log.Info().Msgf("Success load nameserver %s\n", server)
+		log.Info().Msgf("success load nameserver %s", server)
 	}
 	for _, domain := range config.Search {
-		log.Info().Msgf("Success load search %s\n", domain)
+		log.Info().Msgf("success load search %s", domain)
 	}
 	return
 }
@@ -42,102 +42,43 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg.Authoritative = true
 	// Stuff must be in the answer section
 	for _, a := range s.query(req) {
-		log.Info().Msgf("%v\n", a)
+		log.Info().Msgf("answer: %v", a)
 		msg.Answer = append(msg.Answer, a)
 	}
 
 	_ = w.WriteMsg(&msg)
 }
 
-// Get first and second parts of domain name
-func (s *server) getFirst2Parts(domain string) string {
-	firstPart := s.getFirstPart(domain)
-	return domain[:len(firstPart)] + s.getFirstPart(domain[len(firstPart):])
-}
-
-// Get first part of domain name
-func (s *server) getFirstPart(domain string) string {
-	dotIndex := strings.Index(domain, ".") + 1
-	return domain[:dotIndex]
-}
-
-// Convert short domain to fully qualified domain name
-func (s *server) getDomainWithClusterPostfix(origin string, count int) (domain string) {
-	var postfix string
-	if count == 1 {
-		// must be single service name, use full postfix
-		postfix = s.config.Search[0]
-	} else {
-		// may already content namespace, use postfix without namespace
-		for _, search := range s.config.Search {
-			if strings.LastIndex(search, "svc") == 0 {
-				postfix = search
-				break
-			}
-		}
-	}
-	if postfix == "" {
-		// something wrong with pod's resolv conf, nothing we could do
-		domain = origin
-	} else {
-		// @see https://github.com/alibaba/kt-connect/issues/153
-		if strings.HasSuffix(postfix, ".") {
-			domain = origin + postfix
-		} else {
-			domain = origin + postfix + "."
-		}
-		log.Info().Msgf("Format domain %s to %s\n", origin, domain)
-	}
-	return
-}
-
 // Simulate kubernetes-like dns look up logic
 func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	if len(req.Question) <= 0 {
-		log.Error().Msgf("*** error: dns Msg question length is 0")
+		log.Error().Msgf("error: no dns Msg question available")
 		return
 	}
 
 	qtype := req.Question[0].Qtype
 	name := req.Question[0].Name
+	log.Info().Msgf("looking up %s", name)
+	rr, err := s.exchange(name, qtype, name)
+	if IsDomainNotExist(err) {
+		for _, suffix := range s.getSuffixes() {
+			rr, err = s.exchange(name+suffix, qtype, name)
+			if err == nil {
+				break
+			}
+		}
+	}
+	return
+}
 
-	count := strings.Count(name, ".")
-	var err error
-	switch count {
-	case 0:
-		// invalid domain, dns name always ends with a '.'
-		log.Warn().Msgf("received invalid domain query: " + name)
-		rr = make([]dns.RR, 0)
-	case 1:
-		// it's service, e.g. 'app-svc.'
-		rr, err = s.exchange(s.getDomainWithClusterPostfix(name, count), qtype, name)
-		if IsDomainNotExist(err) {
-			// it may be a intranet domain, e.g. 'alibaba.'
-			rr, _ = s.exchange(name, qtype, name)
-		}
-		for _, a := range rr {
-			a.Header().Name = name
-		}
-	case 2:
-		// it's raw domain, e.g. 'alibaba.com.'
-		rr, err = s.exchange(name, qtype, name)
-		if IsDomainNotExist(err) {
-			// it's service.namespace, e.g. 'app-svc.app-ns.'
-			rr, _ = s.exchange(s.getDomainWithClusterPostfix(name, count), qtype, name)
-			for _, a := range rr {
-				a.Header().Name = name
-			}
-		}
-	default:
-		// it's raw domain, e.g. 'kt.alibaba.com.'
-		rr, err = s.exchange(name, qtype, name)
-		if IsDomainNotExist(err) {
-			// it's service with custom local domain postfix
-			rr, err = s.exchange(s.getDomainWithClusterPostfix(s.getFirstPart(name), count), qtype, name)
-			if IsDomainNotExist(err) {
-				// it's service.namespace with custom local domain postfix
-				rr, _ = s.exchange(s.getDomainWithClusterPostfix(s.getFirst2Parts(name), count), qtype, name)
-			}
+// Convert short domain to fully qualified domain name
+func (s *server) getSuffixes() (suffixes []string) {
+	for _, s := range s.config.Search {
+		// @see https://github.com/alibaba/kt-connect/issues/153
+		if strings.HasSuffix(s, ".") {
+			suffixes = append(suffixes, s)
+		} else {
+			suffixes = append(suffixes, s+".")
 		}
 	}
 	return
@@ -146,7 +87,7 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 // Get upstream dns server address
 func (s *server) getResolveServer() (address string, err error) {
 	if len(s.config.Servers) <= 0 {
-		err = errors.New("*** error: dns server is 0")
+		err = errors.New("error: no dns server available")
 		return
 	}
 
@@ -159,13 +100,12 @@ func (s *server) getResolveServer() (address string, err error) {
 
 // Look for domain record from upstream dns server
 func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
-	log.Info().Msgf("Received DNS query for %s: \n", domain)
 	address, err := s.getResolveServer()
 	if err != nil {
-		log.Error().Msgf(err.Error())
+		log.Error().Msgf("error: fail to fetch upstream dns: %s", err.Error())
 		return
 	}
-	log.Info().Msgf("Exchange message for domain %s to dns server %s\n", domain, address)
+	log.Info().Msgf("resolve domain %s via server %s", domain, address)
 
 	c := new(dns.Client)
 	msg := new(dns.Msg)
@@ -175,9 +115,9 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 
 	if res == nil {
 		if err != nil {
-			log.Error().Msgf("*** error: %s\n", err.Error())
+			log.Error().Msgf("error: fail to resolve: %s", err.Error())
 		} else {
-			log.Error().Msgf("*** error: unknown\n")
+			log.Error().Msgf("error: fail to resolve")
 		}
 		return
 	}
@@ -186,7 +126,7 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 		err = DomainNotExistError{domain}
 		return
 	} else if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf(" *** failed to answer name %s after %d query for %s\n", name, qtype, domain)
+		log.Error().Msgf("error: failed to answer name %s after %d query for %s", name, qtype, domain)
 		return
 	}
 
@@ -206,16 +146,11 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 // Replace fully qualified domain name with short domain name in dns answer
 func (s *server) convertAnswer(name, inClusterName string, actual dns.RR) (rr dns.RR, err error) {
 	if name != inClusterName {
-		log.Info().Msgf("origin %s query name is not same %s", inClusterName, name)
-		log.Info().Msgf("origin answer rr to %s", actual.String())
-
 		var parts []string
 		parts = append(parts, name)
 		answer := strings.Split(actual.String(), "\t")
 		parts = append(parts, answer[1:]...)
-
 		rrStr := strings.Join(parts, " ")
-		log.Info().Msgf("rewrite rr to %s", rrStr)
 		rr, err = dns.NewRR(rrStr)
 		if err != nil {
 			return
@@ -223,5 +158,6 @@ func (s *server) convertAnswer(name, inClusterName string, actual dns.RR) (rr dn
 	} else {
 		rr = actual
 	}
+	rr.Header().Name = name
 	return
 }

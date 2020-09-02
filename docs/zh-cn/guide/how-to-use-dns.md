@@ -67,6 +67,9 @@ spec:
 构建DNS服务调试镜像：
 
 ```
+构建shadow-linux-amd64并生成kt-connect-shadow:latest镜像
+$ make build-shadow TAG=latest
+生成并推送kt-connect-shadow:dlv镜像
 $ scripts/build-shadow-dlv
 ```
 
@@ -75,6 +78,8 @@ $ scripts/build-shadow-dlv
 ```
 $ kubectl apply -f https://rdc-incubators.oss-cn-beijing.aliyuncs.com/dns/dns-debug.yaml
 ```
+
+由于开启了dlv远程调试模式，程序启动后会停留在"API server listening at: [::]:2345"输出的地方，然后等待IDE连接。
 
 查看创建的`kt-connect-dns`服务IP：
 
