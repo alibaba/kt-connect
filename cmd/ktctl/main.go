@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -19,7 +21,7 @@ var (
 
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: util.IsWindows()})
 }
 
 func main() {
