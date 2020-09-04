@@ -80,7 +80,8 @@ release:
   ids:
     - ktctl
     - kubectl-connect
-  draft: true
+  # @see https://github.com/goreleaser/goreleaser/issues/1023
+  draft: false
   # If set to auto, will mark the release as not ready for production
   # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
   # If set to true, will mark the release as not ready for production.
