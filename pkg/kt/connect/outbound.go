@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -48,27 +50,9 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 	}
 
 	if options.ConnectOptions.Method == "socks5" {
-		log.Info().Msgf("==============================================================")
-		log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
-		log.Info().Msgf("==============================================================")
-		_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d", options.ConnectOptions.Socke5Proxy)), 0644)
-		_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s", options.Namespace)), 0644)
-		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
-			Ctx:  rootCtx,
-			Cmd:  cli.SSH().DynamicForwardLocalRequestToRemote(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort, options.ConnectOptions.Socke5Proxy),
-			Name: "vpn(ssh)",
-			Stop: stop,
-		}, options.Debug)
+		err = startSocks5Connection(rootCtx, options, cli, credential, stop)
 	} else {
-		err = exec.BackgroundRunWithCtx(
-			&exec.CMDContext{
-				Ctx:  rootCtx,
-				Cmd:  cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort, podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug),
-				Name: "vpn(sshuttle)",
-				Stop: stop,
-			},
-			options.Debug,
-		)
+		err = startVPNConnection(rootCtx, cli, credential, options, podIP, cidrs, stop)
 	}
 	if err != nil {
 		return
@@ -76,4 +60,39 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 
 	log.Info().Msgf("KT proxy start successful")
 	return
+}
+
+func startSocks5Connection(
+	rootCtx context.Context, options *options.DaemonOptions, cli exec.CliInterface,
+	credential *util.SSHCredential, stop chan bool) (err error) {
+	log.Info().Msgf("==============================================================")
+	log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
+	log.Info().Msgf("==============================================================")
+	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
+		options.ConnectOptions.Socke5Proxy)), 0644)
+	_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s",
+		options.Namespace)), 0644)
+	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+		Ctx: rootCtx,
+		Cmd: cli.SSH().DynamicForwardLocalRequestToRemote(credential.RemoteHost, credential.PrivateKeyPath,
+			options.ConnectOptions.SSHPort, options.ConnectOptions.Socke5Proxy),
+		Name: "vpn(ssh)",
+		Stop: stop,
+	}, options.Debug)
+	return err
+}
+
+func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan bool) (err error) {
+	err = exec.BackgroundRunWithCtx(
+		&exec.CMDContext{
+			Ctx: rootCtx,
+			Cmd: cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort,
+				podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug),
+			Name: "vpn(sshuttle)",
+			Stop: stop,
+		},
+		options.Debug,
+	)
+	return err
 }
