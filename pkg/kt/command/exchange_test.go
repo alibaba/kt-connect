@@ -8,7 +8,6 @@ import (
 
 	"github.com/alibaba/kt-connect/fake/kt"
 
-	"github.com/alibaba/kt-connect/fake/kt/action"
 	"github.com/golang/mock/gomock"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -18,7 +17,7 @@ import (
 func Test_exchangeCommand(t *testing.T) {
 	ctl := gomock.NewController(t)
 	fakeKtCli := kt.NewMockCliInterface(ctl)
-	mockAction := action.NewMockActionInterface(ctl)
+	mockAction := NewMockActionInterface(ctl)
 
 	mockAction.EXPECT().Exchange(gomock.Eq("service"), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 

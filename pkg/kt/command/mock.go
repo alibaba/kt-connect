@@ -2,13 +2,14 @@
 // Source: pkg/kt/command/types.go
 
 // Package action is a generated GoMock package.
-package action
+package command
 
 import (
+	reflect "reflect"
+
 	kt "github.com/alibaba/kt-connect/pkg/kt"
 	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
 // MockActionInterface is a mock of ActionInterface interface

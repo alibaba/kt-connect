@@ -14,7 +14,6 @@ import (
 	"github.com/alibaba/kt-connect/fake/kt/exec/sshuttle"
 
 	fakeKt "github.com/alibaba/kt-connect/fake/kt"
-	"github.com/alibaba/kt-connect/fake/kt/action"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
 )
@@ -23,7 +22,7 @@ func TestNewCheckCommand(t *testing.T) {
 
 	ctl := gomock.NewController(t)
 	fakeCli := fakeKt.NewMockCliInterface(ctl)
-	fakeAction := action.NewMockActionInterface(ctl)
+	fakeAction := NewMockActionInterface(ctl)
 
 	fakeAction.EXPECT().Check(fakeCli).Return(nil)
 

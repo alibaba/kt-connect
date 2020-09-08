@@ -13,7 +13,6 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/alibaba/kt-connect/fake/kt"
-	"github.com/alibaba/kt-connect/fake/kt/action"
 	fakeCluster "github.com/alibaba/kt-connect/fake/kt/cluster"
 	fakeConnect "github.com/alibaba/kt-connect/fake/kt/connect"
 )
@@ -23,7 +22,7 @@ func Test_newConnectCommand(t *testing.T) {
 
 	fakeKtCli := kt.NewMockCliInterface(ctl)
 
-	mockAction := action.NewMockActionInterface(ctl)
+	mockAction := NewMockActionInterface(ctl)
 	mockAction.EXPECT().Connect(fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {

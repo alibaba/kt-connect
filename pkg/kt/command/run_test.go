@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	fakeKt "github.com/alibaba/kt-connect/fake/kt"
-	"github.com/alibaba/kt-connect/fake/kt/action"
 	"github.com/alibaba/kt-connect/fake/kt/cluster"
 	"github.com/alibaba/kt-connect/fake/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -22,7 +21,7 @@ func Test_runCommand(t *testing.T) {
 	ctl := gomock.NewController(t)
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
-	mockAction := action.NewMockActionInterface(ctl)
+	mockAction := NewMockActionInterface(ctl)
 	mockAction.EXPECT().Run(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
