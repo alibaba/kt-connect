@@ -18,6 +18,11 @@ import (
 
 // Outbound start vpn connection
 func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
+	ssh := channel.SSHChannel{}
+	return outbound(s, name, podIP, credential, cidrs, cli, &ssh)
+}
+
+func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
 	options := s.Options
 	stop := make(chan bool)
 	rootCtx, cancel := context.WithCancel(context.Background())
@@ -52,7 +57,7 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 	}
 
 	if options.ConnectOptions.Method == "socks5" {
-		err = startSocks5Connection(options)
+		err = startSocks5Connection(ssh, options)
 	} else {
 		err = startVPNConnection(rootCtx, cli, credential, options, podIP, cidrs, stop)
 	}
@@ -64,7 +69,7 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 	return
 }
 
-func startSocks5Connection(options *options.DaemonOptions) (err error) {
+func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("==============================================================")
 	log.Info().Msgf("Start SOCKS5 Proxy Successful: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
 	log.Info().Msgf("==============================================================")
@@ -73,9 +78,11 @@ func startSocks5Connection(options *options.DaemonOptions) (err error) {
 	_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s",
 		options.Namespace)), 0644)
 
-	return channel.DynamicPortForward(
-		"root",
-		"root",
+	return ssh.StartSocks5Proxy(
+		&channel.Certificate{
+			Username: "root",
+			Password: "root",
+		},
 		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
 		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.Socke5Proxy),
 	)

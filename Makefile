@@ -21,6 +21,8 @@ generate-mock:
 	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=fake/kt/exec/sshuttle/sshuttle_mock.go -package=sshuttle
 	mockgen -source=pkg/kt/exec/types.go -destination=fake/kt/exec/exec_mock.go -package=exec
 	mockgen -source=pkg/kt/types.go -destination=fake/kt/kt_mock.go -package=kt
+	MKDIR -p fake/kt/channel
+	mockgen -source=pkg/kt/channel/types.go -destination=pkg/kt/channel/mock.go -package=channel
 
 # run unit test
 test:

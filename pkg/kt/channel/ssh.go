@@ -12,6 +12,19 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// SSHChannel ssh channel
+type SSHChannel struct{}
+
+// StartSocks5Proxy start socks5 proxy
+func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress string, socks5Address string) (err error) {
+	return DynamicPortForward(certificate.Username, certificate.Password, sshAddress, socks5Address)
+}
+
+// ForwardRemoteToLocal forward remote request to local
+func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress string, remoteEndpoint string, localEndpoint string) (err error) {
+	return ForwardRemoteToLocal(certificate.Username, certificate.Password, sshAddress, remoteEndpoint, localEndpoint)
+}
+
 // DynamicPortForward create socks5 proxy
 func DynamicPortForward(username string, password string, address string, socks5Address string) error {
 	conn, err := connection(username, password, address)
