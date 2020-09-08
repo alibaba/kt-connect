@@ -5,11 +5,12 @@
 package kt
 
 import (
+	reflect "reflect"
+
 	cluster "github.com/alibaba/kt-connect/pkg/kt/cluster"
 	connect "github.com/alibaba/kt-connect/pkg/kt/connect"
 	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
 // MockCliInterface is a mock of CliInterface interface

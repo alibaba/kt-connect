@@ -4,8 +4,10 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/alibaba/kt-connect/fake/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/fake/kt/exec/ssh"
+	"github.com/alibaba/kt-connect/pkg/kt/channel"
+
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	"github.com/golang/mock/gomock"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -46,10 +48,13 @@ func Test_inbound(t *testing.T) {
 			kubectl := kubectl.NewMockCliInterface(ctl)
 			ssh := ssh.NewMockCliInterface(ctl)
 
+			sshChannel := channel.NewMockChannel(ctl)
+
 			kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))
 			ssh.EXPECT().ForwardRemoteRequestToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))
+			sshChannel.EXPECT().ForwardRemoteToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
-			if err := inbound(tt.args.exposePort, tt.args.podName, tt.args.remoteIP, tt.args.credential, tt.args.options, kubectl, ssh); (err != nil) != tt.wantErr {
+			if err := inbound(tt.args.exposePort, tt.args.podName, tt.args.remoteIP, tt.args.credential, tt.args.options, kubectl, sshChannel); (err != nil) != tt.wantErr {
 				t.Errorf("inbound() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

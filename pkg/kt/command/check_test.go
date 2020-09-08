@@ -8,13 +8,12 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 
-	fakeExec "github.com/alibaba/kt-connect/fake/kt/exec"
-	"github.com/alibaba/kt-connect/fake/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/fake/kt/exec/ssh"
-	"github.com/alibaba/kt-connect/fake/kt/exec/sshuttle"
+	fakeExec "github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 
-	fakeKt "github.com/alibaba/kt-connect/fake/kt"
-	"github.com/alibaba/kt-connect/fake/kt/action"
+	fakeKt "github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
 )
@@ -23,7 +22,7 @@ func TestNewCheckCommand(t *testing.T) {
 
 	ctl := gomock.NewController(t)
 	fakeCli := fakeKt.NewMockCliInterface(ctl)
-	fakeAction := action.NewMockActionInterface(ctl)
+	fakeAction := NewMockActionInterface(ctl)
 
 	fakeAction.EXPECT().Check(fakeCli).Return(nil)
 

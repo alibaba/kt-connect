@@ -5,10 +5,9 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/alibaba/kt-connect/fake/kt/action"
 	"github.com/golang/mock/gomock"
 
-	fakeKt "github.com/alibaba/kt-connect/fake/kt"
+	fakeKt "github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/urfave/cli"
 )
@@ -17,7 +16,7 @@ func Test_newDashboardCommand(t *testing.T) {
 	ctl := gomock.NewController(t)
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
-	mockAction := action.NewMockActionInterface(ctl)
+	mockAction := NewMockActionInterface(ctl)
 	mockAction.EXPECT().OpenDashboard(gomock.Any(), gomock.Any()).Return(nil)
 	mockAction.EXPECT().ApplyDashboard(gomock.Any(), gomock.Any()).Return(nil)
 

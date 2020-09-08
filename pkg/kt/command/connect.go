@@ -69,7 +69,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if options.ConnectOptions.Dump2Hosts {
 		hosts := kubernetes.ServiceHosts(options.Namespace)
 		for k, v := range hosts {
-			log.Debug().Msgf("Service found: %s %s", k, v)
+			log.Info().Msgf("Service found: %s %s", k, v)
 		}
 		if options.ConnectOptions.Dump2HostsNamespaces != nil {
 			for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
@@ -82,7 +82,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 					if v == "" || v == "None" {
 						continue
 					}
-					log.Debug().Msgf("Service found: %s.%s %s", k, namespace, v)
+					log.Info().Msgf("Service found: %s.%s %s", k, namespace, v)
 					hosts[k+"."+namespace] = v
 				}
 			}

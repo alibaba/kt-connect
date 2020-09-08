@@ -3,6 +3,7 @@ module github.com/alibaba/kt-connect
 go 1.13
 
 require (
+	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-gonic/gin v1.4.0
@@ -17,6 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/urfave/cli v1.22.4
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
+	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
 	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	istio.io/api v0.0.0-20200221025927-228308df3f1b

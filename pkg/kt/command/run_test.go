@@ -6,10 +6,11 @@ import (
 	"io/ioutil"
 	"testing"
 
-	fakeKt "github.com/alibaba/kt-connect/fake/kt"
-	"github.com/alibaba/kt-connect/fake/kt/action"
-	"github.com/alibaba/kt-connect/fake/kt/cluster"
-	"github.com/alibaba/kt-connect/fake/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
+
+	fakeKt "github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/golang/mock/gomock"
@@ -22,7 +23,7 @@ func Test_runCommand(t *testing.T) {
 	ctl := gomock.NewController(t)
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
-	mockAction := action.NewMockActionInterface(ctl)
+	mockAction := NewMockActionInterface(ctl)
 	mockAction.EXPECT().Run(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
