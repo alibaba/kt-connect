@@ -2,10 +2,13 @@ package connect
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/alibaba/kt-connect/pkg/kt/channel"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 
@@ -65,8 +68,8 @@ func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredenti
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("redirect request from pod %s 22 to 127.0.0.1:%d starting\n", remoteIP, localSSHPort)
 
+	var wg2 sync.WaitGroup
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
@@ -77,20 +80,24 @@ func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredenti
 			localPort = ports[1]
 			remotePort = ports[0]
 		}
-		cmd := sshCli.ForwardRemoteRequestToLocal(localPort, credential.RemoteHost, remotePort, credential.PrivateKeyPath, localSSHPort)
-		err := exec.BackgroundRunWithCtx(
-			&exec.CMDContext{
-				Ctx:  rootCtx,
-				Cmd:  cmd,
-				Name: "ssh remote port-forward",
-				Stop: stop,
-			},
-			debug,
-		)
 
-		if err != nil {
-			return err
-		}
+		wg2.Add(1)
+		go func(wg *sync.WaitGroup) {
+			log.Info().Msgf("redirect request from pod:%s to 127.0.0.1:%s\n", remotePort, localPort)
+			err := channel.ForwardRemoteToLocal(
+				"root",
+				"root",
+				fmt.Sprintf("127.0.0.1:%d", localSSHPort),
+				fmt.Sprintf("0.0.0.0:%s", remotePort),
+				fmt.Sprintf("127.0.0.1:%s", localPort),
+			)
+			if err != nil {
+				log.Error().Msgf("error happen when forward remote request to local %s", err)
+			}
+			log.Info().Msgf("redirect request from pod:%s to 127.0.0.1:%s finished\n", remotePort, localPort)
+			wg.Done()
+		}(&wg2)
 	}
+	wg.Wait()
 	return nil
 }

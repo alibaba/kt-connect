@@ -66,7 +66,7 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 
 func startSocks5Connection(options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("==============================================================")
-	log.Info().Msgf("Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
+	log.Info().Msgf("Start SOCKS5 Proxy Successful: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
 	log.Info().Msgf("==============================================================")
 	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
 		options.ConnectOptions.Socke5Proxy)), 0644)

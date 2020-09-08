@@ -3,10 +3,10 @@ package channel
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 
 	"github.com/armon/go-socks5"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/net/context"
 
 	"golang.org/x/crypto/ssh"
@@ -41,31 +41,37 @@ func DynamicPortForward(username string, password string, address string, socks5
 }
 
 // ForwardRemoteToLocal forward remote request to local
-func ForwardRemoteToLocal(username string, password string, address string, remoteEndpoint string, localEndpoint string) {
+func ForwardRemoteToLocal(username string, password string, address string, remoteEndpoint string, localEndpoint string) (err error) {
 	conn, err := connection(username, password, address)
 	defer conn.Close()
 	if err != nil {
-		log.Fatal(err)
+		log.Error().Msgf("fail to create ssh tunnel")
+		return err
 	}
 
 	// Listen on remote server port
 	listener, err := conn.Listen("tcp", remoteEndpoint)
 	if err != nil {
-		log.Fatalln(fmt.Printf("Listen open port ON remote server error: %s", err))
+		log.Error().Msgf("fail to listen remote endpoint ")
+		return err
 	}
 	defer listener.Close()
+
+	log.Info().Msgf("forward %s to localEndpoint %s", remoteEndpoint, localEndpoint)
 
 	// handle incoming connections on reverse forwarded tunnel
 	for {
 		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
-			log.Fatalln(fmt.Printf("Dial INTO local service error: %s", err))
+			log.Error().Msgf("Dial INTO local service error: %s", err)
+			return err
 		}
 
 		client, err := listener.Accept()
 		if err != nil {
-			log.Fatalln(err)
+			log.Error().Msgf("error: %s", err)
+			return err
 		}
 
 		handleClient(client, local)
@@ -83,20 +89,19 @@ func connection(username string, password string, address string) (*ssh.Client, 
 
 	conn, err := ssh.Dial("tcp", address, config)
 	if err != nil {
-		log.Fatal("fail create ssh connection", err)
+		log.Error().Msgf("fail create ssh connection %s", err)
 	}
 	return conn, err
 }
 
 func handleClient(client net.Conn, remote net.Conn) {
-	defer client.Close()
 	chDone := make(chan bool)
 
 	// Start remote -> local data transfer
 	go func() {
 		_, err := io.Copy(client, remote)
 		if err != nil {
-			log.Println("error while copy remote->local:", err)
+			log.Error().Msgf("error while copy remote->local: %s", err)
 		}
 		chDone <- true
 	}()
@@ -105,7 +110,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(remote, client)
 		if err != nil {
-			log.Println(err)
+			log.Error().Msgf("error while copy local->remote: %s", err)
 		}
 		chDone <- true
 	}()
