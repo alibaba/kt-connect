@@ -6,9 +6,9 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/kt/channel"
 
-	fakeExec "github.com/alibaba/kt-connect/fake/kt/exec"
-	"github.com/alibaba/kt-connect/fake/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/fake/kt/exec/sshuttle"
+	fakeExec "github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/golang/mock/gomock"
 

@@ -6,16 +6,17 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 
-	"github.com/alibaba/kt-connect/fake/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
 
-	"github.com/alibaba/kt-connect/fake/kt"
-	fakeCluster "github.com/alibaba/kt-connect/fake/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt"
 )
 
 func Test_newConnectCommand(t *testing.T) {
@@ -66,7 +67,7 @@ func Test_shouldConnectToCluster(t *testing.T) {
 
 	ktctl := kt.NewMockCliInterface(ctl)
 
-	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
+	kubernetes := cluster.NewMockKubernetesInterface(ctl)
 	exec := exec.NewMockCliInterface(ctl)
 	shadow := connect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
@@ -91,7 +92,7 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 	ctl := gomock.NewController(t)
 	ktctl := kt.NewMockCliInterface(ctl)
 
-	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
+	kubernetes := cluster.NewMockKubernetesInterface(ctl)
 	shadow := connect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Return("", "", "", nil, errors.New("")).AnyTimes()
 
@@ -110,7 +111,7 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 
 	ktctl := kt.NewMockCliInterface(ctl)
 
-	kubernetes := fakeCluster.NewMockKubernetesInterface(ctl)
+	kubernetes := cluster.NewMockKubernetesInterface(ctl)
 	shadow := connect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Return("172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
 	kubernetes.EXPECT().ClusterCrids(gomock.Any()).Return([]string{}, errors.New("fail to get crid"))

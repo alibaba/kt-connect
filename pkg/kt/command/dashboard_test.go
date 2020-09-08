@@ -7,7 +7,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	fakeKt "github.com/alibaba/kt-connect/fake/kt"
+	fakeKt "github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/urfave/cli"
 )

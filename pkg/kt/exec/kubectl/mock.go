@@ -5,9 +5,10 @@
 package kubectl
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	exec "os/exec"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
 // MockCliInterface is a mock of CliInterface interface
