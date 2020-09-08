@@ -11,16 +11,16 @@ SERVER_IMAGE	  =  kt-connect-server
 generate-mock:
 	mkdir -p fake/kt/cluster
 	mockgen -source=pkg/kt/cluster/types.go -destination=fake/kt/cluster/kubernetes_mock.go -package=cluster
-	mkdir -p fake/kt/connect
-	mockgen -source=pkg/kt/connect/types.go -destination=fake/kt/connect/connect_mock.go -package=connect
 	mkdir -p fake/kt/exec
 	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=fake/kt/exec/kubectl/kubectl_mock.go -package=kubectl
 	mockgen -source=pkg/kt/exec/ssh/types.go -destination=fake/kt/exec/ssh/ssh_mock.go -package=ssh
 	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=fake/kt/exec/sshuttle/sshuttle_mock.go -package=sshuttle
 	mockgen -source=pkg/kt/exec/types.go -destination=fake/kt/exec/exec_mock.go -package=exec
 	mockgen -source=pkg/kt/types.go -destination=fake/kt/kt_mock.go -package=kt
+
 	mockgen -source=pkg/kt/channel/types.go -destination=pkg/kt/channel/mock.go -package=channel
     mockgen -source=pkg/kt/command/types.go -destination=pkg/kt/command/mock.go -package=command
+    mockgen -source=pkg/kt/connect/types.go -destination=pkg/kt/connect/mock.go -package=connect
 
 # run unit test
 test:

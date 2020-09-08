@@ -6,9 +6,10 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
+
 	fakeKt "github.com/alibaba/kt-connect/fake/kt"
 	"github.com/alibaba/kt-connect/fake/kt/cluster"
-	"github.com/alibaba/kt-connect/fake/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/golang/mock/gomock"
