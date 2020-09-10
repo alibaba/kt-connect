@@ -64,13 +64,10 @@ spec:
 
 ## 调试DNS服务
 
-构建DNS服务调试镜像：
+构建DNS服务调试镜像(并推送到仓库)：
 
 ```
-构建shadow-linux-amd64并生成kt-connect-shadow:latest镜像
-$ make build-shadow TAG=latest
-生成并推送kt-connect-shadow:dlv镜像
-$ scripts/build-shadow-dlv
+$ make build-shadow-dlv
 ```
 
 部署调试版本DNS服务：
