@@ -35,7 +35,7 @@ type KubernetesInterface interface {
 	ScaleTo(deployment, namespace string, replicas *int32) (err error)
 	ServiceHosts(namespace string) (hosts map[string]string)
 	ClusterCrids(podCIDR string) (cidrs []string, err error)
-	GetOrCreateShadow(name, namespace, image string, labels map[string]string, debug, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
+	GetOrCreateShadow(name, namespace, image string, labels, env map[string]string, debug, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
 	CreateService(name, namespace string, port int, labels map[string]string) (*coreV1.Service, error)
 	GetDeployment(name string, namespace string) (*appV1.Deployment, error)
 	UpdateDeployment(namespace string, deployment *appV1.Deployment) (*appV1.Deployment, error)

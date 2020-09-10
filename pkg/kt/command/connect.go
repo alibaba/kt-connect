@@ -95,8 +95,9 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if options.ConnectOptions.ShareShadow {
 		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
 	}
+	env := make(map[string]string)
 	endPointIP, podName, sshcm, credential, err :=
-		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), options.Debug, options.ConnectOptions.ShareShadow)
+		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), env, options.Debug, options.ConnectOptions.ShareShadow)
 
 	if err != nil {
 		return

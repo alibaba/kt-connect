@@ -144,12 +144,17 @@ func service(name, namespace string, labels map[string]string, port int) *v1.Ser
 
 }
 
-func container(image string, args []string) v1.Container {
+func container(image string, args []string, env map[string]string) v1.Container {
+	var envVar []v1.EnvVar
+	for k, v := range env {
+		envVar = append(envVar, v1.EnvVar{Name: k, Value: v})
+	}
 	return v1.Container{
 		Name:            "standalone",
 		Image:           image,
 		ImagePullPolicy: "IfNotPresent",
 		Args:            args,
+		Env:             envVar,
 		VolumeMounts: []v1.VolumeMount{
 			{
 				Name:      "ssh-public-key",
@@ -159,11 +164,11 @@ func container(image string, args []string) v1.Container {
 	}
 }
 
-func deployment(namespace, name string, labels map[string]string, image, volume string, debug bool) *appV1.Deployment {
-	args := []string{}
+func deployment(namespace, name string, labels, env map[string]string, image, volume string, debug bool) *appV1.Deployment {
+	var args []string
 	if debug {
 		log.Debug().Msg("create shadow with debug mode")
-		//args = append(args, "--debug")
+		args = append(args, "--debug")
 	}
 	sshVolume := v1.Volume{
 		Name: "ssh-public-key",
@@ -201,7 +206,7 @@ func deployment(namespace, name string, labels map[string]string, image, volume 
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						container(image, args),
+						container(image, args, env),
 					},
 					Volumes: []v1.Volume{
 						sshVolume,
