@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"os"
 	"strings"
 
@@ -60,65 +61,79 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	}
 	log.Info().Msgf("Connect Start At %d", pid)
 
-	shadow := cli.Shadow()
 	kubernetes, err := cli.Kubernetes()
-
 	if err != nil {
 		return
 	}
 
 	if options.ConnectOptions.Dump2Hosts {
-		hosts := kubernetes.ServiceHosts(options.Namespace)
-		for k, v := range hosts {
-			log.Info().Msgf("Service found: %s %s", k, v)
-		}
-		if options.ConnectOptions.Dump2HostsNamespaces != nil {
-			for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
-				if namespace == options.Namespace {
-					continue
-				}
-				log.Debug().Msgf("Search service in %s namespace...", namespace)
-				singleHosts := kubernetes.ServiceHosts(namespace)
-				for k, v := range singleHosts {
-					if v == "" || v == "None" {
-						continue
-					}
-					log.Info().Msgf("Service found: %s.%s %s", k, namespace, v)
-					hosts[k+"."+namespace] = v
-				}
-			}
-		}
-		util.DumpHosts(hosts)
-		options.ConnectOptions.Hosts = hosts
+		setupDump2Host(options, kubernetes)
 	}
 
-	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
-	if options.ConnectOptions.ShareShadow {
-		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
-	}
-
-	env := make(map[string]string)
-	if options.ConnectOptions.LocalDomain != "" {
-		env[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
-	}
-
-	endPointIP, podName, sshcm, credential, err :=
-		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), env, options.Debug, options.ConnectOptions.ShareShadow)
-
+	endPointIP, podName, credential, err := getOrCreateShadow(options, err, kubernetes)
 	if err != nil {
 		return
 	}
-
-	// record shadow name will clean up terminal
-	options.RuntimeOptions.Shadow = workload
-	options.RuntimeOptions.SSHCM = sshcm
 
 	cidrs, err := kubernetes.ClusterCrids(options.ConnectOptions.CIDR)
 	if err != nil {
 		return
 	}
 
-	return shadow.Outbound(podName, endPointIP, credential, cidrs, cli.Exec())
+	return cli.Shadow().Outbound(podName, endPointIP, credential, cidrs, cli.Exec())
+}
+
+func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes cluster.KubernetesInterface) (string, string, *util.SSHCredential, error) {
+	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	if options.ConnectOptions.ShareShadow {
+		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
+	}
+
+	endPointIP, podName, sshcm, credential, err :=
+		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), envs(options),
+			options.Debug, options.ConnectOptions.ShareShadow)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	// record shadow name will clean up terminal
+	options.RuntimeOptions.Shadow = workload
+	options.RuntimeOptions.SSHCM = sshcm
+
+	return endPointIP, podName, credential, nil
+}
+
+func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
+	hosts := kubernetes.ServiceHosts(options.Namespace)
+	for k, v := range hosts {
+		log.Info().Msgf("Service found: %s %s", k, v)
+	}
+	if options.ConnectOptions.Dump2HostsNamespaces != nil {
+		for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
+			if namespace == options.Namespace {
+				continue
+			}
+			log.Debug().Msgf("Search service in %s namespace...", namespace)
+			singleHosts := kubernetes.ServiceHosts(namespace)
+			for k, v := range singleHosts {
+				if v == "" || v == "None" {
+					continue
+				}
+				log.Info().Msgf("Service found: %s.%s %s", k, namespace, v)
+				hosts[k+"."+namespace] = v
+			}
+		}
+	}
+	util.DumpHosts(hosts)
+	options.ConnectOptions.Hosts = hosts
+}
+
+func envs(options *options.DaemonOptions) map[string]string {
+	env := make(map[string]string)
+	if options.ConnectOptions.LocalDomain != "" {
+		env[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
+	}
+	return env
 }
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
