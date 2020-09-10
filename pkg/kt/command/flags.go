@@ -99,6 +99,11 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Multi clients try to use existing shadow (Beta)",
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
+		cli.StringFlag{
+			Name:        "localDomain",
+			Usage:       "Set local domain suffix to help dns resolve properly",
+			Destination: &options.ConnectOptions.LocalDomain,
+		},
 	}
 }
 

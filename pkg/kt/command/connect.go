@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
 
@@ -95,7 +96,12 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if options.ConnectOptions.ShareShadow {
 		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
 	}
+
 	env := make(map[string]string)
+	if options.ConnectOptions.LocalDomain != "" {
+		env[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
+	}
+
 	endPointIP, podName, sshcm, credential, err :=
 		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), env, options.Debug, options.ConnectOptions.ShareShadow)
 

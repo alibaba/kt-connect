@@ -27,6 +27,7 @@ type ConnectOptions struct {
 	Dump2HostsNamespaces cli.StringSlice
 	Hosts                map[string]string
 	ShareShadow          bool
+	LocalDomain          string
 }
 
 type exchangeOptions struct {

@@ -2,7 +2,9 @@ package dnsserver
 
 import (
 	"errors"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
@@ -58,6 +60,14 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 
 	qtype := req.Question[0].Qtype
 	name := req.Question[0].Name
+	if !strings.HasSuffix(name, ".") {
+		// This should never happen, just in case
+		name = name + "."
+	}
+	localDomain := os.Getenv(common.EnvVarLocalDomain)
+	if localDomain != "" && strings.HasSuffix(name, localDomain+".") {
+		name = name[0:(len(name) - len(localDomain) - 1)]
+	}
 	log.Info().Msgf("looking up %s", name)
 
 	rr = make([]dns.RR, 0)
@@ -97,12 +107,6 @@ func (s *server) fetchAllPossibleDomains(name string) []string {
 		}
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
-		if len(domainSuffixes) > 0 {
-			// service name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirstPart(name)+domainSuffixes[0])
-			// stateful-set-pod.service name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirst2Parts(name)+domainSuffixes[0])
-		}
 	case 3:
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
@@ -110,47 +114,11 @@ func (s *server) fetchAllPossibleDomains(name string) []string {
 			// stateful-set-pod.service.namespace name
 			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
 		}
-		if len(domainSuffixes) > 0 {
-			// service name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirstPart(name)+domainSuffixes[0])
-			// stateful-set-pod.service name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirst2Parts(name)+domainSuffixes[0])
-		}
-		if len(domainSuffixes) > 1 {
-			// service.namespace name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirstPart(name)+domainSuffixes[1])
-			// stateful-set-pod.service.namespace name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirst2Parts(name)+domainSuffixes[1])
-		}
 	default:
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
-		if len(domainSuffixes) > 0 {
-			// service name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirstPart(name)+domainSuffixes[0])
-			// stateful-set-pod.service name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirst2Parts(name)+domainSuffixes[0])
-		}
-		if len(domainSuffixes) > 1 {
-			// service.namespace name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirstPart(name)+domainSuffixes[1])
-			// stateful-set-pod.service.namespace name with local resolv.conf domain
-			namesToLookup = append(namesToLookup, s.getFirst2Parts(name)+domainSuffixes[1])
-		}
 	}
 	return namesToLookup
-}
-
-// Get first part of domain name
-func (s *server) getFirstPart(domain string) string {
-	dotIndex := strings.Index(domain, ".") + 1
-	return domain[:dotIndex]
-}
-
-// Get first and second parts of domain name
-func (s *server) getFirst2Parts(domain string) string {
-	firstPart := s.getFirstPart(domain)
-	return domain[:len(firstPart)] + s.getFirstPart(domain[len(firstPart):])
 }
 
 // Convert short domain to fully qualified domain name
