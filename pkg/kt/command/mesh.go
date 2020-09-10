@@ -107,9 +107,9 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 func createShadowAndInbound(workload string, labels map[string]string, options *options.DaemonOptions,
 	kubernetes cluster.KubernetesInterface) error {
 
-	env := make(map[string]string)
+	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		workload, options.Namespace, options.Image, labels, env, options.Debug, false)
+		workload, options.Namespace, options.Image, labels, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}

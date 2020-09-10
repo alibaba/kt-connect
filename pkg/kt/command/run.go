@@ -93,9 +93,9 @@ func runAndExposeLocalService(
 	service string, labels map[string]string, options *options.DaemonOptions,
 	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
-	env := make(map[string]string)
+	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		service, options.Namespace, options.Image, labels, env, options.Debug, false)
+		service, options.Namespace, options.Image, labels, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}

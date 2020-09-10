@@ -67,9 +67,9 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 
-			env := make(map[string]string)
+			envs := make(map[string]string)
 			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(tt.args.name, tt.args.namespace, tt.args.image,
-				tt.args.labels, env, tt.args.debug, false)
+				tt.args.labels, envs, tt.args.debug, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
 				return

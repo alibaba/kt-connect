@@ -144,9 +144,9 @@ func service(name, namespace string, labels map[string]string, port int) *v1.Ser
 
 }
 
-func container(image string, args []string, env map[string]string) v1.Container {
+func container(image string, args []string, envs map[string]string) v1.Container {
 	var envVar []v1.EnvVar
-	for k, v := range env {
+	for k, v := range envs {
 		envVar = append(envVar, v1.EnvVar{Name: k, Value: v})
 	}
 	return v1.Container{
@@ -164,7 +164,12 @@ func container(image string, args []string, env map[string]string) v1.Container 
 	}
 }
 
-func deployment(namespace, name string, labels, env map[string]string, image, volume string, debug bool) *appV1.Deployment {
+func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.Deployment {
+	namespace := metaAndSpec.Meta.Namespace
+	name := metaAndSpec.Meta.Name
+	labels := metaAndSpec.Meta.Labels
+	image := metaAndSpec.Image
+	envs := metaAndSpec.Envs
 	var args []string
 	if debug {
 		log.Debug().Msg("create shadow with debug mode")
@@ -206,7 +211,7 @@ func deployment(namespace, name string, labels, env map[string]string, image, vo
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						container(image, args, env),
+						container(image, args, envs),
 					},
 					Volumes: []v1.Volume{
 						sshVolume,

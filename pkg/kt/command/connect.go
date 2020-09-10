@@ -129,11 +129,11 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 }
 
 func envs(options *options.DaemonOptions) map[string]string {
-	env := make(map[string]string)
+	envs := make(map[string]string)
 	if options.ConnectOptions.LocalDomain != "" {
-		env[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
+		envs[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
 	}
-	return env
+	return envs
 }
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
