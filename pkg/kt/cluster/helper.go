@@ -144,12 +144,17 @@ func service(name, namespace string, labels map[string]string, port int) *v1.Ser
 
 }
 
-func container(image string, args []string) v1.Container {
+func container(image string, args []string, envs map[string]string) v1.Container {
+	var envVar []v1.EnvVar
+	for k, v := range envs {
+		envVar = append(envVar, v1.EnvVar{Name: k, Value: v})
+	}
 	return v1.Container{
 		Name:            "standalone",
 		Image:           image,
 		ImagePullPolicy: "IfNotPresent",
 		Args:            args,
+		Env:             envVar,
 		VolumeMounts: []v1.VolumeMount{
 			{
 				Name:      "ssh-public-key",
@@ -159,29 +164,18 @@ func container(image string, args []string) v1.Container {
 	}
 }
 
-func deployment(namespace, name string, labels map[string]string, image, volume string, debug bool) *appV1.Deployment {
-	args := []string{}
+func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.Deployment {
+	var args []string
 	if debug {
 		log.Debug().Msg("create shadow with debug mode")
-		//args = append(args, "--debug")
-	}
-	sshVolume := v1.Volume{
-		Name: "ssh-public-key",
-		VolumeSource: v1.VolumeSource{
-			ConfigMap: &v1.ConfigMapVolumeSource{
-				LocalObjectReference: v1.LocalObjectReference{
-					Name: volume,
-				},
-				Items: []v1.KeyToPath{
-					{
-						Key:  vars.SSHAuthKey,
-						Path: "authorized_keys",
-					},
-				},
-			},
-		},
+		args = append(args, "--debug")
 	}
 
+	namespace := metaAndSpec.Meta.Namespace
+	name := metaAndSpec.Meta.Name
+	labels := metaAndSpec.Meta.Labels
+	image := metaAndSpec.Image
+	envs := metaAndSpec.Envs
 	return &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -201,13 +195,33 @@ func deployment(namespace, name string, labels map[string]string, image, volume 
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						container(image, args),
+						container(image, args, envs),
 					},
 					Volumes: []v1.Volume{
-						sshVolume,
+						getSshVolume(volume),
 					},
 				},
 			},
 		},
 	}
+}
+
+func getSshVolume(volume string) v1.Volume {
+	sshVolume := v1.Volume{
+		Name: "ssh-public-key",
+		VolumeSource: v1.VolumeSource{
+			ConfigMap: &v1.ConfigMapVolumeSource{
+				LocalObjectReference: v1.LocalObjectReference{
+					Name: volume,
+				},
+				Items: []v1.KeyToPath{
+					{
+						Key:  vars.SSHAuthKey,
+						Path: "authorized_keys",
+					},
+				},
+			},
+		},
+	}
+	return sshVolume
 }

@@ -60,6 +60,7 @@ release-shadow:
 
 # dlv for debug
 build-shadow-dlv:
+	make build-shadow TAG=latest
 	scripts/build-shadow-dlv
 
 build-dashboard: build-frontend build-server

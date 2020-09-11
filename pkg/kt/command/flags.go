@@ -54,12 +54,11 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 
 // ConnectActionFlag ...
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
-	methodDefaultValue, methodDefaultUsage := defaultMethod()
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "method",
-			Value:       methodDefaultValue,
-			Usage:       methodDefaultUsage,
+			Value:       methodDefaultValue(),
+			Usage:       methodDefaultUsage(),
 			Destination: &options.ConnectOptions.Method,
 		},
 		cli.IntFlag{
@@ -99,15 +98,26 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Multi clients try to use existing shadow (Beta)",
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
+		cli.StringFlag{
+			Name:        "localDomain",
+			Usage:       "Set local domain suffix to help dns resolve properly",
+			Destination: &options.ConnectOptions.LocalDomain,
+		},
 	}
 }
 
-func defaultMethod() (value string, usage string) {
-	value = "vpn"
-	usage = "Connect method 'vpn' or 'socks5'"
+func methodDefaultValue() string {
 	if util.IsWindows() {
-		value = "socks5"
-		usage = "windows only support socks5"
+		return "socks5"
+	} else {
+		return "vpn"
 	}
-	return
+}
+
+func methodDefaultUsage() string {
+	if util.IsWindows() {
+		return "Windows only support socks5"
+	} else {
+		return "Connect method 'vpn' or 'socks5'"
+	}
 }

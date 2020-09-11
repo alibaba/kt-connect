@@ -15,6 +15,6 @@ func TestAnswerRewrite(t *testing.T) {
 		return
 	}
 	if r.String() != "tomcat.	5	IN	A	172.21.4.129" {
-		t.Errorf("error")
+		t.Errorf("error, get result: " + r.String())
 	}
 }

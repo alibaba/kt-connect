@@ -5,12 +5,11 @@
 package cluster
 
 import (
-	reflect "reflect"
-
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
+	reflect "reflect"
 )
 
 // MockKubernetesInterface is a mock of KubernetesInterface interface
@@ -151,9 +150,9 @@ func (mr *MockKubernetesInterfaceMockRecorder) ClusterCrids(podCIDR interface{})
 }
 
 // GetOrCreateShadow mocks base method
-func (m *MockKubernetesInterface) GetOrCreateShadow(name, namespace, image string, labels map[string]string, debug, reuseShadow bool) (string, string, string, *util.SSHCredential, error) {
+func (m *MockKubernetesInterface) GetOrCreateShadow(name, namespace, image string, labels, envs map[string]string, debug, reuseShadow bool) (string, string, string, *util.SSHCredential, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOrCreateShadow", name, namespace, image, labels, debug, reuseShadow)
+	ret := m.ctrl.Call(m, "GetOrCreateShadow", name, namespace, image, labels, envs, debug, reuseShadow)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(string)
 	ret2, _ := ret[2].(string)
@@ -163,9 +162,9 @@ func (m *MockKubernetesInterface) GetOrCreateShadow(name, namespace, image strin
 }
 
 // GetOrCreateShadow indicates an expected call of GetOrCreateShadow
-func (mr *MockKubernetesInterfaceMockRecorder) GetOrCreateShadow(name, namespace, image, labels, debug, reuseShadow interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) GetOrCreateShadow(name, namespace, image, labels, envs, debug, reuseShadow interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrCreateShadow", reflect.TypeOf((*MockKubernetesInterface)(nil).GetOrCreateShadow), name, namespace, image, labels, debug, reuseShadow)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrCreateShadow", reflect.TypeOf((*MockKubernetesInterface)(nil).GetOrCreateShadow), name, namespace, image, labels, envs, debug, reuseShadow)
 }
 
 // CreateService mocks base method
