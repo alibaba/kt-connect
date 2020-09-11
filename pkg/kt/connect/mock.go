@@ -5,11 +5,10 @@
 package connect
 
 import (
-	reflect "reflect"
-
 	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockShadowInterface is a mock of ShadowInterface interface

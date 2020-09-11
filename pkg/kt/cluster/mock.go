@@ -5,12 +5,11 @@
 package cluster
 
 import (
-	reflect "reflect"
-
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
+	reflect "reflect"
 )
 
 // MockKubernetesInterface is a mock of KubernetesInterface interface
