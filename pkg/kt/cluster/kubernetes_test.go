@@ -122,7 +122,7 @@ func TestKubernetes_ClusterCrids(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			gotCidrs, err := k.ClusterCrids(tt.args.podCIDR)
+			gotCidrs, err := k.ClusterCrids("default", tt.args.podCIDR)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCrids() error = %v, wantErr %v", err, tt.wantErr)
 				return

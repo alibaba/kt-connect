@@ -2,10 +2,11 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"os"
 	"strings"
+
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -75,7 +76,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-	cidrs, err := kubernetes.ClusterCrids(options.ConnectOptions.CIDR)
+	cidrs, err := kubernetes.ClusterCrids(options.Namespace, options.ConnectOptions.CIDR)
 	if err != nil {
 		return
 	}
