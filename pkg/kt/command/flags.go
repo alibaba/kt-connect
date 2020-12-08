@@ -1,11 +1,10 @@
 package command
 
 import (
-	"path/filepath"
-
-	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"os"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
 )
 
@@ -19,7 +18,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "kubeconfig,c",
-			Value:       filepath.Join(options.RuntimeOptions.UserHome, ".kube", "config"),
+			Value:       os.Getenv("KUBECONFIG"),
 			Destination: &options.KubeConfig,
 		},
 		cli.StringFlag{

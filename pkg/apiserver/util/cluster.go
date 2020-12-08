@@ -24,7 +24,10 @@ func GetKubernetesClient() (clientset kubernetes.Interface, config *restclient.C
 
 // GetKubeconfig ...
 func GetKubeconfig() (config *restclient.Config, err error) {
-	kubeconfig := filepath.Join(homeDir(), ".kube", "config")
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if len(kubeconfig) == 0 {
+		kubeconfig = filepath.Join(homeDir(), ".kube", "config")
+	}
 	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
 		log.Info().Msg("kubeconfig not found, use InCluster Mode")
 		config, err := restclient.InClusterConfig()
