@@ -156,9 +156,9 @@ You can install KT Connect Dashboard by following [Install Dashboard](https://rd
 
 ## Ask For Help
 
-Please contact us with DingTalk:
+Please contact us with DingTalk（钉钉）:
 
-![image](./docs/media/dingtalk-group-v2.png)
+<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-en-us.jpg" width="50%"></img>
 
 ## Release Notes
 

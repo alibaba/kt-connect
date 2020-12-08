@@ -26,4 +26,4 @@ KT使用shhuttle作为网络连接实现，实现轻量级的SSH VPN网络
 
 请加入`kt-dev`钉钉群：
 
-<img src="media/dingtalk-group.png" width="40%"></img>
+<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-zh-cn.jpg" width="40%"></img>
