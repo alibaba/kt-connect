@@ -38,7 +38,7 @@ type SSHkeyMeta struct {
 	PrivateKeyPath string
 }
 
-// RemoveService remove sevice
+// RemoveService remove service
 func (k *Kubernetes) RemoveService(name, namespace string) (err error) {
 	client := k.Clientset.CoreV1().Services(namespace)
 	return client.Delete(name, &metav1.DeleteOptions{})

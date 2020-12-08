@@ -2,8 +2,6 @@ package options
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
@@ -86,7 +84,7 @@ func NewDaemonOptions() *DaemonOptions {
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &DaemonOptions{
 		Namespace:  vars.DefNamespace,
-		KubeConfig: os.Getenv("KUBECONFIG"),
+		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{
 			UserHome: userHome,
