@@ -5,9 +5,8 @@
 package channel
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
+	reflect "reflect"
 )
 
 // MockChannel is a mock of Channel interface

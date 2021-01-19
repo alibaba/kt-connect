@@ -21,6 +21,4 @@ func main() {
 		log.Error().Msg(err.Error())
 		panic(err.Error())
 	}
-	log.Info().Msg("shadow(DNS) start at 53 successful")
-	log.Info().Msg("shadow start successful")
 }

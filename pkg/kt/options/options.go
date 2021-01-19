@@ -2,8 +2,6 @@ package options
 
 import (
 	"fmt"
-	"path/filepath"
-
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
@@ -27,6 +25,7 @@ type ConnectOptions struct {
 	Dump2HostsNamespaces cli.StringSlice
 	Hosts                map[string]string
 	ShareShadow          bool
+	LocalDomain          string
 }
 
 type exchangeOptions struct {
@@ -85,7 +84,7 @@ func NewDaemonOptions() *DaemonOptions {
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &DaemonOptions{
 		Namespace:  vars.DefNamespace,
-		KubeConfig: filepath.Join(userHome, ".kube", "config"),
+		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{
 			UserHome: userHome,

@@ -2,7 +2,9 @@ package dnsserver
 
 import (
 	"errors"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
@@ -58,17 +60,65 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 
 	qtype := req.Question[0].Qtype
 	name := req.Question[0].Name
+	if !strings.HasSuffix(name, ".") {
+		// This should never happen, just in case
+		name = name + "."
+	}
+	localDomain := os.Getenv(common.EnvVarLocalDomain)
+	if localDomain != "" && strings.HasSuffix(name, localDomain+".") {
+		name = name[0:(len(name) - len(localDomain) - 1)]
+	}
 	log.Info().Msgf("looking up %s", name)
-	rr, err := s.exchange(name, qtype, name)
-	if IsDomainNotExist(err) {
-		for _, suffix := range s.getSuffixes() {
-			rr, err = s.exchange(name+suffix, qtype, name)
-			if err == nil {
-				break
-			}
+
+	rr = make([]dns.RR, 0)
+	domainsToLookup := s.fetchAllPossibleDomains(name)
+	for _, domain := range domainsToLookup {
+		r, err := s.exchange(domain, qtype, name)
+		if err == nil {
+			rr = r
+			break
 		}
 	}
 	return
+}
+
+// get all domains need to lookup
+func (s *server) fetchAllPossibleDomains(name string) []string {
+	count := strings.Count(name, ".")
+	domainSuffixes := s.getSuffixes()
+	var namesToLookup []string
+	switch count {
+	case 0:
+		// invalid domain, dns name always ends with a '.'
+		log.Warn().Msgf("received invalid domain query: " + name)
+	case 1:
+		if len(domainSuffixes) > 0 {
+			// service name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[0])
+		}
+		// raw domain
+		namesToLookup = append(namesToLookup, name)
+	case 2:
+		if len(domainSuffixes) > 1 {
+			// stateful-set-pod.service name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[0])
+			// service.namespace name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
+		}
+		// raw domain
+		namesToLookup = append(namesToLookup, name)
+	case 3:
+		// raw domain
+		namesToLookup = append(namesToLookup, name)
+		if len(domainSuffixes) > 1 {
+			// stateful-set-pod.service.namespace name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
+		}
+	default:
+		// raw domain
+		namesToLookup = append(namesToLookup, name)
+	}
+	return namesToLookup
 }
 
 // Convert short domain to fully qualified domain name
@@ -105,7 +155,7 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 		log.Error().Msgf("error: fail to fetch upstream dns: %s", err.Error())
 		return
 	}
-	log.Info().Msgf("resolve domain %s via server %s", domain, address)
+	log.Info().Msgf("resolving domain %s via upstream %s", domain, address)
 
 	c := new(dns.Client)
 	msg := new(dns.Msg)
