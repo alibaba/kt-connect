@@ -273,8 +273,8 @@ func (k *Kubernetes) CreateService(name, namespace string, port int, labels map[
 }
 
 // ClusterCrids get cluster cirds
-func (k *Kubernetes) ClusterCrids(podCIDR string) (cidrs []string, err error) {
-	serviceList, err := k.Clientset.CoreV1().Services("").List(metav1.ListOptions{})
+func (k *Kubernetes) ClusterCrids(namespace string, podCIDR string) (cidrs []string, err error) {
+	serviceList, err := k.Clientset.CoreV1().Services(namespace).List(metav1.ListOptions{})
 	if err != nil {
 		return
 	}
