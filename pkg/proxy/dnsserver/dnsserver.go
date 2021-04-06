@@ -44,8 +44,10 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg.Authoritative = true
 	// Stuff must be in the answer section
 	for _, a := range s.query(req) {
-		log.Info().Msgf("answer: %v", a)
-		msg.Answer = append(msg.Answer, a)
+		if (a.Header().Rrtype != dns.TypeCNAME) {
+			log.Info().Msgf("answer: %v", a)
+			msg.Answer = append(msg.Answer, a)
+		}
 	}
 
 	_ = w.WriteMsg(&msg)
