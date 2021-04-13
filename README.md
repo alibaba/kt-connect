@@ -245,5 +245,5 @@ You can install KT Connect Dashboard by following [Install Dashboard](https://rd
 
 Please contact us with DingTalk（钉钉）:
 
-![DingTalk](./docs/media/dingtalk.png)
+<img src="https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/media/dingtalk.png" width="50%"></img>
 
