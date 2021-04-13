@@ -154,12 +154,6 @@ The dashboard can help your know how your dev environment is been used.
 
 You can install KT Connect Dashboard by following [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
 
-## Ask For Help
-
-Please contact us with DingTalk（钉钉）:
-
-<img src="https://virtual-environment.oss-cn-zhangjiakou.aliyuncs.com/image/dingtalk-group-en-us.jpg" width="50%"></img>
-
 ## Release Notes
 
 ### 0.0.12
@@ -246,3 +240,10 @@ Please contact us with DingTalk（钉钉）:
 
 * split command to `connect` and `exchange`.
 * support mutil exchange.
+
+## Ask For Help
+
+Please contact us with DingTalk（钉钉）:
+
+![DingTalk](./docs/media/dingtalk.png)
+
