@@ -44,7 +44,7 @@ export class ComponentMenu extends Component {
       <h3>Component Topo:</h3>
       <Steps direction="vertical" size="small" current={4}>
         <Step title="Request" description="" />
-        {type === 'mesh' && <Step title={`To Version:${component.metadata.labels['version']} (Service Mesh)`} description="" />}
+        {type === 'mesh' && <Step title={`To Version:${component.metadata.labels['kt-version']} (Service Mesh)`} description="" />}
         <Step title={`Request To pod: ${component.metadata.name}`} description={`${component.status.podIP}`} />
         <Step title="Forward to local:" description={`${component.metadata.labels['remoteAddress']}`} />
       </Steps>

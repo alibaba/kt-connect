@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
 
@@ -128,10 +129,10 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 
 func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		"kt":           workload,
-		"version":      meshVersion,
-		"kt-component": ComponentMesh,
-		"control-by":   KubernetesTool,
+		"kt":               workload,
+		common.KTComponent: ComponentMesh,
+		common.KTVersion:   meshVersion,
+		"control-by":       KubernetesTool,
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {

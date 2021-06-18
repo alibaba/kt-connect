@@ -3,6 +3,7 @@ package cluster
 import (
 	"errors"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
@@ -94,8 +95,7 @@ func (k *Kubernetes) Deployment(name, namespace string) (*appv1.Deployment, erro
 // GetOrCreateShadow create shadow
 func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels, envs map[string]string,
 	debug bool, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
-
-	component, version := labels["kt-component"], labels["version"]
+	component, version := labels[common.KTComponent], labels[common.KTVersion]
 	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
 
 	privateKeyPath := util.PrivateKeyPath(component, version)

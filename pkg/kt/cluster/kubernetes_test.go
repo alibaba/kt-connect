@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -41,8 +42,8 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 				namespace: "default",
 				image:     "shadow/shadow",
 				labels: map[string]string{
-					"kt-component": "shadow-component",
-					"version":      "0.0.1",
+					common.KTComponent: "shadow-component",
+					common.KTVersion:   "0.0.1",
 				},
 				debug: true,
 			},
