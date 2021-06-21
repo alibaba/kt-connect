@@ -1,13 +1,15 @@
 package command
 
 import (
+	"fmt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
 )
 
 // AppFlags return app flags
-func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
+func AppFlags(options *options.DaemonOptions, hub, version string) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
@@ -22,7 +24,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + version,
+			Value:       fmt.Sprintf("%v/kt-connect-shadow:%v", hub, version),
 			Destination: &options.Image,
 		},
 		cli.BoolFlag{

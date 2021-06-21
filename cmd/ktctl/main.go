@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	version = "dev"
+	version string // Will be injected when building
+	hub     string // Will be injected when building
 )
 
 func init() {
@@ -32,7 +33,7 @@ func main() {
 	app.Usage = ""
 	app.Version = version
 	app.Authors = command.NewCliAuthor()
-	app.Flags = command.AppFlags(options, version)
+	app.Flags = command.AppFlags(options, hub, version)
 
 	context := &kt.Cli{Options: options}
 	action := command.Action{}

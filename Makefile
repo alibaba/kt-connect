@@ -1,11 +1,12 @@
 
 PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
-TAG				  ?= $(shell date +%s)
+TAG				  ?= $(shell git rev-parse --short HEAD)
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 BUILDER_IMAGE	  =  builder
 DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
+GO_BUILD_LDFLAGS  =  -X main.version=$(TAG) -X main.hub=$(PREFIX)
 
 # generate mock
 generate-mock:
@@ -37,8 +38,8 @@ check:
 
 # build ktctl
 build-connect:
-	scripts/build-ktctl
-	scripts/archive
+	GO_BUILD_LDFLAGS="$(GO_BUILD_LDFLAGS)" scripts/build-ktctl
+	GO_BUILD_LDFLAGS="$(GO_BUILD_LDFLAGS)" scripts/archive
 
 # build connect plugin
 build-connect-plugin:
