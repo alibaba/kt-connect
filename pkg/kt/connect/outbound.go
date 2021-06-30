@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"sync"
-	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt/channel"
 
@@ -46,8 +45,7 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 			},
 			options.Debug,
 		)
-		log.Info().Msgf("wait(%ds) port-forward successful", options.WaitTime)
-		time.Sleep(time.Duration(options.WaitTime) * time.Second)
+		util.WaitPortBeReady(options.WaitTime, options.ConnectOptions.SSHPort)
 		wg.Done()
 	}(&wg)
 

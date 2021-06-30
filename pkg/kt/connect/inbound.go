@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt/channel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -74,8 +73,7 @@ func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, po
 			},
 			debug,
 		)
-		log.Info().Msgf("wait(%ds) port-forward successful", options.WaitTime)
-		time.Sleep(time.Duration(options.WaitTime) * time.Second)
+		util.WaitPortBeReady(options.WaitTime, localSSHPort)
 		wg.Done()
 	}(&wg)
 	wg.Wait()
