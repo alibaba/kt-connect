@@ -5,11 +5,12 @@
 package cluster
 
 import (
+	reflect "reflect"
+
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
-	reflect "reflect"
 )
 
 // MockKubernetesInterface is a mock of KubernetesInterface interface
@@ -135,18 +136,18 @@ func (mr *MockKubernetesInterfaceMockRecorder) ServiceHosts(namespace interface{
 }
 
 // ClusterCrids mocks base method
-func (m *MockKubernetesInterface) ClusterCrids(podCIDR string) ([]string, error) {
+func (m *MockKubernetesInterface) ClusterCrids(namespace, podCIDR string) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClusterCrids", podCIDR)
+	ret := m.ctrl.Call(m, "ClusterCrids", namespace, podCIDR)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ClusterCrids indicates an expected call of ClusterCrids
-func (mr *MockKubernetesInterfaceMockRecorder) ClusterCrids(podCIDR interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) ClusterCrids(namespace, podCIDR interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterCrids", reflect.TypeOf((*MockKubernetesInterface)(nil).ClusterCrids), podCIDR)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterCrids", reflect.TypeOf((*MockKubernetesInterface)(nil).ClusterCrids), namespace, podCIDR)
 }
 
 // GetOrCreateShadow mocks base method
