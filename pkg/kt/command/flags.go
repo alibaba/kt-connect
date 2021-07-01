@@ -44,7 +44,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Name:        "waitTime",
 			Usage:       "custom wait time for kubectl port-forward to support slow network environment",
 			Destination: &options.WaitTime,
-			Value:       5,
+			Value:       10,
 		},
 	}
 }
