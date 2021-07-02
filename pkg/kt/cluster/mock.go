@@ -7,6 +7,8 @@ package cluster
 import (
 	reflect "reflect"
 
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
 	v1 "k8s.io/api/apps/v1"
@@ -136,9 +138,9 @@ func (mr *MockKubernetesInterfaceMockRecorder) ServiceHosts(namespace interface{
 }
 
 // ClusterCrids mocks base method
-func (m *MockKubernetesInterface) ClusterCrids(namespace, podCIDR string) ([]string, error) {
+func (m *MockKubernetesInterface) ClusterCrids(namespace string, connectOptions *options.ConnectOptions) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClusterCrids", namespace, podCIDR)
+	ret := m.ctrl.Call(m, "ClusterCrids", namespace, connectOptions)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1

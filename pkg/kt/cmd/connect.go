@@ -53,6 +53,7 @@ type ConnectOptions struct {
 	currentNs  string
 	Port       int
 	Timeout    int
+	Global     bool
 }
 
 // NewConnectCommand ...
@@ -85,6 +86,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	// method
 	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks5")
 	cmd.Flags().IntVarP(&opt.Port, "port", "p", 2222, "Local SSH Proxy port ")
+	cmd.Flags().BoolVarP(&opt.Global, "global", "g", false, "with cluster scope")
 
 	// vpn
 	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
@@ -186,6 +188,7 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 			Socke5Proxy: o.Proxy,
 			CIDR:        o.Cidr,
 			SSHPort:     o.Port,
+			Global:      o.Global,
 		},
 	}
 }
