@@ -161,6 +161,13 @@ func container(image string, args []string, envs map[string]string) v1.Container
 				MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
 			},
 		},
+		SecurityContext: &v1.SecurityContext{
+			Capabilities: &v1.Capabilities{
+				Add: []v1.Capability{
+					"AUDIT_WRITE",
+				},
+			},
+		},
 	}
 }
 
@@ -198,7 +205,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.D
 						container(image, args, envs),
 					},
 					Volumes: []v1.Volume{
-						getSshVolume(volume),
+						getSSHVolume(volume),
 					},
 				},
 			},
@@ -206,7 +213,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.D
 	}
 }
 
-func getSshVolume(volume string) v1.Volume {
+func getSSHVolume(volume string) v1.Volume {
 	sshVolume := v1.Volume{
 		Name: "ssh-public-key",
 		VolumeSource: v1.VolumeSource{
