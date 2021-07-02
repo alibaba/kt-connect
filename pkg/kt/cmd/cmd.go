@@ -52,6 +52,7 @@ type ConnectOptions struct {
 	Dump2hosts string
 	currentNs  string
 	Port       int
+	Timeout    int
 }
 
 // NewConnectCommand ...
@@ -91,6 +92,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	// socks5
 	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks5, you can choice which port to proxy")
 	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
+	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	return cmd
 
@@ -171,6 +173,7 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 		Debug:     o.Debug,
 		Labels:    o.Labels,
 		Namespace: o.currentNs,
+		WaitTime:  o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
 			UserHome:  userHome,
 			AppHome:   appHome,
