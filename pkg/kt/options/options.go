@@ -17,6 +17,7 @@ type RunOptions struct {
 
 // ConnectOptions ...
 type ConnectOptions struct {
+	Global               bool
 	DisableDNS           bool
 	SSHPort              int
 	Socke5Proxy          int

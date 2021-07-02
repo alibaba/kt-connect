@@ -52,6 +52,11 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 // ConnectActionFlag ...
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
+		cli.BoolFlag{
+			Name:        "global",
+			Usage:       "with cluster scope",
+			Destination: &options.ConnectOptions.Global,
+		},
 		cli.StringFlag{
 			Name:        "method",
 			Value:       methodDefaultValue(),
@@ -106,15 +111,13 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 func methodDefaultValue() string {
 	if util.IsWindows() {
 		return "socks5"
-	} else {
-		return "vpn"
 	}
+	return "vpn"
 }
 
 func methodDefaultUsage() string {
 	if util.IsWindows() {
 		return "Windows only support socks5"
-	} else {
-		return "Connect method 'vpn' or 'socks5'"
 	}
+	return "Connect method 'vpn' or 'socks5'"
 }
