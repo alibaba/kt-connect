@@ -17,7 +17,7 @@ import (
 
 var (
 	meshExample = `
-  # exchange app to local
+  # mesh app to local
   kubectl mesh tomcat --expose 8080
 `
 )

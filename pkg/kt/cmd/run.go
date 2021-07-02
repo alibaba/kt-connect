@@ -16,8 +16,8 @@ import (
 
 var (
 	runExample = `
-  # exchange app to local
-  kubectl run tomcat --expose -p 80
+  # expose local service to cluster 
+  kubectl run tomcat -e -p 80
 `
 )
 
