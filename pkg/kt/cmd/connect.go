@@ -21,9 +21,9 @@ var (
   # connect to kubernetes cluster
   ktctl connect
   # connect with debug mode
-  ktctl connect -d
+  kubectl connect -d
   # connect with socks5
-  ktctl connect -m socks5 --dump2hosts=default,dev
+  kubectl connect -m socks5 --dump2hosts=default,dev
   # connect with socks5 and dump service to local hosts file
 `
 )
@@ -52,6 +52,7 @@ type ConnectOptions struct {
 	Dump2hosts string
 	currentNs  string
 	Port       int
+	Timeout    int
 }
 
 // NewConnectCommand ...
@@ -79,6 +80,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().BoolVarP(&opt.Debug, "debug", "d", false, "debug mode")
 	cmd.Flags().StringVarP(&opt.Image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow", "shadow image")
 	cmd.Flags().StringVarP(&opt.Labels, "labels", "l", "", "custom labels on shadow pod")
+	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// method
 	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks5")
@@ -171,6 +173,7 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 		Debug:     o.Debug,
 		Labels:    o.Labels,
 		Namespace: o.currentNs,
+		WaitTime:  o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
 			UserHome:  userHome,
 			AppHome:   appHome,

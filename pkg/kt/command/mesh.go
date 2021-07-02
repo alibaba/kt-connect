@@ -67,7 +67,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "mesh")
 
-	kubernetes, err := cluster.Create(options.KubeConfig)
+	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
 	}
