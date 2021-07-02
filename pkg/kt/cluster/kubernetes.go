@@ -6,6 +6,8 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
 
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
@@ -19,7 +21,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// PodMetaAndSpec
+// PodMetaAndSpec ...
 type PodMetaAndSpec struct {
 	Meta  *ResourceMeta
 	Image string
@@ -273,13 +275,21 @@ func (k *Kubernetes) CreateService(name, namespace string, port int, labels map[
 }
 
 // ClusterCrids get cluster cirds
-func (k *Kubernetes) ClusterCrids(namespace string, podCIDR string) (cidrs []string, err error) {
-	serviceList, err := k.Clientset.CoreV1().Services(namespace).List(metav1.ListOptions{})
+func (k *Kubernetes) ClusterCrids(namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
+	currentNS := namespace
+	if connectOptions.Global {
+		log.Info().Msgf("scan proxy CRID in cluster scope")
+		currentNS = ""
+	} else {
+		log.Info().Msgf("scan proxy CRID in namespace scope")
+	}
+
+	serviceList, err := k.Clientset.CoreV1().Services(currentNS).List(metav1.ListOptions{})
 	if err != nil {
 		return
 	}
 
-	cidrs, err = getPodCirds(k.Clientset, podCIDR)
+	cidrs, err = getPodCirds(k.Clientset, connectOptions.CIDR)
 	if err != nil {
 		return
 	}

@@ -2,6 +2,7 @@ package options
 
 import (
 	"fmt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
@@ -16,6 +17,7 @@ type RunOptions struct {
 
 // ConnectOptions ...
 type ConnectOptions struct {
+	Global               bool
 	DisableDNS           bool
 	SSHPort              int
 	Socke5Proxy          int
@@ -28,11 +30,13 @@ type ConnectOptions struct {
 	LocalDomain          string
 }
 
-type exchangeOptions struct {
+// ExchangeOptions ...
+type ExchangeOptions struct {
 	Expose string
 }
 
-type meshOptions struct {
+// MeshOptions ...
+type MeshOptions struct {
 	Expose  string
 	Version string
 }
@@ -70,8 +74,8 @@ type DaemonOptions struct {
 	RuntimeOptions   *RuntimeOptions
 	RunOptions       *RunOptions
 	ConnectOptions   *ConnectOptions
-	ExchangeOptions  *exchangeOptions
-	MeshOptions      *meshOptions
+	ExchangeOptions  *ExchangeOptions
+	MeshOptions      *MeshOptions
 	DashboardOptions *dashboardOptions
 	WaitTime         int
 }
@@ -92,8 +96,8 @@ func NewDaemonOptions() *DaemonOptions {
 			PidFile:  pidFile,
 		},
 		ConnectOptions:   &ConnectOptions{},
-		ExchangeOptions:  &exchangeOptions{},
-		MeshOptions:      &meshOptions{},
+		ExchangeOptions:  &ExchangeOptions{},
+		MeshOptions:      &MeshOptions{},
 		DashboardOptions: &dashboardOptions{},
 		RunOptions:       &RunOptions{},
 	}

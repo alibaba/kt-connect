@@ -49,7 +49,7 @@ func WaitPortBeReady(waitTime, port int) bool {
 	for i := 0; i < waitTime; i++ {
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
-			log.Info().Msgf("connect to port-forward failed, error: %s, retry: %d", err, i)
+			log.Debug().Msgf("connect to port-forward failed, error: %s, retry: %d", err, i)
 			time.Sleep(1 * time.Second)
 		} else {
 			conn.Close()

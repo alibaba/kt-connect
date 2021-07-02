@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -34,7 +35,7 @@ type KubernetesInterface interface {
 	Scale(deployment *appV1.Deployment, replicas *int32) (err error)
 	ScaleTo(deployment, namespace string, replicas *int32) (err error)
 	ServiceHosts(namespace string) (hosts map[string]string)
-	ClusterCrids(namespace string, podCIDR string) (cidrs []string, err error)
+	ClusterCrids(namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error)
 	GetOrCreateShadow(name, namespace, image string, labels, envs map[string]string, debug, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
 	CreateService(name, namespace string, port int, labels map[string]string) (*coreV1.Service, error)
 	GetDeployment(name string, namespace string) (*appV1.Deployment, error)
