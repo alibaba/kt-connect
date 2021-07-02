@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -56,7 +55,7 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "exchange")
 
-	kubernetes, err := cluster.Create(options.KubeConfig)
+	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
 	}

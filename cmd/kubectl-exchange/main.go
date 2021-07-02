@@ -18,7 +18,7 @@ func main() {
 	flags := pflag.NewFlagSet("kubectl-exchange", pflag.ExitOnError)
 	pflag.CommandLine = flags
 
-	root := cmd.NewConnectCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}, version)
+	root := cmd.NewExchangeCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}, version)
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

@@ -9,27 +9,26 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
-	exchangeExample = `
+	runExample = `
   # exchange app to local
-  kubectl exchange tomcat --expose 8080
+  kubectl run tomcat --expose -p 80
 `
 )
 
-// NewExchangeCommand ...
-func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
-	opt := NewExchangeOptions(streams)
+// NewRunCommand ...
+func NewRunCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
+	opt := NewRunOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:          "exchange",
-		Short:        "exchange app",
-		Example:      exchangeExample,
+		Use:          "mesh",
+		Short:        "mesh app",
+		Example:      runExample,
 		SilenceUsage: true,
 		Version:      version,
 		RunE: func(c *cobra.Command, args []string) error {
@@ -50,14 +49,14 @@ func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *co
 	cmd.Flags().StringVarP(&opt.Labels, "labels", "l", "", "custom labels on shadow pod")
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
-	// exchange
-	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
-
+	// run
+	cmd.Flags().IntVarP(&opt.Port, "port", "p", 80, " The port that exposes")
+	cmd.Flags().BoolVarP(&opt.Expose, "expose", "e", false, " If true, a public, external service is created")
 	return cmd
 }
 
-// ExchangeOptions ...
-type ExchangeOptions struct {
+// RunOptions ...
+type RunOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	rawConfig   api.Config
 	args        []string
@@ -73,25 +72,26 @@ type ExchangeOptions struct {
 	currentNs string
 	Timeout   int
 
-	// exchange
+	// run
+	Port   int
+	Expose bool
 	Target string
-	Expose string
 }
 
-// NewExchangeOptions ...
-func NewExchangeOptions(streams genericclioptions.IOStreams) *ExchangeOptions {
-	return &ExchangeOptions{
+// NewRunOptions ...
+func NewRunOptions(streams genericclioptions.IOStreams) *RunOptions {
+	return &RunOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
 		IOStreams:   streams,
 	}
 }
 
 // Complete ...
-func (o *ExchangeOptions) Complete(cmd *cobra.Command, args []string) error {
+func (o *RunOptions) Complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 
 	if len(o.args) < 2 {
-		return fmt.Errorf("missing exchange target")
+		return fmt.Errorf("missing run target")
 	}
 
 	o.Target = args[1]
@@ -127,23 +127,19 @@ func (o *ExchangeOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // Run ...
-func (o *ExchangeOptions) Run() error {
+func (o *RunOptions) Run() error {
 	if err := o.checkContext(); err != nil {
 		return err
 	}
-	if err := o.checkTarget(); err != nil {
-		return err
-	}
-
 	ops := o.transport()
 	context := &kt.Cli{Options: ops}
 	action := command.Action{}
 
-	return action.Exchange(o.Target, context, ops)
+	return action.Run(o.Target, context, ops)
 }
 
 // checkContext
-func (o *ExchangeOptions) checkContext() error {
+func (o *RunOptions) checkContext() error {
 	currentCtx := o.rawConfig.CurrentContext
 	if _, ok := o.rawConfig.Contexts[currentCtx]; !ok {
 		return fmt.Errorf("current context %s not found anymore in KUBECONFIG", currentCtx)
@@ -151,15 +147,7 @@ func (o *ExchangeOptions) checkContext() error {
 	return nil
 }
 
-// checkTarget
-func (o *ExchangeOptions) checkTarget() error {
-	if _, err := o.clientset.AppsV1().Deployments(o.currentNs).Get(o.Target, metav1.GetOptions{}); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (o *ExchangeOptions) transport() *options.DaemonOptions {
+func (o *RunOptions) transport() *options.DaemonOptions {
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
 	util.CreateDirIfNotExist(appHome)
@@ -176,8 +164,9 @@ func (o *ExchangeOptions) transport() *options.DaemonOptions {
 			PidFile:   pidFile,
 			Clientset: o.clientset,
 		},
-		ExchangeOptions: &options.ExchangeOptions{
+		RunOptions: &options.RunOptions{
 			Expose: o.Expose,
+			Port:   o.Port,
 		},
 		ConnectOptions: &options.ConnectOptions{},
 	}

@@ -19,7 +19,7 @@ import (
 var (
 	connectExample = `
   # connect to kubernetes cluster
-  kubectl connect
+  ktctl connect
   # connect with debug mode
   kubectl connect -d
   # connect with socks5
@@ -80,6 +80,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().BoolVarP(&opt.Debug, "debug", "d", false, "debug mode")
 	cmd.Flags().StringVarP(&opt.Image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow", "shadow image")
 	cmd.Flags().StringVarP(&opt.Labels, "labels", "l", "", "custom labels on shadow pod")
+	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// method
 	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks5")
@@ -92,7 +93,6 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	// socks5
 	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks5, you can choice which port to proxy")
 	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
-	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	return cmd
 

@@ -16,20 +16,20 @@ import (
 )
 
 var (
-	exchangeExample = `
+	meshExample = `
   # exchange app to local
-  kubectl exchange tomcat --expose 8080
+  kubectl mesh tomcat --expose 8080
 `
 )
 
-// NewExchangeCommand ...
-func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
-	opt := NewExchangeOptions(streams)
+// NewMeshCommand ...
+func NewMeshCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
+	opt := NewMeshOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:          "exchange",
-		Short:        "exchange app",
-		Example:      exchangeExample,
+		Use:          "mesh",
+		Short:        "mesh app",
+		Example:      meshExample,
 		SilenceUsage: true,
 		Version:      version,
 		RunE: func(c *cobra.Command, args []string) error {
@@ -52,12 +52,12 @@ func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *co
 
 	// exchange
 	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
-
+	cmd.Flags().StringVarP(&opt.Version, "version-label", "", "0.0.1", "specify the version of mesh service, e.g. '0.0.1'")
 	return cmd
 }
 
-// ExchangeOptions ...
-type ExchangeOptions struct {
+// MeshOptions ...
+type MeshOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	rawConfig   api.Config
 	args        []string
@@ -73,25 +73,26 @@ type ExchangeOptions struct {
 	currentNs string
 	Timeout   int
 
-	// exchange
-	Target string
-	Expose string
+	// mesh
+	Target  string
+	Expose  string
+	Version string
 }
 
-// NewExchangeOptions ...
-func NewExchangeOptions(streams genericclioptions.IOStreams) *ExchangeOptions {
-	return &ExchangeOptions{
+// NewMeshOptions ...
+func NewMeshOptions(streams genericclioptions.IOStreams) *MeshOptions {
+	return &MeshOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
 		IOStreams:   streams,
 	}
 }
 
 // Complete ...
-func (o *ExchangeOptions) Complete(cmd *cobra.Command, args []string) error {
+func (o *MeshOptions) Complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 
 	if len(o.args) < 2 {
-		return fmt.Errorf("missing exchange target")
+		return fmt.Errorf("missing mesh target")
 	}
 
 	o.Target = args[1]
@@ -127,7 +128,7 @@ func (o *ExchangeOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // Run ...
-func (o *ExchangeOptions) Run() error {
+func (o *MeshOptions) Run() error {
 	if err := o.checkContext(); err != nil {
 		return err
 	}
@@ -139,11 +140,11 @@ func (o *ExchangeOptions) Run() error {
 	context := &kt.Cli{Options: ops}
 	action := command.Action{}
 
-	return action.Exchange(o.Target, context, ops)
+	return action.Mesh(o.Target, context, ops)
 }
 
 // checkContext
-func (o *ExchangeOptions) checkContext() error {
+func (o *MeshOptions) checkContext() error {
 	currentCtx := o.rawConfig.CurrentContext
 	if _, ok := o.rawConfig.Contexts[currentCtx]; !ok {
 		return fmt.Errorf("current context %s not found anymore in KUBECONFIG", currentCtx)
@@ -152,14 +153,14 @@ func (o *ExchangeOptions) checkContext() error {
 }
 
 // checkTarget
-func (o *ExchangeOptions) checkTarget() error {
+func (o *MeshOptions) checkTarget() error {
 	if _, err := o.clientset.AppsV1().Deployments(o.currentNs).Get(o.Target, metav1.GetOptions{}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (o *ExchangeOptions) transport() *options.DaemonOptions {
+func (o *MeshOptions) transport() *options.DaemonOptions {
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
 	util.CreateDirIfNotExist(appHome)
@@ -176,8 +177,9 @@ func (o *ExchangeOptions) transport() *options.DaemonOptions {
 			PidFile:   pidFile,
 			Clientset: o.clientset,
 		},
-		ExchangeOptions: &options.ExchangeOptions{
-			Expose: o.Expose,
+		MeshOptions: &options.MeshOptions{
+			Expose:  o.Expose,
+			Version: o.Version,
 		},
 		ConnectOptions: &options.ConnectOptions{},
 	}
