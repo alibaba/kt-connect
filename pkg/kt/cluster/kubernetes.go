@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 
@@ -97,10 +98,11 @@ func (k *Kubernetes) Deployment(name, namespace string) (*appv1.Deployment, erro
 func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels, envs map[string]string,
 	debug bool, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
 
-	component, version := labels["kt-component"], labels["version"]
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
+	component := labels["kt-component"]
+	identifier := strings.ToLower(util.RandomString(4))
+	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, identifier)
 
-	privateKeyPath := util.PrivateKeyPath(component, version)
+	privateKeyPath := util.PrivateKeyPath(component, identifier)
 
 	if reuseShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&ResourceMeta{
