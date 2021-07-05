@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
 
@@ -108,9 +109,9 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 
 func getExchangeLabels(customLabels string, workload string, origin *v1.Deployment) map[string]string {
 	labels := map[string]string{
-		"kt":           workload,
-		"kt-component": "exchange",
-		"control-by":   "kt",
+		"kt":               workload,
+		common.KTComponent: "exchange",
+		"control-by":       "kt",
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {
@@ -122,6 +123,6 @@ func getExchangeLabels(customLabels string, workload string, origin *v1.Deployme
 		labels[k] = v
 	}
 	splits := strings.Split(workload, "-")
-	labels["version"] = splits[len(splits)-1]
+	labels[common.KTVersion] = splits[len(splits)-1]
 	return labels
 }

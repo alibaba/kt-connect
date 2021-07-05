@@ -139,13 +139,13 @@ func envs(options *options.DaemonOptions) map[string]string {
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		"kt-component": "connect",
-		"control-by":   "kt",
+		common.KTComponent: "connect",
+		"control-by":       "kt",
 	}
 	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
 	splits := strings.Split(workload, "-")
-	labels["version"] = splits[len(splits)-1]
+	labels[common.KTVersion] = splits[len(splits)-1]
 	return labels
 }

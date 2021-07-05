@@ -1,3 +1,7 @@
 package common
 
-const EnvVarLocalDomain = "LOCAL_DOMAIN"
+const (
+	EnvVarLocalDomain = "LOCAL_DOMAIN"
+	KTVersion         = "kt-version"
+	KTComponent       = "kt-component"
+)
