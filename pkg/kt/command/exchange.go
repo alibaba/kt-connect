@@ -104,6 +104,7 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 
+	setupHeartBeat(cli, options, podName)
 	return nil
 }
 

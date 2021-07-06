@@ -83,7 +83,7 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 	labels := getMeshLabels(workload, meshVersion, app, options)
 
-	err = createShadowAndInbound(workload, labels, options, kubernetes)
+	err = createShadowAndInbound(workload, labels, options, kubernetes, cli)
 	if err != nil {
 		return err
 	}
@@ -106,7 +106,7 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 }
 
 func createShadowAndInbound(workload string, labels map[string]string, options *options.DaemonOptions,
-	kubernetes cluster.KubernetesInterface) error {
+	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) error {
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
@@ -124,6 +124,8 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 	if err != nil {
 		return err
 	}
+
+	setupHeartBeat(cli, options, podName)
 	return nil
 }
 
