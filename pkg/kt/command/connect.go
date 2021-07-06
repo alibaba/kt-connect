@@ -2,11 +2,12 @@ package command
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -80,6 +81,17 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if err != nil {
 		return
 	}
+
+	// setup a heartbeat watcher
+	ticker := time.NewTicker(time.Minute * 10)
+	go func() {
+		for _ = range ticker.C {
+			now := time.Now()
+			fmt.Printf("ticked at %v (%d)", now, now.Unix())
+			cli.Exec().Kubectl().UpdateAnnotate(options.Namespace, podName,
+				common.KTLastHeartBeat, strconv.FormatInt(now.Unix(), 10))
+		}
+	}()
 
 	return cli.Shadow().Outbound(podName, endPointIP, credential, cidrs, cli.Exec())
 }
