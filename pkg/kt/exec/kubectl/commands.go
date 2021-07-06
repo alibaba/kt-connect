@@ -55,18 +55,6 @@ func (k *Cli) PortForward(namespace, resource string, remotePort int) *exec.Cmd 
 	)
 }
 
-// UpdateAnnotate ...
-func (k *Cli) UpdateAnnotate(namespace, podName, label, value string) *exec.Cmd {
-	args := kubectl(k, namespace)
-	args = append(args, "annotate", "--overwrite", "pods",
-		podName,
-		fmt.Sprintf("%s='%s'", label, value))
-	return exec.Command(
-		KUBECTL,
-		args...,
-	)
-}
-
 func kubectl(k *Cli, namespace string) []string {
 	var (
 		args             []string

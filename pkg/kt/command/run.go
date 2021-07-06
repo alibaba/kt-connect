@@ -119,7 +119,7 @@ func runAndExposeLocalService(
 		return err
 	}
 
-	setupHeartBeat(cli, options, podName)
 	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 	return nil
+
 }

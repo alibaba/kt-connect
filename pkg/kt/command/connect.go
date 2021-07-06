@@ -2,16 +2,18 @@ package command
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+
+	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
-	"os"
-	"strings"
 )
 
 // newConnectCommand return new connect command
@@ -78,8 +80,6 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if err != nil {
 		return
 	}
-
-	setupHeartBeat(cli, options, podName)
 
 	return cli.Shadow().Outbound(podName, endPointIP, credential, cidrs, cli.Exec())
 }
