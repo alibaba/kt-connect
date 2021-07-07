@@ -22,8 +22,9 @@ func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.Da
 		newConnectCommand(kt, options, action),
 		newExchangeCommand(kt, options, action),
 		newMeshCommand(kt, options, action),
+		newCleanCommand(kt, options, action),
 		newDashboardCommand(kt, options, action),
-		NewCheckCommand(kt, options, action),
+		newCheckCommand(kt, options, action),
 	}
 }
 

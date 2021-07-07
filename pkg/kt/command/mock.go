@@ -112,6 +112,14 @@ func (m *MockActionInterface) Mesh(service string, cli kt.CliInterface, options 
 	return ret0
 }
 
+// Mesh mocks base method
+func (m *MockActionInterface) Clean(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Clean", service, cli, options)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
 // Mesh indicates an expected call of Mesh
 func (mr *MockActionInterfaceMockRecorder) Mesh(service, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()

@@ -13,6 +13,7 @@ type ActionInterface interface {
 	Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Exchange(service string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Mesh(service string, cli kt.CliInterface, options *options.DaemonOptions) error
+	Clean(cli kt.CliInterface, options *options.DaemonOptions) error
 	ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) error
 }
 

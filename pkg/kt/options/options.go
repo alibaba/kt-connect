@@ -41,6 +41,11 @@ type MeshOptions struct {
 	Version string
 }
 
+// CleanOptions ...
+type CleanOptions struct {
+	DryRun bool
+}
+
 // RuntimeOptions ...
 type RuntimeOptions struct {
 	PidFile  string
@@ -76,6 +81,7 @@ type DaemonOptions struct {
 	ConnectOptions   *ConnectOptions
 	ExchangeOptions  *ExchangeOptions
 	MeshOptions      *MeshOptions
+	CleanOptions     *CleanOptions
 	DashboardOptions *dashboardOptions
 	WaitTime         int
 }
@@ -98,6 +104,7 @@ func NewDaemonOptions() *DaemonOptions {
 		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &ExchangeOptions{},
 		MeshOptions:      &MeshOptions{},
+		CleanOptions:     &CleanOptions{},
 		DashboardOptions: &dashboardOptions{},
 		RunOptions:       &RunOptions{},
 	}
