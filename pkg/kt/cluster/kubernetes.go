@@ -157,6 +157,19 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 	return
 }
 
+// GetAllExistingShadowDeployments fetch all shadow deployments
+func (k *Kubernetes) GetAllExistingShadowDeployments(namespace string) ([]appv1.Deployment, error) {
+	list, err := k.Clientset.AppsV1().Deployments(namespace).List(metav1.ListOptions{
+		LabelSelector: k8sLabels.Set(metav1.LabelSelector{
+			MatchLabels: map[string]string{"control-by": "kt"},
+		}.MatchLabels).String(),
+	})
+	if list == nil {
+		return nil, common.CommandExecError{Reason: "get nil list when querying shadow deployments"}
+	}
+	return list.Items, err
+}
+
 func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *v1.Pod, generator *util.SSHGenerator, err error) {
 	_, shadowError := k.GetDeployment(resourceMeta.Name, resourceMeta.Namespace)
 	if shadowError != nil {

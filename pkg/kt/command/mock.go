@@ -113,9 +113,9 @@ func (m *MockActionInterface) Mesh(service string, cli kt.CliInterface, options 
 }
 
 // Mesh mocks base method
-func (m *MockActionInterface) Clean(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Clean", service, cli, options)
+	ret := m.ctrl.Call(m, "Clean", cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
