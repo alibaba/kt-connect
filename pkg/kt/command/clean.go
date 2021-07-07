@@ -4,10 +4,12 @@ import (
 	"container/list"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
+	"k8s.io/api/apps/v1"
 	"strconv"
 	"time"
 )
@@ -39,11 +41,7 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 //Clean delete unavailing shadow pods
 func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
 	const halfAnHour = 30 * 60
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
-	deployments, err := kubernetes.GetAllExistingShadowDeployments(options.Namespace)
+	kubernetes, deployments, err := action.getShadowDeployments(cli, options)
 	if err != nil {
 		return err
 	}
@@ -75,4 +73,18 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		log.Info().Msg("Done.")
 	}
 	return nil
+}
+
+func (action *Action) getShadowDeployments(cli kt.CliInterface, options *options.DaemonOptions) (
+	cluster.KubernetesInterface, []v1.Deployment, error) {
+
+	kubernetes, err := cli.Kubernetes()
+	if err != nil {
+		return nil, nil, err
+	}
+	deployments, err := kubernetes.GetAllExistingShadowDeployments(options.Namespace)
+	if err != nil {
+		return nil, nil, err
+	}
+	return kubernetes, deployments, nil
 }
