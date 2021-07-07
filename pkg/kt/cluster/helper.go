@@ -2,6 +2,8 @@ package cluster
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
+	"strconv"
 	"strings"
 	"time"
 
@@ -115,7 +117,7 @@ func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
 func wait(podName string) {
 	time.Sleep(time.Second)
 	if len(podName) >= 0 {
-		log.Info().Msgf("pod: %s is running,but not ready", podName)
+		log.Info().Msgf("pod: %s is running, but not ready", podName)
 		return
 	}
 	log.Info().Msg("Shadow Pods not ready......")
@@ -189,7 +191,8 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.D
 			Namespace: namespace,
 			Labels:    labels,
 			Annotations: map[string]string{
-				vars.RefCount: "1",
+				vars.RefCount:          "1",
+				common.KTLastHeartBeat: strconv.FormatInt(time.Now().Unix(), 10),
 			},
 		},
 		Spec: appV1.DeploymentSpec{

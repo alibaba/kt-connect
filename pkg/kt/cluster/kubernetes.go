@@ -234,7 +234,6 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	log.Info().Msgf("Client address %s", localIPAddress)
 	resourceMeta := metaAndSpec.Meta
 	resourceMeta.Labels["remoteAddress"] = localIPAddress
-
 	resourceMeta.Labels["kt"] = resourceMeta.Name
 	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
 	deployment := deployment(metaAndSpec, sshcm, debug)
@@ -245,6 +244,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	}
 	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
+	setupHeartBeat(client, resourceMeta.Name)
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
 }
 
