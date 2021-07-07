@@ -43,7 +43,8 @@ type MeshOptions struct {
 
 // CleanOptions ...
 type CleanOptions struct {
-	DryRun bool
+	DryRun           bool
+	ThresholdInMinus int64
 }
 
 // RuntimeOptions ...

@@ -25,6 +25,12 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 				Usage:       "Only print name of deployments to be deleted",
 				Destination: &options.CleanOptions.DryRun,
 			},
+			urfave.Int64Flag{
+				Name:        "thresholdInMinus",
+				Usage:       "Length of allowed disconnection time before a unavailing shadow pod be deleted",
+				Destination: &options.CleanOptions.ThresholdInMinus,
+				Value:       30,
+			},
 		},
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
@@ -40,7 +46,6 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 
 //Clean delete unavailing shadow pods
 func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
-	const halfAnHour = 30 * 60
 	kubernetes, deployments, err := action.getShadowDeployments(cli, options)
 	if err != nil {
 		return err
@@ -49,7 +54,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	namesOfDeploymentToDelete := list.New()
 	for _, deployment := range deployments {
 		lastHeartBeat, err := strconv.ParseInt(deployment.ObjectMeta.Annotations[common.KTLastHeartBeat], 10, 64)
-		if err == nil && time.Now().Unix()-lastHeartBeat > halfAnHour {
+		if err == nil && action.isExpired(lastHeartBeat, options) {
 			namesOfDeploymentToDelete.PushBack(deployment.Name)
 		}
 	}
@@ -73,6 +78,10 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		log.Info().Msg("Done.")
 	}
 	return nil
+}
+
+func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOptions) bool {
+	return time.Now().Unix()-lastHeartBeat > options.CleanOptions.ThresholdInMinus*60
 }
 
 func (action *Action) getShadowDeployments(cli kt.CliInterface, options *options.DaemonOptions) (
