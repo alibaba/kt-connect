@@ -7,7 +7,7 @@ require (
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-gonic/gin v1.4.0
-	github.com/golang/mock v1.4.1
+	github.com/golang/mock v1.6.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/kubernetes/dashboard v1.10.1
 	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
@@ -18,8 +18,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/urfave/cli v1.22.4
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d
-	golang.org/x/net v0.0.0-20191004110552-13f9640d40b9
-	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	istio.io/api v0.0.0-20200221025927-228308df3f1b
 	istio.io/client-go v0.0.0-20200221055756-736d3076b458
