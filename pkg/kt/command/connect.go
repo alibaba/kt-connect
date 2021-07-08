@@ -139,8 +139,9 @@ func envs(options *options.DaemonOptions) map[string]string {
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		common.KTComponent: "connect",
-		"control-by":       "kt",
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentConnect,
+		common.KTName:      workload,
 	}
 	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v

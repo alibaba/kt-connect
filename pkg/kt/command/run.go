@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strconv"
@@ -75,10 +76,11 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 	}
 
 	labels := map[string]string{
-		"control-by":       "kt",
-		common.KTComponent: "run",
-		"kt":               service,
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentRun,
+		common.KTName:      service,
 		common.KTVersion:   strings.ToLower(util.RandomString(5)),
+		common.KTConfig:    fmt.Sprintf("expose=%t", options.RunOptions.Expose),
 	}
 
 	// extra labels must be applied after origin labels

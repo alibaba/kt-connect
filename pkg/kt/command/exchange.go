@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
@@ -74,7 +75,7 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image,
-		getExchangeLabels(options.Labels, workload, app), envs, options.Debug, false)
+		getExchangeLabels(options, workload, app), envs, options.Debug, false)
 	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
 	if err != nil {
@@ -107,11 +108,13 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 	return nil
 }
 
-func getExchangeLabels(customLabels string, workload string, origin *v1.Deployment) map[string]string {
+func getExchangeLabels(options *options.DaemonOptions, workload string, origin *v1.Deployment) map[string]string {
 	labels := map[string]string{
-		"kt":               workload,
-		common.KTComponent: "exchange",
-		"control-by":       "kt",
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentExchange,
+		common.KTName:      workload,
+		common.KTConfig: fmt.Sprintf("app=%s,replicas=%d",
+			options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas),
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {
@@ -119,7 +122,7 @@ func getExchangeLabels(customLabels string, workload string, origin *v1.Deployme
 		}
 	}
 	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(customLabels) {
+	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
 	splits := strings.Split(workload, "-")

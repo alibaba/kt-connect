@@ -54,7 +54,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 					"default",
 					"a",
 					"172.168.1.2", map[string]string{
-						"kt": "shadow",
+						"kt-name": "shadow",
 					}),
 			},
 			wantPodIP:   "172.168.1.2",

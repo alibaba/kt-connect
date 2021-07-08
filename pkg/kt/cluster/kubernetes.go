@@ -161,7 +161,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 func (k *Kubernetes) GetAllExistingShadowDeployments(namespace string) ([]appv1.Deployment, error) {
 	list, err := k.Clientset.AppsV1().Deployments(namespace).List(metav1.ListOptions{
 		LabelSelector: k8sLabels.Set(metav1.LabelSelector{
-			MatchLabels: map[string]string{"control-by": "kt"},
+			MatchLabels: map[string]string{common.ControlBy: common.KubernetesTool},
 		}.MatchLabels).String(),
 	})
 	if list == nil {
@@ -246,8 +246,8 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	localIPAddress := util.GetOutboundIP()
 	log.Info().Msgf("Client address %s", localIPAddress)
 	resourceMeta := metaAndSpec.Meta
-	resourceMeta.Labels["remoteAddress"] = localIPAddress
-	resourceMeta.Labels["kt"] = resourceMeta.Name
+	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
+	resourceMeta.Labels[common.KTName] = resourceMeta.Name
 	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
 	deployment := deployment(metaAndSpec, sshcm, debug)
 	log.Info().Msg("shadow template is prepare ready.")
@@ -264,7 +264,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *v1.ConfigMap, err error) {
 	clientSet := k.Clientset
 
-	labels["kt"] = sshcm
+	labels[common.KTName] = sshcm
 	cli := clientSet.CoreV1().ConfigMaps(namespace)
 
 	return cli.Create(&v1.ConfigMap{
@@ -340,7 +340,7 @@ func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Inte
 	podLabels := k8sLabels.NewSelector()
 	log.Info().Msgf("pod label: kt=%s", name)
 	labelKeys := []string{
-		"kt",
+		common.KTName,
 	}
 	requirement, err := k8sLabels.NewRequirement(labelKeys[0], selection.Equals, []string{name})
 	if err != nil {

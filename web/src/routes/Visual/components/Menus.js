@@ -46,7 +46,7 @@ export class ComponentMenu extends Component {
         <Step title="Request" description="" />
         {type === 'mesh' && <Step title={`To Version:${component.metadata.labels['kt-version']} (Service Mesh)`} description="" />}
         <Step title={`Request To pod: ${component.metadata.name}`} description={`${component.status.podIP}`} />
-        <Step title="Forward to local:" description={`${component.metadata.labels['remoteAddress']}`} />
+        <Step title="Forward to local:" description={`${component.metadata.labels['kt-remote-address']}`} />
       </Steps>
     </div>)
   }

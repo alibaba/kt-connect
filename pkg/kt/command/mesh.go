@@ -19,12 +19,6 @@ import (
 	urfave "github.com/urfave/cli"
 )
 
-// ComponentMesh mesh component
-const ComponentMesh = "mesh"
-
-// KubernetesTool kt sign
-const KubernetesTool = "kt"
-
 // newMeshCommand return new mesh command
 func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
@@ -129,10 +123,10 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 
 func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		"kt":               workload,
-		common.KTComponent: ComponentMesh,
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentMesh,
+		common.KTName:      workload,
 		common.KTVersion:   meshVersion,
-		"control-by":       KubernetesTool,
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {
