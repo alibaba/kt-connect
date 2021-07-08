@@ -31,7 +31,7 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 			},
 			urfave.BoolFlag{
 				Name:        "expose",
-				Usage:       " If true, a public, external service is created",
+				Usage:       "If true, a public, external service is created",
 				Destination: &options.RunOptions.Expose,
 			},
 		},
@@ -46,7 +46,7 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 			if port == 0 {
 				return errors.New("--port is required")
 			}
-			return action.Run(c.Args().First(), cli, options)
+			return action.Run(pathToServiceName(c.Args().First()), cli, options)
 		},
 	}
 }
@@ -121,5 +121,21 @@ func runAndExposeLocalService(
 
 	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 	return nil
+}
 
+func pathToServiceName(path string) string {
+	name := path
+	i := strings.LastIndex(name, "/")
+	if i >= 0 {
+		name = name[i+1:]
+	}
+	i = strings.LastIndex(name, "\\")
+	if i >= 0 {
+		name = name[i+1:]
+	}
+	i = strings.Index(name, ".")
+	if i >= 0 {
+		name = name[:i]
+	}
+	return strings.ToLower(name + "-" + util.RandomString(5))
 }

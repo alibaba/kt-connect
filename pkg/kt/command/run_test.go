@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -153,6 +154,21 @@ func Test_run(t *testing.T) {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func Test_pathToServiceName(t *testing.T) {
+	if strings.Index(pathToServiceName("abC.Exe"), "abc-") != 0 {
+		t.Errorf("failed to extract file name")
+	}
+	if strings.Index(pathToServiceName("/path/to/aBc.eXe"), "abc-") != 0 {
+		t.Errorf("failed to extract unix path")
+	}
+	if strings.Index(pathToServiceName("c:\\path\\to\\Abc.exE"), "abc-") != 0 {
+		t.Errorf("failed to extract windows path")
+	}
+	if strings.Index(pathToServiceName("ABC"), "abc-") != 0 {
+		t.Errorf("failed to handle origin name")
 	}
 }
 

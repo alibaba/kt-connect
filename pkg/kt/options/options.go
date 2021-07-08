@@ -58,8 +58,9 @@ type RuntimeOptions struct {
 	SSHCM string
 	// The origin app name
 	Origin string
-	// The origin repicas
-	Replicas  int32
+	// The origin replicas
+	Replicas int32
+	// Exposed service name
 	Service   string
 	Clientset kubernetes.Interface
 }
