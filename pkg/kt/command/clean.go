@@ -15,6 +15,12 @@ import (
 	"time"
 )
 
+type ResourceToClean struct {
+	NamesOfDeploymentToDelete *list.List
+	NamesOfServiceToDelete    *list.List
+	DeploymentsToScale        map[string]int32
+}
+
 // newConnectCommand return new connect command
 func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
@@ -52,74 +58,74 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		return err
 	}
 	log.Debug().Msgf("Found %d shadow deployments", len(deployments))
-	namesOfDeploymentToDelete := list.New()
-	namesOfServiceToDelete := list.New()
-	deploymentsToScale := make(map[string]int32)
+	resourceToClean := ResourceToClean{
+		list.New(),
+		list.New(),
+		make(map[string]int32),
+	}
 	for _, deployment := range deployments {
 		lastHeartBeat, err := strconv.ParseInt(deployment.ObjectMeta.Annotations[common.KTLastHeartBeat], 10, 64)
 		if err == nil && action.isExpired(lastHeartBeat, options) {
-			namesOfDeploymentToDelete.PushBack(deployment.Name)
+			resourceToClean.NamesOfDeploymentToDelete.PushBack(deployment.Name)
 			config := util.String2Map(deployment.ObjectMeta.Annotations[common.KTConfig])
 			if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentExchange {
 				replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 				app := config["app"]
 				if replica > 0 && app != "" {
-					deploymentsToScale[app] = int32(replica)
+					resourceToClean.DeploymentsToScale[app] = int32(replica)
 				}
 			} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun &&
 				config["expose"] == "true" {
-				namesOfServiceToDelete.PushBack(deployment.ObjectMeta.Labels[common.KTName])
+				resourceToClean.NamesOfServiceToDelete.PushBack(deployment.ObjectMeta.Labels[common.KTName])
 			}
 		}
 	}
-	if namesOfDeploymentToDelete.Len() == 0 {
+	if resourceToClean.NamesOfDeploymentToDelete.Len() == 0 {
 		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
 		return nil
 	}
 	if options.CleanOptions.DryRun {
-		action.printResourceToClean(namesOfDeploymentToDelete, namesOfServiceToDelete, deploymentsToScale)
+		action.printResourceToClean(resourceToClean)
 	} else {
-		action.cleanResource(namesOfDeploymentToDelete, namesOfServiceToDelete, deploymentsToScale, kubernetes, options)
-		log.Info().Msg("Done.")
+		action.cleanResource(resourceToClean, kubernetes, options.Namespace)
 	}
 	return nil
 }
 
-func (action *Action) cleanResource(namesOfDeploymentToDelete *list.List, namesOfServiceToDelete *list.List,
-	deploymentsToScale map[string]int32, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) {
-	log.Info().Msgf("Deleting %d unavailing shadow deployments", namesOfDeploymentToDelete.Len())
-	for name := namesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveDeployment(name.Value.(string), options.Namespace)
+func (action *Action) cleanResource(r ResourceToClean, kubernetes cluster.KubernetesInterface, namespace string) {
+	log.Info().Msgf("Deleting %d unavailing shadow deployments", r.NamesOfDeploymentToDelete.Len())
+	for name := r.NamesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
+		err := kubernetes.RemoveDeployment(name.Value.(string), namespace)
 		if err != nil {
 			log.Error().Msgf("Fail to delete deployment %s", name.Value.(string))
 		}
 	}
-	for name := namesOfServiceToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveService(name.Value.(string), options.Namespace)
+	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
+		err := kubernetes.RemoveService(name.Value.(string), namespace)
 		if err != nil {
 			log.Error().Msgf("Fail to delete service %s", name.Value.(string))
 		}
 	}
-	for name, replica := range deploymentsToScale {
-		err := kubernetes.ScaleTo(name, options.Namespace, &replica)
+	for name, replica := range r.DeploymentsToScale {
+		err := kubernetes.ScaleTo(name, namespace, &replica)
 		if err != nil {
 			log.Error().Msgf("Fail to scale deployment %s to %d", name, replica)
 		}
 	}
+	log.Info().Msg("Done.")
 }
 
-func (action *Action) printResourceToClean(namesOfDeploymentToDelete *list.List, namesOfServiceToDelete *list.List,
-	deploymentsToScale map[string]int32) {
-	log.Info().Msgf("Found %d unavailing shadow deployments:", namesOfDeploymentToDelete.Len())
-	for name := namesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
+func (action *Action) printResourceToClean(r ResourceToClean) {
+	log.Info().Msgf("Found %d unavailing shadow deployments:", r.NamesOfDeploymentToDelete.Len())
+	for name := r.NamesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
 		log.Info().Msgf(" * %s", name.Value.(string))
 	}
-	log.Info().Msgf("Found %d unavailing shadow service:", namesOfServiceToDelete.Len())
-	for name := namesOfServiceToDelete.Front(); name != nil; name = name.Next() {
+	log.Info().Msgf("Found %d unavailing shadow service:", r.NamesOfServiceToDelete.Len())
+	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
 		log.Info().Msgf(" * %s", name.Value.(string))
 	}
-	log.Info().Msgf("Found %d exchanged deployments to recover:", len(deploymentsToScale))
-	for name, replica := range deploymentsToScale {
+	log.Info().Msgf("Found %d exchanged deployments to recover:", len(r.DeploymentsToScale))
+	for name, replica := range r.DeploymentsToScale {
 		log.Info().Msgf(" * %s -> %d", name, replica)
 	}
 }
