@@ -6,6 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
@@ -52,10 +53,23 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	}
 	log.Debug().Msgf("Found %d shadow deployments", len(deployments))
 	namesOfDeploymentToDelete := list.New()
+	namesOfServiceToDelete := list.New()
+	deploymentsToScale := make(map[string]int32)
 	for _, deployment := range deployments {
 		lastHeartBeat, err := strconv.ParseInt(deployment.ObjectMeta.Annotations[common.KTLastHeartBeat], 10, 64)
 		if err == nil && action.isExpired(lastHeartBeat, options) {
 			namesOfDeploymentToDelete.PushBack(deployment.Name)
+			config := util.String2Map(deployment.ObjectMeta.Annotations[common.KTConfig])
+			if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentExchange {
+				replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
+				app := config["app"]
+				if replica > 0 && app != "" {
+					deploymentsToScale[app] = int32(replica)
+				}
+			} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun &&
+				config["expose"] == "true" {
+				namesOfServiceToDelete.PushBack(deployment.ObjectMeta.Labels[common.KTName])
+			}
 		}
 	}
 	if namesOfDeploymentToDelete.Len() == 0 {
@@ -63,21 +77,51 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		return nil
 	}
 	if options.CleanOptions.DryRun {
-		log.Info().Msgf("Found %d unavailing shadow deployments:", namesOfDeploymentToDelete.Len())
-		for name := namesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
-			log.Info().Msgf("> %s", name.Value.(string))
-		}
+		action.printResourceToClean(namesOfDeploymentToDelete, namesOfServiceToDelete, deploymentsToScale)
 	} else {
-		log.Info().Msgf("Deleting %d unavailing shadow deployments", namesOfDeploymentToDelete.Len())
-		for name := namesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
-			err := kubernetes.RemoveDeployment(name.Value.(string), options.Namespace)
-			if err != nil {
-				return err
-			}
-		}
+		action.cleanResource(namesOfDeploymentToDelete, namesOfServiceToDelete, deploymentsToScale, kubernetes, options)
 		log.Info().Msg("Done.")
 	}
 	return nil
+}
+
+func (action *Action) cleanResource(namesOfDeploymentToDelete *list.List, namesOfServiceToDelete *list.List,
+	deploymentsToScale map[string]int32, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) {
+	log.Info().Msgf("Deleting %d unavailing shadow deployments", namesOfDeploymentToDelete.Len())
+	for name := namesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
+		err := kubernetes.RemoveDeployment(name.Value.(string), options.Namespace)
+		if err != nil {
+			log.Error().Msgf("Fail to delete deployment %s", name.Value.(string))
+		}
+	}
+	for name := namesOfServiceToDelete.Front(); name != nil; name = name.Next() {
+		err := kubernetes.RemoveService(name.Value.(string), options.Namespace)
+		if err != nil {
+			log.Error().Msgf("Fail to delete service %s", name.Value.(string))
+		}
+	}
+	for name, replica := range deploymentsToScale {
+		err := kubernetes.ScaleTo(name, options.Namespace, &replica)
+		if err != nil {
+			log.Error().Msgf("Fail to scale deployment %s to %d", name, replica)
+		}
+	}
+}
+
+func (action *Action) printResourceToClean(namesOfDeploymentToDelete *list.List, namesOfServiceToDelete *list.List,
+	deploymentsToScale map[string]int32) {
+	log.Info().Msgf("Found %d unavailing shadow deployments:", namesOfDeploymentToDelete.Len())
+	for name := namesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
+		log.Info().Msgf(" * %s", name.Value.(string))
+	}
+	log.Info().Msgf("Found %d unavailing shadow service:", namesOfServiceToDelete.Len())
+	for name := namesOfServiceToDelete.Front(); name != nil; name = name.Next() {
+		log.Info().Msgf(" * %s", name.Value.(string))
+	}
+	log.Info().Msgf("Found %d exchanged deployments to recover:", len(deploymentsToScale))
+	for name, replica := range deploymentsToScale {
+		log.Info().Msgf(" * %s -> %d", name, replica)
+	}
 }
 
 func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOptions) bool {

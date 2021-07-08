@@ -75,7 +75,7 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image,
-		getExchangeLabels(options, workload, app), envs, options.Debug, false)
+		getExchangeLabels(options, workload, app), getExchangeAnnotation(options), envs, options.Debug, false)
 	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
 	if err != nil {
@@ -108,13 +108,18 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 	return nil
 }
 
+func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
+	return map[string]string{
+		common.KTConfig: fmt.Sprintf("app=%s,replicas=%d",
+			options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas),
+	}
+}
+
 func getExchangeLabels(options *options.DaemonOptions, workload string, origin *v1.Deployment) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentExchange,
 		common.KTName:      workload,
-		common.KTConfig: fmt.Sprintf("app=%s,replicas=%d",
-			options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas),
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {

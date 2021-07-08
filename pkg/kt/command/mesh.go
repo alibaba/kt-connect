@@ -103,8 +103,9 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 	kubernetes cluster.KubernetesInterface) error {
 
 	envs := make(map[string]string)
+	annotations := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		workload, options.Namespace, options.Image, labels, envs, options.Debug, false)
+		workload, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}

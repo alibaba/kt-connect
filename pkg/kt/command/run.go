@@ -80,7 +80,9 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 		common.KTComponent: common.ComponentRun,
 		common.KTName:      service,
 		common.KTVersion:   strings.ToLower(util.RandomString(5)),
-		common.KTConfig:    fmt.Sprintf("expose=%t", options.RunOptions.Expose),
+	}
+	annotations := map[string]string{
+		common.KTConfig: fmt.Sprintf("expose=%t", options.RunOptions.Expose),
 	}
 
 	// extra labels must be applied after origin labels
@@ -88,17 +90,16 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 		labels[k] = v
 	}
 
-	return runAndExposeLocalService(service, labels, options, kubernetes, cli)
+	return runAndExposeLocalService(service, labels, annotations, options, kubernetes, cli)
 }
 
 // runAndExposeLocalService create shadow and expose service if need
-func runAndExposeLocalService(
-	service string, labels map[string]string, options *options.DaemonOptions,
+func runAndExposeLocalService(service string, labels, annotations map[string]string, options *options.DaemonOptions,
 	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		service, options.Namespace, options.Image, labels, envs, options.Debug, false)
+		service, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}
@@ -139,5 +140,5 @@ func pathToServiceName(path string) string {
 	if i >= 0 {
 		name = name[:i]
 	}
-	return strings.ToLower(name + "-" + util.RandomString(5))
+	return strings.ToLower(fmt.Sprintf("kt-%s-%s", name, util.RandomString(5)))
 }

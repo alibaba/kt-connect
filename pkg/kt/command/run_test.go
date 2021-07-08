@@ -158,16 +158,16 @@ func Test_run(t *testing.T) {
 }
 
 func Test_pathToServiceName(t *testing.T) {
-	if strings.Index(pathToServiceName("abC.Exe"), "abc-") != 0 {
+	if strings.Index(pathToServiceName("abC.Exe"), "kt-abc-") != 0 {
 		t.Errorf("failed to extract file name")
 	}
-	if strings.Index(pathToServiceName("/path/to/aBc.eXe"), "abc-") != 0 {
+	if strings.Index(pathToServiceName("/path/to/aBc.eXe"), "kt-abc-") != 0 {
 		t.Errorf("failed to extract unix path")
 	}
-	if strings.Index(pathToServiceName("c:\\path\\to\\Abc.exE"), "abc-") != 0 {
+	if strings.Index(pathToServiceName("c:\\path\\to\\Abc.exE"), "kt-abc-") != 0 {
 		t.Errorf("failed to extract windows path")
 	}
-	if strings.Index(pathToServiceName("ABC"), "abc-") != 0 {
+	if strings.Index(pathToServiceName("ABC"), "kt-abc-") != 0 {
 		t.Errorf("failed to handle origin name")
 	}
 }

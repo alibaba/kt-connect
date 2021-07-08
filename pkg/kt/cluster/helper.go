@@ -183,17 +183,17 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.D
 	namespace := metaAndSpec.Meta.Namespace
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
+	annotations := metaAndSpec.Meta.Annotations
+	annotations[vars.RefCount] = "1"
+	annotations[common.KTLastHeartBeat] = strconv.FormatInt(time.Now().Unix(), 10)
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
 	return &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels:    labels,
-			Annotations: map[string]string{
-				vars.RefCount:          "1",
-				common.KTLastHeartBeat: strconv.FormatInt(time.Now().Unix(), 10),
-			},
+			Name:        name,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Spec: appV1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
