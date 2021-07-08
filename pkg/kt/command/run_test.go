@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"io/ioutil"
-	"strings"
 	"testing"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -25,7 +24,7 @@ func Test_runCommand(t *testing.T) {
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
 	mockAction := NewMockActionInterface(ctl)
-	mockAction.EXPECT().Run(gomock.Len(len("kt-service-xxxxx")), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Run(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -35,6 +34,7 @@ func Test_runCommand(t *testing.T) {
 	}{
 		{testArgs: []string{"run", "service", "--port", "8080", "--expose"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
 		{testArgs: []string{"run", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--port is required")},
+		{testArgs: []string{"run"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("an identifier name must be provided")},
 	}
 
 	for _, c := range cases {
@@ -57,9 +57,7 @@ func Test_runCommand(t *testing.T) {
 		} else if err != c.expectedErr {
 			t.Errorf("expected %v but is %v", c.expectedErr, err)
 		}
-
 	}
-
 }
 
 func Test_run(t *testing.T) {
@@ -151,21 +149,6 @@ func Test_run(t *testing.T) {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
-	}
-}
-
-func Test_pathToServiceName(t *testing.T) {
-	if strings.Index(pathToServiceName("abC.Exe"), "kt-abc-") != 0 {
-		t.Errorf("failed to extract file name")
-	}
-	if strings.Index(pathToServiceName("/path/to/aBc.eXe"), "kt-abc-") != 0 {
-		t.Errorf("failed to extract unix path")
-	}
-	if strings.Index(pathToServiceName("c:\\path\\to\\Abc.exE"), "kt-abc-") != 0 {
-		t.Errorf("failed to extract windows path")
-	}
-	if strings.Index(pathToServiceName("ABC"), "kt-abc-") != 0 {
-		t.Errorf("failed to handle origin name")
 	}
 }
 

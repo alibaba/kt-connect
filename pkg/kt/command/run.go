@@ -44,18 +44,21 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 				return err
 			}
 			port := options.RunOptions.Port
+			if len(c.Args()) == 0 {
+				return errors.New("an identifier name must be provided")
+			}
 			if port == 0 {
 				return errors.New("--port is required")
 			}
-			return action.Run(pathToServiceName(c.Args().First()), cli, options)
+			return action.Run(c.Args().First(), cli, options)
 		},
 	}
 }
 
 // Run create a new service in cluster
-func (action *Action) Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Run(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "run")
-	if err := run(service, cli, options); err != nil {
+	if err := run(deploymentName, cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
@@ -69,17 +72,19 @@ func (action *Action) Run(service string, cli kt.CliInterface, options *options.
 }
 
 // Run create a new service in cluster
-func run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func run(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
 	}
 
+	version := strings.ToLower(util.RandomString(5))
+	name := fmt.Sprintf("%s-kt-%s", deploymentName, version)
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentRun,
-		common.KTName:      service,
-		common.KTVersion:   strings.ToLower(util.RandomString(5)),
+		common.KTName:      name,
+		common.KTVersion:   version,
 	}
 	annotations := map[string]string{
 		common.KTConfig: fmt.Sprintf("expose=%t", options.RunOptions.Expose),
@@ -90,31 +95,31 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 		labels[k] = v
 	}
 
-	return runAndExposeLocalService(service, labels, annotations, options, kubernetes, cli)
+	return runAndExposeLocalService(name, labels, annotations, options, kubernetes, cli)
 }
 
 // runAndExposeLocalService create shadow and expose service if need
-func runAndExposeLocalService(service string, labels, annotations map[string]string, options *options.DaemonOptions,
+func runAndExposeLocalService(name string, labels, annotations map[string]string, options *options.DaemonOptions,
 	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		service, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
+		name, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}
 	log.Info().Msgf("create shadow pod %s ip %s", podName, podIP)
 
 	if options.RunOptions.Expose {
-		log.Info().Msgf("expose deployment %s to %s:%v", service, service, options.RunOptions.Port)
-		_, err = kubernetes.CreateService(service, options.Namespace, options.RunOptions.Port, labels)
+		log.Info().Msgf("expose deployment %s to service %s:%v", name, name, options.RunOptions.Port)
+		_, err = kubernetes.CreateService(name, options.Namespace, options.RunOptions.Port, labels)
 		if err != nil {
 			return err
 		}
-		options.RuntimeOptions.Service = service
+		options.RuntimeOptions.Service = name
 	}
 
-	options.RuntimeOptions.Shadow = service
+	options.RuntimeOptions.Shadow = name
 	options.RuntimeOptions.SSHCM = sshcm
 
 	err = cli.Shadow().Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP, credential)
@@ -124,21 +129,4 @@ func runAndExposeLocalService(service string, labels, annotations map[string]str
 
 	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 	return nil
-}
-
-func pathToServiceName(path string) string {
-	name := path
-	i := strings.LastIndex(name, "/")
-	if i >= 0 {
-		name = name[i+1:]
-	}
-	i = strings.LastIndex(name, "\\")
-	if i >= 0 {
-		name = name[i+1:]
-	}
-	i = strings.Index(name, ".")
-	if i >= 0 {
-		name = name[:i]
-	}
-	return strings.ToLower(fmt.Sprintf("kt-%s-%s", name, util.RandomString(5)))
 }

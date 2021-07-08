@@ -43,23 +43,23 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
-			mesh := c.Args().First()
+			deploymentToMesh := c.Args().First()
 			expose := options.MeshOptions.Expose
 
-			if len(mesh) == 0 {
-				return errors.New("mesh target is required")
+			if len(deploymentToMesh) == 0 {
+				return errors.New("name of deployment to mesh is required")
 			}
 
 			if len(expose) == 0 {
-				return errors.New("-expose is required")
+				return errors.New("--expose is required")
 			}
-			return action.Mesh(mesh, cli, options)
+			return action.Mesh(deploymentToMesh, cli, options)
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "mesh")
 
 	kubernetes, err := cli.Kubernetes()
@@ -67,7 +67,7 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 		return err
 	}
 
-	app, err := kubernetes.Deployment(mesh, options.Namespace)
+	app, err := kubernetes.Deployment(deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}

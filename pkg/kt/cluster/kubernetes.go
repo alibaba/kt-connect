@@ -83,7 +83,7 @@ func (k *Kubernetes) Scale(deployment *appv1.Deployment, replicas *int32) (err e
 
 	d, err := client.Update(deployment)
 	if err != nil {
-		log.Error().Msgf("%s Fails scale deployment %s to %d\n", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
+		log.Error().Msgf("%s Fails scale deployment %s to %d", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
 		return
 	}
 	log.Info().Msgf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
@@ -258,7 +258,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("deploy shadow deployment %s in namespace %s\n", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
+	log.Info().Msgf("deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
 	setupHeartBeat(client, resourceMeta.Name)
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)

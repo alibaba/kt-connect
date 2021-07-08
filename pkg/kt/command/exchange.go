@@ -39,22 +39,22 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
-			exchange := c.Args().First()
+			deploymentToExchange := c.Args().First()
 			expose := options.ExchangeOptions.Expose
 
-			if len(exchange) == 0 {
-				return errors.New("exchange is required")
+			if len(deploymentToExchange) == 0 {
+				return errors.New("name of deployment to exchange is required")
 			}
 			if len(expose) == 0 {
-				return errors.New("-expose is required")
+				return errors.New("--expose is required")
 			}
-			return action.Exchange(exchange, cli, options)
+			return action.Exchange(deploymentToExchange, cli, options)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "exchange")
 
 	kubernetes, err := cli.Kubernetes()
@@ -62,7 +62,7 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 		return err
 	}
 
-	app, err := kubernetes.Deployment(exchange, options.Namespace)
+	app, err := kubernetes.Deployment(deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}

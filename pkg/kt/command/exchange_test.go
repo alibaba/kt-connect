@@ -28,8 +28,8 @@ func Test_exchangeCommand(t *testing.T) {
 		expectedErr            error
 	}{
 		{testArgs: []string{"exchange", "service", "--expose", "8080"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
-		{testArgs: []string{"exchange", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("-expose is required")},
-		{testArgs: []string{"exchange"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("exchange is required")},
+		{testArgs: []string{"exchange", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--expose is required")},
+		{testArgs: []string{"exchange"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("name of deployment to exchange is required")},
 	}
 
 	for _, c := range cases {
