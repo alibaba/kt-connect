@@ -25,7 +25,7 @@ func Test_runCommand(t *testing.T) {
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
 	mockAction := NewMockActionInterface(ctl)
-	mockAction.EXPECT().Run(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Run(gomock.Len(len("kt-service-xxxxx")), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -142,13 +142,10 @@ func Test_run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kubernetes.EXPECT().
-				GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Times(1).
+			kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Times(1).
 				Return(tt.args.shadowResponse.podIP, tt.args.shadowResponse.podName, tt.args.shadowResponse.sshcm, tt.args.shadowResponse.credential, tt.args.shadowResponse.err)
 			kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.serviceResponse.service, tt.args.serviceResponse.err)
-			shadow.EXPECT().
-				Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-				Return(tt.args.inboundResponse.err)
+			shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.inboundResponse.err)
 
 			if err := run(tt.args.service, fakeKtCli, tt.args.options); (err != nil) != tt.wantErr {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
