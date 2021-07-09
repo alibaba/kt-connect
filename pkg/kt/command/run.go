@@ -56,9 +56,9 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 }
 
 // Run create a new service in cluster
-func (action *Action) Run(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "run")
-	if err := run(deploymentName, cli, options); err != nil {
+	if err := run(serviceName, cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
@@ -72,22 +72,22 @@ func (action *Action) Run(deploymentName string, cli kt.CliInterface, options *o
 }
 
 // Run create a new service in cluster
-func run(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
 	}
 
 	version := strings.ToLower(util.RandomString(5))
-	name := fmt.Sprintf("%s-kt-%s", deploymentName, version)
+	deploymentName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentRun,
-		common.KTName:      name,
+		common.KTName:      deploymentName,
 		common.KTVersion:   version,
 	}
 	annotations := map[string]string{
-		common.KTConfig: fmt.Sprintf("expose=%t", options.RunOptions.Expose),
+		common.KTConfig: fmt.Sprintf("expose=%t,service=%s", options.RunOptions.Expose, serviceName),
 	}
 
 	// extra labels must be applied after origin labels
@@ -95,31 +95,31 @@ func run(deploymentName string, cli kt.CliInterface, options *options.DaemonOpti
 		labels[k] = v
 	}
 
-	return runAndExposeLocalService(name, labels, annotations, options, kubernetes, cli)
+	return runAndExposeLocalService(serviceName, deploymentName, labels, annotations, options, kubernetes, cli)
 }
 
 // runAndExposeLocalService create shadow and expose service if need
-func runAndExposeLocalService(name string, labels, annotations map[string]string, options *options.DaemonOptions,
-	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
+func runAndExposeLocalService(serviceName, deploymentName string, labels, annotations map[string]string,
+	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		name, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
+		deploymentName, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}
 	log.Info().Msgf("create shadow pod %s ip %s", podName, podIP)
 
 	if options.RunOptions.Expose {
-		log.Info().Msgf("expose deployment %s to service %s:%v", name, name, options.RunOptions.Port)
-		_, err = kubernetes.CreateService(name, options.Namespace, options.RunOptions.Port, labels)
+		log.Info().Msgf("expose deployment %s to service %s:%v", deploymentName, serviceName, options.RunOptions.Port)
+		_, err = kubernetes.CreateService(serviceName, options.Namespace, options.RunOptions.Port, labels)
 		if err != nil {
 			return err
 		}
-		options.RuntimeOptions.Service = name
+		options.RuntimeOptions.Service = serviceName
 	}
 
-	options.RuntimeOptions.Shadow = name
+	options.RuntimeOptions.Shadow = deploymentName
 	options.RuntimeOptions.SSHCM = sshcm
 
 	err = cli.Shadow().Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP, credential)

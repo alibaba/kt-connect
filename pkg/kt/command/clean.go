@@ -74,9 +74,12 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 				if replica > 0 && app != "" {
 					resourceToClean.DeploymentsToScale[app] = int32(replica)
 				}
-			} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun &&
-				config["expose"] == "true" {
-				resourceToClean.NamesOfServiceToDelete.PushBack(deployment.ObjectMeta.Labels[common.KTName])
+			} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun {
+				expose := config["expose"] == "true"
+				service := config["service"]
+				if expose && service != "" {
+					resourceToClean.NamesOfServiceToDelete.PushBack(service)
+				}
 			}
 		}
 	}
