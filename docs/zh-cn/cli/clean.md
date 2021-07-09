@@ -1,21 +1,21 @@
-## Command: ktctl run
+## Command: ktctl clean
 
-Expose local service to cluster
+清理集群里已超期的KT代理容器
 
-### Usage
-
-```
-ktctl run localservice --port 8080 --expose
-```
-
-### Options
+### 示例
 
 ```
---port value  The port that exposes (default: 0)
---expose      If true, a public, external service is created
+ktctl clean
 ```
 
-### Global Options
+### 参数
+
+```
+--dryRun                  Only print name of deployments to be deleted
+--thresholdInMinus value  Length of allowed disconnection time before a unavailing shadow pod be deleted (default: 30)
+```
+
+### 从父命令集成的参数
 
 ```
 --namespace value, -n value   (default: "default")

@@ -10,10 +10,11 @@
   - [Dashboard](en-us/guide/dashboard.md)
 
 - Cli References
-  - [ktctl run](en-us/cli/run.md)
   - [ktctl connect](en-us/cli/connect.md)
   - [ktctl exchange](en-us/cli/exchange.md)
   - [ktctl mesh](en-us/cli/mesh.md)
+  - [ktctl run](en-us/cli/run.md)
+  - [ktctl clean](en-us/cli/clean.md)
   - [ktctl dashboard](en-us/cli/dashboard.md)
   - [ktctl check](en-us/cli/check.md)
 
