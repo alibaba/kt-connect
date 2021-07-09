@@ -26,8 +26,8 @@ func NewRunCommand(streams genericclioptions.IOStreams, version string) *cobra.C
 	opt := NewRunOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:          "mesh",
-		Short:        "mesh app",
+		Use:          "run",
+		Short:        "run app",
 		Example:      runExample,
 		SilenceUsage: true,
 		Version:      version,

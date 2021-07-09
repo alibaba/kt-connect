@@ -5,37 +5,38 @@
 package exec
 
 import (
+	reflect "reflect"
+
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockCliInterface is a mock of CliInterface interface
+// MockCliInterface is a mock of CliInterface interface.
 type MockCliInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockCliInterfaceMockRecorder
 }
 
-// MockCliInterfaceMockRecorder is the mock recorder for MockCliInterface
+// MockCliInterfaceMockRecorder is the mock recorder for MockCliInterface.
 type MockCliInterfaceMockRecorder struct {
 	mock *MockCliInterface
 }
 
-// NewMockCliInterface creates a new mock instance
+// NewMockCliInterface creates a new mock instance.
 func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
 	mock := &MockCliInterface{ctrl: ctrl}
 	mock.recorder = &MockCliInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
 }
 
-// Kubectl mocks base method
+// Kubectl mocks base method.
 func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Kubectl")
@@ -43,27 +44,13 @@ func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
 	return ret0
 }
 
-// Kubectl indicates an expected call of Kubectl
+// Kubectl indicates an expected call of Kubectl.
 func (mr *MockCliInterfaceMockRecorder) Kubectl() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubectl", reflect.TypeOf((*MockCliInterface)(nil).Kubectl))
 }
 
-// SSHUttle mocks base method
-func (m *MockCliInterface) SSHUttle() sshuttle.CliInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SSHUttle")
-	ret0, _ := ret[0].(sshuttle.CliInterface)
-	return ret0
-}
-
-// SSHUttle indicates an expected call of SSHUttle
-func (mr *MockCliInterfaceMockRecorder) SSHUttle() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHUttle", reflect.TypeOf((*MockCliInterface)(nil).SSHUttle))
-}
-
-// SSH mocks base method
+// SSH mocks base method.
 func (m *MockCliInterface) SSH() ssh.CliInterface {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SSH")
@@ -71,8 +58,22 @@ func (m *MockCliInterface) SSH() ssh.CliInterface {
 	return ret0
 }
 
-// SSH indicates an expected call of SSH
+// SSH indicates an expected call of SSH.
 func (mr *MockCliInterfaceMockRecorder) SSH() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSH", reflect.TypeOf((*MockCliInterface)(nil).SSH))
+}
+
+// SSHUttle mocks base method.
+func (m *MockCliInterface) SSHUttle() sshuttle.CliInterface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SSHUttle")
+	ret0, _ := ret[0].(sshuttle.CliInterface)
+	return ret0
+}
+
+// SSHUttle indicates an expected call of SSHUttle.
+func (mr *MockCliInterfaceMockRecorder) SSHUttle() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHUttle", reflect.TypeOf((*MockCliInterface)(nil).SSHUttle))
 }

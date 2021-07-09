@@ -94,7 +94,7 @@ func exposeLocalPortsToRemote(ssh channel.Channel, exposePorts string, localSSHP
 func exposeLocalPortToRemote(wg sync.WaitGroup, ssh channel.Channel, remotePort string, localPort string, localSSHPort int) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s\n", remotePort, localPort)
+		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
 		err := ssh.ForwardRemoteToLocal(
 			&channel.Certificate{
 				Username: "root",
@@ -107,7 +107,7 @@ func exposeLocalPortToRemote(wg sync.WaitGroup, ssh channel.Channel, remotePort 
 		if err != nil {
 			log.Error().Msgf("error happen when forward remote request to local %s", err)
 		}
-		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished\n", remotePort, localPort)
+		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished", remotePort, localPort)
 		wg.Done()
 	}(&wg)
 }

@@ -15,8 +15,8 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 )
 
-// NewCheckCommand return new check command
-func NewCheckCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// newCheckCommand return new check command
+func newCheckCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "check",
 		Usage: "check local dependency for ktctl",

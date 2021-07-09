@@ -34,6 +34,7 @@ func Test_runCommand(t *testing.T) {
 	}{
 		{testArgs: []string{"run", "service", "--port", "8080", "--expose"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
 		{testArgs: []string{"run", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--port is required")},
+		{testArgs: []string{"run"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("an identifier name must be provided")},
 	}
 
 	for _, c := range cases {
@@ -56,9 +57,7 @@ func Test_runCommand(t *testing.T) {
 		} else if err != c.expectedErr {
 			t.Errorf("expected %v but is %v", c.expectedErr, err)
 		}
-
 	}
-
 }
 
 func Test_run(t *testing.T) {
@@ -141,13 +140,10 @@ func Test_run(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kubernetes.EXPECT().
-				GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Times(1).
+			kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Times(1).
 				Return(tt.args.shadowResponse.podIP, tt.args.shadowResponse.podName, tt.args.shadowResponse.sshcm, tt.args.shadowResponse.credential, tt.args.shadowResponse.err)
 			kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.serviceResponse.service, tt.args.serviceResponse.err)
-			shadow.EXPECT().
-				Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
-				Return(tt.args.inboundResponse.err)
+			shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.inboundResponse.err)
 
 			if err := run(tt.args.service, fakeKtCli, tt.args.options); (err != nil) != tt.wantErr {
 				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)

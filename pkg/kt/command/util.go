@@ -22,8 +22,9 @@ func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.Da
 		newConnectCommand(kt, options, action),
 		newExchangeCommand(kt, options, action),
 		newMeshCommand(kt, options, action),
+		newCleanCommand(kt, options, action),
 		newDashboardCommand(kt, options, action),
-		NewCheckCommand(kt, options, action),
+		newCheckCommand(kt, options, action),
 	}
 }
 
@@ -41,9 +42,9 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	go func() {
 		<-ch
-		log.Info().Msgf("- Terminal And Clean Workspace\n")
+		log.Info().Msgf("- Terminal And Clean Workspace")
 		CleanupWorkspace(cli, options)
-		log.Info().Msgf("- Successful Clean Up Workspace\n")
+		log.Info().Msgf("- Successful Clean Up Workspace")
 		os.Exit(0)
 	}()
 	return
@@ -51,7 +52,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
-	log.Info().Msgf("- start Clean Workspace\n")
+	log.Info().Msgf("- start Clean Workspace")
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
 		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
 		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {

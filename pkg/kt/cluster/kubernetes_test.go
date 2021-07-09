@@ -54,7 +54,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 					"default",
 					"a",
 					"172.168.1.2", map[string]string{
-						"kt": "shadow",
+						"kt-name": "shadow",
 					}),
 			},
 			wantPodIP:   "172.168.1.2",
@@ -70,8 +70,9 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			}
 
 			envs := make(map[string]string)
+			annotations := make(map[string]string)
 			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(tt.args.name, tt.args.namespace, tt.args.image,
-				tt.args.labels, envs, tt.args.debug, false)
+				tt.args.labels, annotations, envs, tt.args.debug, false)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
 				return

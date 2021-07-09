@@ -90,9 +90,9 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
 	}
 
-	endPointIP, podName, sshcm, credential, err :=
-		kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image, labels(workload, options), envs(options),
-			options.Debug, options.ConnectOptions.ShareShadow)
+	annotations := make(map[string]string)
+	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace,
+		options.Image, labels(workload, options), annotations, envs(options), options.Debug, options.ConnectOptions.ShareShadow)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -139,8 +139,9 @@ func envs(options *options.DaemonOptions) map[string]string {
 
 func labels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		common.KTComponent: "connect",
-		"control-by":       "kt",
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentConnect,
+		common.KTName:      workload,
 	}
 	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v

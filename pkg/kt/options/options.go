@@ -41,6 +41,12 @@ type MeshOptions struct {
 	Version string
 }
 
+// CleanOptions ...
+type CleanOptions struct {
+	DryRun           bool
+	ThresholdInMinus int64
+}
+
 // RuntimeOptions ...
 type RuntimeOptions struct {
 	PidFile  string
@@ -52,8 +58,9 @@ type RuntimeOptions struct {
 	SSHCM string
 	// The origin app name
 	Origin string
-	// The origin repicas
-	Replicas  int32
+	// The origin replicas
+	Replicas int32
+	// Exposed service name
 	Service   string
 	Clientset kubernetes.Interface
 }
@@ -76,6 +83,7 @@ type DaemonOptions struct {
 	ConnectOptions   *ConnectOptions
 	ExchangeOptions  *ExchangeOptions
 	MeshOptions      *MeshOptions
+	CleanOptions     *CleanOptions
 	DashboardOptions *dashboardOptions
 	WaitTime         int
 }
@@ -98,6 +106,7 @@ func NewDaemonOptions() *DaemonOptions {
 		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &ExchangeOptions{},
 		MeshOptions:      &MeshOptions{},
+		CleanOptions:     &CleanOptions{},
 		DashboardOptions: &dashboardOptions{},
 		RunOptions:       &RunOptions{},
 	}

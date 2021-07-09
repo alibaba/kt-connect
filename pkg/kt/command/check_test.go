@@ -45,7 +45,7 @@ func TestNewCheckCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions()
 		opts.Debug = true
-		command := NewCheckCommand(fakeCli, opts, fakeAction)
+		command := newCheckCommand(fakeCli, opts, fakeAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

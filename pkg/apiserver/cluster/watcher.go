@@ -125,9 +125,9 @@ func (w *Watcher) Namespaces(stopCh <-chan struct{}) (lister v1.NamespaceLister,
 func podDeleted(obj interface{}) {
 	// pod, ok := obj.(*api.Pod)
 	// if ok {
-	// 	fmt.Printf("Pod deleted: %s\n", pod.ObjectMeta.Name)
+	// 	fmt.Printf("Pod deleted: %s", pod.ObjectMeta.Name)
 	// } else {
-	// 	fmt.Printf("Pod deleted event: %s\n", obj)
+	// 	fmt.Printf("Pod deleted event: %s", obj)
 	// }
 }
 

@@ -5,48 +5,35 @@
 package channel
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockChannel is a mock of Channel interface
+// MockChannel is a mock of Channel interface.
 type MockChannel struct {
 	ctrl     *gomock.Controller
 	recorder *MockChannelMockRecorder
 }
 
-// MockChannelMockRecorder is the mock recorder for MockChannel
+// MockChannelMockRecorder is the mock recorder for MockChannel.
 type MockChannelMockRecorder struct {
 	mock *MockChannel
 }
 
-// NewMockChannel creates a new mock instance
+// NewMockChannel creates a new mock instance.
 func NewMockChannel(ctrl *gomock.Controller) *MockChannel {
 	mock := &MockChannel{ctrl: ctrl}
 	mock.recorder = &MockChannelMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockChannel) EXPECT() *MockChannelMockRecorder {
 	return m.recorder
 }
 
-// StartSocks5Proxy mocks base method
-func (m *MockChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StartSocks5Proxy", certificate, sshAddress, socks5Address)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// StartSocks5Proxy indicates an expected call of StartSocks5Proxy
-func (mr *MockChannelMockRecorder) StartSocks5Proxy(certificate, sshAddress, socks5Address interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartSocks5Proxy", reflect.TypeOf((*MockChannel)(nil).StartSocks5Proxy), certificate, sshAddress, socks5Address)
-}
-
-// ForwardRemoteToLocal mocks base method
+// ForwardRemoteToLocal mocks base method.
 func (m *MockChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ForwardRemoteToLocal", certificate, sshAddress, remoteEndpoint, localEndpoint)
@@ -54,8 +41,22 @@ func (m *MockChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress,
 	return ret0
 }
 
-// ForwardRemoteToLocal indicates an expected call of ForwardRemoteToLocal
+// ForwardRemoteToLocal indicates an expected call of ForwardRemoteToLocal.
 func (mr *MockChannelMockRecorder) ForwardRemoteToLocal(certificate, sshAddress, remoteEndpoint, localEndpoint interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardRemoteToLocal", reflect.TypeOf((*MockChannel)(nil).ForwardRemoteToLocal), certificate, sshAddress, remoteEndpoint, localEndpoint)
+}
+
+// StartSocks5Proxy mocks base method.
+func (m *MockChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StartSocks5Proxy", certificate, sshAddress, socks5Address)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StartSocks5Proxy indicates an expected call of StartSocks5Proxy.
+func (mr *MockChannelMockRecorder) StartSocks5Proxy(certificate, sshAddress, socks5Address interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartSocks5Proxy", reflect.TypeOf((*MockChannel)(nil).StartSocks5Proxy), certificate, sshAddress, socks5Address)
 }

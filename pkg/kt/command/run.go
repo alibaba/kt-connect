@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strconv"
@@ -31,7 +32,7 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 			},
 			urfave.BoolFlag{
 				Name:        "expose",
-				Usage:       " If true, a public, external service is created",
+				Usage:       "If true, a public, external service is created",
 				Destination: &options.RunOptions.Expose,
 			},
 		},
@@ -43,6 +44,9 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 				return err
 			}
 			port := options.RunOptions.Port
+			if len(c.Args()) == 0 {
+				return errors.New("an identifier name must be provided")
+			}
 			if port == 0 {
 				return errors.New("--port is required")
 			}
@@ -52,9 +56,9 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 }
 
 // Run create a new service in cluster
-func (action *Action) Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "run")
-	if err := run(service, cli, options); err != nil {
+	if err := run(serviceName, cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
@@ -68,17 +72,22 @@ func (action *Action) Run(service string, cli kt.CliInterface, options *options.
 }
 
 // Run create a new service in cluster
-func run(service string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
 	}
 
+	version := strings.ToLower(util.RandomString(5))
+	deploymentName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
-		"control-by":       "kt",
-		common.KTComponent: "run",
-		"kt":               service,
-		common.KTVersion:   strings.ToLower(util.RandomString(5)),
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentRun,
+		common.KTName:      deploymentName,
+		common.KTVersion:   version,
+	}
+	annotations := map[string]string{
+		common.KTConfig: fmt.Sprintf("expose=%t,service=%s", options.RunOptions.Expose, serviceName),
 	}
 
 	// extra labels must be applied after origin labels
@@ -86,32 +95,31 @@ func run(service string, cli kt.CliInterface, options *options.DaemonOptions) er
 		labels[k] = v
 	}
 
-	return runAndExposeLocalService(service, labels, options, kubernetes, cli)
+	return runAndExposeLocalService(serviceName, deploymentName, labels, annotations, options, kubernetes, cli)
 }
 
 // runAndExposeLocalService create shadow and expose service if need
-func runAndExposeLocalService(
-	service string, labels map[string]string, options *options.DaemonOptions,
-	kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
+func runAndExposeLocalService(serviceName, deploymentName string, labels, annotations map[string]string,
+	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
 	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		service, options.Namespace, options.Image, labels, envs, options.Debug, false)
+		deploymentName, options.Namespace, options.Image, labels, annotations, envs, options.Debug, false)
 	if err != nil {
 		return err
 	}
 	log.Info().Msgf("create shadow pod %s ip %s", podName, podIP)
 
 	if options.RunOptions.Expose {
-		log.Info().Msgf("expose deployment %s to %s:%v", service, service, options.RunOptions.Port)
-		_, err = kubernetes.CreateService(service, options.Namespace, options.RunOptions.Port, labels)
+		log.Info().Msgf("expose deployment %s to service %s:%v", deploymentName, serviceName, options.RunOptions.Port)
+		_, err = kubernetes.CreateService(serviceName, options.Namespace, options.RunOptions.Port, labels)
 		if err != nil {
 			return err
 		}
-		options.RuntimeOptions.Service = service
+		options.RuntimeOptions.Service = serviceName
 	}
 
-	options.RuntimeOptions.Shadow = service
+	options.RuntimeOptions.Shadow = deploymentName
 	options.RuntimeOptions.SSHCM = sshcm
 
 	err = cli.Shadow().Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP, credential)
@@ -121,5 +129,4 @@ func runAndExposeLocalService(
 
 	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
 	return nil
-
 }
