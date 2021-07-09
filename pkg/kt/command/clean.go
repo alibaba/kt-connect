@@ -64,24 +64,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		make(map[string]int32),
 	}
 	for _, deployment := range deployments {
-		lastHeartBeat, err := strconv.ParseInt(deployment.ObjectMeta.Annotations[common.KTLastHeartBeat], 10, 64)
-		if err == nil && action.isExpired(lastHeartBeat, options) {
-			resourceToClean.NamesOfDeploymentToDelete.PushBack(deployment.Name)
-			config := util.String2Map(deployment.ObjectMeta.Annotations[common.KTConfig])
-			if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentExchange {
-				replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
-				app := config["app"]
-				if replica > 0 && app != "" {
-					resourceToClean.DeploymentsToScale[app] = int32(replica)
-				}
-			} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun {
-				expose := config["expose"] == "true"
-				service := config["service"]
-				if expose && service != "" {
-					resourceToClean.NamesOfServiceToDelete.PushBack(service)
-				}
-			}
-		}
+		action.analysisShadowDeployment(deployment, options, resourceToClean)
 	}
 	if resourceToClean.NamesOfDeploymentToDelete.Len() == 0 {
 		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
@@ -93,6 +76,27 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		action.cleanResource(resourceToClean, kubernetes, options.Namespace)
 	}
 	return nil
+}
+
+func (action *Action) analysisShadowDeployment(deployment v1.Deployment, options *options.DaemonOptions, resourceToClean ResourceToClean) {
+	lastHeartBeat, err := strconv.ParseInt(deployment.ObjectMeta.Annotations[common.KTLastHeartBeat], 10, 64)
+	if err == nil && action.isExpired(lastHeartBeat, options) {
+		resourceToClean.NamesOfDeploymentToDelete.PushBack(deployment.Name)
+		config := util.String2Map(deployment.ObjectMeta.Annotations[common.KTConfig])
+		if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentExchange {
+			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
+			app := config["app"]
+			if replica > 0 && app != "" {
+				resourceToClean.DeploymentsToScale[app] = int32(replica)
+			}
+		} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun {
+			expose := config["expose"] == "true"
+			service := config["service"]
+			if expose && service != "" {
+				resourceToClean.NamesOfServiceToDelete.PushBack(service)
+			}
+		}
+	}
 }
 
 func (action *Action) cleanResource(r ResourceToClean, kubernetes cluster.KubernetesInterface, namespace string) {
