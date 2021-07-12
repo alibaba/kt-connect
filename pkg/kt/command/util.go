@@ -18,10 +18,10 @@ import (
 // NewCommands return new Connect Action
 func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.DaemonOptions) []cli.Command {
 	return []cli.Command{
-		newProvideCommand(kt, options, action),
 		newConnectCommand(kt, options, action),
 		newExchangeCommand(kt, options, action),
 		newMeshCommand(kt, options, action),
+		newProvideCommand(kt, options, action),
 		newCleanCommand(kt, options, action),
 		newDashboardCommand(kt, options, action),
 		newCheckCommand(kt, options, action),
@@ -35,7 +35,7 @@ func SetUpWaitingChannel() (ch chan os.Signal) {
 	return
 }
 
-// SetUpCloseHandler registry close handeler
+// SetUpCloseHandler registry close handler
 func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, action string) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	// see https://en.wikipedia.org/wiki/Signal_(IPC)
