@@ -1,18 +1,18 @@
-## Command: ktctl run
+## Command: ktctl provide
 
 将本地服务暴露到Kubernetes集群
 
 ### 示例
 
 ```
-ktctl run localservice --port 8080 --expose
+ktctl run localservice --expose 8080
 ```
 
 ### 参数
 
 ```
---port value  The port that exposes (default: 0)
---expose      If true, a public, external service is created
+--expose value  The port that exposes
+--external      If true, a public, external service is created
 ```
 
 ### 从父命令集成的参数

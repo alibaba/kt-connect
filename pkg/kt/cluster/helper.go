@@ -123,7 +123,7 @@ func wait(podName string) {
 	log.Info().Msg("Shadow Pods not ready......")
 }
 
-func service(name, namespace string, labels map[string]string, port int) *v1.Service {
+func service(name, namespace string, labels map[string]string, external bool, port int) *v1.Service {
 	var ports []v1.ServicePort
 	ports = append(ports, v1.ServicePort{
 		Name:       name,
@@ -131,7 +131,7 @@ func service(name, namespace string, labels map[string]string, port int) *v1.Ser
 		TargetPort: intstr.FromInt(port),
 	})
 
-	return &v1.Service{
+	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -143,7 +143,10 @@ func service(name, namespace string, labels map[string]string, port int) *v1.Ser
 			Ports:    ports,
 		},
 	}
-
+	if external {
+		service.Spec.Type = v1.ServiceTypeLoadBalancer
+	}
+	return service
 }
 
 func container(image string, args []string, envs map[string]string) v1.Container {

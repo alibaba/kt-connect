@@ -89,10 +89,9 @@ func (action *Action) analysisShadowDeployment(deployment v1.Deployment, options
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentRun {
-			expose := config["expose"] == "true"
+		} else if deployment.ObjectMeta.Labels[common.KTComponent] == common.ComponentProvide {
 			service := config["service"]
-			if expose && service != "" {
+			if service != "" {
 				resourceToClean.NamesOfServiceToDelete.PushBack(service)
 			}
 		}

@@ -170,7 +170,7 @@ func TestKubernetes_CreateService(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(),
 			}
-			_, err := k.CreateService(tt.args.name, tt.args.namespace, tt.args.port, tt.args.labels)
+			_, err := k.CreateService(tt.args.name, tt.args.namespace, false, tt.args.port, tt.args.labels)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.CreateService() error = %v, wantErr %v", err, tt.wantErr)
 				return

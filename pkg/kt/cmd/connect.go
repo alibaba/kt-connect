@@ -185,7 +185,7 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 		ConnectOptions: &options.ConnectOptions{
 			DisableDNS:  o.DisableDNS,
 			Method:      o.Method,
-			Socke5Proxy: o.Proxy,
+			Socks5Proxy: o.Proxy,
 			CIDR:        o.Cidr,
 			SSHPort:     o.Port,
 			Global:      o.Global,

@@ -53,18 +53,18 @@ func (mr *MockKubernetesInterfaceMockRecorder) ClusterCrids(namespace, connectOp
 }
 
 // CreateService mocks base method.
-func (m *MockKubernetesInterface) CreateService(name, namespace string, port int, labels map[string]string) (*v10.Service, error) {
+func (m *MockKubernetesInterface) CreateService(name, namespace string, external bool, port int, labels map[string]string) (*v10.Service, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateService", name, namespace, port, labels)
+	ret := m.ctrl.Call(m, "CreateService", name, namespace, external, port, labels)
 	ret0, _ := ret[0].(*v10.Service)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateService indicates an expected call of CreateService.
-func (mr *MockKubernetesInterfaceMockRecorder) CreateService(name, namespace, port, labels interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) CreateService(name, namespace, external, port, labels interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateService", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateService), name, namespace, port, labels)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateService", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateService), name, namespace, external, port, labels)
 }
 
 // DecreaseRef mocks base method.

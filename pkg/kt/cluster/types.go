@@ -39,7 +39,7 @@ type KubernetesInterface interface {
 	GetOrCreateShadow(name, namespace, image string, labels, annotations, envs map[string]string, debug,
 		reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
 	GetAllExistingShadowDeployments(namespace string) (list []appV1.Deployment, err error)
-	CreateService(name, namespace string, port int, labels map[string]string) (*coreV1.Service, error)
+	CreateService(name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error)
 	GetDeployment(name string, namespace string) (*appV1.Deployment, error)
 	UpdateDeployment(namespace string, deployment *appV1.Deployment) (*appV1.Deployment, error)
 	DecreaseRef(namespace string, deployment string) (cleanup bool, err error)
