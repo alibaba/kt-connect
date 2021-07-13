@@ -5,14 +5,14 @@ Expose local service to cluster
 ### Usage
 
 ```
-ktctl run localservice --expose 8080
+ktctl provide localservice --expose 8080
 ```
 
 ### Options
 
 ```
 --expose value  The port that exposes
---external      If true, a public, external service is created
+--external      If specified, a public, external service is created
 ```
 
 ### Global Options

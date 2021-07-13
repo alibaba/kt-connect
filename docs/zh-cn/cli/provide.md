@@ -5,14 +5,14 @@
 ### 示例
 
 ```
-ktctl run localservice --expose 8080
+ktctl provide localservice --expose 8080
 ```
 
 ### 参数
 
 ```
 --expose value  The port that exposes
---external      If true, a public, external service is created
+--external      If specified, a public, external service is created
 ```
 
 ### 从父命令集成的参数
