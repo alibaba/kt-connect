@@ -51,7 +51,7 @@ func NewProvideCommand(streams genericclioptions.IOStreams, version string) *cob
 
 	// run
 	cmd.Flags().IntVarP(&opt.Expose, "expose", "", 80, " The port that exposes")
-	cmd.Flags().BoolVarP(&opt.External, "external", "e", false, " If true, a public, external service is created")
+	cmd.Flags().BoolVarP(&opt.External, "external", "e", false, " If specified, a public, external service is created")
 	return cmd
 }
 
@@ -91,7 +91,7 @@ func (o *ProvideOptions) Complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 
 	if len(o.args) < 2 {
-		return fmt.Errorf("missing run target")
+		return fmt.Errorf("please specify service name")
 	}
 
 	o.Target = args[1]
