@@ -7,7 +7,7 @@ const (
 	ComponentConnect  = "connect"
 	ComponentExchange = "exchange"
 	ComponentMesh     = "mesh"
-	ComponentRun      = "run"
+	ComponentProvide  = "provide"
 	KTVersion         = "kt-version"        // Label used for fetch shadow mark in UI
 	KTComponent       = "kt-component"      // Label used for distinguish shadow type
 	KTRemoteAddress   = "kt-remote-address" // Label used for fetch pod IP in UI

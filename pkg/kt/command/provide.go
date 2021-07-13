@@ -19,21 +19,21 @@ import (
 	urfave "github.com/urfave/cli"
 )
 
-// newRunCommand return new run command
-func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// newProvideCommand return new provide command
+func newProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
-		Name:  "run",
-		Usage: "create a shadow deployment to redirect request to user local",
+		Name:  "provide",
+		Usage: "create a shadow service to redirect request to user local",
 		Flags: []urfave.Flag{
 			urfave.IntFlag{
-				Name:        "port",
+				Name:        "expose",
 				Usage:       "The port that exposes",
-				Destination: &options.RunOptions.Port,
+				Destination: &options.ProvideOptions.Expose,
 			},
 			urfave.BoolFlag{
-				Name:        "expose",
-				Usage:       "If true, a public, external service is created",
-				Destination: &options.RunOptions.Expose,
+				Name:        "external",
+				Usage:       "If specified, a public, external service is created",
+				Destination: &options.ProvideOptions.External,
 			},
 		},
 		Action: func(c *urfave.Context) error {
@@ -43,22 +43,22 @@ func newRunCommand(cli kt.CliInterface, options *options.DaemonOptions, action A
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
-			port := options.RunOptions.Port
+			port := options.ProvideOptions.Expose
 			if len(c.Args()) == 0 {
-				return errors.New("an identifier name must be provided")
+				return errors.New("an service name must be specified")
 			}
 			if port == 0 {
-				return errors.New("--port is required")
+				return errors.New("--expose is required")
 			}
-			return action.Run(c.Args().First(), cli, options)
+			return action.Provide(c.Args().First(), cli, options)
 		},
 	}
 }
 
-// Run create a new service in cluster
-func (action *Action) Run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(cli, options, "run")
-	if err := run(serviceName, cli, options); err != nil {
+// Provide create a new service in cluster
+func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+	ch := SetUpCloseHandler(cli, options, "provide")
+	if err := provide(serviceName, cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
@@ -71,8 +71,8 @@ func (action *Action) Run(serviceName string, cli kt.CliInterface, options *opti
 	return nil
 }
 
-// Run create a new service in cluster
-func run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+// Provide create a new service in cluster
+func provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
@@ -82,12 +82,12 @@ func run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions
 	deploymentName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
-		common.KTComponent: common.ComponentRun,
+		common.KTComponent: common.ComponentProvide,
 		common.KTName:      deploymentName,
 		common.KTVersion:   version,
 	}
 	annotations := map[string]string{
-		common.KTConfig: fmt.Sprintf("expose=%t,service=%s", options.RunOptions.Expose, serviceName),
+		common.KTConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
 	// extra labels must be applied after origin labels
@@ -95,11 +95,11 @@ func run(serviceName string, cli kt.CliInterface, options *options.DaemonOptions
 		labels[k] = v
 	}
 
-	return runAndExposeLocalService(serviceName, deploymentName, labels, annotations, options, kubernetes, cli)
+	return exposeLocalService(serviceName, deploymentName, labels, annotations, options, kubernetes, cli)
 }
 
-// runAndExposeLocalService create shadow and expose service if need
-func runAndExposeLocalService(serviceName, deploymentName string, labels, annotations map[string]string,
+// exposeLocalService create shadow and expose service if need
+func exposeLocalService(serviceName, deploymentName string, labels, annotations map[string]string,
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
@@ -110,23 +110,21 @@ func runAndExposeLocalService(serviceName, deploymentName string, labels, annota
 	}
 	log.Info().Msgf("create shadow pod %s ip %s", podName, podIP)
 
-	if options.RunOptions.Expose {
-		log.Info().Msgf("expose deployment %s to service %s:%v", deploymentName, serviceName, options.RunOptions.Port)
-		_, err = kubernetes.CreateService(serviceName, options.Namespace, options.RunOptions.Port, labels)
-		if err != nil {
-			return err
-		}
-		options.RuntimeOptions.Service = serviceName
+	log.Info().Msgf("expose deployment %s to service %s:%v", deploymentName, serviceName, options.ProvideOptions.Expose)
+	_, err = kubernetes.CreateService(serviceName, options.Namespace, options.ProvideOptions.External, options.ProvideOptions.Expose, labels)
+	if err != nil {
+		return err
 	}
+	options.RuntimeOptions.Service = serviceName
 
 	options.RuntimeOptions.Shadow = deploymentName
 	options.RuntimeOptions.SSHCM = sshcm
 
-	err = cli.Shadow().Inbound(strconv.Itoa(options.RunOptions.Port), podName, podIP, credential)
+	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName, podIP, credential)
 	if err != nil {
 		return err
 	}
 
-	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.RunOptions.Port, options.RunOptions.Port)
+	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.ProvideOptions.Expose, options.ProvideOptions.Expose)
 	return nil
 }

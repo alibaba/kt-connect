@@ -24,7 +24,7 @@ func Test_runCommand(t *testing.T) {
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
 	mockAction := NewMockActionInterface(ctl)
-	mockAction.EXPECT().Run(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Provide(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -32,9 +32,9 @@ func Test_runCommand(t *testing.T) {
 		useShortOptionHandling bool
 		expectedErr            error
 	}{
-		{testArgs: []string{"run", "service", "--port", "8080", "--expose"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
-		{testArgs: []string{"run", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--port is required")},
-		{testArgs: []string{"run"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("an identifier name must be provided")},
+		{testArgs: []string{"provide", "service", "--expose", "8080", "--external"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
+		{testArgs: []string{"provide", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--expose is required")},
+		{testArgs: []string{"provide"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("an service name must be specified")},
 	}
 
 	for _, c := range cases {
@@ -47,7 +47,7 @@ func Test_runCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions()
 		opts.Debug = true
-		command := newRunCommand(fakeKtCli, opts, mockAction)
+		command := newProvideCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {
@@ -86,11 +86,11 @@ func Test_run(t *testing.T) {
 			name: "shouldExposeLocalServiceToCluster",
 			args: args{
 				service: "test",
-				options: options.NewRunDaemonOptions(
+				options: options.NewProvideDaemonOptions(
 					"aa=bb",
-					&options.RunOptions{
-						Expose: true,
-						Port:   8081,
+					&options.ProvideOptions{
+						External: false,
+						Expose:   8081,
 					}),
 				shadowResponse: createShadowResponse{
 					podIP:   "172.168.0.1",
@@ -117,11 +117,11 @@ func Test_run(t *testing.T) {
 			name: "shouldExposeLocalServiceFailWhenShadowCreateFail",
 			args: args{
 				service: "test2",
-				options: options.NewRunDaemonOptions(
+				options: options.NewProvideDaemonOptions(
 					"aaa=bbb",
-					&options.RunOptions{
-						Expose: true,
-						Port:   8081,
+					&options.ProvideOptions{
+						External: false,
+						Expose:   8081,
 					}),
 				shadowResponse: createShadowResponse{
 					podIP:   "172.168.0.1",
@@ -142,11 +142,11 @@ func Test_run(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Times(1).
 				Return(tt.args.shadowResponse.podIP, tt.args.shadowResponse.podName, tt.args.shadowResponse.sshcm, tt.args.shadowResponse.credential, tt.args.shadowResponse.err)
-			kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.serviceResponse.service, tt.args.serviceResponse.err)
+			kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.serviceResponse.service, tt.args.serviceResponse.err)
 			shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.inboundResponse.err)
 
-			if err := run(tt.args.service, fakeKtCli, tt.args.options); (err != nil) != tt.wantErr {
-				t.Errorf("run() error = %v, wantErr %v", err, tt.wantErr)
+			if err := provide(tt.args.service, fakeKtCli, tt.args.options); (err != nil) != tt.wantErr {
+				t.Errorf("provide() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

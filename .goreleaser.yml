@@ -35,9 +35,9 @@ builds:
     - linux
     - darwin
     - windows
-- id: "kubectl-run"
-  main: ./cmd/kubectl-run/main.go
-  binary: kubectl-run
+- id: "kubectl-provide"
+  main: ./cmd/kubectl-provide/main.go
+  binary: kubectl-provide
   goos:
     - linux
     - darwin
@@ -102,10 +102,10 @@ archives:
   files:
     - LICENSE
     - README.md
-- id: kubectl-run
+- id: kubectl-provide
   builds:
-    - kubectl-run
-  name_template: 'kubectl-run_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+    - kubectl-provide
+  name_template: 'kubectl-provide_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
   format: tar.gz
   files:
@@ -130,7 +130,7 @@ release:
     - kubectl-connect
     - kubectl-exchange
     - kubectl-mesh
-    - kubectl-run
+    - kubectl-provide
   # @see https://github.com/goreleaser/goreleaser/issues/1023
   draft: false
   # If set to auto, will mark the release as not ready for production

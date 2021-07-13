@@ -15,10 +15,10 @@ var (
 )
 
 func main() {
-	flags := pflag.NewFlagSet("kubectl-mesh", pflag.ExitOnError)
+	flags := pflag.NewFlagSet("kubectl-provide", pflag.ExitOnError)
 	pflag.CommandLine = flags
 
-	root := cmd.NewRunCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}, version)
+	root := cmd.NewProvideCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}, version)
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}

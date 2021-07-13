@@ -15,20 +15,20 @@ import (
 )
 
 var (
-	runExample = `
+	provideExample = `
   # expose local service to cluster 
-  kubectl run tomcat -e -p 80
+  kubectl provide tomcat --expose 80
 `
 )
 
-// NewRunCommand ...
-func NewRunCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
-	opt := NewRunOptions(streams)
+// NewProvideCommand ...
+func NewProvideCommand(streams genericclioptions.IOStreams, version string) *cobra.Command {
+	opt := NewProvideOptions(streams)
 
 	cmd := &cobra.Command{
-		Use:          "run",
-		Short:        "run app",
-		Example:      runExample,
+		Use:          "provide",
+		Short:        "provide app",
+		Example:      provideExample,
 		SilenceUsage: true,
 		Version:      version,
 		RunE: func(c *cobra.Command, args []string) error {
@@ -50,13 +50,13 @@ func NewRunCommand(streams genericclioptions.IOStreams, version string) *cobra.C
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// run
-	cmd.Flags().IntVarP(&opt.Port, "port", "p", 80, " The port that exposes")
-	cmd.Flags().BoolVarP(&opt.Expose, "expose", "e", false, " If true, a public, external service is created")
+	cmd.Flags().IntVarP(&opt.Expose, "expose", "", 80, " The port that exposes")
+	cmd.Flags().BoolVarP(&opt.External, "external", "e", false, " If specified, a public, external service is created")
 	return cmd
 }
 
-// RunOptions ...
-type RunOptions struct {
+// ProvideOptions ...
+type ProvideOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 	rawConfig   api.Config
 	args        []string
@@ -73,25 +73,25 @@ type RunOptions struct {
 	Timeout   int
 
 	// run
-	Port   int
-	Expose bool
-	Target string
+	Expose   int
+	External bool
+	Target   string
 }
 
-// NewRunOptions ...
-func NewRunOptions(streams genericclioptions.IOStreams) *RunOptions {
-	return &RunOptions{
+// NewProvideOptions ...
+func NewProvideOptions(streams genericclioptions.IOStreams) *ProvideOptions {
+	return &ProvideOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
 		IOStreams:   streams,
 	}
 }
 
 // Complete ...
-func (o *RunOptions) Complete(cmd *cobra.Command, args []string) error {
+func (o *ProvideOptions) Complete(cmd *cobra.Command, args []string) error {
 	o.args = args
 
 	if len(o.args) < 2 {
-		return fmt.Errorf("missing run target")
+		return fmt.Errorf("please specify service name")
 	}
 
 	o.Target = args[1]
@@ -127,7 +127,7 @@ func (o *RunOptions) Complete(cmd *cobra.Command, args []string) error {
 }
 
 // Run ...
-func (o *RunOptions) Run() error {
+func (o *ProvideOptions) Run() error {
 	if err := o.checkContext(); err != nil {
 		return err
 	}
@@ -135,11 +135,11 @@ func (o *RunOptions) Run() error {
 	context := &kt.Cli{Options: ops}
 	action := command.Action{}
 
-	return action.Run(o.Target, context, ops)
+	return action.Provide(o.Target, context, ops)
 }
 
 // checkContext
-func (o *RunOptions) checkContext() error {
+func (o *ProvideOptions) checkContext() error {
 	currentCtx := o.rawConfig.CurrentContext
 	if _, ok := o.rawConfig.Contexts[currentCtx]; !ok {
 		return fmt.Errorf("current context %s not found anymore in KUBECONFIG", currentCtx)
@@ -147,7 +147,7 @@ func (o *RunOptions) checkContext() error {
 	return nil
 }
 
-func (o *RunOptions) transport() *options.DaemonOptions {
+func (o *ProvideOptions) transport() *options.DaemonOptions {
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
 	util.CreateDirIfNotExist(appHome)
@@ -164,9 +164,9 @@ func (o *RunOptions) transport() *options.DaemonOptions {
 			PidFile:   pidFile,
 			Clientset: o.clientset,
 		},
-		RunOptions: &options.RunOptions{
-			Expose: o.Expose,
-			Port:   o.Port,
+		ProvideOptions: &options.ProvideOptions{
+			External: o.External,
+			Expose:   o.Expose,
 		},
 		ConnectOptions: &options.ConnectOptions{},
 	}

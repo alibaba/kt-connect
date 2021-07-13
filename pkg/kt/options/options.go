@@ -9,10 +9,10 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// RunOptions ...
-type RunOptions struct {
-	Expose bool
-	Port   int
+// ProvideOptions ...
+type ProvideOptions struct {
+	External bool
+	Expose   int
 }
 
 // ConnectOptions ...
@@ -20,7 +20,7 @@ type ConnectOptions struct {
 	Global               bool
 	DisableDNS           bool
 	SSHPort              int
-	Socke5Proxy          int
+	Socks5Proxy          int
 	CIDR                 string
 	Method               string
 	Dump2Hosts           bool
@@ -79,7 +79,7 @@ type DaemonOptions struct {
 	Labels           string
 	KubeOptions      cli.StringSlice
 	RuntimeOptions   *RuntimeOptions
-	RunOptions       *RunOptions
+	ProvideOptions   *ProvideOptions
 	ConnectOptions   *ConnectOptions
 	ExchangeOptions  *ExchangeOptions
 	MeshOptions      *MeshOptions
@@ -108,14 +108,14 @@ func NewDaemonOptions() *DaemonOptions {
 		MeshOptions:      &MeshOptions{},
 		CleanOptions:     &CleanOptions{},
 		DashboardOptions: &dashboardOptions{},
-		RunOptions:       &RunOptions{},
+		ProvideOptions:   &ProvideOptions{},
 	}
 }
 
-// NewRunDaemonOptions ...
-func NewRunDaemonOptions(labels string, options *RunOptions) *DaemonOptions {
+// NewProvideDaemonOptions ...
+func NewProvideDaemonOptions(labels string, options *ProvideOptions) *DaemonOptions {
 	daemonOptions := NewDaemonOptions()
 	daemonOptions.Labels = labels
-	daemonOptions.RunOptions = options
+	daemonOptions.ProvideOptions = options
 	return daemonOptions
 }

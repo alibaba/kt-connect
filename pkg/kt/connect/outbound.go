@@ -69,10 +69,10 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 
 func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {
 	log.Info().Msgf("==============================================================")
-	log.Info().Msgf("Start SOCKS5 Proxy Successful: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socke5Proxy)
+	log.Info().Msgf("Start SOCKS5 Proxy Successful: export http_proxy=socks5://127.0.0.1:%d", options.ConnectOptions.Socks5Proxy)
 	log.Info().Msgf("==============================================================")
 	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
-		options.ConnectOptions.Socke5Proxy)), 0644)
+		options.ConnectOptions.Socks5Proxy)), 0644)
 	_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s",
 		options.Namespace)), 0644)
 
@@ -82,7 +82,7 @@ func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) 
 			Password: "root",
 		},
 		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
-		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.Socke5Proxy),
+		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.Socks5Proxy),
 	)
 }
 

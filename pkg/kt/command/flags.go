@@ -67,7 +67,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Name:        "proxy",
 			Value:       2223,
 			Usage:       "when should method socks5, you can choice which port to proxy",
-			Destination: &options.ConnectOptions.Socke5Proxy,
+			Destination: &options.ConnectOptions.Socks5Proxy,
 		},
 		cli.IntFlag{
 			Name:        "port",

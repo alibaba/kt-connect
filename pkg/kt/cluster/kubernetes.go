@@ -284,9 +284,9 @@ func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, nam
 }
 
 // CreateService create kubernetes service
-func (k *Kubernetes) CreateService(name, namespace string, port int, labels map[string]string) (*v1.Service, error) {
+func (k *Kubernetes) CreateService(name, namespace string, external bool, port int, labels map[string]string) (*v1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
-	svc := service(name, namespace, labels, port)
+	svc := service(name, namespace, labels, external, port)
 	return cli.Create(svc)
 }
 
