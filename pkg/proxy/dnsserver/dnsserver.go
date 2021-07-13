@@ -114,6 +114,17 @@ func (s *server) fetchAllPossibleDomains(name string) []string {
 			// stateful-set-pod.service.namespace name
 			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
 		}
+		if len(domainSuffixes) > 2 {
+			// service.namespace.svc name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[2])
+		}
+	case 4:
+		// raw domain
+		namesToLookup = append(namesToLookup, name)
+		if len(domainSuffixes) > 2 {
+			// stateful-set-pod.service.namespace.svc name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[2])
+		}
 	default:
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
