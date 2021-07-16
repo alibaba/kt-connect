@@ -1,9 +1,11 @@
 package socks
 
 import (
+	"fmt"
 	"log"
 	"os"
 
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/wzshiming/socks4"
 )
 
@@ -12,8 +14,7 @@ func Start() {
 	svc := &socks4.Server{
 		Logger: logger,
 	}
-	svc.Authentication = socks4.UserAuth("kt")
-	err := svc.ListenAndServe("tcp", ":1080")
+	err := svc.ListenAndServe("tcp", fmt.Sprintf(":%d", common.Socks4Port))
 	if err != nil {
 		logger.Println(err)
 	}

@@ -61,7 +61,7 @@ func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, po
 
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		portforward := kubernetesCli.PortForward(options.Namespace, podName, common.ShadowSshPort, localSSHPort)
+		portforward := kubernetesCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
 		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
 			Ctx:  rootCtx,
 			Cmd:  portforward,
