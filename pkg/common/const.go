@@ -15,4 +15,6 @@ const (
 	KTConfig          = "kt-config"         // Annotation used for clean up context
 	KTLastHeartBeat   = "kt-last-heart-beat"
 	YyyyMmDdHhMmSs    = "2006-01-02 15:04:05"
+	ShadowSshPort     = 22
+	ShadowSocksPort   = 1080
 )

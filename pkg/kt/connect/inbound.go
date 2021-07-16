@@ -3,6 +3,7 @@ package connect
 import (
 	"context"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,21 +59,15 @@ func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, po
 	var err error
 	var wg sync.WaitGroup
 
-	debug := options.Debug
-	namespace := options.Namespace
-
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		portforward := kubernetesCli.PortForward(namespace, podName, localSSHPort)
-		err = exec.BackgroundRunWithCtx(
-			&exec.CMDContext{
-				Ctx:  rootCtx,
-				Cmd:  portforward,
-				Name: "exchange port forward to local",
-				Stop: stop,
-			},
-			debug,
-		)
+		portforward := kubernetesCli.PortForward(options.Namespace, podName, common.ShadowSshPort, localSSHPort)
+		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+			Ctx:  rootCtx,
+			Cmd:  portforward,
+			Name: "exchange port forward to local",
+			Stop: stop,
+		})
 		util.WaitPortBeReady(options.WaitTime, localSSHPort)
 		wg.Done()
 	}(&wg)

@@ -50,7 +50,7 @@ func Test_inbound(t *testing.T) {
 
 			sshChannel := channel.NewMockChannel(ctl)
 
-			kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))
+			kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))
 			ssh.EXPECT().ForwardRemoteRequestToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(exec.Command("ls", "-al"))
 			sshChannel.EXPECT().ForwardRemoteToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 

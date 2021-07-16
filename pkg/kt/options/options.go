@@ -20,7 +20,7 @@ type ConnectOptions struct {
 	Global               bool
 	DisableDNS           bool
 	SSHPort              int
-	Socks5Proxy          int
+	SocksPort            int
 	CIDR                 string
 	Method               string
 	Dump2Hosts           bool
