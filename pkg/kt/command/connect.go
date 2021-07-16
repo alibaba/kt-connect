@@ -131,6 +131,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 
 func envs(options *options.DaemonOptions) map[string]string {
 	envs := make(map[string]string)
+	envs[common.EnvVarConnectMethod] = options.ConnectOptions.Method
 	if options.ConnectOptions.LocalDomain != "" {
 		envs[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
 	}

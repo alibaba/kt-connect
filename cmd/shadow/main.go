@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/proxy/dnsserver"
 	"github.com/alibaba/kt-connect/pkg/proxy/shadowsocks"
 	"github.com/alibaba/kt-connect/pkg/proxy/socks"
@@ -16,13 +17,13 @@ func init() {
 }
 
 func main() {
-	go socks.Start()
-	go shadowsocks.Start()
+	connectMethod := os.Getenv(common.EnvVarConnectMethod)
 	log.Info().Msg("shadow staring...")
-	srv := dnsserver.NewDNSServerDefault()
-	err := srv.ListenAndServe()
-	if err != nil {
-		log.Error().Msg(err.Error())
-		panic(err.Error())
+	if connectMethod == "socks" {
+		socks.Start()
+	} else if connectMethod == "shadowsocks" {
+		shadowsocks.Start()
+	} else {
+		dnsserver.Start()
 	}
 }
