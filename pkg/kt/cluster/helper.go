@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"strconv"
 	"strings"
 	"time"
@@ -149,15 +150,21 @@ func service(name, namespace string, labels map[string]string, external bool, po
 	return service
 }
 
-func container(image string, args []string, envs map[string]string) v1.Container {
+func container(image string, args []string, envs map[string]string, options *options.DaemonOptions) v1.Container {
 	var envVar []v1.EnvVar
 	for k, v := range envs {
 		envVar = append(envVar, v1.EnvVar{Name: k, Value: v})
 	}
+	var pullPolicy v1.PullPolicy
+	if options.ForceUpdateShadow {
+		pullPolicy = "Always"
+	} else {
+		pullPolicy = "IfNotPresent"
+	}
 	return v1.Container{
 		Name:            "standalone",
 		Image:           image,
-		ImagePullPolicy: "IfNotPresent",
+		ImagePullPolicy: pullPolicy,
 		Args:            args,
 		Env:             envVar,
 		VolumeMounts: []v1.VolumeMount{
@@ -176,9 +183,9 @@ func container(image string, args []string, envs map[string]string) v1.Container
 	}
 }
 
-func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.Deployment {
+func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *appV1.Deployment {
 	var args []string
-	if debug {
+	if options.Debug {
 		log.Debug().Msg("create shadow with debug mode")
 		args = append(args, "--debug")
 	}
@@ -208,7 +215,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, debug bool) *appV1.D
 				},
 				Spec: v1.PodSpec{
 					Containers: []v1.Container{
-						container(image, args, envs),
+						container(image, args, envs, options),
 					},
 					Volumes: []v1.Volume{
 						getSSHVolume(volume),

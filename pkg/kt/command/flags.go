@@ -46,6 +46,11 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Destination: &options.WaitTime,
 			Value:       10,
 		},
+		cli.BoolFlag{
+			Name:        "forceUpdate,f",
+			Usage:       "always update shadow image",
+			Destination: &options.ForceUpdateShadow,
+		},
 	}
 }
 
@@ -110,14 +115,14 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 
 func methodDefaultValue() string {
 	if util.IsWindows() {
-		return "socks5"
+		return "socks"
 	}
 	return "vpn"
 }
 
 func methodDefaultUsage() string {
 	if util.IsWindows() {
-		return "Windows only support socks5"
+		return "Connect method 'socks' or 'socks5'"
 	}
-	return "Connect method 'vpn' or 'socks5'"
+	return "Connect method 'vpn', 'socks' or 'socks5'"
 }

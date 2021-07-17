@@ -72,20 +72,21 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	KubeConfig       string
-	Namespace        string
-	Debug            bool
-	Image            string
-	Labels           string
-	KubeOptions      cli.StringSlice
-	RuntimeOptions   *RuntimeOptions
-	ProvideOptions   *ProvideOptions
-	ConnectOptions   *ConnectOptions
-	ExchangeOptions  *ExchangeOptions
-	MeshOptions      *MeshOptions
-	CleanOptions     *CleanOptions
-	DashboardOptions *dashboardOptions
-	WaitTime         int
+	KubeConfig        string
+	Namespace         string
+	Debug             bool
+	Image             string
+	Labels            string
+	KubeOptions       cli.StringSlice
+	RuntimeOptions    *RuntimeOptions
+	ProvideOptions    *ProvideOptions
+	ConnectOptions    *ConnectOptions
+	ExchangeOptions   *ExchangeOptions
+	MeshOptions       *MeshOptions
+	CleanOptions      *CleanOptions
+	DashboardOptions  *dashboardOptions
+	WaitTime          int
+	ForceUpdateShadow bool
 }
 
 // NewDaemonOptions return new cli default options
