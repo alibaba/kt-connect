@@ -5,7 +5,6 @@ import (
 
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/proxy/dnsserver"
-	"github.com/alibaba/kt-connect/pkg/proxy/shadowsocks"
 	"github.com/alibaba/kt-connect/pkg/proxy/socks"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -21,8 +20,6 @@ func main() {
 	log.Info().Msg("shadow staring...")
 	if connectMethod == common.ConnectMethodSocks {
 		socks.Start()
-	} else if connectMethod == "shadowsocks" {
-		shadowsocks.Start()
 	} else {
 		dnsserver.Start()
 	}

@@ -84,7 +84,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// method
-	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks/socks5/shadowsocks")
+	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks/socks5")
 	cmd.Flags().IntVarP(&opt.Port, "port", "p", 2222, "Local SSH Proxy port ")
 	cmd.Flags().BoolVarP(&opt.Global, "global", "g", false, "with cluster scope")
 
@@ -93,7 +93,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR, e.g. '172.2.0.0/16")
 
 	// socks
-	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks, socks5 or shadowsocks, you can choice which port to proxy")
+	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks or socks5, you can choice which port to proxy")
 	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
 
 	return cmd

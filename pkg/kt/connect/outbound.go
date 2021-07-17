@@ -27,8 +27,6 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 
 	if option.ConnectOptions.Method == common.ConnectMethodSocks {
 		err = startSocks4Connection(cli, option, name)
-	} else if option.ConnectOptions.Method == "shadowsocks" {
-		err = startShadowSocksConnection(cli, option, name)
 	} else {
 		stop, rootCtx, err := forwardSshPortToLocal(cli, option, name)
 		if err == nil {
@@ -83,11 +81,6 @@ func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions
 func startSocks4Connection(cli exec.CliInterface, options *options.DaemonOptions, name string) error {
 	showSocksBanner(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
 	return cli.Kubectl().PortForward(options.Namespace, name, common.Socks4Port, options.ConnectOptions.SocksPort).Start()
-}
-
-func startShadowSocksConnection(cli exec.CliInterface, options *options.DaemonOptions, name string) error {
-	log.Info().Msgf("Start ShadowSocks Proxy Successful On 127.0.0.1:%d", options.ConnectOptions.SocksPort)
-	return cli.Kubectl().PortForward(options.Namespace, name, common.ShadowSocksPort, options.ConnectOptions.SocksPort).Start()
 }
 
 func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {

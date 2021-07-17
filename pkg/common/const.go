@@ -21,5 +21,4 @@ const (
 	YyyyMmDdHhMmSs      = "2006-01-02 15:04:05"
 	SshPort             = 22
 	Socks4Port          = 1080
-	ShadowSocksPort     = 8379
 )
