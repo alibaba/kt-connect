@@ -72,7 +72,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		setupDump2Host(options, kubernetes)
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
-		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, options.RuntimeOptions.ProxyConfig)
+		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 		if err != nil {
 			log.Error().Msg(err.Error())
 		}

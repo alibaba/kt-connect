@@ -8,7 +8,7 @@ import (
 const InternetSettings = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
 const notExist = "<NotExist>"
 
-func SetGlobalProxy(port int, config ProxyConfig) error {
+func SetGlobalProxy(port int, config *ProxyConfig) error {
 	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, InternetSettings, registry.ALL_ACCESS)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func SetGlobalProxy(port int, config ProxyConfig) error {
 	return nil
 }
 
-func CleanGlobalProxy(config ProxyConfig) {
+func CleanGlobalProxy(config *ProxyConfig) {
 	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, InternetSettings, registry.ALL_ACCESS)
 	if err == nil {
 		defer internetSettings.Close()
