@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"github.com/alibaba/kt-connect/pkg/common"
 	"os/exec"
 	"testing"
 
@@ -45,7 +46,7 @@ func TestShadow_Outbound(t *testing.T) {
 	}
 	vpnOptions := options.NewDaemonOptions()
 	socksOptions := options.NewDaemonOptions()
-	socksOptions.ConnectOptions.Method = "socks5"
+	socksOptions.ConnectOptions.Method = common.ConnectMethodSocks5
 
 	tests := []struct {
 		name    string

@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"os"
 	"strings"
 
@@ -60,15 +61,21 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Connect Start At %d", pid)
+	log.Info().Msgf("Connect start at %d", pid)
 
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return
 	}
 
-	if options.ConnectOptions.Dump2Hosts {
+	if options.ConnectOptions.Dump2Hosts || options.ConnectOptions.Dump2HostsNamespaces != nil {
 		setupDump2Host(options, kubernetes)
+	}
+	if options.ConnectOptions.Method == common.ConnectMethodSocks {
+		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort)
+		if err != nil {
+			log.Error().Msg(err.Error())
+		}
 	}
 
 	endPointIP, podName, credential, err := getOrCreateShadow(options, err, kubernetes)

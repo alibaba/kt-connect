@@ -23,19 +23,19 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 }
 
 func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
-	options := s.Options
+	option := s.Options
 
-	if options.ConnectOptions.Method == "socks" {
-		err = startSocks4Connection(cli, options, name)
-	} else if options.ConnectOptions.Method == "shadowsocks" {
-		err = startShadowSocksConnection(cli, options, name)
+	if option.ConnectOptions.Method == common.ConnectMethodSocks {
+		err = startSocks4Connection(cli, option, name)
+	} else if option.ConnectOptions.Method == "shadowsocks" {
+		err = startShadowSocksConnection(cli, option, name)
 	} else {
-		stop, rootCtx, err := forwardSshPortToLocal(cli, options, name)
+		stop, rootCtx, err := forwardSshPortToLocal(cli, option, name)
 		if err == nil {
-			if options.ConnectOptions.Method == "socks5" {
-				err = startSocks5Connection(ssh, options)
+			if option.ConnectOptions.Method == common.ConnectMethodSocks5 {
+				err = startSocks5Connection(ssh, option)
 			} else {
-				err = startVPNConnection(rootCtx, cli, credential, options, podIP, cidrs, stop)
+				err = startVPNConnection(rootCtx, cli, credential, option, podIP, cidrs, stop)
 			}
 		}
 	}
@@ -81,7 +81,7 @@ func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions
 }
 
 func startSocks4Connection(cli exec.CliInterface, options *options.DaemonOptions, name string) error {
-	showSocksBanner("socks", options.ConnectOptions.SocksPort)
+	showSocksBanner(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
 	return cli.Kubectl().PortForward(options.Namespace, name, common.Socks4Port, options.ConnectOptions.SocksPort).Start()
 }
 
@@ -91,7 +91,7 @@ func startShadowSocksConnection(cli exec.CliInterface, options *options.DaemonOp
 }
 
 func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {
-	showSocksBanner("socks5", options.ConnectOptions.SocksPort)
+	showSocksBanner(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
 		options.ConnectOptions.SocksPort)), 0644)
 	_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s",

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
@@ -115,9 +116,9 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 
 func methodDefaultValue() string {
 	if util.IsWindows() {
-		return "socks"
+		return common.ConnectMethodSocks
 	}
-	return "vpn"
+	return common.ConnectMethodVpn
 }
 
 func methodDefaultUsage() string {

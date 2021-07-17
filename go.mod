@@ -21,6 +21,7 @@ require (
 	github.com/wzshiming/socks4 v0.2.3
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+	golang.org/x/sys v0.0.0-20210510120138-977fb7262007
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	istio.io/api v0.0.0-20200221025927-228308df3f1b
 	istio.io/client-go v0.0.0-20200221055756-736d3076b458

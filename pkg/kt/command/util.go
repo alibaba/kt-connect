@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"os"
 	"os/signal"
 	"strings"
@@ -77,6 +79,9 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 
 	if len(options.ConnectOptions.Hosts) > 0 {
 		util.DropHosts(options.ConnectOptions.Hosts)
+	}
+	if options.ConnectOptions.Method == common.ConnectMethodSocks {
+		registry.CleanGlobalProxy()
 	}
 
 	kubernetes, err := cli.Kubernetes()

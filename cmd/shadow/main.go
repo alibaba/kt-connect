@@ -19,7 +19,7 @@ func init() {
 func main() {
 	connectMethod := os.Getenv(common.EnvVarConnectMethod)
 	log.Info().Msg("shadow staring...")
-	if connectMethod == "socks" {
+	if connectMethod == common.ConnectMethodSocks {
 		socks.Start()
 	} else if connectMethod == "shadowsocks" {
 		shadowsocks.Start()
