@@ -104,7 +104,7 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels, annotations, envs, false)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}

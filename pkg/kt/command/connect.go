@@ -98,8 +98,7 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 	}
 
 	annotations := make(map[string]string)
-	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options,
-		labels(workload, options), annotations, envs(options), options.ConnectOptions.ShareShadow)
+	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels(workload, options), annotations, envs(options))
 	if err != nil {
 		return "", "", nil, err
 	}

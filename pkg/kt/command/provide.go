@@ -103,7 +103,7 @@ func exposeLocalService(serviceName, deploymentName string, labels, annotations 
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(deploymentName, options, labels, annotations, envs, false)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(deploymentName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}

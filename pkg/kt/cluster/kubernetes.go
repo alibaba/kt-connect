@@ -96,14 +96,15 @@ func (k *Kubernetes) Deployment(name, namespace string) (*appv1.Deployment, erro
 }
 
 // GetOrCreateShadow create shadow
-func (k *Kubernetes) GetOrCreateShadow(name string, options *options.DaemonOptions, labels, annotations, envs map[string]string,
-	reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+func (k *Kubernetes) GetOrCreateShadow(name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
+	podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+
 	component, version := labels[common.KTComponent], labels[common.KTVersion]
 	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
 
 	privateKeyPath := util.PrivateKeyPath(component, version)
 
-	if reuseShadow {
+	if options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&ResourceMeta{
 			Name:        name,
 			Namespace:   options.Namespace,

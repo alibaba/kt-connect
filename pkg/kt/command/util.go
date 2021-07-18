@@ -55,27 +55,8 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	log.Info().Msgf("- start Clean Workspace")
-	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
-		log.Info().Msgf("- remove pid %s", options.RuntimeOptions.PidFile)
-		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
-			log.Error().Err(err).
-				Msgf("stop process:%s failed", options.RuntimeOptions.PidFile)
-		}
-	}
-
-	if _, err := os.Stat(".jvmrc"); err == nil {
-		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
-		if err = os.Remove(".jvmrc"); err != nil {
-			log.Error().Err(err).Msg("delete .jvmrc failed")
-		}
-	}
-
-	if _, err := os.Stat(".envrc"); err == nil {
-		log.Info().Msgf("- Remove .envrc %s", options.RuntimeOptions.PidFile)
-		if err = os.Remove(".envrc"); err != nil {
-			log.Error().Err(err).Msg("delete .envrc failed")
-		}
-	}
+	cleanLocalFiles(options)
+	removePrivateKey(options)
 
 	if len(options.ConnectOptions.Hosts) > 0 {
 		util.DropHosts(options.ConnectOptions.Hosts)
@@ -104,12 +85,28 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	if err != nil {
 		return
 	}
+}
 
-	if len(options.RuntimeOptions.Service) > 0 {
-		log.Info().Msgf("- cleanup service %s", options.RuntimeOptions.Service)
-		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
-		if err != nil {
-			log.Error().Err(err).Msg("delete service failed")
+func cleanLocalFiles(options *options.DaemonOptions) {
+	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
+		log.Info().Msgf("- Remove pid %s", options.RuntimeOptions.PidFile)
+		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
+			log.Error().Err(err).
+				Msgf("stop process:%s failed", options.RuntimeOptions.PidFile)
+		}
+	}
+
+	if _, err := os.Stat(".jvmrc"); err == nil {
+		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
+		if err = os.Remove(".jvmrc"); err != nil {
+			log.Error().Err(err).Msg("delete .jvmrc failed")
+		}
+	}
+
+	if _, err := os.Stat(".envrc"); err == nil {
+		log.Info().Msgf("- Remove .envrc %s", options.RuntimeOptions.PidFile)
+		if err = os.Remove(".envrc"); err != nil {
+			log.Error().Err(err).Msg("delete .envrc failed")
 		}
 	}
 }
@@ -142,7 +139,14 @@ func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluste
 		}
 	}
 
-	removePrivateKey(options)
+	if len(options.RuntimeOptions.Service) > 0 {
+		log.Info().Msgf("- Cleanup service %s", options.RuntimeOptions.Service)
+		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
+		if err != nil {
+			log.Error().Err(err).Msg("delete service failed")
+		}
+	}
+
 	return
 }
 
