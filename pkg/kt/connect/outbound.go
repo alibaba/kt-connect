@@ -23,17 +23,15 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 }
 
 func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
-	option := s.Options
-
-	if option.ConnectOptions.Method == common.ConnectMethodSocks {
-		err = startSocks4Connection(cli, option, name)
+	if s.Options.ConnectOptions.Method == common.ConnectMethodSocks {
+		err = startSocks4Connection(cli, s.Options, name)
 	} else {
-		stop, rootCtx, err := forwardSshPortToLocal(cli, option, name)
+		stop, rootCtx, err := forwardSshPortToLocal(cli, s.Options, name)
 		if err == nil {
-			if option.ConnectOptions.Method == common.ConnectMethodSocks5 {
-				err = startSocks5Connection(ssh, option)
+			if s.Options.ConnectOptions.Method == common.ConnectMethodSocks5 {
+				err = startSocks5Connection(ssh, s.Options)
 			} else {
-				err = startVPNConnection(rootCtx, cli, credential, option, podIP, cidrs, stop)
+				err = startVPNConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
 			}
 		}
 	}

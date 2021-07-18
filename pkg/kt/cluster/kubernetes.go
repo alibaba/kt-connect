@@ -104,7 +104,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, options *options.DaemonOptio
 
 	privateKeyPath := util.PrivateKeyPath(component, version)
 
-	if options.ConnectOptions.ShareShadow {
+	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&ResourceMeta{
 			Name:        name,
 			Namespace:   options.Namespace,

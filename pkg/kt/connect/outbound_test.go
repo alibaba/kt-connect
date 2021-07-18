@@ -44,9 +44,13 @@ func TestShadow_Outbound(t *testing.T) {
 		credential *util.SSHCredential
 		cidrs      []string
 	}
+
 	vpnOptions := options.NewDaemonOptions()
+	vpnOptions.WaitTime = 0
+
 	socksOptions := options.NewDaemonOptions()
 	socksOptions.ConnectOptions.Method = common.ConnectMethodSocks5
+	socksOptions.WaitTime = 0
 
 	tests := []struct {
 		name    string
