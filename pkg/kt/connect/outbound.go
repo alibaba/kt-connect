@@ -99,8 +99,12 @@ func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) 
 }
 
 func showSocksBanner(protocol string, port int) {
+	operation := "export"
+	if util.IsWindows() {
+		operation = "set"
+	}
 	log.Info().Msgf("==============================================================")
-	log.Info().Msgf("Start SOCKS Proxy Successful: export http_proxy=%s://127.0.0.1:%d", protocol, port)
+	log.Info().Msgf("Start SOCKS Proxy Successful: %s http_proxy=%s://127.0.0.1:%d", operation, protocol, port)
 	log.Info().Msgf("==============================================================")
 }
 
