@@ -80,13 +80,13 @@ func exposeLocalPortsToRemote(ssh channel.Channel, exposePorts string, localSSHP
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
-		localPort, remotePort := getPortMapping(exposePort)
-		exposeLocalPortToRemote(wg, ssh, remotePort, localPort, localSSHPort)
+		exposeLocalPortToRemote(&wg, ssh, exposePort, localSSHPort)
 	}
 	wg.Wait()
 }
 
-func exposeLocalPortToRemote(wg sync.WaitGroup, ssh channel.Channel, remotePort string, localPort string, localSSHPort int) {
+func exposeLocalPortToRemote(wg *sync.WaitGroup, ssh channel.Channel, exposePort string, localSSHPort int) {
+	localPort, remotePort := getPortMapping(exposePort)
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
@@ -104,7 +104,7 @@ func exposeLocalPortToRemote(wg sync.WaitGroup, ssh channel.Channel, remotePort 
 		}
 		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished", remotePort, localPort)
 		wg.Done()
-	}(&wg)
+	}(wg)
 }
 
 func getPortMapping(exposePort string) (string, string) {

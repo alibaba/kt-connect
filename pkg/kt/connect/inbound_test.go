@@ -17,7 +17,7 @@ func Test_shouldRedirectRequestToLocalHost(t *testing.T) {
 
 	ctl := gomock.NewController(t)
 
-	args := args{
+	args := InboundArgs{
 		exposePort: "8080",
 		podName:    "podName",
 		remoteIP:   "127.0.0.1",
@@ -26,20 +26,18 @@ func Test_shouldRedirectRequestToLocalHost(t *testing.T) {
 	}
 	args.options.WaitTime = 0
 
-	t.Run("shouldRedirectRequestToLocalHost", func(t *testing.T) {
-		kubectl := kubectl.NewMockCliInterface(ctl)
-		sshChannel := channel.NewMockChannel(ctl)
+	kubectlCli := kubectl.NewMockCliInterface(ctl)
+	sshChannel := channel.NewMockChannel(ctl)
 
-		kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(exec.Command("echo", "kubectl port-forward"))
-		sshChannel.EXPECT().ForwardRemoteToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0).Return(nil)
+	kubectlCli.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(exec.Command("echo", "kubectl port-forward"))
+	sshChannel.EXPECT().ForwardRemoteToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(nil)
 
-		if err := inbound(args.exposePort, args.podName, args.remoteIP, args.credential, args.options, kubectl, sshChannel); err != nil {
-			t.Errorf("expect no error, actual is %v", err)
-		}
-	})
+	if err := inbound(args.exposePort, args.podName, args.remoteIP, args.credential, args.options, kubectlCli, sshChannel); err != nil {
+		t.Errorf("expect no error, actual is %v", err)
+	}
 }
 
-type args struct {
+type InboundArgs struct {
 	exposePort string
 	podName    string
 	remoteIP   string

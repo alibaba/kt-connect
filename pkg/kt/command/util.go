@@ -81,10 +81,8 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 	}
 
-	err = tryCleanShadowRelatedObjs(options, kubernetes)
-	if err != nil {
-		return
-	}
+	cleanDeploymentAndConfigMap(options, kubernetes)
+	cleanService(options, kubernetes)
 }
 
 func cleanLocalFiles(options *options.DaemonOptions) {
@@ -111,43 +109,43 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	}
 }
 
-func tryCleanShadowRelatedObjs(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) (err error) {
-	var shouldCleanSharedShadowResource bool
-	if len(options.RuntimeOptions.Shadow) > 0 {
+func cleanService(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
+	if options.RuntimeOptions.Service != "" {
+		log.Info().Msgf("- Cleanup service %s", options.RuntimeOptions.Service)
+		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
+		if err != nil {
+			log.Error().Err(err).Msgf("delete service %s failed", options.RuntimeOptions.Service)
+		}
+	}
+}
+
+func cleanDeploymentAndConfigMap(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
+	shouldDelWithShared := false
+	var err error
+	if options.RuntimeOptions.Shadow != "" {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-			shouldCleanSharedShadowResource, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
+			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
 			if err != nil {
-				return
+				log.Error().Err(err).Msgf("delete shared deployment %s failed", options.RuntimeOptions.Shadow)
 			}
 		} else {
 			log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
 			err = kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 			if err != nil {
-				return
+				log.Error().Err(err).Msgf("delete deployment %s failed", options.RuntimeOptions.Shadow)
 			}
 		}
 	}
 
-	if len(options.RuntimeOptions.SSHCM) > 0 {
-		shouldDelWithShared := options.ConnectOptions != nil && options.ConnectOptions.ShareShadow && shouldCleanSharedShadowResource
-		if shouldDelWithShared || (options.ConnectOptions != nil && !options.ConnectOptions.ShareShadow) {
+	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil {
+		if shouldDelWithShared || !options.ConnectOptions.ShareShadow {
 			log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
 			err = kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
 			if err != nil {
-				return
+				log.Error().Err(err).Msgf("delete configmap %s failed", options.RuntimeOptions.SSHCM)
 			}
 		}
 	}
-
-	if len(options.RuntimeOptions.Service) > 0 {
-		log.Info().Msgf("- Cleanup service %s", options.RuntimeOptions.Service)
-		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
-		if err != nil {
-			log.Error().Err(err).Msg("delete service failed")
-		}
-	}
-
-	return
 }
 
 // decreaseRefOrRemoveTheShadow
