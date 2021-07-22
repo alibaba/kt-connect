@@ -50,14 +50,10 @@ build-shadow-dlv:
 	make build-shadow TAG=latest
 	scripts/build-shadow-dlv
 
-build-dashboard: build-frontend build-server
+build-dashboard: build-frontend
 
 build-frontend:
 	docker build -t $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG) -f build/docker/dashboard/Dockerfile .
-
-build-server:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o artifacts/apiserver/apiserver-linux-amd64 cmd/server/main.go
-	docker build -t $(PREFIX)/$(SERVER_IMAGE):$(TAG) -f build/docker/apiserver/Dockerfile .
 
 release-dashboard:
 	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
