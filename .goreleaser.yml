@@ -52,9 +52,7 @@ builds:
 dockers:
 - goos: linux
   goarch: amd64
-  binaries:
-  - shadow
-  builds:
+  ids:
   - shadow
   image_templates:
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
