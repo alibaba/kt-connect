@@ -49,6 +49,13 @@ builds:
   - linux
   goarch:
   - amd64
+- id: "server"
+  main: ./cmd/server/main.go
+  binary: apiserver
+  goos:
+    - linux
+  goarch:
+    - amd64
 dockers:
 - goos: linux
   goarch: amd64
