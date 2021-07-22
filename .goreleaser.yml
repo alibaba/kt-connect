@@ -49,7 +49,7 @@ builds:
   - linux
   goarch:
   - amd64
-- id: "server"
+- id: "apiserver"
   main: ./cmd/server/main.go
   binary: apiserver
   goos:
@@ -70,6 +70,16 @@ dockers:
   skip_push: false
   extra_files:
     - build/docker/shadow/run.sh
+- goos: linux
+  goarch: amd64
+  ids:
+    - apiserver
+  image_templates:
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:latest"
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}"
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
+  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Version }}"
+  dockerfile: build/docker/apiserver/Dockerfile_releaser
 archives:
 - id: ktctl
   builds:
