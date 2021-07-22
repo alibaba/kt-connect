@@ -1,4 +1,4 @@
-FROM node:9.11.1 as build-deps
+FROM node:14.8.0 as build-deps
 WORKDIR /usr/src/app
 COPY web/package.json ./
 RUN npm install -g cnpm 

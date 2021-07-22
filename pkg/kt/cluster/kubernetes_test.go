@@ -31,7 +31,6 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 		objs           []runtime.Object
 		wantPodIP      string
 		wantPodName    string
-		wantSshcm      string
 		wantCredential *util.SSHCredential
 		wantErr        bool
 	}{
@@ -59,7 +58,6 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			},
 			wantPodIP:   "172.168.1.2",
 			wantPodName: "shadow-pod",
-			wantSshcm:   "kt-shadow-component-public-key-0.0.1",
 			wantErr:     false,
 		},
 	}
@@ -83,8 +81,8 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			if gotPodName != tt.wantPodName {
 				t.Errorf("Kubernetes.GetOrCreateShadow() gotPodName = %v, want %v", gotPodName, tt.wantPodName)
 			}
-			if gotSshcm != tt.wantSshcm {
-				t.Errorf("Kubernetes.GetOrCreateShadow() gotSshcm = %v, want %v", gotSshcm, tt.wantSshcm)
+			if gotSshcm == "" {
+				t.Errorf("Kubernetes.GetOrCreateShadow() gotSshcm = %v", gotSshcm)
 			}
 		})
 	}

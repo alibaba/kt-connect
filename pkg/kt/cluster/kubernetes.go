@@ -3,8 +3,10 @@ package cluster
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
+	"strings"
+
+	"github.com/alibaba/kt-connect/pkg/common"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 
@@ -99,10 +101,11 @@ func (k *Kubernetes) Deployment(name, namespace string) (*appv1.Deployment, erro
 func (k *Kubernetes) GetOrCreateShadow(name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
 	podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
 
-	component, version := labels[common.KTComponent], labels[common.KTVersion]
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
+	component := labels[common.KTComponent]
+	identifier := strings.ToLower(util.RandomString(4))
+	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, identifier)
 
-	privateKeyPath := util.PrivateKeyPath(component, version)
+	privateKeyPath := util.PrivateKeyPath(component, identifier)
 
 	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&ResourceMeta{
