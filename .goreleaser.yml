@@ -80,16 +80,6 @@ dockers:
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
   - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Version }}"
   dockerfile: build/docker/apiserver/Dockerfile_releaser
-- goos: linux
-  goarch: amd64
-  dockerfile: build/docker/dashboard/Dockerfile
-  image_templates:
-    - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:latest"
-    - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:{{ .Tag }}"
-    - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:v{{ .Major }}"
-    - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-dashboard:v{{ .Version }}"
-  extra_files:
-    - build/docker/dashboard/nginx/default.conf
 archives:
 - id: ktctl
   builds:
