@@ -2,7 +2,6 @@ package common
 
 const (
 	EnvVarLocalDomain   = "LOCAL_DOMAIN"
-	EnvVarConnectMethod = "CONNECT_METHOD"
 	ControlBy           = "control-by"
 	KubernetesTool      = "kt"
 	ComponentConnect    = "connect"
