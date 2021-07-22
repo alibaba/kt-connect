@@ -11,10 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var interrupt = make(chan bool)
+var interrupt = make(chan struct{})
 
 // StopBackendProcess ...
-func StopBackendProcess(stop bool, cancel func()) {
+func StopBackendProcess(stop struct{}, cancel func()) {
 	if cancel == nil {
 		return
 	}
@@ -23,7 +23,7 @@ func StopBackendProcess(stop bool, cancel func()) {
 }
 
 // Interrupt ...
-func Interrupt() chan bool {
+func Interrupt() chan struct{} {
 	return interrupt
 }
 

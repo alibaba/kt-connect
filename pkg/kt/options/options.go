@@ -2,8 +2,10 @@ package options
 
 import (
 	"fmt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
@@ -69,6 +71,7 @@ type RuntimeOptions struct {
 	Service string
 	// Windows global proxy config
 	ProxyConfig registry.ProxyConfig
+	RestConfig  *rest.Config
 }
 
 type dashboardOptions struct {

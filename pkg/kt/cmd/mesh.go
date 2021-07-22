@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -74,9 +76,10 @@ type MeshOptions struct {
 	Timeout   int
 
 	// mesh
-	Target  string
-	Expose  string
-	Version string
+	Target     string
+	Expose     string
+	Version    string
+	restConfig *rest.Config
 }
 
 // NewMeshOptions ...
@@ -121,6 +124,7 @@ func (o *MeshOptions) Complete(cmd *cobra.Command, args []string) error {
 	}
 
 	o.clientset = clientset
+	o.restConfig = restConfig
 	if o.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
@@ -172,10 +176,11 @@ func (o *MeshOptions) transport() *options.DaemonOptions {
 		Namespace: o.currentNs,
 		WaitTime:  o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:  userHome,
-			AppHome:   appHome,
-			PidFile:   pidFile,
-			Clientset: o.clientset,
+			UserHome:   userHome,
+			AppHome:    appHome,
+			PidFile:    pidFile,
+			Clientset:  o.clientset,
+			RestConfig: o.restConfig,
 		},
 		MeshOptions: &options.MeshOptions{
 			Expose:  o.Expose,

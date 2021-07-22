@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -42,6 +44,7 @@ type ConnectOptions struct {
 	userSpecifiedNamespace string
 	genericclioptions.IOStreams
 	clientset  kubernetes.Interface
+	restConfig *rest.Config
 	Image      string
 	Method     string
 	Debug      bool
@@ -128,6 +131,7 @@ func (o *ConnectOptions) Complete(cmd *cobra.Command, args []string) error {
 	}
 
 	o.clientset = clientset
+	o.restConfig = restConfig
 	return nil
 }
 
@@ -177,10 +181,11 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 		Namespace: o.currentNs,
 		WaitTime:  o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:  userHome,
-			AppHome:   appHome,
-			PidFile:   pidFile,
-			Clientset: o.clientset,
+			UserHome:   userHome,
+			AppHome:    appHome,
+			PidFile:    pidFile,
+			Clientset:  o.clientset,
+			RestConfig: o.restConfig,
 		},
 		ConnectOptions: &options.ConnectOptions{
 			DisableDNS: o.DisableDNS,

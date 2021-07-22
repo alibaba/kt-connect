@@ -17,7 +17,7 @@ type CMDContext struct {
 	Ctx  context.Context
 	Cmd  *exec.Cmd
 	Name string
-	Stop chan bool // notify parent current Cmd occur error
+	Stop chan struct{} // notify parent current Cmd occur error
 }
 
 // RunAndWait run cmd
@@ -66,7 +66,7 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
 			if !strings.Contains(err.Error(), "signal:") {
 				log.Error().Err(err).Msgf("background process of %s failed", cmdCtx.Name)
 			}
-			cmdCtx.Stop <- true
+			cmdCtx.Stop <- struct{}{}
 			return
 		}
 		log.Info().Msgf("%s finished with context", cmdCtx.Name)
@@ -98,7 +98,7 @@ func runCmd(cmdCtx *CMDContext) error {
 
 	err = cmd.Start()
 	if err != nil {
-		cmdCtx.Stop <- true
+		cmdCtx.Stop <- struct{}{}
 		return err
 	}
 

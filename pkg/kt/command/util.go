@@ -2,12 +2,15 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -211,5 +214,17 @@ func combineKubeOpts(options *options.DaemonOptions) error {
 	if !namespaced {
 		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", options.Namespace))
 	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", options.KubeConfig)
+	if err != nil {
+		return err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+	options.RuntimeOptions.Clientset = clientset
+	options.RuntimeOptions.RestConfig = config
+
 	return nil
 }

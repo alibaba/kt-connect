@@ -257,6 +257,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
 	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
+
 	deployment := deployment(metaAndSpec, sshcm, options)
 	log.Info().Msg("shadow template is prepare ready.")
 	result, err := client.Create(deployment)

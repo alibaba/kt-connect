@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"k8s.io/client-go/rest"
+
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -73,9 +75,10 @@ type ProvideOptions struct {
 	Timeout   int
 
 	// run
-	Expose   int
-	External bool
-	Target   string
+	Expose     int
+	External   bool
+	Target     string
+	restConfig *rest.Config
 }
 
 // NewProvideOptions ...
@@ -120,6 +123,7 @@ func (o *ProvideOptions) Complete(cmd *cobra.Command, args []string) error {
 	}
 
 	o.clientset = clientset
+	o.restConfig = restConfig
 	if o.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
@@ -159,10 +163,11 @@ func (o *ProvideOptions) transport() *options.DaemonOptions {
 		Namespace: o.currentNs,
 		WaitTime:  o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:  userHome,
-			AppHome:   appHome,
-			PidFile:   pidFile,
-			Clientset: o.clientset,
+			UserHome:   userHome,
+			AppHome:    appHome,
+			PidFile:    pidFile,
+			Clientset:  o.clientset,
+			RestConfig: o.restConfig,
 		},
 		ProvideOptions: &options.ProvideOptions{
 			External: o.External,

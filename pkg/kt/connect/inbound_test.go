@@ -32,7 +32,7 @@ func Test_shouldRedirectRequestToLocalHost(t *testing.T) {
 	kubectlCli.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(exec.Command("echo", "kubectl port-forward"))
 	sshChannel.EXPECT().ForwardRemoteToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(nil)
 
-	if err := inbound(args.exposePort, args.podName, args.remoteIP, args.credential, args.options, kubectlCli, sshChannel); err != nil {
+	if err := inbound(nil, args.exposePort, args.podName, args.remoteIP, sshChannel); err != nil {
 		t.Errorf("expect no error, actual is %v", err)
 	}
 }
