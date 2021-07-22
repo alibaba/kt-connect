@@ -20,7 +20,7 @@
     "redux": "^4.0.1",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
-    "superagent": "^5.1.0",
+    "superagent": "5.1.0",
     "xterm": "^3.14.4"
   },
   "scripts": {
