@@ -44,11 +44,11 @@ func (k *Cli) PortForwardDashboardToLocal(port string) *exec.Cmd {
 }
 
 // PortForward ...
-func (k *Cli) PortForward(namespace, resource string, remotePort int) *exec.Cmd {
+func (k *Cli) PortForward(namespace, resource string, remotePort, localPort int) *exec.Cmd {
 	args := kubectl(k, namespace)
 	args = append(args, "port-forward",
 		resource,
-		fmt.Sprintf("%d", remotePort)+":22")
+		fmt.Sprintf("%d:%d", localPort, remotePort))
 	return exec.Command(
 		KUBECTL,
 		args...,

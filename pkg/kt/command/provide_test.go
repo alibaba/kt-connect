@@ -60,8 +60,82 @@ func Test_runCommand(t *testing.T) {
 	}
 }
 
-func Test_run(t *testing.T) {
+func Test_shouldExposeLocalServiceToCluster(t *testing.T) {
+	fakeKtCli, kubernetes, shadow := getHandlers(t)
 
+	args := args{
+		service: "test",
+		options: options.NewProvideDaemonOptions(
+			"aa=bb",
+			&options.ProvideOptions{
+				External: false,
+				Expose:   8081,
+			}),
+		shadowResponse: createShadowResponse{
+			podIP:   "172.168.0.1",
+			podName: "shadow",
+			sshcm:   "shadow-ssh-cm",
+			credential: &util.SSHCredential{
+				RemoteHost:     "127.0.0.1",
+				Port:           "2222",
+				PrivateKeyPath: "/tmp/pk",
+			},
+			err: nil,
+		},
+		serviceResponse: createServiceResponse{
+			service: &coreV1.Service{},
+			err:     nil,
+		},
+		inboundResponse: inboundResponse{
+			err: nil,
+		},
+	}
+
+	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		Return(args.shadowResponse.podIP, args.shadowResponse.podName, args.shadowResponse.sshcm, args.shadowResponse.credential, args.shadowResponse.err)
+	kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(args.serviceResponse.service, args.serviceResponse.err)
+	shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(args.inboundResponse.err)
+
+	if err := provide(args.service, fakeKtCli, args.options); err != nil {
+		t.Errorf("expect no error, actual is %v", err)
+	}
+}
+
+func Test_shouldExposeLocalServiceFailWhenShadowCreateFail(t *testing.T) {
+	fakeKtCli, kubernetes, shadow := getHandlers(t)
+
+	args := args{
+		service: "test2",
+		options: options.NewProvideDaemonOptions(
+			"aaa=bbb",
+			&options.ProvideOptions{
+				External: false,
+				Expose:   8081,
+			}),
+		shadowResponse: createShadowResponse{
+			podIP:   "172.168.0.1",
+			podName: "shadow",
+			sshcm:   "shadow-ssh-cm",
+			credential: &util.SSHCredential{
+				RemoteHost:     "127.0.0.1",
+				Port:           "2222",
+				PrivateKeyPath: "/tmp/pk",
+			},
+			err: errors.New("fail create shadow"),
+		},
+	}
+
+	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+		Return(args.shadowResponse.podIP, args.shadowResponse.podName, args.shadowResponse.sshcm, args.shadowResponse.credential, args.shadowResponse.err)
+	kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0).Return(args.serviceResponse.service, args.serviceResponse.err)
+	shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0).Return(args.inboundResponse.err)
+
+	if err := provide(args.service, fakeKtCli, args.options); err == nil {
+		t.Errorf("expect error = %v, actual is nil", err)
+	}
+}
+
+func getHandlers(t *testing.T) (*fakeKt.MockCliInterface, *cluster.MockKubernetesInterface, *connect.MockShadowInterface) {
 	ctl := gomock.NewController(t)
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 	kubernetes := cluster.NewMockKubernetesInterface(ctl)
@@ -69,87 +143,15 @@ func Test_run(t *testing.T) {
 
 	fakeKtCli.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 	fakeKtCli.EXPECT().Shadow().AnyTimes().Return(shadow)
+	return fakeKtCli, kubernetes, shadow
+}
 
-	type args struct {
-		service         string
-		options         *options.DaemonOptions
-		shadowResponse  createShadowResponse
-		serviceResponse createServiceResponse
-		inboundResponse inboundResponse
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "shouldExposeLocalServiceToCluster",
-			args: args{
-				service: "test",
-				options: options.NewProvideDaemonOptions(
-					"aa=bb",
-					&options.ProvideOptions{
-						External: false,
-						Expose:   8081,
-					}),
-				shadowResponse: createShadowResponse{
-					podIP:   "172.168.0.1",
-					podName: "shadow",
-					sshcm:   "shadow-ssh-cm",
-					credential: &util.SSHCredential{
-						RemoteHost:     "127.0.0.1",
-						Port:           "2222",
-						PrivateKeyPath: "/tmp/pk",
-					},
-					err: nil,
-				},
-				serviceResponse: createServiceResponse{
-					service: &coreV1.Service{},
-					err:     nil,
-				},
-				inboundResponse: inboundResponse{
-					err: nil,
-				},
-			},
-			wantErr: false,
-		},
-		{
-			name: "shouldExposeLocalServiceFailWhenShadowCreateFail",
-			args: args{
-				service: "test2",
-				options: options.NewProvideDaemonOptions(
-					"aaa=bbb",
-					&options.ProvideOptions{
-						External: false,
-						Expose:   8081,
-					}),
-				shadowResponse: createShadowResponse{
-					podIP:   "172.168.0.1",
-					podName: "shadow",
-					sshcm:   "shadow-ssh-cm",
-					credential: &util.SSHCredential{
-						RemoteHost:     "127.0.0.1",
-						Port:           "2222",
-						PrivateKeyPath: "/tmp/pk",
-					},
-					err: errors.New("fail create shadow"),
-				},
-			},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), false).Times(1).
-				Return(tt.args.shadowResponse.podIP, tt.args.shadowResponse.podName, tt.args.shadowResponse.sshcm, tt.args.shadowResponse.credential, tt.args.shadowResponse.err)
-			kubernetes.EXPECT().CreateService(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.serviceResponse.service, tt.args.serviceResponse.err)
-			shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(tt.args.inboundResponse.err)
-
-			if err := provide(tt.args.service, fakeKtCli, tt.args.options); (err != nil) != tt.wantErr {
-				t.Errorf("provide() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+type args struct {
+	service         string
+	options         *options.DaemonOptions
+	shadowResponse  createShadowResponse
+	serviceResponse createServiceResponse
+	inboundResponse inboundResponse
 }
 
 type inboundResponse struct {

@@ -7,7 +7,7 @@ type CliInterface interface {
 	Version() *exec.Cmd
 	ApplyDashboardToCluster() *exec.Cmd
 	PortForwardDashboardToLocal(port string) *exec.Cmd
-	PortForward(namespace, resource string, remotePort int) *exec.Cmd
+	PortForward(namespace, resource string, remotePort, localPort int) *exec.Cmd
 }
 
 // Cli ...

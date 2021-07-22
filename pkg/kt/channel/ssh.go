@@ -16,7 +16,7 @@ import (
 type SSHChannel struct{}
 
 // StartSocks5Proxy start socks5 proxy
-func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress string, socks5Address string) (err error) {
+func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	defer conn.Close()
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress strin
 }
 
 // ForwardRemoteToLocal forward remote request to local
-func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress string, remoteEndpoint string, localEndpoint string) (err error) {
+func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	defer conn.Close()
 	if err != nil {

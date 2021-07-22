@@ -96,17 +96,18 @@ func (k *Kubernetes) Deployment(name, namespace string) (*appv1.Deployment, erro
 }
 
 // GetOrCreateShadow create shadow
-func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels, annotations, envs map[string]string,
-	debug bool, reuseShadow bool) (podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+func (k *Kubernetes) GetOrCreateShadow(name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
+	podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+
 	component, version := labels[common.KTComponent], labels[common.KTVersion]
 	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, version)
 
 	privateKeyPath := util.PrivateKeyPath(component, version)
 
-	if reuseShadow {
+	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&ResourceMeta{
 			Name:        name,
-			Namespace:   namespace,
+			Namespace:   options.Namespace,
 			Labels:      labels,
 			Annotations: annotations,
 		}, &SSHkeyMeta{
@@ -126,18 +127,19 @@ func (k *Kubernetes) GetOrCreateShadow(name, namespace, image string, labels, an
 	podIP, podName, credential, err = k.createShadow(&PodMetaAndSpec{
 		&ResourceMeta{
 			Name:        name,
-			Namespace:   namespace,
+			Namespace:   options.Namespace,
 			Labels:      labels,
 			Annotations: annotations,
-		}, image, envs,
+		}, options.Image, envs,
 	}, &SSHkeyMeta{
 		Sshcm:          sshcm,
 		PrivateKeyPath: privateKeyPath,
-	}, debug)
+	}, options)
 	return
 }
 
-func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta, debug bool) (podIP string, podName string, credential *util.SSHCredential, err error) {
+func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta, options *options.DaemonOptions) (
+	podIP string, podName string, credential *util.SSHCredential, err error) {
 
 	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
 	if err != nil {
@@ -151,7 +153,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 	}
 	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
 
-	pod, err2 := k.createAndGetPod(metaAndSpec, sshKeyMeta.Sshcm, debug)
+	pod, err2 := k.createAndGetPod(metaAndSpec, sshKeyMeta.Sshcm, options)
 	if err2 != nil {
 		err = err2
 		return
@@ -245,14 +247,14 @@ func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *ut
 	return podIP, podName, credential
 }
 
-func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, debug bool) (pod v1.Pod, err error) {
+func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (pod v1.Pod, err error) {
 	localIPAddress := util.GetOutboundIP()
 	log.Info().Msgf("Client address %s", localIPAddress)
 	resourceMeta := metaAndSpec.Meta
 	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
 	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
-	deployment := deployment(metaAndSpec, sshcm, debug)
+	deployment := deployment(metaAndSpec, sshcm, options)
 	log.Info().Msg("shadow template is prepare ready.")
 	result, err := client.Create(deployment)
 	if err != nil {

@@ -20,6 +20,16 @@ type server struct {
 // constants
 const resolvFile = "/etc/resolv.conf"
 
+// Start setup dns server
+func Start() {
+	srv := NewDNSServerDefault()
+	err := srv.ListenAndServe()
+	if err != nil {
+		log.Error().Msg(err.Error())
+		panic(err.Error())
+	}
+}
+
 // NewDNSServerDefault create default dns server
 func NewDNSServerDefault() (srv *dns.Server) {
 	srv = &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}

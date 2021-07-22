@@ -26,7 +26,7 @@ func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 		Cmd:  cmd,
 		Name: name,
 	}
-	err = runCmd(ctx, debug)
+	err = runCmd(ctx)
 
 	if err != nil {
 		return
@@ -41,7 +41,7 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 		Cmd:  cmd,
 		Name: name,
 	}
-	err = runCmd(ctx, debug)
+	err = runCmd(ctx)
 	if err != nil {
 		return
 	}
@@ -56,8 +56,8 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 }
 
 // BackgroundRunWithCtx run cmd in background with context
-func BackgroundRunWithCtx(cmdCtx *CMDContext, debug bool) (err error) {
-	err = runCmd(cmdCtx, debug)
+func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
+	err = runCmd(cmdCtx)
 	if err != nil {
 		return
 	}
@@ -74,7 +74,7 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext, debug bool) (err error) {
 	return
 }
 
-func runCmd(cmdCtx *CMDContext, debug bool) error {
+func runCmd(cmdCtx *CMDContext) error {
 	var err error
 	cmd := cmdCtx.Cmd
 	log.Debug().Msgf("Child, os.Args = %+v", os.Args)

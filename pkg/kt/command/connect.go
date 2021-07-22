@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"os"
 	"strings"
 
@@ -60,15 +61,21 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("Connect Start At %d", pid)
+	log.Info().Msgf("Connect start at %d", pid)
 
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return
 	}
 
-	if options.ConnectOptions.Dump2Hosts {
+	if options.ConnectOptions.Dump2Hosts || options.ConnectOptions.Dump2HostsNamespaces != nil {
 		setupDump2Host(options, kubernetes)
+	}
+	if options.ConnectOptions.Method == common.ConnectMethodSocks {
+		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+		if err != nil {
+			log.Error().Msg(err.Error())
+		}
 	}
 
 	endPointIP, podName, credential, err := getOrCreateShadow(options, err, kubernetes)
@@ -91,8 +98,7 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 	}
 
 	annotations := make(map[string]string)
-	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace,
-		options.Image, labels(workload, options), annotations, envs(options), options.Debug, options.ConnectOptions.ShareShadow)
+	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels(workload, options), annotations, envs(options))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -131,6 +137,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 
 func envs(options *options.DaemonOptions) map[string]string {
 	envs := make(map[string]string)
+	envs[common.EnvVarConnectMethod] = options.ConnectOptions.Method
 	if options.ConnectOptions.LocalDomain != "" {
 		envs[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
 	}

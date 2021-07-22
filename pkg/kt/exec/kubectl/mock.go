@@ -49,17 +49,17 @@ func (mr *MockCliInterfaceMockRecorder) ApplyDashboardToCluster() *gomock.Call {
 }
 
 // PortForward mocks base method.
-func (m *MockCliInterface) PortForward(namespace, resource string, remotePort int) *exec.Cmd {
+func (m *MockCliInterface) PortForward(namespace, resource string, remotePort, localPort int) *exec.Cmd {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PortForward", namespace, resource, remotePort)
+	ret := m.ctrl.Call(m, "PortForward", namespace, resource, remotePort, localPort)
 	ret0, _ := ret[0].(*exec.Cmd)
 	return ret0
 }
 
 // PortForward indicates an expected call of PortForward.
-func (mr *MockCliInterfaceMockRecorder) PortForward(namespace, resource, remotePort interface{}) *gomock.Call {
+func (mr *MockCliInterfaceMockRecorder) PortForward(namespace, resource, remotePort, localPort interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PortForward", reflect.TypeOf((*MockCliInterface)(nil).PortForward), namespace, resource, remotePort)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PortForward", reflect.TypeOf((*MockCliInterface)(nil).PortForward), namespace, resource, remotePort, localPort)
 }
 
 // PortForwardDashboardToLocal mocks base method.

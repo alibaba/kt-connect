@@ -3,6 +3,7 @@ package connect
 import (
 	"context"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,21 +59,15 @@ func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, po
 	var err error
 	var wg sync.WaitGroup
 
-	debug := options.Debug
-	namespace := options.Namespace
-
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		portforward := kubernetesCli.PortForward(namespace, podName, localSSHPort)
-		err = exec.BackgroundRunWithCtx(
-			&exec.CMDContext{
-				Ctx:  rootCtx,
-				Cmd:  portforward,
-				Name: "exchange port forward to local",
-				Stop: stop,
-			},
-			debug,
-		)
+		portforward := kubernetesCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
+		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+			Ctx:  rootCtx,
+			Cmd:  portforward,
+			Name: "exchange port forward to local",
+			Stop: stop,
+		})
 		util.WaitPortBeReady(options.WaitTime, localSSHPort)
 		wg.Done()
 	}(&wg)
@@ -85,13 +80,13 @@ func exposeLocalPortsToRemote(ssh channel.Channel, exposePorts string, localSSHP
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
-		localPort, remotePort := getPortMapping(exposePort)
-		exposeLocalPortToRemote(wg, ssh, remotePort, localPort, localSSHPort)
+		exposeLocalPortToRemote(&wg, ssh, exposePort, localSSHPort)
 	}
 	wg.Wait()
 }
 
-func exposeLocalPortToRemote(wg sync.WaitGroup, ssh channel.Channel, remotePort string, localPort string, localSSHPort int) {
+func exposeLocalPortToRemote(wg *sync.WaitGroup, ssh channel.Channel, exposePort string, localSSHPort int) {
+	localPort, remotePort := getPortMapping(exposePort)
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
@@ -109,7 +104,7 @@ func exposeLocalPortToRemote(wg sync.WaitGroup, ssh channel.Channel, remotePort 
 		}
 		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished", remotePort, localPort)
 		wg.Done()
-	}(&wg)
+	}(wg)
 }
 
 func getPortMapping(exposePort string) (string, string) {

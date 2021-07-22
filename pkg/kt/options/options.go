@@ -2,11 +2,12 @@ package options
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
-	"k8s.io/client-go/kubernetes"
 )
 
 // ProvideOptions ...
@@ -20,7 +21,7 @@ type ConnectOptions struct {
 	Global               bool
 	DisableDNS           bool
 	SSHPort              int
-	Socks5Proxy          int
+	SocksPort            int
 	CIDR                 string
 	Method               string
 	Dump2Hosts           bool
@@ -49,9 +50,13 @@ type CleanOptions struct {
 
 // RuntimeOptions ...
 type RuntimeOptions struct {
-	PidFile  string
+	Clientset kubernetes.Interface
+	// Path of user home, same as ${HOME}
 	UserHome string
-	AppHome  string
+	// Path of kt config folder, default to ${UserHome}/.ktctl
+	AppHome string
+	// Path of kt pid file, default to ${AppHome}/pid
+	PidFile string
 	// Shadow deployment name
 	Shadow string
 	// ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
@@ -61,8 +66,9 @@ type RuntimeOptions struct {
 	// The origin replicas
 	Replicas int32
 	// Exposed service name
-	Service   string
-	Clientset kubernetes.Interface
+	Service string
+	// Windows global proxy config
+	ProxyConfig registry.ProxyConfig
 }
 
 type dashboardOptions struct {
@@ -72,20 +78,21 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	KubeConfig       string
-	Namespace        string
-	Debug            bool
-	Image            string
-	Labels           string
-	KubeOptions      cli.StringSlice
-	RuntimeOptions   *RuntimeOptions
-	ProvideOptions   *ProvideOptions
-	ConnectOptions   *ConnectOptions
-	ExchangeOptions  *ExchangeOptions
-	MeshOptions      *MeshOptions
-	CleanOptions     *CleanOptions
-	DashboardOptions *dashboardOptions
-	WaitTime         int
+	KubeConfig        string
+	Namespace         string
+	Debug             bool
+	Image             string
+	Labels            string
+	KubeOptions       cli.StringSlice
+	RuntimeOptions    *RuntimeOptions
+	ProvideOptions    *ProvideOptions
+	ConnectOptions    *ConnectOptions
+	ExchangeOptions   *ExchangeOptions
+	MeshOptions       *MeshOptions
+	CleanOptions      *CleanOptions
+	DashboardOptions  *dashboardOptions
+	WaitTime          int
+	ForceUpdateShadow bool
 }
 
 // NewDaemonOptions return new cli default options
