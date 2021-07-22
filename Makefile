@@ -28,22 +28,13 @@ test:
 	go tool cover -html=c.out -o artifacts/report/coverage/index.html
 
 # build kt project
-build: build-connect build-shadow build-server build-dashboard
+compile:
+	goreleaser --snapshot --skip-publish --rm-dist
 
 # check the style
 check:
 	golint ./pkg/... ./cmd/...
 # 	golangci-lint run ./pkg/...
-
-# build ktctl
-build-connect:
-	scripts/build-ktctl
-	scripts/archive
-
-# build kubectl plugin
-build-kubectl-plugin:
-	scripts/build-kubectl-plugin
-	scripts/archive-plugins
 
 # build this image before shadow
 build-shadow-base:
@@ -53,10 +44,6 @@ build-shadow-base:
 build-shadow:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-linux-amd64 cmd/shadow/main.go
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile .
-
-# release shadow
-release-shadow:
-	docker push $(PREFIX)/$(SHADOW_IMAGE):$(TAG)
 
 # dlv for debug
 build-shadow-dlv:
@@ -75,9 +62,3 @@ build-server:
 release-dashboard:
 	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)
-
-git-release:
-	scripts/release
-
-dryrun-release:
-	goreleaser --snapshot --skip-publish --rm-dist
