@@ -11,22 +11,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-var interrupt = make(chan struct{})
-
-// StopBackendProcess ...
-func StopBackendProcess(stop struct{}, cancel func()) {
-	if cancel == nil {
-		return
-	}
-	cancel()
-	interrupt <- stop
-}
-
-// Interrupt ...
-func Interrupt() chan struct{} {
-	return interrupt
-}
-
 // IsDaemonRunning check daemon is running or not
 func IsDaemonRunning(pidFile string) bool {
 	if _, err := os.Stat(pidFile); os.IsNotExist(err) {

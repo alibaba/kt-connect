@@ -3,9 +3,11 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
+
+	"github.com/alibaba/kt-connect/internal/process"
+	"github.com/alibaba/kt-connect/pkg/common"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 
@@ -98,7 +100,7 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		<-process.Interrupt()
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

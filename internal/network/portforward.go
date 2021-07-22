@@ -11,7 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/internal/process"
+
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
@@ -43,7 +44,7 @@ func ForwardPodPortToLocal(request PortForwardAPodRequest) (chan struct{}, conte
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
 	go func() {
-		util.StopBackendProcess(<-stop, cancel)
+		process.Stop(<-stop, cancel)
 	}()
 
 	request.StopCh = stop

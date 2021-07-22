@@ -3,10 +3,12 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/alibaba/kt-connect/internal/process"
+	"github.com/alibaba/kt-connect/pkg/common"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 
@@ -63,7 +65,7 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		<-process.Interrupt()
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

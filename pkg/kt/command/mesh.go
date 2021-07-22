@@ -2,9 +2,11 @@ package command
 
 import (
 	"errors"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
+
+	"github.com/alibaba/kt-connect/internal/process"
+	"github.com/alibaba/kt-connect/pkg/common"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 	v1 "k8s.io/api/apps/v1"
@@ -88,7 +90,7 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		<-process.Interrupt()
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
