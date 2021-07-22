@@ -4,5 +4,5 @@ GOARCH=amd64 GOOS=linux go build -o "artifacts/ktctl/ktctl_linux_amd64" ./cmd/kt
 GOARCH=386 GOOS=linux go build -o "artifacts/ktctl/ktctl_linux_386" ./cmd/ktctl
 GOARCH=amd64 GOOS=darwin go build -o "artifacts/ktctl/ktctl_darwin_amd64" ./cmd/ktctl
 GOARCH=386 GOOS=darwin go build -o "artifacts/ktctl/ktctl_darwin_386" ./cmd/ktctl
-GOARCH=386 GOOS=windows go build -o "artifacts/ktctl/ktctl_windows_386.exe" ./cmd/ktctl
 GOARCH=amd64 GOOS=windows go build -o "artifacts/ktctl/ktctl_windows_amd64.exe" ./cmd/ktctl
+GOARCH=386 GOOS=windows go build -o "artifacts/ktctl/ktctl_windows_386.exe" ./cmd/ktctl

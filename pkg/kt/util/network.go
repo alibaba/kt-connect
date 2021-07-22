@@ -45,7 +45,6 @@ func GetOutboundIP() (address string) {
 // WaitPortBeReady return true when port is ready
 // It waits at most waitTime seconds, then return false.
 func WaitPortBeReady(waitTime, port int) bool {
-
 	for i := 0; i < waitTime; i++ {
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
@@ -57,6 +56,5 @@ func WaitPortBeReady(waitTime, port int) bool {
 			return true
 		}
 	}
-
 	return false
 }

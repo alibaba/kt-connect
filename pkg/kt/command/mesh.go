@@ -19,12 +19,6 @@ import (
 	urfave "github.com/urfave/cli"
 )
 
-// ComponentMesh mesh component
-const ComponentMesh = "mesh"
-
-// KubernetesTool kt sign
-const KubernetesTool = "kt"
-
 // newMeshCommand return new mesh command
 func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
@@ -49,23 +43,23 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
-			mesh := c.Args().First()
+			deploymentToMesh := c.Args().First()
 			expose := options.MeshOptions.Expose
 
-			if len(mesh) == 0 {
-				return errors.New("mesh target is required")
+			if len(deploymentToMesh) == 0 {
+				return errors.New("name of deployment to mesh is required")
 			}
 
 			if len(expose) == 0 {
-				return errors.New("-expose is required")
+				return errors.New("--expose is required")
 			}
-			return action.Mesh(mesh, cli, options)
+			return action.Mesh(deploymentToMesh, cli, options)
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "mesh")
 
 	kubernetes, err := cli.Kubernetes()
@@ -73,7 +67,7 @@ func (action *Action) Mesh(mesh string, cli kt.CliInterface, options *options.Da
 		return err
 	}
 
-	app, err := kubernetes.Deployment(mesh, options.Namespace)
+	app, err := kubernetes.Deployment(deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -109,8 +103,8 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 	kubernetes cluster.KubernetesInterface) error {
 
 	envs := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(
-		workload, options.Namespace, options.Image, labels, envs, options.Debug, false)
+	annotations := make(map[string]string)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -129,10 +123,10 @@ func createShadowAndInbound(workload string, labels map[string]string, options *
 
 func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		"kt":               workload,
-		common.KTComponent: ComponentMesh,
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentMesh,
+		common.KTName:      workload,
 		common.KTVersion:   meshVersion,
-		"control-by":       KubernetesTool,
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {

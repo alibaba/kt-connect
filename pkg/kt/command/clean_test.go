@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"flag"
 	"io/ioutil"
 	"testing"
@@ -13,13 +12,13 @@ import (
 	"github.com/urfave/cli"
 )
 
-func Test_meshCommand(t *testing.T) {
+func Test_cleanCommand(t *testing.T) {
 
 	ctl := gomock.NewController(t)
 	fakeKtCli := kt.NewMockCliInterface(ctl)
 	mockAction := NewMockActionInterface(ctl)
 
-	mockAction.EXPECT().Mesh(gomock.Eq("service"), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Clean(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -27,9 +26,8 @@ func Test_meshCommand(t *testing.T) {
 		useShortOptionHandling bool
 		expectedErr            error
 	}{
-		{testArgs: []string{"mesh", "service", "--expose", "8080"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
-		{testArgs: []string{"mesh", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--expose is required")},
-		{testArgs: []string{"mesh"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("name of deployment to mesh is required")},
+		{testArgs: []string{"clean", "--dryRun"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
+		{testArgs: []string{"clean"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
 	}
 
 	for _, c := range cases {
@@ -42,7 +40,7 @@ func Test_meshCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions()
 		opts.Debug = true
-		command := newMeshCommand(fakeKtCli, opts, mockAction)
+		command := newCleanCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

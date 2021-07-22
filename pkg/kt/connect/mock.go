@@ -5,36 +5,37 @@
 package connect
 
 import (
+	reflect "reflect"
+
 	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
-	reflect "reflect"
 )
 
-// MockShadowInterface is a mock of ShadowInterface interface
+// MockShadowInterface is a mock of ShadowInterface interface.
 type MockShadowInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockShadowInterfaceMockRecorder
 }
 
-// MockShadowInterfaceMockRecorder is the mock recorder for MockShadowInterface
+// MockShadowInterfaceMockRecorder is the mock recorder for MockShadowInterface.
 type MockShadowInterfaceMockRecorder struct {
 	mock *MockShadowInterface
 }
 
-// NewMockShadowInterface creates a new mock instance
+// NewMockShadowInterface creates a new mock instance.
 func NewMockShadowInterface(ctrl *gomock.Controller) *MockShadowInterface {
 	mock := &MockShadowInterface{ctrl: ctrl}
 	mock.recorder = &MockShadowInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockShadowInterface) EXPECT() *MockShadowInterfaceMockRecorder {
 	return m.recorder
 }
 
-// Inbound mocks base method
+// Inbound mocks base method.
 func (m *MockShadowInterface) Inbound(exposePort, podName, remoteIP string, credential *util.SSHCredential) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Inbound", exposePort, podName, remoteIP, credential)
@@ -42,13 +43,13 @@ func (m *MockShadowInterface) Inbound(exposePort, podName, remoteIP string, cred
 	return ret0
 }
 
-// Inbound indicates an expected call of Inbound
+// Inbound indicates an expected call of Inbound.
 func (mr *MockShadowInterfaceMockRecorder) Inbound(exposePort, podName, remoteIP, credential interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inbound", reflect.TypeOf((*MockShadowInterface)(nil).Inbound), exposePort, podName, remoteIP, credential)
 }
 
-// Outbound mocks base method
+// Outbound mocks base method.
 func (m *MockShadowInterface) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, exec exec.CliInterface) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Outbound", name, podIP, credential, cidrs, exec)
@@ -56,7 +57,7 @@ func (m *MockShadowInterface) Outbound(name, podIP string, credential *util.SSHC
 	return ret0
 }
 
-// Outbound indicates an expected call of Outbound
+// Outbound indicates an expected call of Outbound.
 func (mr *MockShadowInterfaceMockRecorder) Outbound(name, podIP, credential, cidrs, exec interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Outbound", reflect.TypeOf((*MockShadowInterface)(nil).Outbound), name, podIP, credential, cidrs, exec)

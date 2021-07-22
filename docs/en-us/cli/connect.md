@@ -11,7 +11,7 @@ ktctl --debug --namespace=default connect --method=socks5
 ### Options
 
 ```
---method value  Connect method 'vpn' or 'socks5' (default: "vpn")
+--method value  Connect method 'vpn', 'socks' or 'socks5' (default: "vpn")
 --proxy value   when should method socks5, you can choice which port to proxy, default 2223 (default: 2223)
 --port value    Local SSH Proxy port (default: 2222)
 --disableDNS    Disable Cluster DNS

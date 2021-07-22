@@ -2,17 +2,18 @@ package options
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
-	"k8s.io/client-go/kubernetes"
 )
 
-// RunOptions ...
-type RunOptions struct {
-	Expose bool
-	Port   int
+// ProvideOptions ...
+type ProvideOptions struct {
+	External bool
+	Expose   int
 }
 
 // ConnectOptions ...
@@ -20,7 +21,7 @@ type ConnectOptions struct {
 	Global               bool
 	DisableDNS           bool
 	SSHPort              int
-	Socke5Proxy          int
+	SocksPort            int
 	CIDR                 string
 	Method               string
 	Dump2Hosts           bool
@@ -41,21 +42,33 @@ type MeshOptions struct {
 	Version string
 }
 
+// CleanOptions ...
+type CleanOptions struct {
+	DryRun           bool
+	ThresholdInMinus int64
+}
+
 // RuntimeOptions ...
 type RuntimeOptions struct {
-	PidFile  string
+	Clientset kubernetes.Interface
+	// Path of user home, same as ${HOME}
 	UserHome string
-	AppHome  string
+	// Path of kt config folder, default to ${UserHome}/.ktctl
+	AppHome string
+	// Path of kt pid file, default to ${AppHome}/pid
+	PidFile string
 	// Shadow deployment name
 	Shadow string
 	// ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
 	SSHCM string
 	// The origin app name
 	Origin string
-	// The origin repicas
-	Replicas  int32
-	Service   string
-	Clientset kubernetes.Interface
+	// The origin replicas
+	Replicas int32
+	// Exposed service name
+	Service string
+	// Windows global proxy config
+	ProxyConfig registry.ProxyConfig
 }
 
 type dashboardOptions struct {
@@ -65,19 +78,21 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	KubeConfig       string
-	Namespace        string
-	Debug            bool
-	Image            string
-	Labels           string
-	KubeOptions      cli.StringSlice
-	RuntimeOptions   *RuntimeOptions
-	RunOptions       *RunOptions
-	ConnectOptions   *ConnectOptions
-	ExchangeOptions  *ExchangeOptions
-	MeshOptions      *MeshOptions
-	DashboardOptions *dashboardOptions
-	WaitTime         int
+	KubeConfig        string
+	Namespace         string
+	Debug             bool
+	Image             string
+	Labels            string
+	KubeOptions       cli.StringSlice
+	RuntimeOptions    *RuntimeOptions
+	ProvideOptions    *ProvideOptions
+	ConnectOptions    *ConnectOptions
+	ExchangeOptions   *ExchangeOptions
+	MeshOptions       *MeshOptions
+	CleanOptions      *CleanOptions
+	DashboardOptions  *dashboardOptions
+	WaitTime          int
+	ForceUpdateShadow bool
 }
 
 // NewDaemonOptions return new cli default options
@@ -98,15 +113,16 @@ func NewDaemonOptions() *DaemonOptions {
 		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &ExchangeOptions{},
 		MeshOptions:      &MeshOptions{},
+		CleanOptions:     &CleanOptions{},
 		DashboardOptions: &dashboardOptions{},
-		RunOptions:       &RunOptions{},
+		ProvideOptions:   &ProvideOptions{},
 	}
 }
 
-// NewRunDaemonOptions ...
-func NewRunDaemonOptions(labels string, options *RunOptions) *DaemonOptions {
+// NewProvideDaemonOptions ...
+func NewProvideDaemonOptions(labels string, options *ProvideOptions) *DaemonOptions {
 	daemonOptions := NewDaemonOptions()
 	daemonOptions.Labels = labels
-	daemonOptions.RunOptions = options
+	daemonOptions.ProvideOptions = options
 	return daemonOptions
 }

@@ -40,9 +40,9 @@ build-connect:
 	scripts/build-ktctl
 	scripts/archive
 
-# build connect plugin
-build-connect-plugin:
-	scripts/build-kubectl-plugin-connect
+# build kubectl plugin
+build-kubectl-plugin:
+	scripts/build-kubectl-plugin
 	scripts/archive-plugins
 
 # build this image before shadow

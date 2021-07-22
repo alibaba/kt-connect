@@ -1,22 +1,18 @@
-## 命令: ktctl connect
+## Command: ktctl provide
 
-从本地连接到集群
+将本地服务暴露到Kubernetes集群
 
 ### 示例
 
 ```
-ktctl --debug --namespace=default connect --method=socks5
+ktctl provide localservice --expose 8080
 ```
 
 ### 参数
 
 ```
---method value  Connect method 'vpn', 'socks' or 'socks5' (default: "vpn")
---proxy value   when should method socks5, you can choice which port to proxy, default 2223 (default: 2223)
---port value    Local SSH Proxy port (default: 2222)
---disableDNS    Disable Cluster DNS
---cidr value    Custom CIDR, e.g. '172.2.0.0/16'
---dump2hosts    Auto write service to local hosts file (客户端版本0.0.10+)
+--expose value  The port that exposes
+--external      If specified, a public, external service is created
 ```
 
 ### 从父命令集成的参数

@@ -242,8 +242,8 @@ class Service extends Component {
                           <Tag>{item.status.phase}</Tag>
                           <Tag>{item.status.podIP}</Tag>
                           {isSystemComponent && <Tag color="#108ee9">{labels['kt-component']}</Tag>}
-                          {isVersion && <Tag color="#108ee9">{`version: ${labels['version']}`}</Tag>}
-                          {isSystemComponent && <Tag color="#87d068">{`Client: ${labels['remoteAddress']}`}</Tag>}
+                          {isVersion && <Tag color="#108ee9">{`version: ${labels['kt-version']}`}</Tag>}
+                          {isSystemComponent && <Tag color="#87d068">{`Client: ${labels['kt-remote-address']}`}</Tag>}
                         </div>
                       }
                       description={

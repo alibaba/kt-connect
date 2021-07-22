@@ -9,6 +9,6 @@ type Certificate struct {
 
 // Channel network channel
 type Channel interface {
-	StartSocks5Proxy(certificate *Certificate, sshAddress string, socks5Address string) error
-	ForwardRemoteToLocal(certificate *Certificate, sshAddress string, remoteEndpoint string, localEndpoint string) error
+	StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) error
+	ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) error
 }

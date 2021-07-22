@@ -20,6 +20,16 @@ type server struct {
 // constants
 const resolvFile = "/etc/resolv.conf"
 
+// Start setup dns server
+func Start() {
+	srv := NewDNSServerDefault()
+	err := srv.ListenAndServe()
+	if err != nil {
+		log.Error().Msg(err.Error())
+		panic(err.Error())
+	}
+}
+
 // NewDNSServerDefault create default dns server
 func NewDNSServerDefault() (srv *dns.Server) {
 	srv = &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
@@ -113,6 +123,17 @@ func (s *server) fetchAllPossibleDomains(name string) []string {
 		if len(domainSuffixes) > 1 {
 			// stateful-set-pod.service.namespace name
 			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
+		}
+		if len(domainSuffixes) > 2 {
+			// service.namespace.svc name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[2])
+		}
+	case 4:
+		// raw domain
+		namesToLookup = append(namesToLookup, name)
+		if len(domainSuffixes) > 2 {
+			// stateful-set-pod.service.namespace.svc name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[2])
 		}
 	default:
 		// raw domain

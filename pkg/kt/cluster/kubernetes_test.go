@@ -53,7 +53,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 					"default",
 					"a",
 					"172.168.1.2", map[string]string{
-						"kt": "shadow",
+						"kt-name": "shadow",
 					}),
 			},
 			wantPodIP:   "172.168.1.2",
@@ -68,8 +68,9 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			}
 
 			envs := make(map[string]string)
-			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(tt.args.name, tt.args.namespace, tt.args.image,
-				tt.args.labels, envs, tt.args.debug, false)
+			annotations := make(map[string]string)
+			option := options.DaemonOptions{Namespace: tt.args.namespace, Image: tt.args.image, Debug: tt.args.debug}
+			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(tt.args.name, &option, tt.args.labels, annotations, envs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -167,7 +168,7 @@ func TestKubernetes_CreateService(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(),
 			}
-			_, err := k.CreateService(tt.args.name, tt.args.namespace, tt.args.port, tt.args.labels)
+			_, err := k.CreateService(tt.args.name, tt.args.namespace, false, tt.args.port, tt.args.labels)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.CreateService() error = %v, wantErr %v", err, tt.wantErr)
 				return

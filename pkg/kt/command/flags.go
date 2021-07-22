@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
@@ -46,6 +47,11 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Destination: &options.WaitTime,
 			Value:       10,
 		},
+		cli.BoolFlag{
+			Name:        "forceUpdate,f",
+			Usage:       "always update shadow image",
+			Destination: &options.ForceUpdateShadow,
+		},
 	}
 }
 
@@ -67,7 +73,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Name:        "proxy",
 			Value:       2223,
 			Usage:       "when should method socks5, you can choice which port to proxy",
-			Destination: &options.ConnectOptions.Socke5Proxy,
+			Destination: &options.ConnectOptions.SocksPort,
 		},
 		cli.IntFlag{
 			Name:        "port",
@@ -110,14 +116,14 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 
 func methodDefaultValue() string {
 	if util.IsWindows() {
-		return "socks5"
+		return common.ConnectMethodSocks
 	}
-	return "vpn"
+	return common.ConnectMethodVpn
 }
 
 func methodDefaultUsage() string {
 	if util.IsWindows() {
-		return "Windows only support socks5"
+		return "Connect method 'socks' or 'socks5'"
 	}
-	return "Connect method 'vpn' or 'socks5'"
+	return "Connect method 'vpn', 'socks' or 'socks5'"
 }

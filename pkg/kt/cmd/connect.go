@@ -22,9 +22,9 @@ var (
   ktctl connect
   # connect with debug mode
   kubectl connect -d
-  # connect with socks5
-  kubectl connect -m socks5 --dump2hosts=default,dev
-  # connect with socks5 and dump service to local hosts file
+  # connect with socks
+  kubectl connect -m socks --dump2hosts=default,dev
+  # connect with socks and dump service to local hosts file
 `
 )
 
@@ -84,7 +84,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// method
-	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks5")
+	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks/socks5")
 	cmd.Flags().IntVarP(&opt.Port, "port", "p", 2222, "Local SSH Proxy port ")
 	cmd.Flags().BoolVarP(&opt.Global, "global", "g", false, "with cluster scope")
 
@@ -92,8 +92,8 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
 	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR, e.g. '172.2.0.0/16")
 
-	// socks5
-	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks5, you can choice which port to proxy")
+	// socks
+	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks or socks5, you can choice which port to proxy")
 	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
 
 	return cmd
@@ -183,12 +183,12 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 			Clientset: o.clientset,
 		},
 		ConnectOptions: &options.ConnectOptions{
-			DisableDNS:  o.DisableDNS,
-			Method:      o.Method,
-			Socke5Proxy: o.Proxy,
-			CIDR:        o.Cidr,
-			SSHPort:     o.Port,
-			Global:      o.Global,
+			DisableDNS: o.DisableDNS,
+			Method:     o.Method,
+			SocksPort:  o.Proxy,
+			CIDR:       o.Cidr,
+			SSHPort:    o.Port,
+			Global:     o.Global,
 		},
 	}
 }

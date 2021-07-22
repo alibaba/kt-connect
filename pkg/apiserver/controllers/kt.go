@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
+	ktConst "github.com/alibaba/kt-connect/pkg/common"
 	"github.com/gin-gonic/gin"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -16,7 +17,7 @@ type KTController struct {
 // Components Components
 func (c KTController) Components(context *gin.Context) {
 	set := labels.Set{
-		"control-by": "kt",
+		ktConst.ControlBy: ktConst.KubernetesTool,
 	}
 	selector := labels.SelectorFromSet(set)
 	pods, err := c.Context.Cluster.PodLister.List(selector)
@@ -33,7 +34,7 @@ func (c KTController) Components(context *gin.Context) {
 func (c KTController) ComponentsInNamespace(context *gin.Context) {
 	namespace := context.Param("namespace")
 	set := labels.Set{
-		"control-by": "kt",
+		ktConst.ControlBy: ktConst.KubernetesTool,
 	}
 	selector := labels.SelectorFromSet(set)
 	pods, err := c.Context.Cluster.PodLister.Pods(namespace).List(selector)

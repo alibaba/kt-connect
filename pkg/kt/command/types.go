@@ -10,9 +10,10 @@ type ActionInterface interface {
 	OpenDashboard(cli kt.CliInterface, options *options.DaemonOptions) error
 	Connect(cli kt.CliInterface, options *options.DaemonOptions) error
 	Check(cli kt.CliInterface) error
-	Run(service string, cli kt.CliInterface, options *options.DaemonOptions) error
-	Exchange(service string, cli kt.CliInterface, options *options.DaemonOptions) error
-	Mesh(service string, cli kt.CliInterface, options *options.DaemonOptions) error
+	Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error
+	Exchange(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error
+	Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error
+	Clean(cli kt.CliInterface, options *options.DaemonOptions) error
 	ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) error
 }
 

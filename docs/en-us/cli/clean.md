@@ -1,21 +1,21 @@
-## Command: ktctl run
+## Command: ktctl clean
 
-Expose local service to cluster
+Delete unavailing shadow pods from kubernetes cluster
 
-### 示例
-
-```
-ktctl run localservice --port 8080 --expose
-```
-
-### 参数
+### Usage
 
 ```
---port value  The port that exposes (default: 0)
---expose      If true, a public, external service is created
+ktctl clean
 ```
 
-### 从父命令集成的参数
+### Options
+
+```
+--dryRun                  Only print name of deployments to be deleted
+--thresholdInMinus value  Length of allowed disconnection time before a unavailing shadow pod be deleted (default: 30)
+```
+
+### Global Options
 
 ```
 --namespace value, -n value   (default: "default")

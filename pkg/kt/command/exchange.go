@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
@@ -38,22 +39,22 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
-			exchange := c.Args().First()
+			deploymentToExchange := c.Args().First()
 			expose := options.ExchangeOptions.Expose
 
-			if len(exchange) == 0 {
-				return errors.New("exchange is required")
+			if len(deploymentToExchange) == 0 {
+				return errors.New("name of deployment to exchange is required")
 			}
 			if len(expose) == 0 {
-				return errors.New("-expose is required")
+				return errors.New("--expose is required")
 			}
-			return action.Exchange(exchange, cli, options)
+			return action.Exchange(deploymentToExchange, cli, options)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch := SetUpCloseHandler(cli, options, "exchange")
 
 	kubernetes, err := cli.Kubernetes()
@@ -61,7 +62,7 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 		return err
 	}
 
-	app, err := kubernetes.Deployment(exchange, options.Namespace)
+	app, err := kubernetes.Deployment(deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -73,8 +74,8 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 	workload := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options.Namespace, options.Image,
-		getExchangeLabels(options.Labels, workload, app), envs, options.Debug, false)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options,
+		getExchangeLabels(options, workload, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("create exchange shadow %s in namespace %s", workload, options.Namespace)
 
 	if err != nil {
@@ -107,11 +108,18 @@ func (action *Action) Exchange(exchange string, cli kt.CliInterface, options *op
 	return nil
 }
 
-func getExchangeLabels(customLabels string, workload string, origin *v1.Deployment) map[string]string {
+func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
+	return map[string]string{
+		common.KTConfig: fmt.Sprintf("app=%s,replicas=%d",
+			options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas),
+	}
+}
+
+func getExchangeLabels(options *options.DaemonOptions, workload string, origin *v1.Deployment) map[string]string {
 	labels := map[string]string{
-		"kt":               workload,
-		common.KTComponent: "exchange",
-		"control-by":       "kt",
+		common.ControlBy:   common.KubernetesTool,
+		common.KTComponent: common.ComponentExchange,
+		common.KTName:      workload,
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {
@@ -119,7 +127,7 @@ func getExchangeLabels(customLabels string, workload string, origin *v1.Deployme
 		}
 	}
 	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(customLabels) {
+	for k, v := range util.String2Map(options.Labels) {
 		labels[k] = v
 	}
 	splits := strings.Split(workload, "-")

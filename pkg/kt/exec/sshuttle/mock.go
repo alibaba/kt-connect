@@ -5,49 +5,36 @@
 package sshuttle
 
 import (
-	gomock "github.com/golang/mock/gomock"
 	exec "os/exec"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
 )
 
-// MockCliInterface is a mock of CliInterface interface
+// MockCliInterface is a mock of CliInterface interface.
 type MockCliInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockCliInterfaceMockRecorder
 }
 
-// MockCliInterfaceMockRecorder is the mock recorder for MockCliInterface
+// MockCliInterfaceMockRecorder is the mock recorder for MockCliInterface.
 type MockCliInterfaceMockRecorder struct {
 	mock *MockCliInterface
 }
 
-// NewMockCliInterface creates a new mock instance
+// NewMockCliInterface creates a new mock instance.
 func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
 	mock := &MockCliInterface{ctrl: ctrl}
 	mock.recorder = &MockCliInterfaceMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
 }
 
-// Version mocks base method
-func (m *MockCliInterface) Version() *exec.Cmd {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Version")
-	ret0, _ := ret[0].(*exec.Cmd)
-	return ret0
-}
-
-// Version indicates an expected call of Version
-func (mr *MockCliInterfaceMockRecorder) Version() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockCliInterface)(nil).Version))
-}
-
-// Connect mocks base method
+// Connect mocks base method.
 func (m *MockCliInterface) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Connect", remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug)
@@ -55,8 +42,22 @@ func (m *MockCliInterface) Connect(remoteHost, privateKeyPath string, remotePort
 	return ret0
 }
 
-// Connect indicates an expected call of Connect
+// Connect indicates an expected call of Connect.
 func (mr *MockCliInterfaceMockRecorder) Connect(remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockCliInterface)(nil).Connect), remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug)
+}
+
+// Version mocks base method.
+func (m *MockCliInterface) Version() *exec.Cmd {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Version")
+	ret0, _ := ret[0].(*exec.Cmd)
+	return ret0
+}
+
+// Version indicates an expected call of Version.
+func (mr *MockCliInterfaceMockRecorder) Version() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockCliInterface)(nil).Version))
 }

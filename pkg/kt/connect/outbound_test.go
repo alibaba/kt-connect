@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"github.com/alibaba/kt-connect/pkg/common"
 	"os/exec"
 	"testing"
 
@@ -15,87 +16,88 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
-func TestShadow_Outbound(t *testing.T) {
+func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 
-	ctl := gomock.NewController(t)
-	execCli := fakeExec.NewMockCliInterface(ctl)
+	execCli, sshuttle, kubectl, sshChannel := getHandlers(t)
 
-	sshuttle := sshuttle.NewMockCliInterface(ctl)
-	kubectl := kubectl.NewMockCliInterface(ctl)
-
-	sshChannel := channel.NewMockChannel(ctl)
 	sshChannel.EXPECT().StartSocks5Proxy(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-
-	kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(func(namespace, resource, remotePort interface{}) *exec.Cmd {
-		return exec.Command("echo", "kubectl portforward")
-	})
+	kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(
+		func(namespace, resource, remotePort, localPort interface{}) *exec.Cmd {
+			return exec.Command("echo", "kubectl port-forward")
+		})
 	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
-
 	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectl)
 	execCli.EXPECT().SSHUttle().AnyTimes().Return(sshuttle)
 
-	type fields struct {
-		Options *options.DaemonOptions
-	}
-	type args struct {
-		name       string
-		podIP      string
-		credential *util.SSHCredential
-		cidrs      []string
-	}
-	vpnOptions := options.NewDaemonOptions()
 	socksOptions := options.NewDaemonOptions()
-	socksOptions.ConnectOptions.Method = "socks5"
+	socksOptions.ConnectOptions.Method = common.ConnectMethodSocks5
+	socksOptions.WaitTime = 0
 
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		{
-			name: "shouldConnectToClusterWithSocks5Methods",
-			fields: fields{
-				Options: socksOptions,
-			},
-			args: args{
-				name:  "name",
-				podIP: "172.168.0.2",
-				credential: &util.SSHCredential{
-					RemoteHost:     "127.0.0.1",
-					Port:           "223",
-					PrivateKeyPath: "/tmp/path",
-				},
-				cidrs: []string{},
-			},
-			wantErr: false,
+	args := OutboundArgs{
+		name:  "name",
+		podIP: "172.168.0.2",
+		credential: &util.SSHCredential{
+			RemoteHost:     "127.0.0.1",
+			Port:           "223",
+			PrivateKeyPath: "/tmp/path",
 		},
-		{
-			name: "shouldConnectToClusterWithVpnMethods",
-			fields: fields{
-				Options: vpnOptions,
-			},
-			args: args{
-				name:  "name",
-				podIP: "172.168.0.2",
-				credential: &util.SSHCredential{
-					RemoteHost:     "127.0.0.1",
-					Port:           "223",
-					PrivateKeyPath: "/tmp/path",
-				},
-				cidrs: []string{},
-			},
-			wantErr: false,
-		},
+		cidrs: []string{},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &Shadow{
-				Options: tt.fields.Options,
-			}
-			if err := outbound(s, tt.args.name, tt.args.podIP, tt.args.credential, tt.args.cidrs, execCli, sshChannel); (err != nil) != tt.wantErr {
-				t.Errorf("Shadow.Outbound() error = %v, wantErr %v", err, tt.wantErr)
-			}
+
+	s := &Shadow{
+		Options: socksOptions,
+	}
+	if err := outbound(s, args.name, args.podIP, args.credential, args.cidrs, execCli, sshChannel); err != nil {
+		t.Errorf("expect no error, actual is %v", err)
+	}
+}
+
+func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
+
+	execCli, sshuttle, kubectl, sshChannel := getHandlers(t)
+
+	kubectl.EXPECT().PortForward(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(
+		func(namespace, resource, remotePort, localPort interface{}) *exec.Cmd {
+			return exec.Command("echo", "kubectl port-forward")
 		})
+	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
+	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectl)
+	execCli.EXPECT().SSHUttle().AnyTimes().Return(sshuttle)
+
+	vpnOptions := options.NewDaemonOptions()
+	vpnOptions.WaitTime = 0
+
+	args := OutboundArgs{
+		name:  "name",
+		podIP: "172.168.0.2",
+		credential: &util.SSHCredential{
+			RemoteHost:     "127.0.0.1",
+			Port:           "223",
+			PrivateKeyPath: "/tmp/path",
+		},
+		cidrs: []string{},
 	}
+
+	s := &Shadow{
+		Options: vpnOptions,
+	}
+	if err := outbound(s, args.name, args.podIP, args.credential, args.cidrs, execCli, sshChannel); err != nil {
+		t.Errorf("expect no error, actual is %v", err)
+	}
+}
+
+func getHandlers(t *testing.T) (*fakeExec.MockCliInterface, *sshuttle.MockCliInterface, *kubectl.MockCliInterface, *channel.MockChannel) {
+	ctl := gomock.NewController(t)
+	execCli := fakeExec.NewMockCliInterface(ctl)
+	sshuttle := sshuttle.NewMockCliInterface(ctl)
+	kubectl := kubectl.NewMockCliInterface(ctl)
+	sshChannel := channel.NewMockChannel(ctl)
+	return execCli, sshuttle, kubectl, sshChannel
+}
+
+type OutboundArgs struct {
+	name       string
+	podIP      string
+	credential *util.SSHCredential
+	cidrs      []string
 }
