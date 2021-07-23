@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/proxy/dnsserver"
 	"github.com/alibaba/kt-connect/pkg/proxy/socks"
 	"github.com/rs/zerolog"
@@ -16,11 +15,7 @@ func init() {
 }
 
 func main() {
-	connectMethod := os.Getenv(common.EnvVarConnectMethod)
 	log.Info().Msg("shadow staring...")
-	if connectMethod == common.ConnectMethodSocks {
-		socks.Start()
-	} else {
-		dnsserver.Start()
-	}
+	go socks.Start()
+	dnsserver.Start()
 }
