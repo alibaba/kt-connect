@@ -91,14 +91,9 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Custom CIDR, e.g. '172.2.0.0/16'",
 			Destination: &options.ConnectOptions.CIDR,
 		},
-		cli.BoolFlag{
-			Name:        "dump2hosts",
-			Usage:       "Auto write service to local hosts file",
-			Destination: &options.ConnectOptions.Dump2Hosts,
-		},
 		cli.StringSliceFlag{
-			Name:  "dump2hostsNS",
-			Usage: "Which namespaces service to local hosts file, support multiple namespaces.",
+			Name:  "dump2hosts",
+			Usage: "Specify namespaces to dump service into local hosts file, use ',' separated",
 			Value: &options.ConnectOptions.Dump2HostsNamespaces,
 		},
 		cli.BoolFlag{

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
@@ -69,10 +70,9 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 
 	// socks
 	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks or socks5, you can choice which port to proxy")
-	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "auto write service to local hosts file")
+	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "specify namespaces to dump service into local hosts file")
 
 	return cmd
-
 }
 
 // Complete ...
@@ -135,12 +135,13 @@ func (o *ConnectOptions) checkContext() error {
 func (o *ConnectOptions) transport() *options.DaemonOptions {
 	daemonOptions := o.transportGlobalOptions()
 	daemonOptions.ConnectOptions = &options.ConnectOptions{
-		DisableDNS: o.DisableDNS,
-		Method:     o.Method,
-		SocksPort:  o.Proxy,
-		CIDR:       o.Cidr,
-		SSHPort:    o.Port,
-		Global:     o.Global,
+		DisableDNS:           o.DisableDNS,
+		Method:               o.Method,
+		SocksPort:            o.Proxy,
+		CIDR:                 o.Cidr,
+		SSHPort:              o.Port,
+		Global:               o.Global,
+		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
 	}
 	return daemonOptions
 }

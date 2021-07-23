@@ -26,7 +26,6 @@ type ConnectOptions struct {
 	SocksPort            int
 	CIDR                 string
 	Method               string
-	Dump2Hosts           bool
 	Dump2HostsNamespaces cli.StringSlice
 	Hosts                map[string]string
 	ShareShadow          bool
