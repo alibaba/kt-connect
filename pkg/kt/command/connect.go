@@ -68,13 +68,13 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-	if options.ConnectOptions.Dump2Hosts || options.ConnectOptions.Dump2HostsNamespaces != nil {
+	if util.IsWindows() || len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
 		setupDump2Host(options, kubernetes)
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 		if err != nil {
-			log.Error().Msg(err.Error())
+			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
 		}
 	}
 
@@ -115,7 +115,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 	for k, v := range hosts {
 		log.Info().Msgf("Service found: %s %s", k, v)
 	}
-	if options.ConnectOptions.Dump2HostsNamespaces != nil {
+	if len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
 		for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
 			if namespace == options.Namespace {
 				continue
