@@ -22,8 +22,6 @@ generate-mock:
 
 # run unit test
 test:
-	mkdir -p ~/.kube
-	touch ~/.kube/config
 	mkdir -p artifacts/report/coverage
 	go test -v -cover -coverprofile c.out.tmp ./...
 	cat c.out.tmp | grep -v "_mock.go" > c.out
