@@ -23,10 +23,10 @@ jobs:
 
     - name: Test KinD
       run: |
-      kubectl cluster-info
-      kubectl get pods -n kube-system
-      echo "current-context:" $(kubectl config current-context)
-      echo "environment-kubeconfig:" ${KUBECONFIG}
+        kubectl cluster-info
+        kubectl get pods -n kube-system
+        echo "current-context:" $(kubectl config current-context)
+        echo "environment-kubeconfig:" ${KUBECONFIG}
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
