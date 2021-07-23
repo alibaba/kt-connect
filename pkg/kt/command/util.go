@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"os"
 	"os/signal"
@@ -68,6 +69,14 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
 		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
+	}
+
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		err := exec.RunAndWait(cli.Exec().SSHTunnelling().RemoveDevice(), "del_device", options.Debug)
+		if err != nil {
+			log.Error().Msgf("fails to delete tun device")
+			return
+		}
 	}
 
 	kubernetes, err := cli.Kubernetes()

@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"net"
 	"os"
 	"strings"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/cilium/ipam/service/ipallocator"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
@@ -27,12 +29,28 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
+			if err := CompleteOptions(options); err != nil {
+				return err
+			}
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
 			return action.Connect(cli, options)
 		},
 	}
+}
+
+func CompleteOptions(options *options.DaemonOptions) error {
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		srcIP, destIP, err := allocateTunIP(options.ConnectOptions.TunCidr)
+		if err != nil {
+			return err
+		}
+		options.ConnectOptions.SourceIP = srcIP
+		options.ConnectOptions.DestIP = destIP
+	}
+
+	return nil
 }
 
 // Connect connect vpn to kubernetes cluster
@@ -144,6 +162,10 @@ func envs(options *options.DaemonOptions) map[string]string {
 	if options.ConnectOptions.LocalDomain != "" {
 		envs[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
 	}
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		envs[common.ClientTunIP] = options.ConnectOptions.SourceIP
+		envs[common.ServerTunIP] = options.ConnectOptions.DestIP
+	}
 	return envs
 }
 
@@ -159,4 +181,24 @@ func labels(workload string, options *options.DaemonOptions) map[string]string {
 	splits := strings.Split(workload, "-")
 	labels[common.KTVersion] = splits[len(splits)-1]
 	return labels
+}
+
+func allocateTunIP(cidr string) (srcIP, destIP string, err error) {
+	_, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return "", "", err
+	}
+	rge, err := ipallocator.NewCIDRRange(ipnet)
+	if err != nil {
+		return "", "", err
+	}
+	ip1, err := rge.AllocateNext()
+	if err != nil {
+		return "", "", err
+	}
+	ip2, err := rge.AllocateNext()
+	if err != nil {
+		return "", "", err
+	}
+	return ip1.String(), ip2.String(), nil
 }

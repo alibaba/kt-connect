@@ -23,9 +23,10 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 }
 
 func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
-	if s.Options.ConnectOptions.Method == common.ConnectMethodSocks {
+	switch s.Options.ConnectOptions.Method {
+	case common.ConnectMethodSocks:
 		err = startSocks4Connection(cli, s.Options, name)
-	} else {
+	case common.ConnectMethodVpn, common.ConnectMethodSocks5:
 		stop, rootCtx, err := forwardSshPortToLocal(cli, s.Options, name)
 		if err == nil {
 			if s.Options.ConnectOptions.Method == common.ConnectMethodSocks5 {
@@ -34,6 +35,13 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 				err = startVPNConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
 			}
 		}
+	case common.ConnectMethodTun:
+		stop, rootCtx, err := forwardSshPortToLocal(cli, s.Options, name)
+		if err == nil {
+			err = startTunConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
+		}
+	default:
+		return fmt.Errorf("not support method: %s", s.Options.ConnectOptions.Method)
 	}
 	if err != nil {
 		return
@@ -121,4 +129,47 @@ func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 		Stop: stop,
 	})
 	return err
+}
+
+// startTunConnection creates a ssh tunnel to pod
+func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan bool) (err error) {
+
+	// 1. Create tun device.
+	err = exec.RunAndWait(cli.SSHTunnelling().AddDevice(), "add_device", options.Debug)
+	if err != nil {
+		return err
+	}
+
+	// 2. Setup device ip
+	err = exec.RunAndWait(cli.SSHTunnelling().SetupDeviceIP(), "setup_device", options.Debug)
+	if err != nil {
+		// clean up
+		return err
+	}
+
+	// Create ssh tunnel.
+	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+		Ctx:  rootCtx,
+		Cmd:  cli.SSH().TunnelToRemote(0, credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort),
+		Name: "ssh_tun",
+		Stop: stop,
+	})
+
+	if err != nil {
+		// clean up
+		return err
+	}
+
+	// Add route to kubernetes cluster.
+	for i := range cidrs {
+		err = exec.RunAndWait(cli.SSHTunnelling().AddRoute(cidrs[i]), "add_route", options.Debug)
+		if err != nil {
+			// clean up
+			return err
+		}
+	}
+
+	// TODO: setup dns proxy
+	return nil
 }

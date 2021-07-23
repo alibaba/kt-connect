@@ -38,5 +38,8 @@ func (c *Cli) Shadow() connect.ShadowInterface {
 func (c *Cli) Exec() exec.CliInterface {
 	return &exec.Cli{
 		KubeOptions: c.Options.KubeOptions,
+		TunName:     c.Options.ConnectOptions.TunName,
+		SourceIP:    c.Options.ConnectOptions.SourceIP,
+		DestIP:      c.Options.ConnectOptions.DestIP,
 	}
 }

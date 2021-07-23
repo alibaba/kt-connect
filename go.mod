@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
+	github.com/cilium/ipam v0.0.0-20201106170308-4184bc4bf9d6
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/gin-gonic/gin v1.7.0
