@@ -74,7 +74,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 		if err != nil {
-			log.Error().Msg(err.Error())
+			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
 		}
 	}
 
