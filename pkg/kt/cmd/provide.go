@@ -8,7 +8,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -152,10 +151,6 @@ func (o *ProvideOptions) checkContext() error {
 }
 
 func (o *ProvideOptions) transport() *options.DaemonOptions {
-	userHome := util.HomeDir()
-	appHome := fmt.Sprintf("%s/.ktctl", userHome)
-	util.CreateDirIfNotExist(appHome)
-	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &options.DaemonOptions{
 		Image:     o.Image,
 		Debug:     o.Debug,
