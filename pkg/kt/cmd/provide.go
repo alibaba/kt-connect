@@ -3,8 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -12,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
@@ -54,30 +51,6 @@ func NewProvideCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().IntVarP(&opt.Expose, "expose", "", 80, " The port that exposes")
 	cmd.Flags().BoolVarP(&opt.External, "external", "e", false, " If specified, a public, external service is created")
 	return cmd
-}
-
-// ProvideOptions ...
-type ProvideOptions struct {
-	configFlags *genericclioptions.ConfigFlags
-	rawConfig   api.Config
-	args        []string
-
-	userSpecifiedNamespace string
-	genericclioptions.IOStreams
-	clientset kubernetes.Interface
-
-	// global
-	Labels    string
-	Image     string
-	Debug     bool
-	currentNs string
-	Timeout   int
-
-	// run
-	Expose     int
-	External   bool
-	Target     string
-	restConfig *rest.Config
 }
 
 // NewProvideOptions ...

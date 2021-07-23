@@ -3,8 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -13,7 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
@@ -55,29 +52,6 @@ func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *co
 	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
 
 	return cmd
-}
-
-// ExchangeOptions ...
-type ExchangeOptions struct {
-	configFlags *genericclioptions.ConfigFlags
-	rawConfig   api.Config
-	args        []string
-
-	userSpecifiedNamespace string
-	genericclioptions.IOStreams
-	clientset  kubernetes.Interface
-	restConfig *rest.Config
-
-	// global
-	Labels    string
-	Image     string
-	Debug     bool
-	currentNs string
-	Timeout   int
-
-	// exchange
-	Target string
-	Expose string
 }
 
 // NewExchangeOptions ...

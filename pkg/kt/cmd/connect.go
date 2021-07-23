@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"k8s.io/client-go/rest"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -14,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
@@ -32,30 +29,6 @@ var (
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-}
-
-// ConnectOptions ...
-type ConnectOptions struct {
-	configFlags *genericclioptions.ConfigFlags
-	rawConfig   api.Config
-	args        []string
-
-	userSpecifiedNamespace string
-	genericclioptions.IOStreams
-	clientset  kubernetes.Interface
-	restConfig *rest.Config
-	Image      string
-	Method     string
-	Debug      bool
-	Labels     string
-	Proxy      int
-	DisableDNS bool
-	Cidr       string
-	Dump2hosts string
-	currentNs  string
-	Port       int
-	Timeout    int
-	Global     bool
 }
 
 // NewConnectCommand ...
