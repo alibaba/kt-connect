@@ -141,7 +141,7 @@ func (o *ConnectOptions) Run() error {
 		return err
 	}
 
-	ops := CloneDaemonOptions(o)
+	ops := o.transport()
 	context := &kt.Cli{Options: ops}
 	action := command.Action{}
 
@@ -160,16 +160,7 @@ func (o *ConnectOptions) checkContext() error {
 	return nil
 }
 
-// NewConnectOptions ...
-func NewConnectOptions(streams genericclioptions.IOStreams) *ConnectOptions {
-	return &ConnectOptions{
-		configFlags: genericclioptions.NewConfigFlags(true),
-		IOStreams:   streams,
-	}
-}
-
-// CloneDaemonOptions ...
-func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
+func (o *ConnectOptions) transport() *options.DaemonOptions {
 	userHome := util.HomeDir()
 	appHome := fmt.Sprintf("%s/.ktctl", userHome)
 	util.CreateDirIfNotExist(appHome)
@@ -195,5 +186,13 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 			SSHPort:    o.Port,
 			Global:     o.Global,
 		},
+	}
+}
+
+// NewConnectOptions ...
+func NewConnectOptions(streams genericclioptions.IOStreams) *ConnectOptions {
+	return &ConnectOptions{
+		configFlags: genericclioptions.NewConfigFlags(true),
+		IOStreams:   streams,
 	}
 }
