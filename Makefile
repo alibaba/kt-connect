@@ -58,3 +58,6 @@ build-frontend:
 release-dashboard:
 	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
 	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)
+
+clean:
+	rm -fr artifacts
