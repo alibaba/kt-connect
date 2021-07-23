@@ -66,14 +66,13 @@ func showSocksBanner(protocol string, port int) {
 	log.Info().Msgf("==============================================================")
 }
 
-func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
-	options *options.DaemonOptions, podIP string, cidrs []string, stop chan struct{}) (err error) {
+func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {
 	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx: rootCtx,
-		Cmd: cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort,
-			podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug),
+		Cmd: cli.SSHUttle().Connect(request.RemoteSSHHost, request.RemoteSSHPKPath, request.RemoteSSHPort,
+			request.RemoteDNSServerAddress, request.DisableDNS, request.CustomCRID, request.Debug),
 		Name: "vpn(sshuttle)",
-		Stop: stop,
+		Stop: request.Stop,
 	})
 	return err
 }

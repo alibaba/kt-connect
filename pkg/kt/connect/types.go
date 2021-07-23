@@ -24,3 +24,15 @@ func Create(options *options.DaemonOptions) (shadow Shadow) {
 	}
 	return
 }
+
+// SSHVPNRequest ...
+type SSHVPNRequest struct {
+	RemoteSSHHost          string
+	RemoteSSHPort          int
+	RemoteSSHPKPath        string
+	RemoteDNSServerAddress string
+	DisableDNS             bool
+	CustomCRID             []string
+	Stop                   chan struct{}
+	Debug                  bool
+}

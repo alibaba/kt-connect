@@ -23,7 +23,16 @@ func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, 
 			if s.Options.ConnectOptions.Method == common.ConnectMethodSocks5 {
 				err = startSocks5Connection(ssh, s.Options)
 			} else {
-				err = startVPNConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
+				err = startVPNConnection(rootCtx, cli, SSHVPNRequest{
+					RemoteSSHHost:          credential.RemoteHost,
+					RemoteSSHPKPath:        credential.PrivateKeyPath,
+					RemoteSSHPort:          s.Options.ConnectOptions.SSHPort,
+					RemoteDNSServerAddress: podIP,
+					DisableDNS:             s.Options.ConnectOptions.DisableDNS,
+					CustomCRID:             cidrs,
+					Stop:                   stop,
+					Debug:                  s.Options.Debug,
+				})
 			}
 		}
 	}
