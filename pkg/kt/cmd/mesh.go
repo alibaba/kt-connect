@@ -137,23 +137,10 @@ func (o *MeshOptions) checkTarget() error {
 }
 
 func (o *MeshOptions) transport() *options.DaemonOptions {
-	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
-		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:   userHome,
-			AppHome:    appHome,
-			PidFile:    pidFile,
-			Clientset:  o.clientset,
-			RestConfig: o.restConfig,
-		},
-		MeshOptions: &options.MeshOptions{
-			Expose:  o.Expose,
-			Version: o.Version,
-		},
-		ConnectOptions: &options.ConnectOptions{},
+	daemonOptions := o.transportGlobalOptions()
+	daemonOptions.MeshOptions = &options.MeshOptions{
+		Expose:  o.Expose,
+		Version: o.Version,
 	}
+	return daemonOptions
 }

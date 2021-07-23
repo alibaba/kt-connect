@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -77,4 +78,22 @@ type ProvideOptions struct {
 	Expose   int
 	External bool
 	Target   string
+}
+
+func (o *GlobalOptions) transportGlobalOptions() *options.DaemonOptions {
+	return &options.DaemonOptions{
+		Image:     o.Image,
+		Debug:     o.Debug,
+		Labels:    o.Labels,
+		Namespace: o.currentNs,
+		WaitTime:  o.Timeout,
+		RuntimeOptions: &options.RuntimeOptions{
+			UserHome:   userHome,
+			AppHome:    appHome,
+			PidFile:    pidFile,
+			Clientset:  o.clientset,
+			RestConfig: o.restConfig,
+		},
+		ConnectOptions: &options.ConnectOptions{},
+	}
 }

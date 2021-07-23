@@ -133,28 +133,16 @@ func (o *ConnectOptions) checkContext() error {
 }
 
 func (o *ConnectOptions) transport() *options.DaemonOptions {
-	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
-		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:   userHome,
-			AppHome:    appHome,
-			PidFile:    pidFile,
-			Clientset:  o.clientset,
-			RestConfig: o.restConfig,
-		},
-		ConnectOptions: &options.ConnectOptions{
-			DisableDNS: o.DisableDNS,
-			Method:     o.Method,
-			SocksPort:  o.Proxy,
-			CIDR:       o.Cidr,
-			SSHPort:    o.Port,
-			Global:     o.Global,
-		},
+	daemonOptions := o.transportGlobalOptions()
+	daemonOptions.ConnectOptions = &options.ConnectOptions{
+		DisableDNS: o.DisableDNS,
+		Method:     o.Method,
+		SocksPort:  o.Proxy,
+		CIDR:       o.Cidr,
+		SSHPort:    o.Port,
+		Global:     o.Global,
 	}
+	return daemonOptions
 }
 
 // NewConnectOptions ...

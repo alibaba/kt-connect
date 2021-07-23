@@ -138,22 +138,9 @@ func (o *ExchangeOptions) checkTarget() error {
 }
 
 func (o *ExchangeOptions) transport() *options.DaemonOptions {
-	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
-		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:   userHome,
-			AppHome:    appHome,
-			PidFile:    pidFile,
-			Clientset:  o.clientset,
-			RestConfig: o.restConfig,
-		},
-		ExchangeOptions: &options.ExchangeOptions{
-			Expose: o.Expose,
-		},
-		ConnectOptions: &options.ConnectOptions{},
+	daemonOptions := o.transportGlobalOptions()
+	daemonOptions.ExchangeOptions = &options.ExchangeOptions{
+		Expose: o.Expose,
 	}
+	return daemonOptions
 }
