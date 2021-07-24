@@ -163,7 +163,7 @@ func TestDumpHosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			linesAfterDump, _ := dumpHosts(tt.args.hostsToDump)
+			linesAfterDump := dumpHosts(tt.args.hostsToDump)
 			if len(tt.args.linesAfterDump) != len(linesAfterDump) {
 				t.Errorf("should has %d lines, but got %d", len(tt.args.linesAfterDump), len(linesAfterDump))
 			}

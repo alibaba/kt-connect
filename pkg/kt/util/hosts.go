@@ -15,35 +15,41 @@ const ktHostsEscapeEnd = "# Kt Hosts End"
 func DropHosts() {
 	lines, err := loadHostsFile()
 	if err != nil {
+		log.Error().Msgf("Failed to load hosts file: %s", err.Error())
 		return
 	}
 	linesAfterDrop, err := dropHosts(lines)
 	if err != nil {
+		log.Error().Msgf("Failed to parse hosts file: %s", err.Error())
 		return
 	}
-	err = updateHostsFile(linesAfterDrop)
-	if err != nil {
-		return
+	if len(linesAfterDrop) < len(lines) {
+		err = updateHostsFile(linesAfterDrop)
+		if err != nil {
+			log.Error().Msgf("Failed to update hosts file, you may require %s permission: %s",
+				getAdminUserName(), err.Error())
+			return
+		}
+		log.Info().Msgf("Drop hosts successful")
 	}
-	log.Info().Msgf("Drop hosts successful")
 }
 
 // DumpHosts DumpToHosts
 func DumpHosts(hostsMap map[string]string) {
 	lines, err := loadHostsFile()
 	if err != nil {
+		log.Error().Msgf("Failed to load hosts file: %s", err.Error())
 		return
 	}
 	linesBeforeDump, err := dropHosts(lines)
 	if err != nil {
+		log.Error().Msgf("Failed to parse hosts file: %s", err.Error())
 		return
 	}
-	linesToDump, err := dumpHosts(hostsMap)
+	err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap)))
 	if err != nil {
-		return
-	}
-	err = updateHostsFile(mergeLines(linesBeforeDump, linesToDump))
-	if err != nil {
+		log.Error().Msgf("Failed to update hosts file, you may require %s permission: %s",
+			getAdminUserName(), err.Error())
 		return
 	}
 	log.Info().Msg("Dump hosts successful")
@@ -77,14 +83,14 @@ func dropHosts(rawLines []string) ([]string, error) {
 	}
 }
 
-func dumpHosts(hostsMap map[string]string) ([]string, error) {
+func dumpHosts(hostsMap map[string]string) []string {
 	var lines []string
 	lines = append(lines, ktHostsEscapeBegin)
 	for host, ip := range hostsMap {
 		lines = append(lines, fmt.Sprintf("%s %s", ip, host))
 	}
 	lines = append(lines, ktHostsEscapeEnd)
-	return lines, nil
+	return lines
 }
 
 func mergeLines(linesBefore []string, linesAfter []string) []string {
@@ -146,4 +152,11 @@ func getHostsPath() string {
 	} else {
 		return os.Getenv("HOSTS_PATH")
 	}
+}
+
+func getAdminUserName() string {
+	if IsWindows() {
+		return "administrator"
+	}
+	return "root"
 }
