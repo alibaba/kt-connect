@@ -25,7 +25,6 @@ type ConnectOptions struct {
 	CIDR                 string
 	Method               string
 	Dump2HostsNamespaces cli.StringSlice
-	Hosts                map[string]string
 	ShareShadow          bool
 	LocalDomain          string
 }
@@ -66,6 +65,8 @@ type RuntimeOptions struct {
 	Replicas int32
 	// Exposed service name
 	Service string
+	// Whether dump2host enabled
+	Dump2Host bool
 	// Windows global proxy config
 	ProxyConfig registry.ProxyConfig
 }

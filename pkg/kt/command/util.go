@@ -58,8 +58,8 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	cleanLocalFiles(options)
 	removePrivateKey(options)
 
-	if len(options.ConnectOptions.Hosts) > 0 {
-		util.DropHosts(options.ConnectOptions.Hosts)
+	if options.RuntimeOptions.Dump2Host {
+		util.DropHosts()
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)

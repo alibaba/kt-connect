@@ -122,17 +122,17 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 			}
 			log.Debug().Msgf("Search service in %s namespace...", namespace)
 			singleHosts := kubernetes.ServiceHosts(namespace)
-			for k, v := range singleHosts {
-				if v == "" || v == "None" {
+			for svc, ip := range singleHosts {
+				if ip == "" || ip == "None" {
 					continue
 				}
-				log.Info().Msgf("Service found: %s.%s %s", k, namespace, v)
-				hosts[k+"."+namespace] = v
+				log.Info().Msgf("Service found: %s.%s %s", svc, namespace, ip)
+				hosts[svc+"."+namespace] = ip
 			}
 		}
 	}
 	util.DumpHosts(hosts)
-	options.ConnectOptions.Hosts = hosts
+	options.RuntimeOptions.Dump2Host = true
 }
 
 func envs(options *options.DaemonOptions) map[string]string {
