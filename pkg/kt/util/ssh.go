@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/ssh"
 )
@@ -47,7 +47,7 @@ func NewDefaultSSHCredential() *SSHCredential {
 
 // Generate generate SSHGenerator
 func Generate(privateKeyPath string) (*SSHGenerator, error) {
-	privateKey, err := generatePrivateKey(vars.SSHBitSize)
+	privateKey, err := generatePrivateKey(common.SSHBitSize)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(component, identifier string) string {
-	return fmt.Sprintf("%s/.ktctl/%s/"+vars.SSHPrivateKeyName, HomeDir(), component, identifier)
+	return fmt.Sprintf("%s/%s/"+common.SSHPrivateKeyName, KtHome, component, identifier)
 }
 
 // generatePrivateKey creates a RSA Private Key of specified byte size

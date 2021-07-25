@@ -32,24 +32,11 @@ func IsDaemonRunning(pidFile string) bool {
 	return true
 }
 
-// HomeDir Current User home dir
-func HomeDir() string {
-	// linux & mac
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	// windows
-	if h := os.Getenv("USERPROFILE"); h != "" {
-		return h
-	}
-	return "/root"
-}
-
 // KubeConfig location of kube-config file
 func KubeConfig() string {
 	kubeconfig := os.Getenv("KUBECONFIG")
 	if len(kubeconfig) == 0 {
-		kubeconfig = filepath.Join(HomeDir(), ".kube", "config")
+		kubeconfig = filepath.Join(UserHome, ".kube", "config")
 	}
 	return kubeconfig
 }

@@ -12,7 +12,6 @@ import (
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/rs/zerolog/log"
 	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -191,9 +190,9 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta,
 		return
 	}
 
-	generator = util.NewSSHGenerator(configMap.Data[vars.SSHAuthPrivateKey], configMap.Data[vars.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
+	generator = util.NewSSHGenerator(configMap.Data[common.SSHAuthPrivateKey], configMap.Data[common.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
 
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[vars.SSHAuthPrivateKey]))
+	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SSHAuthPrivateKey]))
 	if err != nil {
 		return
 	}
@@ -230,13 +229,13 @@ func increaseRefCount(name string, clientSet kubernetes.Interface, namespace str
 		return err
 	}
 	annotations := deployment.ObjectMeta.Annotations
-	count, err := strconv.Atoi(annotations[vars.RefCount])
+	count, err := strconv.Atoi(annotations[common.RefCount])
 	if err != nil {
-		log.Error().Msgf("Failed to parse annotations[vars.RefCount] of deployment %s with value %s", name, annotations[vars.RefCount])
+		log.Error().Msgf("Failed to parse annotations[common.RefCount] of deployment %s with value %s", name, annotations[common.RefCount])
 		return err
 	}
 
-	deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count + 1)
+	deployment.ObjectMeta.Annotations[common.RefCount] = strconv.Itoa(count + 1)
 
 	_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
 	return err
@@ -282,8 +281,8 @@ func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, nam
 			Labels:    labels,
 		},
 		Data: map[string]string{
-			vars.SSHAuthKey:        string(generator.PublicKey),
-			vars.SSHAuthPrivateKey: string(generator.PrivateKey),
+			common.SSHAuthKey:        string(generator.PublicKey),
+			common.SSHAuthPrivateKey: string(generator.PrivateKey),
 		},
 	})
 }
@@ -406,7 +405,7 @@ func (k *Kubernetes) DecreaseRef(namespace string, app string) (cleanup bool, er
 }
 
 func decreaseOrRemove(k *Kubernetes, deployment *appv1.Deployment) (cleanup bool, err error) {
-	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
+	refCount := deployment.ObjectMeta.Annotations[common.RefCount]
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
@@ -430,7 +429,7 @@ func decreaseDeploymentRef(refCount string, k *Kubernetes, deployment *appv1.Dep
 	if err != nil {
 		return
 	}
-	deployment.ObjectMeta.Annotations[vars.RefCount] = count
+	deployment.ObjectMeta.Annotations[common.RefCount] = count
 	_, err = k.UpdateDeployment(deployment.GetObjectMeta().GetNamespace(), deployment)
 	return
 }

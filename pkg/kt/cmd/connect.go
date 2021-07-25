@@ -166,8 +166,8 @@ func NewConnectOptions(streams genericclioptions.IOStreams) *ConnectOptions {
 
 // CloneDaemonOptions ...
 func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
-	userHome := util.HomeDir()
-	appHome := fmt.Sprintf("%s/.ktctl", userHome)
+	userHome := util.UserHome
+	appHome := util.KtHome
 	util.CreateDirIfNotExist(appHome)
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &options.DaemonOptions{

@@ -2,11 +2,11 @@ package options
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"k8s.io/client-go/kubernetes"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/urfave/cli"
 )
 
@@ -97,12 +97,12 @@ type DaemonOptions struct {
 
 // NewDaemonOptions return new cli default options
 func NewDaemonOptions() *DaemonOptions {
-	userHome := util.HomeDir()
-	appHome := fmt.Sprintf("%s/.ktctl", userHome)
+	userHome := util.UserHome
+	appHome := util.KtHome
 	util.CreateDirIfNotExist(appHome)
 	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &DaemonOptions{
-		Namespace:  vars.DefNamespace,
+		Namespace:  common.DefNamespace,
 		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{

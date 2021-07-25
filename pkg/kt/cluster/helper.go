@@ -2,20 +2,18 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -170,7 +168,7 @@ func container(image string, args []string, envs map[string]string, options *opt
 		VolumeMounts: []v1.VolumeMount{
 			{
 				Name:      "ssh-public-key",
-				MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
+				MountPath: fmt.Sprintf("/root/%s", common.SSHAuthKey),
 			},
 		},
 		SecurityContext: &v1.SecurityContext{
@@ -194,7 +192,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
 	annotations := metaAndSpec.Meta.Annotations
-	annotations[vars.RefCount] = "1"
+	annotations[common.RefCount] = "1"
 	annotations[common.KTLastHeartBeat] = strconv.FormatInt(time.Now().Unix(), 10)
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
@@ -236,7 +234,7 @@ func getSSHVolume(volume string) v1.Volume {
 				},
 				Items: []v1.KeyToPath{
 					{
-						Key:  vars.SSHAuthKey,
+						Key:  common.SSHAuthKey,
 						Path: "authorized_keys",
 					},
 				},
