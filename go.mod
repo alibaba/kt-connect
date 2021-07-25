@@ -10,7 +10,6 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/kubernetes/dashboard v1.10.1
-	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 	github.com/linfan/socks4 v0.2.3-2
 	github.com/miekg/dns v1.1.31
 	github.com/rs/zerolog v1.23.0

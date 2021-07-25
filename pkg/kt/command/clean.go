@@ -75,6 +75,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	} else {
 		action.cleanResource(resourceToClean, kubernetes, options.Namespace)
 	}
+	util.DropHosts()
 	return nil
 }
 

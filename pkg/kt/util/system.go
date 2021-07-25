@@ -6,9 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-
-	"github.com/lextoumbourou/goodhosts"
-	"github.com/rs/zerolog/log"
 )
 
 var interrupt = make(chan bool)
@@ -77,53 +74,4 @@ func WritePidFile(pidFile string) (pid int, err error) {
 // IsWindows check runtime is windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
-}
-
-// DropHosts ...
-func DropHosts(hostsMap map[string]string) {
-	hosts, err := goodhosts.NewHosts()
-
-	if err != nil {
-		log.Warn().Msgf("Fail to read hosts from host %s, ignore", err.Error())
-		return
-	}
-
-	for name, ip := range hostsMap {
-		if hosts.Has(ip, name) {
-			if err = hosts.Remove(ip, name); err != nil {
-				log.Warn().Str("ip", ip).Str("name", name).Msg("remove host failed")
-			}
-		}
-	}
-
-	if err := hosts.Flush(); err != nil {
-		log.Error().Err(err).Msgf("Error Happen when flush hosts")
-	}
-
-	log.Info().Msgf("- drop hosts successful.")
-}
-
-// DumpHosts DumpToHosts
-func DumpHosts(hostsMap map[string]string) {
-	hosts, err := goodhosts.NewHosts()
-
-	if err != nil {
-		log.Warn().Msgf("Fail to read hosts from host %s, ignore", err.Error())
-		return
-	}
-
-	for name, ip := range hostsMap {
-		if !hosts.Has(ip, name) {
-			if err = hosts.Add(ip, name); err != nil {
-				log.Warn().Str("ip", ip).Str("name", name).Msg("add host failed")
-			}
-		}
-	}
-
-	if err := hosts.Flush(); err != nil {
-		log.Error().Err(err).Msg("Error Happen when dump hosts")
-	}
-
-	log.Info().Msg("Dump hosts successful.")
-
 }
