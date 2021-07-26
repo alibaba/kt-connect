@@ -101,13 +101,6 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 			log.Error().Err(err).Msg("delete .jvmrc failed")
 		}
 	}
-
-	if _, err := os.Stat(".envrc"); err == nil {
-		log.Info().Msgf("- Remove .envrc %s", options.RuntimeOptions.PidFile)
-		if err = os.Remove(".envrc"); err != nil {
-			log.Error().Err(err).Msg("delete .envrc failed")
-		}
-	}
 }
 
 func cleanService(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
