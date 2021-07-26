@@ -86,7 +86,7 @@ func generatePrivateKey(bitSize int) (*rsa.PrivateKey, error) {
 		return nil, err
 	}
 
-	log.Info().Msg("private Key generated")
+	log.Info().Msg("Private Key generated")
 	return privateKey, nil
 }
 
@@ -117,7 +117,7 @@ func generatePublicKey(privatekey *rsa.PublicKey) ([]byte, error) {
 	}
 
 	pubKeyBytes := ssh.MarshalAuthorizedKey(publicRsaKey)
-	log.Info().Msg("public key generated")
+	log.Info().Msg("Public key generated")
 	return pubKeyBytes, nil
 }
 
@@ -126,12 +126,12 @@ func WritePrivateKey(privateKeyPath string, data []byte) error {
 	dir := filepath.Dir(privateKeyPath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0700); err != nil {
-			log.Error().Err(err).Str("dir", dir).Msg("can't create dir")
+			log.Error().Err(err).Str("dir", dir).Msg("Can't create dir")
 			return err
 		}
 	}
 	if err := ioutil.WriteFile(privateKeyPath, data, 0400); err != nil {
-		log.Error().Err(err).Str("file", privateKeyPath).Msg("write ssh private key failed")
+		log.Error().Err(err).Str("file", privateKeyPath).Msg("Write ssh private key failed")
 		return err
 	}
 	return nil

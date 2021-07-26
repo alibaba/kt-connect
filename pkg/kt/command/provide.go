@@ -107,9 +107,9 @@ func exposeLocalService(serviceName, deploymentName string, labels, annotations 
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("create shadow pod %s ip %s", podName, podIP)
+	log.Info().Msgf("Create shadow pod %s ip %s", podName, podIP)
 
-	log.Info().Msgf("expose deployment %s to service %s:%v", deploymentName, serviceName, options.ProvideOptions.Expose)
+	log.Info().Msgf("Expose deployment %s to service %s:%v", deploymentName, serviceName, options.ProvideOptions.Expose)
 	_, err = kubernetes.CreateService(serviceName, options.Namespace, options.ProvideOptions.External, options.ProvideOptions.Expose, labels)
 	if err != nil {
 		return err
@@ -124,6 +124,6 @@ func exposeLocalService(serviceName, deploymentName string, labels, annotations 
 		return err
 	}
 
-	log.Info().Msgf("forward remote %s:%v -> 127.0.0.1:%v", podIP, options.ProvideOptions.Expose, options.ProvideOptions.Expose)
+	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podIP, options.ProvideOptions.Expose, options.ProvideOptions.Expose)
 	return nil
 }

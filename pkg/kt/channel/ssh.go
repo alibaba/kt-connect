@@ -48,19 +48,19 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	defer conn.Close()
 	if err != nil {
-		log.Error().Msgf("fail to create ssh tunnel")
+		log.Error().Msgf("Fail to create ssh tunnel")
 		return err
 	}
 
 	// Listen on remote server port
 	listener, err := conn.Listen("tcp", remoteEndpoint)
 	if err != nil {
-		log.Error().Msgf("fail to listen remote endpoint ")
+		log.Error().Msgf("Fail to listen remote endpoint ")
 		return err
 	}
 	defer listener.Close()
 
-	log.Info().Msgf("forward %s to localEndpoint %s", remoteEndpoint, localEndpoint)
+	log.Info().Msgf("Forward %s to localEndpoint %s", remoteEndpoint, localEndpoint)
 
 	// handle incoming connections on reverse forwarded tunnel
 	for {
@@ -73,7 +73,7 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 
 		client, err := listener.Accept()
 		if err != nil {
-			log.Error().Msgf("error: %s", err)
+			log.Error().Msgf("Error: %s", err)
 			return err
 		}
 
@@ -92,7 +92,7 @@ func connection(username string, password string, address string) (*ssh.Client, 
 
 	conn, err := ssh.Dial("tcp", address, config)
 	if err != nil {
-		log.Error().Msgf("fail create ssh connection %s", err)
+		log.Error().Msgf("Fail create ssh connection %s", err)
 	}
 	return conn, err
 }
@@ -104,7 +104,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(client, remote)
 		if err != nil {
-			log.Error().Msgf("error while copy remote->local: %s", err)
+			log.Error().Msgf("Error while copy remote->local: %s", err)
 		}
 		chDone <- true
 	}()
@@ -113,7 +113,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(remote, client)
 		if err != nil {
-			log.Error().Msgf("error while copy local->remote: %s", err)
+			log.Error().Msgf("Error while copy local->remote: %s", err)
 		}
 		chDone <- true
 	}()

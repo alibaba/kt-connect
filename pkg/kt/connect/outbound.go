@@ -39,7 +39,7 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 		return
 	}
 
-	log.Info().Msgf("KT proxy start successful")
+	log.Info().Msgf("Proxy start successful")
 	return
 }
 

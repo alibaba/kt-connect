@@ -51,7 +51,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		os.Exit(0)
 	}()
 	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
+	log.Info().Msgf("Terminal signal is %s", s)
 	return
 }
 

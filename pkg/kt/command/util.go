@@ -44,9 +44,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 	go func() {
 		<-ch
-		log.Info().Msgf("- Terminal And Clean Workspace")
 		CleanupWorkspace(cli, options)
-		log.Info().Msgf("- Successful Clean Up Workspace")
 		os.Exit(0)
 	}()
 	return
@@ -54,7 +52,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
-	log.Info().Msgf("- start Clean Workspace")
+	log.Info().Msgf("- Cleaning workspace")
 	cleanLocalFiles(options)
 	removePrivateKey(options)
 
@@ -67,17 +65,17 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
-		log.Error().Msgf("fails create kubernetes client when clean up workspace")
+		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
 		return
 	}
 
 	if len(options.RuntimeOptions.Origin) > 0 {
-		log.Info().Msgf("- Recover Origin App %s", options.RuntimeOptions.Origin)
+		log.Info().Msgf("- Recovering Origin App %s", options.RuntimeOptions.Origin)
 		err := kubernetes.ScaleTo(options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().
 				Str("namespace", options.Namespace).
-				Msgf("scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
+				Msgf("Scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
 		}
 	}
 
@@ -87,17 +85,17 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 
 func cleanLocalFiles(options *options.DaemonOptions) {
 	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
-		log.Info().Msgf("- Remove pid %s", options.RuntimeOptions.PidFile)
+		log.Info().Msgf("- Removing pid %s", options.RuntimeOptions.PidFile)
 		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
 			log.Error().Err(err).
-				Msgf("stop process:%s failed", options.RuntimeOptions.PidFile)
+				Msgf("Stop process:%s failed", options.RuntimeOptions.PidFile)
 		}
 	}
 
 	if _, err := os.Stat(".jvmrc"); err == nil {
-		log.Info().Msgf("- Remove .jvmrc %s", options.RuntimeOptions.PidFile)
+		log.Info().Msgf("- Removing .jvmrc %s", options.RuntimeOptions.PidFile)
 		if err = os.Remove(".jvmrc"); err != nil {
-			log.Error().Err(err).Msg("delete .jvmrc failed")
+			log.Error().Err(err).Msg("Delete .jvmrc failed")
 		}
 	}
 
@@ -111,10 +109,10 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 
 func cleanService(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
 	if options.RuntimeOptions.Service != "" {
-		log.Info().Msgf("- Cleanup service %s", options.RuntimeOptions.Service)
+		log.Info().Msgf("- Cleaning service %s", options.RuntimeOptions.Service)
 		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("delete service %s failed", options.RuntimeOptions.Service)
+			log.Error().Err(err).Msgf("Delete service %s failed", options.RuntimeOptions.Service)
 		}
 	}
 }
@@ -126,23 +124,23 @@ func cleanDeploymentAndConfigMap(options *options.DaemonOptions, kubernetes clus
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
 			if err != nil {
-				log.Error().Err(err).Msgf("delete shared deployment %s failed", options.RuntimeOptions.Shadow)
+				log.Error().Err(err).Msgf("Delete shared deployment %s failed", options.RuntimeOptions.Shadow)
 			}
 		} else {
-			log.Info().Msgf("- clean shadow %s", options.RuntimeOptions.Shadow)
+			log.Info().Msgf("- Cleaning shadow %s", options.RuntimeOptions.Shadow)
 			err = kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
 			if err != nil {
-				log.Error().Err(err).Msgf("delete deployment %s failed", options.RuntimeOptions.Shadow)
+				log.Error().Err(err).Msgf("Delete deployment %s failed", options.RuntimeOptions.Shadow)
 			}
 		}
 	}
 
 	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil {
 		if shouldDelWithShared || !options.ConnectOptions.ShareShadow {
-			log.Info().Msgf("- clean sshcm %s", options.RuntimeOptions.SSHCM)
+			log.Info().Msgf("- Cleaning sshcm %s", options.RuntimeOptions.SSHCM)
 			err = kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
 			if err != nil {
-				log.Error().Err(err).Msgf("delete configmap %s failed", options.RuntimeOptions.SSHCM)
+				log.Error().Err(err).Msgf("Delete configmap %s failed", options.RuntimeOptions.SSHCM)
 			}
 		}
 	}
@@ -162,13 +160,13 @@ func removePrivateKey(options *options.DaemonOptions) {
 	component, version := splits[1], splits[len(splits)-1]
 	file := util.PrivateKeyPath(component, version)
 	if err := os.Remove(file); os.IsNotExist(err) {
-		log.Error().Err(err).Msgf("can't delete %s", file)
+		log.Error().Err(err).Msgf("Can't delete %s", file)
 	}
 }
 
 // validateKubeOpts support like '-n default | --kubeconfig=/path/to/kubeconfig'
 func validateKubeOpts(opts []string) error {
-	errMsg := "kubectl option %s invalid, check it by 'kubectl options'"
+	errMsg := "Kubectl option %s invalid, check it by 'kubectl options'"
 	for _, opt := range opts {
 		// validate like '--kubeconfig=/path/to/kube/config'
 		if strings.Contains(opt, "=") && len(strings.Fields(opt)) != 1 {

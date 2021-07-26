@@ -15,7 +15,7 @@ func init() {
 }
 
 func main() {
-	log.Info().Msg("shadow staring...")
+	log.Info().Msg("Shadow staring...")
 	go socks.Start()
 	dnsserver.Start()
 }

@@ -98,7 +98,6 @@ func getCirdFromSample(sample string) string {
 }
 
 func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
-	// log.Info().Msgf("len(podList):%d", len(podList))
 	for _, p := range podList {
 		if len(p.Labels) <= 0 {
 			// almost impossible
@@ -116,10 +115,10 @@ func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
 func wait(podName string) {
 	time.Sleep(time.Second)
 	if len(podName) >= 0 {
-		log.Info().Msgf("pod: %s is running, but not ready", podName)
+		log.Info().Msgf("Pod: %s is running, but not ready", podName)
 		return
 	}
-	log.Info().Msg("Shadow Pods not ready......")
+	log.Info().Msg("Shadow pods not ready......")
 }
 
 func service(name, namespace string, labels map[string]string, external bool, port int) *v1.Service {
@@ -184,7 +183,7 @@ func container(image string, args []string, envs map[string]string, options *opt
 func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *appV1.Deployment {
 	var args []string
 	if options.Debug {
-		log.Debug().Msg("create shadow with debug mode")
+		log.Debug().Msg("Create shadow with debug mode")
 		args = append(args, "--debug")
 	}
 

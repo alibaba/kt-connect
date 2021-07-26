@@ -21,7 +21,7 @@ import (
 func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredential) (err error) {
 	kubernetesCli := &kubectl.Cli{KubeOptions: s.Options.KubeOptions}
 	ssh := &channel.SSHChannel{}
-	log.Info().Msg("creating shadow inbound(remote->local)")
+	log.Info().Msg("Creating shadow inbound(remote->local)")
 	return inbound(exposePorts, podName, remoteIP, credential, s.Options, kubernetesCli, ssh)
 }
 
@@ -38,7 +38,7 @@ func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredenti
 		util.StopBackendProcess(<-stop, cancel)
 	}()
 
-	log.Info().Msgf("remote %s forward to local %s", remoteIP, exposePorts)
+	log.Info().Msgf("Remote %s forward to local %s", remoteIP, exposePorts)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
 		return
@@ -89,7 +89,7 @@ func exposeLocalPortToRemote(wg *sync.WaitGroup, ssh channel.Channel, exposePort
 	localPort, remotePort := getPortMapping(exposePort)
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
+		log.Info().Msgf("ExposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
 		err := ssh.ForwardRemoteToLocal(
 			&channel.Certificate{
 				Username: "root",
@@ -100,9 +100,9 @@ func exposeLocalPortToRemote(wg *sync.WaitGroup, ssh channel.Channel, exposePort
 			fmt.Sprintf("127.0.0.1:%s", localPort),
 		)
 		if err != nil {
-			log.Error().Msgf("error happen when forward remote request to local %s", err)
+			log.Error().Msgf("Error happen when forward remote request to local %s", err)
 		}
-		log.Info().Msgf("exposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished", remotePort, localPort)
+		log.Info().Msgf("ExposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished", remotePort, localPort)
 		wg.Done()
 	}(wg)
 }

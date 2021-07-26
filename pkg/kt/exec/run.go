@@ -50,7 +50,7 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 		if err != nil {
 			return
 		}
-		log.Info().Msgf("%s finished", name)
+		log.Info().Msgf("Finished %s", name)
 	}()
 	return
 }
@@ -64,12 +64,12 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
 	go func() {
 		if err = cmdCtx.Cmd.Wait(); err != nil {
 			if !strings.Contains(err.Error(), "signal:") {
-				log.Error().Err(err).Msgf("background process of %s failed", cmdCtx.Name)
+				log.Error().Err(err).Msgf("Background process of %s failed", cmdCtx.Name)
 			}
 			cmdCtx.Stop <- true
 			return
 		}
-		log.Info().Msgf("%s finished with context", cmdCtx.Name)
+		log.Info().Msgf("Finished %s with context", cmdCtx.Name)
 	}()
 	return
 }
@@ -104,7 +104,7 @@ func runCmd(cmdCtx *CMDContext) error {
 
 	time.Sleep(time.Duration(1) * time.Second)
 	pid := cmd.Process.Pid
-	log.Info().Msgf("%s start at pid: %d", cmdCtx.Name, pid)
+	log.Info().Msgf("Start %s at pid: %d", cmdCtx.Name, pid)
 	// will kill the process when parent cancel
 	go func() {
 		if cmdCtx.Ctx != nil {
@@ -112,7 +112,7 @@ func runCmd(cmdCtx *CMDContext) error {
 			case <-cmdCtx.Ctx.Done():
 				err := cmd.Process.Kill()
 				if err != nil {
-					log.Error().Msgf(err.Error())
+					log.Error().Msgf("Failed to kill process %s", err.Error())
 				}
 			}
 		}
