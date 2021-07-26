@@ -63,6 +63,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
+		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
 	}
 
 	kubernetes, err := cli.Kubernetes()
