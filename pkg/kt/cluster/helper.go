@@ -114,11 +114,11 @@ func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
 
 func wait(podName string) {
 	time.Sleep(time.Second)
-	if len(podName) >= 0 {
+	if len(podName) > 0 {
 		log.Info().Msgf("Pod: %s is running, but not ready", podName)
-		return
+	} else {
+		log.Info().Msg("Shadow pods not ready ...")
 	}
-	log.Info().Msg("Shadow pods not ready......")
 }
 
 func service(name, namespace string, labels map[string]string, external bool, port int) *v1.Service {

@@ -52,7 +52,13 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
-	log.Info().Msgf("- Cleaning workspace")
+	e, _ := util.PathExists(options.RuntimeOptions.PidFile)
+	if !e {
+		log.Info().Msgf("Workspace already cleaned")
+		return
+	}
+
+	log.Info().Msgf("Cleaning workspace")
 	cleanLocalFiles(options)
 	removePrivateKey(options)
 
@@ -93,16 +99,16 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	}
 
 	if _, err := os.Stat(".jvmrc"); err == nil {
-		log.Info().Msgf("- Removing .jvmrc %s", options.RuntimeOptions.PidFile)
+		log.Info().Msg("- Removing .jvmrc")
 		if err = os.Remove(".jvmrc"); err != nil {
 			log.Error().Err(err).Msg("Delete .jvmrc failed")
 		}
 	}
 
 	if _, err := os.Stat(".envrc"); err == nil {
-		log.Info().Msgf("- Remove .envrc %s", options.RuntimeOptions.PidFile)
+		log.Info().Msg("- Remove .envrc")
 		if err = os.Remove(".envrc"); err != nil {
-			log.Error().Err(err).Msg("delete .envrc failed")
+			log.Error().Err(err).Msg("Delete .envrc failed")
 		}
 	}
 }

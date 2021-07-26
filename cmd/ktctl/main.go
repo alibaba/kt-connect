@@ -40,7 +40,7 @@ func main() {
 	app.Commands = command.NewCommands(context, &action, options)
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Msgf("End with error: %s", err.Error())
 		command.CleanupWorkspace(context, options)
 		os.Exit(-1)
 	}
