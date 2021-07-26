@@ -1,4 +1,4 @@
-KT Connect
+KT-Connect
 ===========
 
 ![Go](https://github.com/alibaba/kt-connect/workflows/Go/badge.svg)
@@ -9,16 +9,18 @@ KT Connect
 [![Release](https://img.shields.io/github/release/alibaba/kt-connect.svg?style=flat-square)](https://img.shields.io/github/release/alibaba/kt-connect.svg?style=flat-square)
 ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg)
 
-Manage and integrate with your Kubernetes dev environment more efficiently.
+KT-Connect (short for "Kubernetes Toolkit Connect") is a utility tool to
+manage and integrate with your Kubernetes dev environment more efficiently.
 
 ![Arch](./docs/media/arch.png)
 
 ## Features
 
-* Connect: Directly Access a remote Kubernetes cluster. KT Connect use `sshuttle` as the vpn tool to access remote Kubernetes cluster networks.
-* Exchange: Developer can exchange the workload to redirect the requests to a local app.
-* Mesh: You can create a mesh version in local host and redirect to your local
-* Dashboard: A dashboard view can help you know how the environment is been used.
+* `Connect`: Directly Access a remote Kubernetes cluster. KT Connect use ssh-vpn, socks-proxy or tun-device to access remote Kubernetes cluster networks.
+* `Exchange`: Developer can exchange the workload to redirect the requests to a local app.
+* `Mesh`: You can create a mesh version service in local host, and redirect specified workload requests to your local.
+* `Provide`: Expose a local running app to Kubernetes cluster as a common service, all requests to that service are redirect to local app.
+* `Dashboard`: A dashboard view can help you know how the environment has been used.
 
 ## QuickStart
 
