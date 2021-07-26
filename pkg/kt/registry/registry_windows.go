@@ -3,15 +3,21 @@ package registry
 import (
 	"fmt"
 	"golang.org/x/sys/windows/registry"
+	"syscall"
+	"unsafe"
 )
 
-const InternetSettings = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
-const EnvironmentSettings = "Environment"
-const notExist = "<NotExist>"
-const RegKeyProxyEnable = "ProxyEnable"
-const RegKeyProxyServer = "ProxyServer"
-const RegKeyProxyOverride = "ProxyOverride"
-const RegKeyHttpProxy = "HTTP_PROXY"
+const (
+	HWND_BROADCAST      = uintptr(0xffff)
+	WM_SETTINGCHANGE    = uintptr(0x001A)
+	InternetSettings    = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
+	EnvironmentSettings = "Environment"
+	notExist            = "<NotExist>"
+	RegKeyProxyEnable   = "ProxyEnable"
+	RegKeyProxyServer   = "ProxyServer"
+	RegKeyProxyOverride = "ProxyOverride"
+	RegKeyHttpProxy     = "HTTP_PROXY"
+)
 
 func SetGlobalProxy(port int, config *ProxyConfig) error {
 	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, InternetSettings, registry.ALL_ACCESS)
