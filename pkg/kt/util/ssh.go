@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
