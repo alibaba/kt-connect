@@ -72,6 +72,23 @@ func PrivateKeyPath(component, identifier string) string {
 	return fmt.Sprintf("%s/%s/"+common.SSHPrivateKeyName, KtHome, component, identifier)
 }
 
+// CleanRsaKeys ...
+func CleanRsaKeys() {
+	for _, c := range common.AllKtComponents {
+		dir := fmt.Sprintf("%s/%s/", KtHome, c)
+		files, _ := ioutil.ReadDir(dir)
+		for _, f := range files {
+			if strings.HasSuffix(f.Name(), common.PostfixRsaKey) {
+				rsaKey := fmt.Sprintf("%s/%s", dir, f.Name())
+				err := os.Remove(rsaKey)
+				if err != nil {
+					log.Debug().Msgf("Failed to remove rsa key file: %s", rsaKey)
+				}
+			}
+		}
+	}
+}
+
 // generatePrivateKey creates a RSA Private Key of specified byte size
 func generatePrivateKey(bitSize int) (*rsa.PrivateKey, error) {
 	// Private Key generation
