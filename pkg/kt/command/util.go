@@ -67,6 +67,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
+		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
 	}
 
 	kubernetes, err := cli.Kubernetes()
@@ -102,13 +103,6 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 		log.Info().Msg("- Removing .jvmrc")
 		if err = os.Remove(".jvmrc"); err != nil {
 			log.Error().Err(err).Msg("Delete .jvmrc failed")
-		}
-	}
-
-	if _, err := os.Stat(".envrc"); err == nil {
-		log.Info().Msg("- Remove .envrc")
-		if err = os.Remove(".envrc"); err != nil {
-			log.Error().Err(err).Msg("Delete .envrc failed")
 		}
 	}
 }

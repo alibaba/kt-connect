@@ -76,6 +76,10 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		if err != nil {
 			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
 		}
+		err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+		if err != nil {
+			log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
+		}
 	}
 
 	endPointIP, podName, credential, err := getOrCreateShadow(options, err, kubernetes)

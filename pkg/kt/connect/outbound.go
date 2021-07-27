@@ -76,19 +76,19 @@ func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions
 	return stop, rootCtx, err
 }
 
-func startSocks4Connection(cli exec.CliInterface, options *options.DaemonOptions, name string) error {
-	showSocksBanner(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
-	return cli.Kubectl().PortForward(options.Namespace, name, common.Socks4Port, options.ConnectOptions.SocksPort).Start()
+func startSocks4Connection(cli exec.CliInterface, options *options.DaemonOptions, name string) (err error) {
+	err = cli.Kubectl().PortForward(options.Namespace, name, common.Socks4Port, options.ConnectOptions.SocksPort).Start()
+	if err == nil {
+		showSetupSuccessfulMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
+	}
+	return err
 }
 
 func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {
-	showSocksBanner(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
 		options.ConnectOptions.SocksPort)), 0644)
-	_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s",
-		options.Namespace)), 0644)
 
-	return ssh.StartSocks5Proxy(
+	err = ssh.StartSocks5Proxy(
 		&channel.Certificate{
 			Username: "root",
 			Password: "root",
@@ -96,16 +96,19 @@ func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) 
 		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
 		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SocksPort),
 	)
+	if err == nil {
+		showSetupSuccessfulMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
+	}
+	return err
 }
 
-func showSocksBanner(protocol string, port int) {
-	operation := "export"
-	if util.IsWindows() {
-		operation = "set"
+func showSetupSuccessfulMessage(protocol string, port int) {
+	log.Info().Msgf("Start %s proxy successfully", protocol)
+	if !util.IsWindows() {
+		log.Info().Msgf("==============================================================")
+		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
+		log.Info().Msgf("==============================================================")
 	}
-	log.Info().Msgf("==============================================================")
-	log.Info().Msgf("Start SOCKS Proxy Successful: %s http_proxy=%s://127.0.0.1:%d", operation, protocol, port)
-	log.Info().Msgf("==============================================================")
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
