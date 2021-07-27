@@ -25,11 +25,11 @@ func GetKubernetesClient() (clientset kubernetes.Interface, config *restClient.C
 func GetKubeconfig() (config *restClient.Config, err error) {
 	kubeconfig := ktUtil.KubeConfig()
 	if _, err := os.Stat(kubeconfig); os.IsNotExist(err) {
-		log.Info().Msg("kubeconfig not found, use InCluster Mode")
+		log.Info().Msg("Kubeconfig not found, use in-cluster mode")
 		config, err := restClient.InClusterConfig()
 		return config, err
 	}
-	log.Info().Msg("Use OutCluster Config Mode")
+	log.Info().Msg("Use out-cluster config mode")
 	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 	return
 }

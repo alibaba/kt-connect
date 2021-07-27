@@ -37,12 +37,12 @@ func NewDNSServerDefault() (srv *dns.Server) {
 
 	srv.Handler = &server{config}
 
-	log.Info().Msgf("successful load local " + resolvFile)
+	log.Info().Msgf("Successful load local " + resolvFile)
 	for _, server := range config.Servers {
-		log.Info().Msgf("success load nameserver %s", server)
+		log.Info().Msgf("Success load nameserver %s", server)
 	}
 	for _, domain := range config.Search {
-		log.Info().Msgf("success load search %s", domain)
+		log.Info().Msgf("Success load search %s", domain)
 	}
 	return
 }
@@ -54,7 +54,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg.Authoritative = true
 	// Stuff must be in the answer section
 	for _, a := range s.query(req) {
-		log.Info().Msgf("answer: %v", a)
+		log.Info().Msgf("Answer: %v", a)
 		msg.Answer = append(msg.Answer, a)
 	}
 
@@ -64,7 +64,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 // Simulate kubernetes-like dns look up logic
 func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	if len(req.Question) <= 0 {
-		log.Error().Msgf("error: no dns Msg question available")
+		log.Error().Msgf("Error: no dns Msg question available")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	if localDomain != "" && strings.HasSuffix(name, localDomain+".") {
 		name = name[0:(len(name) - len(localDomain) - 1)]
 	}
-	log.Info().Msgf("looking up %s", name)
+	log.Info().Msgf("Looking up %s", name)
 
 	rr = make([]dns.RR, 0)
 	domainsToLookup := s.fetchAllPossibleDomains(name)
@@ -100,7 +100,7 @@ func (s *server) fetchAllPossibleDomains(name string) []string {
 	switch count {
 	case 0:
 		// invalid domain, dns name always ends with a '.'
-		log.Warn().Msgf("received invalid domain query: " + name)
+		log.Warn().Msgf("Received invalid domain query: " + name)
 	case 1:
 		if len(domainSuffixes) > 0 {
 			// service name
@@ -173,10 +173,10 @@ func (s *server) getResolveServer() (address string, err error) {
 func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
 	address, err := s.getResolveServer()
 	if err != nil {
-		log.Error().Msgf("error: fail to fetch upstream dns: %s", err.Error())
+		log.Error().Msgf("Error: fail to fetch upstream dns: %s", err.Error())
 		return
 	}
-	log.Info().Msgf("resolving domain %s via upstream %s", domain, address)
+	log.Info().Msgf("Resolving domain %s via upstream %s", domain, address)
 
 	c := new(dns.Client)
 	msg := new(dns.Msg)
@@ -186,9 +186,9 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 
 	if res == nil {
 		if err != nil {
-			log.Error().Msgf("error: fail to resolve: %s", err.Error())
+			log.Error().Msgf("Error: fail to resolve: %s", err.Error())
 		} else {
-			log.Error().Msgf("error: fail to resolve")
+			log.Error().Msgf("Error: fail to resolve")
 		}
 		return
 	}
@@ -197,12 +197,12 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 		err = DomainNotExistError{domain}
 		return
 	} else if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf("error: failed to answer name %s after %d query for %s", name, qtype, domain)
+		log.Error().Msgf("Error: failed to answer name %s after %d query for %s", name, qtype, domain)
 		return
 	}
 
 	for _, item := range res.Answer {
-		log.Info().Msgf("response: %s", item.String())
+		log.Info().Msgf("Response: %s", item.String())
 		r, errInLoop := s.convertAnswer(name, domain, item)
 		if errInLoop != nil {
 			err = errInLoop

@@ -38,7 +38,7 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
+		return fmt.Errorf("another connect process already running with %s, exiting", options.RuntimeOptions.PidFile)
 	}
 	ch := SetUpCloseHandler(cli, options, "connect")
 	if err = connectToCluster(cli, options); err != nil {
@@ -51,7 +51,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		os.Exit(0)
 	}()
 	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
+	log.Info().Msgf("Terminal signal is %s", s)
 	return
 }
 

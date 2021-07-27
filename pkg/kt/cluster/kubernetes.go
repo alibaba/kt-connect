@@ -78,13 +78,13 @@ func (k *Kubernetes) ScaleTo(deployment, namespace string, replicas *int32) (err
 
 // Scale scale deployment to
 func (k *Kubernetes) Scale(deployment *appv1.Deployment, replicas *int32) (err error) {
-	log.Info().Msgf("scaling deployment %s to %d", deployment.GetObjectMeta().GetName(), *replicas)
+	log.Info().Msgf("Scaling deployment %s to %d", deployment.GetObjectMeta().GetName(), *replicas)
 	client := k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace())
 	deployment.Spec.Replicas = replicas
 
 	d, err := client.Update(deployment)
 	if err != nil {
-		log.Error().Msgf("%s Fails scale deployment %s to %d", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
+		log.Error().Msgf("Fails scale deployment %s to %d: %s", deployment.GetObjectMeta().GetName(), *replicas, err.Error())
 		return
 	}
 	log.Info().Msgf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
@@ -153,7 +153,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 		err = err2
 		return
 	}
-	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
+	log.Info().Msgf("Successful create ssh config map %v", configMap.ObjectMeta.Name)
 
 	pod, err2 := k.createAndGetPod(metaAndSpec, sshKeyMeta.Sshcm, options)
 	if err2 != nil {
@@ -257,12 +257,12 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
 	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
 	deployment := deployment(metaAndSpec, sshcm, options)
-	log.Info().Msg("shadow template is prepare ready.")
+	log.Info().Msg("Shadow template is prepare ready.")
 	result, err := client.Create(deployment)
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
+	log.Info().Msgf("Deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
 	setupHeartBeat(client, resourceMeta.Name)
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
@@ -298,10 +298,10 @@ func (k *Kubernetes) CreateService(name, namespace string, external bool, port i
 func (k *Kubernetes) ClusterCrids(namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
 	currentNS := namespace
 	if connectOptions.Global {
-		log.Info().Msgf("scan proxy CRID in cluster scope")
+		log.Info().Msgf("Scan proxy CRID in cluster scope")
 		currentNS = ""
 	} else {
-		log.Info().Msgf("scan proxy CRID in namespace scope")
+		log.Info().Msgf("Scan proxy CRID in namespace scope")
 	}
 
 	serviceList, err := k.Clientset.CoreV1().Services(currentNS).List(metav1.ListOptions{})

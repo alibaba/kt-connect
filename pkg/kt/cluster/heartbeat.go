@@ -22,7 +22,7 @@ func setupHeartBeat(client v1.DeploymentInterface, name string) {
 
 func refreshHeartBeat(client v1.DeploymentInterface, name string) {
 	now := time.Now()
-	log.Info().Msgf("heart beat ticked at %s", now.Format(common.YyyyMmDdHhMmSs))
+	log.Info().Msgf("Heart beat ticked at %s", now.Format(common.YyyyMmDdHhMmSs))
 	value := fmt.Sprintf("[ { \"op\" : \"replace\" , \"path\" : \"/metadata/annotations/%s\" , \"value\" : \"%s\" } ]",
 		common.KTLastHeartBeat, strconv.FormatInt(now.Unix(), 10))
 	_, err := client.Patch(name, types.JSONPatchType, []byte(value))
