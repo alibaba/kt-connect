@@ -2,20 +2,18 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
-	"k8s.io/apimachinery/pkg/util/intstr"
-
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -100,7 +98,6 @@ func getCirdFromSample(sample string) string {
 }
 
 func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
-	// log.Info().Msgf("len(podList):%d", len(podList))
 	for _, p := range podList {
 		if len(p.Labels) <= 0 {
 			// almost impossible
@@ -117,11 +114,11 @@ func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
 
 func wait(podName string) {
 	time.Sleep(time.Second)
-	if len(podName) >= 0 {
-		log.Info().Msgf("pod: %s is running, but not ready", podName)
-		return
+	if len(podName) > 0 {
+		log.Info().Msgf("Pod: %s is running, but not ready", podName)
+	} else {
+		log.Info().Msg("Shadow pods not ready ...")
 	}
-	log.Info().Msg("Shadow Pods not ready......")
 }
 
 func service(name, namespace string, labels map[string]string, external bool, port int) *v1.Service {
@@ -170,7 +167,7 @@ func container(image string, args []string, envs map[string]string, options *opt
 		VolumeMounts: []v1.VolumeMount{
 			{
 				Name:      "ssh-public-key",
-				MountPath: fmt.Sprintf("/root/%s", vars.SSHAuthKey),
+				MountPath: fmt.Sprintf("/root/%s", common.SSHAuthKey),
 			},
 		},
 		SecurityContext: &v1.SecurityContext{
@@ -186,7 +183,7 @@ func container(image string, args []string, envs map[string]string, options *opt
 func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *appV1.Deployment {
 	var args []string
 	if options.Debug {
-		log.Debug().Msg("create shadow with debug mode")
+		log.Debug().Msg("Create shadow with debug mode")
 		args = append(args, "--debug")
 	}
 
@@ -194,7 +191,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
 	annotations := metaAndSpec.Meta.Annotations
-	annotations[vars.RefCount] = "1"
+	annotations[common.RefCount] = "1"
 	annotations[common.KTLastHeartBeat] = strconv.FormatInt(time.Now().Unix(), 10)
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
@@ -236,7 +233,7 @@ func getSSHVolume(volume string) v1.Volume {
 				},
 				Items: []v1.KeyToPath{
 					{
-						Key:  vars.SSHAuthKey,
+						Key:  common.SSHAuthKey,
 						Path: "authorized_keys",
 					},
 				},

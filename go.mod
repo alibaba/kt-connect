@@ -6,11 +6,10 @@ require (
 	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
-	github.com/gin-gonic/gin v1.4.0
+	github.com/gin-gonic/gin v1.7.0
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/websocket v1.4.1
 	github.com/kubernetes/dashboard v1.10.1
-	github.com/lextoumbourou/goodhosts v2.1.0+incompatible
 	github.com/linfan/socks4 v0.2.3-2
 	github.com/miekg/dns v1.1.31
 	github.com/rs/zerolog v1.23.0
@@ -21,7 +20,6 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
 	golang.org/x/sys v0.0.0-20210510120138-977fb7262007
-	gopkg.in/yaml.v2 v2.2.8 // indirect
 	istio.io/api v0.0.0-20200221025927-228308df3f1b
 	istio.io/client-go v0.0.0-20200221055756-736d3076b458
 	k8s.io/api v0.17.2

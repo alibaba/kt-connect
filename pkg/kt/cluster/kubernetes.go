@@ -12,7 +12,6 @@ import (
 
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/kt/vars"
 	"github.com/rs/zerolog/log"
 	appv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -79,13 +78,13 @@ func (k *Kubernetes) ScaleTo(deployment, namespace string, replicas *int32) (err
 
 // Scale scale deployment to
 func (k *Kubernetes) Scale(deployment *appv1.Deployment, replicas *int32) (err error) {
-	log.Info().Msgf("scaling deployment %s to %d", deployment.GetObjectMeta().GetName(), *replicas)
+	log.Info().Msgf("Scaling deployment %s to %d", deployment.GetObjectMeta().GetName(), *replicas)
 	client := k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace())
 	deployment.Spec.Replicas = replicas
 
 	d, err := client.Update(deployment)
 	if err != nil {
-		log.Error().Msgf("%s Fails scale deployment %s to %d", err.Error(), deployment.GetObjectMeta().GetName(), *replicas)
+		log.Error().Msgf("Fails scale deployment %s to %d: %s", deployment.GetObjectMeta().GetName(), *replicas, err.Error())
 		return
 	}
 	log.Info().Msgf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
@@ -154,7 +153,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 		err = err2
 		return
 	}
-	log.Info().Msgf("successful create ssh config map %v", configMap.ObjectMeta.Name)
+	log.Info().Msgf("Successful create ssh config map %v", configMap.ObjectMeta.Name)
 
 	pod, err2 := k.createAndGetPod(metaAndSpec, sshKeyMeta.Sshcm, options)
 	if err2 != nil {
@@ -191,9 +190,9 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta,
 		return
 	}
 
-	generator = util.NewSSHGenerator(configMap.Data[vars.SSHAuthPrivateKey], configMap.Data[vars.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
+	generator = util.NewSSHGenerator(configMap.Data[common.SSHAuthPrivateKey], configMap.Data[common.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
 
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[vars.SSHAuthPrivateKey]))
+	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SSHAuthPrivateKey]))
 	if err != nil {
 		return
 	}
@@ -230,13 +229,13 @@ func increaseRefCount(name string, clientSet kubernetes.Interface, namespace str
 		return err
 	}
 	annotations := deployment.ObjectMeta.Annotations
-	count, err := strconv.Atoi(annotations[vars.RefCount])
+	count, err := strconv.Atoi(annotations[common.RefCount])
 	if err != nil {
-		log.Error().Msgf("Failed to parse annotations[vars.RefCount] of deployment %s with value %s", name, annotations[vars.RefCount])
+		log.Error().Msgf("Failed to parse annotations[common.RefCount] of deployment %s with value %s", name, annotations[common.RefCount])
 		return err
 	}
 
-	deployment.ObjectMeta.Annotations[vars.RefCount] = strconv.Itoa(count + 1)
+	deployment.ObjectMeta.Annotations[common.RefCount] = strconv.Itoa(count + 1)
 
 	_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
 	return err
@@ -259,12 +258,12 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
 
 	deployment := deployment(metaAndSpec, sshcm, options)
-	log.Info().Msg("shadow template is prepare ready.")
+	log.Info().Msg("Shadow template is prepare ready.")
 	result, err := client.Create(deployment)
 	if err != nil {
 		return
 	}
-	log.Info().Msgf("deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
+	log.Info().Msgf("Deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
 	setupHeartBeat(client, resourceMeta.Name)
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
@@ -283,8 +282,8 @@ func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, nam
 			Labels:    labels,
 		},
 		Data: map[string]string{
-			vars.SSHAuthKey:        string(generator.PublicKey),
-			vars.SSHAuthPrivateKey: string(generator.PrivateKey),
+			common.SSHAuthKey:        string(generator.PublicKey),
+			common.SSHAuthPrivateKey: string(generator.PrivateKey),
 		},
 	})
 }
@@ -300,10 +299,10 @@ func (k *Kubernetes) CreateService(name, namespace string, external bool, port i
 func (k *Kubernetes) ClusterCrids(namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
 	currentNS := namespace
 	if connectOptions.Global {
-		log.Info().Msgf("scan proxy CRID in cluster scope")
+		log.Info().Msgf("Scan proxy CRID in cluster scope")
 		currentNS = ""
 	} else {
-		log.Info().Msgf("scan proxy CRID in namespace scope")
+		log.Info().Msgf("Scan proxy CRID in namespace scope")
 	}
 
 	serviceList, err := k.Clientset.CoreV1().Services(currentNS).List(metav1.ListOptions{})
@@ -407,7 +406,7 @@ func (k *Kubernetes) DecreaseRef(namespace string, app string) (cleanup bool, er
 }
 
 func decreaseOrRemove(k *Kubernetes, deployment *appv1.Deployment) (cleanup bool, err error) {
-	refCount := deployment.ObjectMeta.Annotations[vars.RefCount]
+	refCount := deployment.ObjectMeta.Annotations[common.RefCount]
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
@@ -431,7 +430,7 @@ func decreaseDeploymentRef(refCount string, k *Kubernetes, deployment *appv1.Dep
 	if err != nil {
 		return
 	}
-	deployment.ObjectMeta.Annotations[vars.RefCount] = count
+	deployment.ObjectMeta.Annotations[common.RefCount] = count
 	_, err = k.UpdateDeployment(deployment.GetObjectMeta().GetNamespace(), deployment)
 	return
 }

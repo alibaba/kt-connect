@@ -31,11 +31,11 @@ func newCheckCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 
 // Check check local denpendency for kt connect
 func (action *Action) Check(cli kt.CliInterface) (err error) {
-	log.Info().Msgf("system info %s-%s", runtime.GOOS, runtime.GOARCH)
+	log.Info().Msgf("System info %s-%s", runtime.GOOS, runtime.GOARCH)
 
 	err = runCommandWithMsg(
 		cli.Exec().SSH().Version(),
-		"checking ssh version", "ssh is missing, please make sure command ssh is work right at your local first",
+		"Checking ssh version", "Ssh is missing, please make sure command ssh is work right at your local first",
 	)
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (action *Action) Check(cli kt.CliInterface) (err error) {
 
 	err = runCommandWithMsg(
 		cli.Exec().Kubectl().Version(),
-		"checking kubectl version", "kubectl is missing, please make sure kubectl is working right at your local first",
+		"Checking kubectl version", "Kubectl is missing, please make sure kubectl is working right at your local first",
 	)
 
 	if err != nil {
@@ -53,14 +53,14 @@ func (action *Action) Check(cli kt.CliInterface) (err error) {
 
 	err = runCommandWithMsg(
 		cli.Exec().SSHUttle().Version(),
-		"checking sshuttle version", "sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode",
+		"Checking sshuttle version", "Sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode",
 	)
 
 	if err != nil {
 		return
 	}
 
-	log.Info().Msg("KT Connect is ready, enjoy it!")
+	log.Info().Msg("KtConnect is ready, enjoy it!")
 	return nil
 }
 

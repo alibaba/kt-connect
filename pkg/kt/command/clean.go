@@ -66,15 +66,17 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	for _, deployment := range deployments {
 		action.analysisShadowDeployment(deployment, options, resourceToClean)
 	}
-	if resourceToClean.NamesOfDeploymentToDelete.Len() == 0 {
-		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
-		return nil
-	}
-	if options.CleanOptions.DryRun {
-		action.printResourceToClean(resourceToClean)
+	if resourceToClean.NamesOfDeploymentToDelete.Len() > 0 {
+		if options.CleanOptions.DryRun {
+			action.printResourceToClean(resourceToClean)
+		} else {
+			action.cleanResource(resourceToClean, kubernetes, options.Namespace)
+		}
 	} else {
-		action.cleanResource(resourceToClean, kubernetes, options.Namespace)
+		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
 	}
+	util.CleanRsaKeys()
+	util.DropHosts()
 	return nil
 }
 

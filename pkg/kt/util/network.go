@@ -29,13 +29,10 @@ func GetOutboundIP() (address string) {
 	address = "127.0.0.1"
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		return
-	}
-	defer conn.Close()
-	if err != nil {
 		log.Error().Err(err).Send()
 		return
 	}
+	defer conn.Close()
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	address = fmt.Sprintf("%s", localAddr.IP)
 	return

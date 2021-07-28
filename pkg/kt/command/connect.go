@@ -40,7 +40,7 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		return fmt.Errorf("connect already running %s exit this", options.RuntimeOptions.PidFile)
+		return fmt.Errorf("another connect process already running with %s, exiting", options.RuntimeOptions.PidFile)
 	}
 	ch := SetUpCloseHandler(cli, options, "connect")
 	if err = connectToCluster(cli, options); err != nil {
@@ -53,7 +53,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		os.Exit(0)
 	}()
 	s := <-ch
-	log.Info().Msgf("Terminal Signal is %s", s)
+	log.Info().Msgf("Terminal signal is %s", s)
 	return
 }
 
@@ -77,6 +77,10 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 		if err != nil {
 			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
+		}
+		err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+		if err != nil {
+			log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
 		}
 	}
 
@@ -124,17 +128,17 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 			}
 			log.Debug().Msgf("Search service in %s namespace...", namespace)
 			singleHosts := kubernetes.ServiceHosts(namespace)
-			for k, v := range singleHosts {
-				if v == "" || v == "None" {
+			for svc, ip := range singleHosts {
+				if ip == "" || ip == "None" {
 					continue
 				}
-				log.Info().Msgf("Service found: %s.%s %s", k, namespace, v)
-				hosts[k+"."+namespace] = v
+				log.Info().Msgf("Service found: %s.%s %s", svc, namespace, ip)
+				hosts[svc+"."+namespace] = ip
 			}
 		}
 	}
 	util.DumpHosts(hosts)
-	options.ConnectOptions.Hosts = hosts
+	options.RuntimeOptions.Dump2Host = true
 }
 
 func envs(options *options.DaemonOptions) map[string]string {
