@@ -25,7 +25,7 @@ type PortForwardAPodRequest struct {
 	RestConfig *rest.Config
 	// PodName pod name
 	PodName string
-	// Namespace namepsace
+	// Namespace target namespace
 	Namespace string
 	// LocalPort is the local port that will be selected to expose the PodPort
 	LocalPort int
@@ -35,6 +35,7 @@ type PortForwardAPodRequest struct {
 	StopCh <-chan struct{}
 	// ReadyCh communicates when the tunnel is ready to receive traffic
 	ReadyCh chan struct{}
+	// Timeout connect timeout
 	Timeout int
 }
 
@@ -88,11 +89,11 @@ func waitPortBeReady(waitTime, port int) bool {
 	for i := 0; i < waitTime; i++ {
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
-			log.Debug().Msgf("connect to port-forward failed, error: %s, retry: %d", err, i)
+			log.Debug().Msgf("Connect to port-forward failed, error: %s, retry: %d", err, i)
 			time.Sleep(1 * time.Second)
 		} else {
 			conn.Close()
-			log.Info().Msgf("connect to port-forward successful")
+			log.Info().Msgf("Connect to port-forward successful")
 			return true
 		}
 	}
