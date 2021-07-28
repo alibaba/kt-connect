@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	userHome = util.HomeDir()
+	userHome = util.UserHome
 	appHome  = fmt.Sprintf("%s/.ktctl", userHome)
 	pidFile  = fmt.Sprintf("%s/pid", appHome)
 )
