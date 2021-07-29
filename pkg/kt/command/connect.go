@@ -87,7 +87,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-	cidrs, err := kubernetes.ClusterCrids(options.Namespace, options.ConnectOptions)
+	cidrs, err := kubernetes.ClusterCidrs(options.Namespace, options.ConnectOptions)
 	if err != nil {
 		return
 	}

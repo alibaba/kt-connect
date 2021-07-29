@@ -37,19 +37,19 @@ func (m *MockKubernetesInterface) EXPECT() *MockKubernetesInterfaceMockRecorder 
 	return m.recorder
 }
 
-// ClusterCrids mocks base method.
-func (m *MockKubernetesInterface) ClusterCrids(namespace string, connectOptions *options.ConnectOptions) ([]string, error) {
+// ClusterCidrs mocks base method.
+func (m *MockKubernetesInterface) ClusterCidrs(namespace string, connectOptions *options.ConnectOptions) ([]string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ClusterCrids", namespace, connectOptions)
+	ret := m.ctrl.Call(m, "ClusterCidrs", namespace, connectOptions)
 	ret0, _ := ret[0].([]string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ClusterCrids indicates an expected call of ClusterCrids.
-func (mr *MockKubernetesInterfaceMockRecorder) ClusterCrids(namespace, connectOptions interface{}) *gomock.Call {
+// ClusterCidrs indicates an expected call of ClusterCidrs.
+func (mr *MockKubernetesInterfaceMockRecorder) ClusterCidrs(namespace, connectOptions interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterCrids", reflect.TypeOf((*MockKubernetesInterface)(nil).ClusterCrids), namespace, connectOptions)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterCidrs", reflect.TypeOf((*MockKubernetesInterface)(nil).ClusterCidrs), namespace, connectOptions)
 }
 
 // CreateService mocks base method.
