@@ -62,6 +62,20 @@ func (mr *MockCliInterfaceMockRecorder) ForwardRemoteRequestToLocal(localPort, r
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardRemoteRequestToLocal", reflect.TypeOf((*MockCliInterface)(nil).ForwardRemoteRequestToLocal), localPort, remoteHost, remotePort, privateKeyPath, remoteSSHPort)
 }
 
+// TunnelToRemote mocks base method.
+func (m *MockCliInterface) TunnelToRemote(localTun int, remoteHost, privateKeyPath string, remoteSSHPort int) *exec.Cmd {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TunnelToRemote", localTun, remoteHost, privateKeyPath, remoteSSHPort)
+	ret0, _ := ret[0].(*exec.Cmd)
+	return ret0
+}
+
+// TunnelToRemote indicates an expected call of TunnelToRemote.
+func (mr *MockCliInterfaceMockRecorder) TunnelToRemote(localTun, remoteHost, privateKeyPath, remoteSSHPort interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TunnelToRemote", reflect.TypeOf((*MockCliInterface)(nil).TunnelToRemote), localTun, remoteHost, privateKeyPath, remoteSSHPort)
+}
+
 // Version mocks base method.
 func (m *MockCliInterface) Version() *exec.Cmd {
 	m.ctrl.T.Helper()

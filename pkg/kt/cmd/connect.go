@@ -102,7 +102,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR, e.g. '172.2.0.0/16")
 
 	// tun
-	cmd.Flags().StringVarP(&opt.TunName, "tunName", "", "tun0", "The tun device name to create on client machine (Alpha)")
+	cmd.Flags().StringVarP(&opt.TunName, "tunName", "", "tun0", "The tun device name to create on client machine (Alpha). Only works on Linux now.")
 	cmd.Flags().StringVarP(&opt.TunCidr, "tunCidr", "", "10.1.1.0/30", "The cidr used by local tun and peer tun device, at least 4 ips. This cidr MUST NOT overlay with kubernetes service cidr and pod cidr.")
 
 	// socks

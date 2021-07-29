@@ -21,11 +21,10 @@ if [ -n "${CLIENT_TUN_IP}" -a -n "${SERVER_TUN_IP}" ]; then
 
   echo "set up iptables"
   iptables -t nat -A POSTROUTING -s ${SERVER_TUN_IP} -o eth0 -j MASQUERADE
-  tail -f /dev/null
+fi
+
+if [[ "${1}" = "--debug" ]]; then
+   /usr/sbin/dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /usr/sbin/shadow-linux-amd64
 else
-  if [[ "${1}" = "--debug" ]]; then
-     /usr/sbin/dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /usr/sbin/shadow-linux-amd64
-  else
-     /usr/sbin/shadow-linux-amd64
-  fi
+   /usr/sbin/shadow-linux-amd64
 fi

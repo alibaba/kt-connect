@@ -222,7 +222,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 		},
 	}
 
-	if options.ConnectOptions.Method == common.ConnectMethodTun {
+	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
 		addTunHostPath(dep)
 	}
 

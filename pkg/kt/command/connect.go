@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"github.com/cilium/ipam/service/allocator"
 	"net"
 	"os"
 	"strings"
@@ -188,7 +189,9 @@ func allocateTunIP(cidr string) (srcIP, destIP string, err error) {
 	if err != nil {
 		return "", "", err
 	}
-	rge, err := ipallocator.NewCIDRRange(ipnet)
+	rge, err := ipallocator.NewAllocatorCIDRRange(ipnet, func(max int, rangeSpec string) (allocator.Interface, error) {
+		return allocator.NewContiguousAllocationMap(max, rangeSpec), nil
+	})
 	if err != nil {
 		return "", "", err
 	}
