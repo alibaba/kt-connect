@@ -2,6 +2,7 @@ package command
 
 import (
 	"container/list"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
@@ -10,8 +11,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
+	"io/ioutil"
 	"k8s.io/api/apps/v1"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -53,6 +57,7 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 
 //Clean delete unavailing shadow pods
 func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
+	action.cleanPidFiles()
 	kubernetes, deployments, err := action.getShadowDeployments(cli, options)
 	if err != nil {
 		return err
@@ -78,6 +83,20 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	util.CleanRsaKeys()
 	util.DropHosts()
 	return nil
+}
+
+func (action *Action) cleanPidFiles() {
+	files, _ := ioutil.ReadDir(util.KtHome)
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".pid") {
+			// TODO: check if process still exist
+			log.Info().Msgf("- Removing pid %s", f.Name())
+			if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
+				log.Error().Err(err).
+					Msgf("Delete pid file %s failed", f.Name())
+			}
+		}
+	}
 }
 
 func (action *Action) analysisShadowDeployment(deployment v1.Deployment, options *options.DaemonOptions, resourceToClean ResourceToClean) {

@@ -1,7 +1,6 @@
 package options
 
 import (
-	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"k8s.io/client-go/kubernetes"
@@ -53,8 +52,8 @@ type RuntimeOptions struct {
 	UserHome string
 	// Path of kt config folder, default to ${UserHome}/.ktctl
 	AppHome string
-	// Path of kt pid file, default to ${AppHome}/pid
-	PidFile string
+	// Component current sub-command
+	Component string
 	// Shadow deployment name
 	Shadow string
 	// ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
@@ -100,7 +99,6 @@ func NewDaemonOptions() *DaemonOptions {
 	userHome := util.UserHome
 	appHome := util.KtHome
 	util.CreateDirIfNotExist(appHome)
-	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &DaemonOptions{
 		Namespace:  common.DefNamespace,
 		KubeConfig: util.KubeConfig(),
@@ -108,7 +106,6 @@ func NewDaemonOptions() *DaemonOptions {
 		RuntimeOptions: &RuntimeOptions{
 			UserHome: userHome,
 			AppHome:  appHome,
-			PidFile:  pidFile,
 		},
 		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &ExchangeOptions{},

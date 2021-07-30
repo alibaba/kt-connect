@@ -20,7 +20,7 @@ import (
 var (
 	connectExample = `
   # connect to kubernetes cluster
-  ktctl connect
+  kubectl connect
   # connect with debug mode
   kubectl connect -d
   # connect with socks
@@ -137,7 +137,7 @@ func (o *ConnectOptions) Run() error {
 		return err
 	}
 
-	ops := CloneDaemonOptions(o)
+	ops := o.transport()
 	context := &kt.Cli{Options: ops}
 	action := command.Action{}
 
@@ -165,11 +165,10 @@ func NewConnectOptions(streams genericclioptions.IOStreams) *ConnectOptions {
 }
 
 // CloneDaemonOptions ...
-func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
+func (o *ConnectOptions) transport() *options.DaemonOptions {
 	userHome := util.UserHome
 	appHome := util.KtHome
 	util.CreateDirIfNotExist(appHome)
-	pidFile := fmt.Sprintf("%s/pid", appHome)
 	return &options.DaemonOptions{
 		Image:     o.Image,
 		Debug:     o.Debug,
@@ -179,7 +178,6 @@ func CloneDaemonOptions(o *ConnectOptions) *options.DaemonOptions {
 		RuntimeOptions: &options.RuntimeOptions{
 			UserHome:  userHome,
 			AppHome:   appHome,
-			PidFile:   pidFile,
 			Clientset: o.clientset,
 		},
 		ConnectOptions: &options.ConnectOptions{

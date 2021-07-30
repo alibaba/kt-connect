@@ -36,13 +36,21 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
-	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		return fmt.Errorf("another connect process already running with %s, exiting", options.RuntimeOptions.PidFile)
+func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
+	if util.IsDaemonRunning(common.ComponentConnect) {
+		return fmt.Errorf("another connect process already running, exiting")
 	}
-	ch := SetUpCloseHandler(cli, options, "connect")
+
+	options.RuntimeOptions.Component = common.ComponentConnect
+	err := util.WritePidFile(common.ComponentConnect)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("KtConnect start at %d", os.Getpid())
+
+	ch := SetUpCloseHandler(cli, options, common.ComponentConnect)
 	if err = connectToCluster(cli, options); err != nil {
-		return
+		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
@@ -52,17 +60,10 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
-	return
+	return nil
 }
 
 func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
-
-	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
-	if err != nil {
-		return
-	}
-	log.Info().Msgf("Connect start at %d", pid)
-
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return
