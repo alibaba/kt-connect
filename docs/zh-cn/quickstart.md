@@ -1,163 +1,282 @@
 # 快速开始
 
-这里，我们通过一个简单的示例，来体验KT的主要能力。 这里我们会在集群中部署一个registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0的镜像，并且通过KT直接在本地访问该服务，同时也可以将集群中所有原本对该应用的请求转发到本地。
+KtConnect提供了本地和测试环境集群的双向互联能力。在这篇文档里，我们将使用一个简单的示例，来快速演示通过KtConnect完成本地直接访问集群中的服务、以及将集群中指定服务的请求转发到本地的过程。
 
 ## 部署实例应用
 
-``` shell
-$ kubectl run tomcat --image=registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0 --expose --port=8080
-service "tomcat" created
-deployment.apps "tomcat" created
+为了便于展示结果，首先在集群中部署一个Tomcat服务并创建一个默认首页：
 
-$ kubectl get deployments -o wide --selector run=tomcat
-NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE       CONTAINERS   IMAGES                                                                 SELECTOR
-tomcat    1         1         1            1           18s       tomcat       registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0   run=tomcat
+```bash
+$ kubectl create deployment tomcat --image=tomcat:9 --port=8080
+deployment.apps/tomcat created
 
-$ kubectl get pods -o wide --selector run=tomcat
-NAME                      READY     STATUS    RESTARTS   AGE       IP             NODE
-tomcat-54d87b848c-2mc9b   1/1       Running   0          1m        172.23.2.234   cn-beijing.192.168.0.8
+$ kubectl expose deployment tomcat --port=8080 --target-port=8080
+service/tomcat exposed
 
-$ kubectl get svc tomcat
-NAME      TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
-tomcat    ClusterIP   172.21.6.39   <none>        8080/TCP   1m
+$ kubectl exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 ```
 
-## Connect：连接集群网络
+查询Pod和服务地址：
 
-使用connect命令建立从本地到集群的网络通道，目前KT Connect支持VPN和Socks5代理两种模式, 不指定`--method`参数时，默认使用VPN模式：
+```bash
+$ kubectl get pod -o wide --selector app=tomcat
+NAME     READY   STATUS    RESTARTS   AGE   IP            ...
+tomcat   2/2     Running   0          34s   10.51.0.162   ...
+
+$ kubectl get svc tomcat
+NAME     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
+tomcat   ClusterIP   172.16.255.111   <none>        8080/TCP   34s
+```
+
+可知Tomcat实例的Pod IP为`10.51.0.162`，服务的Cluster IP为`172.16.255.111`，记下待用。
+
+## 连接集群网络
+
+使用`connect`命令建立从本地到集群的网络通道：
 
 <!-- tabs:start -->
 
-#### ** VPN 模式 **
+#### ** Mac/Linux **
 
-> VPN模式基于sshuttle目前只支持Mac/Linux环境
+> 在Mac/Linux环境下默认采用`vpn`模式
 
-使用connect命令建立本地到集群的VPN网络：
+使用`connect`命令建立本地到集群的VPN网络，注意该命令需要管理员权限，普通用户需加`sudo`执行：
 
-```shell
-$ sudo ktctl connect --method=vpn
-10:44PM INF Connect Start At 80073
-10:44PM INF Client address 192.168.3.120
-10:44PM INF Deploying shadow deployment kt-connect-daemon-rarba in namespace default
-
-10:44PM INF Shadow Pod status is Pending
-10:44PM INF Shadow Pod status is Running
-10:44PM INF Shadow is ready.
-10:44PM INF Success deploy proxy deployment kt-connect-daemon-rarba in namespace default
-
-Forwarding from 127.0.0.1:2222 -> 22
-Forwarding from [::1]:2222 -> 22
-Handling connection for 2222
-Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts.
-client: Connected.
-10:44PM INF KT proxy start successful
+```bash
+$ sudo ktctl connect
+00:00AM INF Connect start at 43941
+00:00AM INF Private Key generated
+00:00AM INF Public key generated
+00:00AM INF Successful create ssh config map kt-connect-public-key-nzxo
+00:00AM INF Client address 192.168.43.137
+00:00AM INF Shadow template is prepare ready.
+00:00AM INF Deploy shadow deployment kt-connect-daemon-nzxov in namespace default
+00:00AM INF Shadow pods not ready ...
+00:00AM INF Pod: kt-connect-daemon-nzxov-d4b55fcfd-n9t5m is running, but not ready
+00:00AM INF Pod: kt-connect-daemon-nzxov-d4b55fcfd-n9t5m is running, but not ready
+00:00AM INF Shadow pod: kt-connect-daemon-nzxov-d4b55fcfd-n9t5m is ready.
+00:00AM INF Scan proxy CRID in namespace scope
+00:00AM INF Start port-forward at pid: 43949
+00:00AM INF Connect to port-forward successful
+00:00AM INF Start vpn(sshuttle) at pid: 43950
+00:00AM INF Proxy start successful
 ```
 
-启用VPN后直接访问集群资源：
+现在本地已经能够直接访问集群资源了，可通过浏览器或`curl`命令来验证：
 
-```
-$ curl http://172.23.2.234:8080    #在本地直接访问PodIP
-kt-connect demo from tomcat9
+```bash
+$ curl http://10.51.0.162:8080    # 在本地直接访问PodIP
+kt-connect demo v1
 
-$ curl http://172.21.6.39:8080    #在本地访问ClusteriIP
-kt-connect demo from tomcat9
+$ curl http://172.21.6.39:8080    # 在本地访问ClusterIP
+kt-connect demo v1
 
-$ curl http://tomcat:8080     #使用<service>作为域名访问
-kt-connect demo from tomcat9
+$ curl http://tomcat:8080         # 使用<service>作为域名访问服务
+kt-connect demo v1
 
-$ curl http://tomcat.default:8080 # 使用<servicename>.<namespace>域名访问
-kt-connect demo from tomcat9
+$ curl http://tomcat.default:8080     # 使用<servicename>.<namespace>域名访问服务
+kt-connect demo v1
 
-$ curl http://tomcat.default.svc.cluster.local:8080 # 使用集群内完整域名访问服务
-kt-connect deom from tomcat9
-```
-
-#### ** Socks5代理模式 **
-
-> Socks5模式基于ssh目前只支持Windows/Mac/Linux环境
-
-使用`--method=socks5`指定使用socks5代理模式，为了能够在本地直接访问service的DNS域名`--dump2hosts`可以自动同步指定命名空间下的所有Service到本地的hosts文件：
-
-```
-$ sudo ktctl connect --method=socks5 --dump2hosts
-6:37PM INF Connect Start At 74032
-6:37PM INF Dump hosts successful.
-6:37PM INF Client address 30.5.124.242
-6:37PM INF Deploying shadow deployment kt-connect-daemon-mkevz in namespace default
-6:37PM INF Shadow is ready.
-6:37PM INF Success deploy proxy deployment kt-connect-daemon-mkevz in namespace default
-
-Forwarding from 127.0.0.1:2222 -> 22
-Forwarding from [::1]:2222 -> 22
-6:38PM INF ==============================================================
-6:38PM INF Start SOCKS5 Proxy: export http_proxy=socks5://127.0.0.1:2223
-6:38PM INF ==============================================================
-Handling connection for 2222
-Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts.
-6:38PM INF KT proxy start successful
+$ curl http://tomcat.default.svc.cluster.local:8080    # 使用集群内完整域名访问服务
+kt-connect demo v1
 ```
 
-在Shell中按照日志输出提示，设置http_proxy参数：
+#### ** Windows **
 
-```
-$ export http_proxy=socks5://127.0.0.1:2223
-$ curl http://172.16.0.147:8080 #本地直接访问PodIP
-$ curl http://172.19.143.139:8080 # 本地直接访问ClusterIP
-$ curl http://tomcat:8080 #使用Service的域名访问
+> 在Windows环境下默认采用`socks`模式，且当前默认仅支持服务短域名
+
+使用`connect`命令建立本地到集群的Socks代理，注意该命令需操作系统注册表，请确保当前用户具有管理员权限：
+
+```bash
+$ ktctl connect                                   
+00:00AM INF Connect start at 46276
+00:00AM INF Private Key generated
+00:00AM INF Public key generated
+00:00AM INF Successful create ssh config map kt-connect-public-key-wiku
+00:00AM INF Client address 192.168.43.137
+00:00AM INF Shadow template is prepare ready.
+00:00AM INF Deploy shadow deployment kt-connect-daemon-wikui in namespace default
+00:00AM INF Pod: kt-connect-daemon-wikui-66df6fd885-h65lc is running, but not ready
+00:00AM INF Pod: kt-connect-daemon-wikui-66df6fd885-h65lc is running, but not ready
+00:00AM INF Shadow pod: kt-connect-daemon-wikui-66df6fd885-h65lc is ready.
+00:00AM INF Scan proxy CRID in namespace scope
+00:00AM INF Start socks proxy successfully
+00:00AM INF Proxy start successful
 ```
 
-> 当命令退出后会自动清理本地的hosts文件
+现在本地已经能够直接访问集群资源了。
+
+由于环境变量和系统代理的修改对已运行的进程无效，在Windows环境中，`ktctl connect`仅对该命令执行之后新创建的进程自动生效。
+
+打开一个新的浏览器或控制台（新窗口，而不是新Tab页），然后在浏览器输入以下地址或使用`curl`命令来验证：
+
+```bash
+$ curl http://10.51.0.162:8080    # 在本地直接访问PodIP
+kt-connect demo v1
+
+$ curl http://172.21.6.39:8080    # 在本地访问ClusterIP
+kt-connect demo v1
+
+$ curl http://tomcat:8080         # 使用<service>作为域名访问服务
+kt-connect demo v1
+```
+
+> 注意 1：在**PowerShell**中`curl`与内置命令重名，需用`curl.exe`替代上述命令中的`curl`
+>
+> 注意 2：KtConnect的`socks`模式本质是系统全局代理，但在Windows下并非所有软件都会遵循系统代理配置。譬如基于Spring的Java应用开发可参考[在IDEA中联调](zh-cn/guide/how-to-use-in-idea.md)文档
 
 <!-- tabs:end -->
 
-## Exchange: 将集群流量转发到本地
+## 将集群流量转发到本地
 
-为了模拟集群联调本地的情况，我们首先在本地运行一个Tomcat:8的容器
+为了验证集群访问本地服务的场景，我们在本地也启动一个Tomcat的容器，并为其创建一个内容不同的首页。
 
-```
-$ docker run -itd -p 8080:8080 tomcat:8
+```bash
+$ docker run -d --name tomcat -p 8080:8080 tomcat:9
+$ docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
 ```
 
+KtConnect提供了三种能够让集群访问本地服务的命令，分别用于不同的调试场景。
+
+- Exchange：将集群指定服务的所有流量转向本地
+- Mesh：将集群指定服务的部分流量（按Mesh规则）转向本地
+- Provide：在集群中创建一个新服务，并将其流量转向本地
+
+<!-- tabs:start -->
+
+#### ** Exchange **
+
+将集群里访问指定服务的所有请求拦截并转发到本地的指定端口，通常用于调试在测试环境调用链上的指定服务。
+
+```text
+┌──────────┐     ┌─ ── ── ──     ┌──────────┐
+│ ServiceA ├─┬─►x│ ServiceB │ ┌─►│ ServiceC │
+└──────────┘ │    ── ── ── ─┘ │  └──────────┘
+         exchange             │
+             │   ┌──────────┐ │
+             └──►│ ServiceB'├─┘
+                 └──────────┘
 ```
+
+由于历史原因，`ktctl exchange`的参数指定的是要替换的目标Deployment名称（而非直接指定Service名称），使用以下命令将先前部署到集群中的`tomcat`服务流量全部转到本地`8080`端口：
+
+```bash
 $ ktctl exchange tomcat --expose 8080
-2019/06/19 11:19:10  * tomcat (0 replicas)
-2019/06/19 11:19:10 Scale deployment tomcat to zero
-2019/06/19 11:19:10 Deploying proxy deployment tomcat-kt-oxpjf in namespace default
-2019/06/19 11:19:10 Pod status is Pending
-2019/06/19 11:19:12 Pod status is Running
-2019/06/19 11:19:12 Success deploy proxy deployment tomcat-kt-oxpjf in namespace default
-SSH Remote port-forward for POD starting
-2019/06/19 11:19:14 ssh remote port-forward start at pid: 3567
+00:00AM INF Private Key generated
+00:00AM INF Public key generated
+00:00AM INF Successful create ssh config map kt-exchange-public-key-qmst
+00:00AM INF Client address 192.168.43.137
+00:00AM INF Shadow template is prepare ready.
+00:00AM INF Deploy shadow deployment tomcat-kt-qmstl in namespace default
+00:00AM INF Pod: tomcat-kt-qmstl-78bcc4c454-wjs88 is running, but not ready
+00:00AM INF Pod: tomcat-kt-qmstl-78bcc4c454-wjs88 is running, but not ready
+00:00AM INF Shadow pod: tomcat-kt-qmstl-78bcc4c454-wjs88 is ready.
+00:00AM INF Create exchange shadow tomcat-kt-qmstl in namespace default
+00:00AM INF Scaling deployment tomcat to 0
+00:00AM INF  * tomcat (0 replicas) success
+00:00AM INF Creating shadow inbound(remote->local)
+00:00AM INF Remote 10.51.0.33 forward to local 8080
+00:00AM INF Connect to port-forward successful
+00:00AM INF ExposeLocalPortsToRemote request from pod:8080 to 127.0.0.1:8080
+00:00AM INF Forward 0.0.0.0:8080 to localEndpoint 127.0.0.1:8080
 ```
 
-在本地或者集群中访问原本指向Tomcat:9的应用，查看输出结果：
+在本地或者集群中访问开头部署到集群的`tomcatt服务，查看输出结果：
 
-> 注意如果未运行`ktctl connect`,只能从集群内访问
+> 注意如果未运行`ktctl connect`，只能从集群内访问
 
+```bash
+$ curl http://tomcat:8080
+kt-connect local v2
 ```
-$ curl http://tomcat:8080 | grep '<h1>'
-<h1>Apache Tomcat/8.5.37</h1> #
+
+可以看到，访问集群里`tomcat`服务的请求被路由到了本地的Tomcat实例，现在就可以直接在本地调试这个服务了。
+
+## ** Mesh **
+
+将集群里访问指定服务的部分请求拦截并转发到本地的指定端口。KtConnect不会自动创建相应的路由规则，因此默认情况下访问该服务的流量将随机访问集群服务和本地实例。
+
+您可以自行使用任何Service Mesh工具（譬如Istio）创建基于`version`标签的路由规则，将特定流量转发到本地。
+
+```text
+┌──────────┐     ┌──────────┐    ┌──────────┐
+│ ServiceA ├─┬──►│ ServiceB │─┬─►│ ServiceC │
+└──────────┘ │   └──────────┘ │  └──────────┘
+            mesh              │
+             │   ┌──────────┐ │
+             └──►│ ServiceB'├─┘
+                 └──────────┘
 ```
 
-## Mesh: 基于Service Mesh按规则转发流量到本地
+为了便于验证结果，先重置一下集群里Tomcat服务的首页内容。然后通过`ktctl mesh`命令创建代理Pod：
+
+```bash
+$ kubectl exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
+
+$ ktctl mesh tomcat --expose 8080    
+00:00AM INF Private Key generated
+00:00AM INF Public key generated
+00:00AM INF Successful create ssh config map kt-mesh-public-key-tekx
+00:00AM INF Client address 192.168.0.33
+00:00AM INF Shadow template is prepare ready.
+00:00AM INF Deploy shadow deployment tomcat-kt-tekxx in namespace default
+00:00AM INF Shadow pods not ready ...
+00:00AM INF Pod: tomcat-kt-tekxx-6d8c4567cf-nm5k2 is running, but not ready
+00:00AM INF Pod: tomcat-kt-tekxx-6d8c4567cf-nm5k2 is running, but not ready
+00:00AM INF Shadow pod: tomcat-kt-tekxx-6d8c4567cf-nm5k2 is ready.
+00:00AM INF Creating shadow inbound(remote->local)
+00:00AM INF Remote 10.51.0.173 forward to local 8080
+00:00AM INF Connect to port-forward successful
+00:00AM INF ExposeLocalPortsToRemote request from pod:8080 to 127.0.0.1:8080
+00:00AM INF Forward 0.0.0.0:8080 to localEndpoint 127.0.0.1:8080
+00:00AM INF ---------------------------------------------------------
+00:00AM INF     Mesh Version 'tekxx' You can update Istio rule       
+00:00AM INF ---------------------------------------------------------
+```
+
+在没有任何额外规则的情况下，访问集群里的`tomcat`服务，流量将随机被路由到本地或集群的服务实例：
+
+```bash
+$ curl http://tomcat:8080
+kt-connect local v2
+
+$ curl http://tomcat:8080
+kt-connect demo v1
+```
+
+`ktctl mesh`与`ktctl exchange`命令的最大区别在于，后者会完全替换原有的应用实例，而前者在创建代理Pod后，依然会保留原服务的Pod，代理Pod会动态生成`version`标签，以便用于可以通过Mesh流量规则将特定的流量转发到本地，同时保证测试环境正常链路始终可用。
 
 > 查看更多：[Mesh最佳实践](/zh-cn/guide/mesh)
 
-`mesh`与`exchange`的最大区别在于，exchange会完全替换原有的应用实例。mesh命令创建代理容器，但是会保留原应用容器，代理容器会动态生成version标签，以便用于可以通过Istio流量规则将特定的流量转发到本地，同时保证环境正常链路始终可用：
+#### ** Provide **
 
+将本地运行的服务实例注册到集群上。与前两种命令不同，`ktctl provide`主要用于将本地开发中的服务提供给其他开发者进行联调和预览。
+
+以下命令会将运行在本地`8080`端口的服务注册到测试集群，命名为`tomcat-preview`。
+
+```bash
+$ ktctl provide tomcat-preview --expose 8080
+10:55PM INF Private Key generated
+10:55PM INF Public key generated
+10:55PM INF Successful create ssh config map kt-provide-public-key-qgju
+10:55PM INF Client address 192.168.43.137
+10:55PM INF Shadow template is prepare ready.
+10:55PM INF Deploy shadow deployment tomcat-preview-kt-qgjuf in namespace default
+10:55PM INF Pod: tomcat-preview-kt-qgjuf-b8655c5c4-jkzvg is running, but not ready
+10:55PM INF Pod: tomcat-preview-kt-qgjuf-b8655c5c4-jkzvg is running, but not ready
+10:55PM INF Shadow pod: tomcat-preview-kt-qgjuf-b8655c5c4-jkzvg is ready.
+10:55PM INF Create shadow pod tomcat-preview-kt-qgjuf-b8655c5c4-jkzvg ip 10.51.0.43
+10:55PM INF Expose deployment tomcat-preview-kt-qgjuf to service tomcat-preview:8080
+10:55PM INF Creating shadow inbound(remote->local)
+10:55PM INF Remote 10.51.0.43 forward to local 8080
+10:55PM INF Start exchange port forward to local at pid: 3408
+10:55PM INF Connect to port-forward successful
+10:55PM INF ExposeLocalPortsToRemote request from pod:8080 to 127.0.0.1:8080
+10:55PM INF Forward 0.0.0.0:8080 to localEndpoint 127.0.0.1:8080
+10:55PM INF ExposeLocalPortsToRemote request from pod:8080 to 127.0.0.1:8080 finished
+10:55PM INF Forward remote 10.51.0.43:8080 -> 127.0.0.1:8080
 ```
-$ ktctl mesh tomcat --expose 8080
-2019/06/19 22:10:23 'KT Connect' not runing, you can only access local app from cluster
-2019/06/19 22:10:24 Deploying proxy deployment tomcat-kt-ybocr in namespace default
-2019/06/19 22:10:24 Pod status is Pending
-2019/06/19 22:10:26 Pod status is Pending
-2019/06/19 22:10:28 Pod status is Running
-2019/06/19 22:10:28 Success deploy proxy deployment tomcat-kt-ybocr in namespace default
-2019/06/19 22:10:28 -----------------------------------------------------------
-2019/06/19 22:10:28 |    Mesh Version 'ybocr' You can update Istio rule       |
-2019/06/19 22:10:28 -----------------------------------------------------------
-2019/06/19 22:10:30 exchange port forward to local start at pid: 53173
-SSH Remote port-forward POD 172.16.0.217 22 to 127.0.0.1:2217 starting
-2019/06/19 22:10:30 ssh remote port-forward exited
-2019/06/19 22:10:32 ssh remote port-forward start at pid: 53174
-```
+
+现在集群里的服务就可以通过`tomcat-preview`名称来访问本地暴露的服务实例了，其他开发者也可以在执行`ktctl connect`后，直接通过`tomcat-preview`服务名称来预览该服务的当前情况。
+
+<!-- tabs:end -->
