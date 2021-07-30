@@ -88,9 +88,8 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 func (action *Action) cleanPidFiles() {
 	files, _ := ioutil.ReadDir(util.KtHome)
 	for _, f := range files {
-		if strings.HasSuffix(f.Name(), ".pid") {
-			// TODO: check if process still exist
-			log.Info().Msgf("- Removing pid %s", f.Name())
+		if strings.HasSuffix(f.Name(), ".pid") && !util.IsProcessExist(action.toPid(f.Name())) {
+			log.Info().Msgf("Removing pid file %s", f.Name())
 			if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
 				log.Error().Err(err).
 					Msgf("Delete pid file %s failed", f.Name())
@@ -140,6 +139,19 @@ func (action *Action) cleanResource(r ResourceToClean, kubernetes cluster.Kubern
 		}
 	}
 	log.Info().Msg("Done.")
+}
+
+func (action *Action) toPid(pidFileName string) int {
+	startPos := strings.LastIndex(pidFileName, "-")
+	endPos := strings.Index(pidFileName, ".")
+	if startPos > 0 && endPos > startPos {
+		pid, err := strconv.Atoi(pidFileName[startPos+1 : endPos])
+		if err != nil {
+			return -1
+		}
+		return pid
+	}
+	return -1
 }
 
 func (action *Action) printResourceToClean(r ResourceToClean) {

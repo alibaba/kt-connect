@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	ps "github.com/mitchellh/go-ps"
 )
 
 var interrupt = make(chan bool)
@@ -45,6 +47,15 @@ func IsPidFileExist() bool {
 		}
 	}
 	return false
+}
+
+// IsProcessExist check whether specified process still running
+func IsProcessExist(pid int) bool {
+	proc, err := ps.FindProcess(pid)
+	if proc == nil || err != nil {
+		return false
+	}
+	return strings.Contains(proc.Executable(), "ktctl")
 }
 
 // KubeConfig location of kube-config file
