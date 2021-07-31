@@ -3,7 +3,9 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"os"
 	"os/signal"
 	"strings"
@@ -67,6 +69,22 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
 		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
+	}
+
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		err := exec.RunAndWait(cli.Exec().SSHTunnelling().RemoveDevice(), "del_device", options.Debug)
+		if err != nil {
+			log.Error().Msgf("Fails to delete tun device")
+			return
+		}
+
+		if !options.ConnectOptions.DisableDNS {
+			err = (&resolvconf.Conf{}).RestoreConfig()
+			if err != nil {
+				log.Error().Msgf("Restore resolv.conf failed, error: %s", err)
+				return
+			}
+		}
 	}
 
 	kubernetes, err := cli.Kubernetes()

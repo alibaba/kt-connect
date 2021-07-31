@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"io/ioutil"
 	"sync"
 
@@ -23,9 +24,15 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 }
 
 func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
-	if s.Options.ConnectOptions.Method == common.ConnectMethodSocks {
+	switch s.Options.ConnectOptions.Method {
+	case common.ConnectMethodSocks:
 		err = startSocks4Connection(cli, s.Options, name)
-	} else {
+	case common.ConnectMethodTun:
+		stop, rootCtx, err := forwardSshPortToLocal(cli, s.Options, name)
+		if err == nil {
+			err = startTunConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
+		}
+	default:
 		stop, rootCtx, err := forwardSshPortToLocal(cli, s.Options, name)
 		if err == nil {
 			if s.Options.ConnectOptions.Method == common.ConnectMethodSocks5 {
@@ -121,4 +128,63 @@ func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 		Stop: stop,
 	})
 	return err
+}
+
+// startTunConnection creates a ssh tunnel to pod
+func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan bool) (err error) {
+
+	// 1. Create tun device.
+	err = exec.RunAndWait(cli.SSHTunnelling().AddDevice(), "add_device", options.Debug)
+	if err != nil {
+		return err
+	} else {
+		log.Info().Msgf("Add tun device successful")
+	}
+
+	// 2. Setup device ip
+	err = exec.RunAndWait(cli.SSHTunnelling().SetupDeviceIP(), "setup_device", options.Debug)
+	if err != nil {
+		// clean up
+		return err
+	} else {
+		log.Info().Msgf("Set tun device ip successful")
+	}
+
+	// 3. Create ssh tunnel.
+	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+		Ctx:  rootCtx,
+		Cmd:  cli.SSH().TunnelToRemote(0, credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort),
+		Name: "ssh_tun",
+		Stop: stop,
+	})
+
+	if err != nil {
+		return err
+	} else {
+		log.Info().Msgf("Create ssh tun successful")
+	}
+
+	// 4. Add route to kubernetes cluster.
+	for i := range cidrs {
+		err = exec.RunAndWait(cli.SSHTunnelling().AddRoute(cidrs[i]), "add_route", options.Debug)
+		if err != nil {
+			// clean up
+			return err
+		} else {
+			log.Info().Msgf("Add route %s successful", cidrs[i])
+		}
+	}
+
+	if !options.ConnectOptions.DisableDNS {
+		// 5. Setup dns config.
+		// This will overwrite the fil /etc/resolv.conf .
+		err = (&resolvconf.Conf{}).AddNameserver(podIP)
+		if err == nil {
+			log.Info().Msgf("Add nameserver %s successful", podIP)
+		}
+		return err
+	}
+
+	return nil
 }

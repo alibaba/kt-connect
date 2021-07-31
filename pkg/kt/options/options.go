@@ -26,6 +26,12 @@ type ConnectOptions struct {
 	Dump2HostsNamespaces cli.StringSlice
 	ShareShadow          bool
 	LocalDomain          string
+	TunName              string
+	TunCidr              string
+
+	// Used for tun mode
+	SourceIP string
+	DestIP   string
 }
 
 // ExchangeOptions ...
