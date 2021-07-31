@@ -30,7 +30,7 @@ func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredenti
 	kubernetesCli kubectl.CliInterface,
 	ssh channel.Channel,
 ) (err error) {
-	stop := make(chan bool)
+	stop := make(chan string)
 	rootCtx, cancel := context.WithCancel(context.Background())
 
 	// one of the background process start failed and will cancel the started process
@@ -54,7 +54,7 @@ func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredenti
 }
 
 func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, podName string, localSSHPort int,
-	stop chan bool, options *options.DaemonOptions) error {
+	stop chan string, options *options.DaemonOptions) error {
 	portforward := kubernetesCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
 	err := exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx:  rootCtx,

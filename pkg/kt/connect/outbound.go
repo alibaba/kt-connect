@@ -41,8 +41,8 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 	return
 }
 
-func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions, name string) (chan bool, context.Context, error) {
-	stop := make(chan bool)
+func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions, name string) (chan string, context.Context, error) {
+	stop := make(chan string)
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
 	go func() {
@@ -102,7 +102,7 @@ func showSetupSuccessfulMessage(protocol string, port int) {
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
-	options *options.DaemonOptions, podIP string, cidrs []string, stop chan bool) (err error) {
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan string) (err error) {
 	return exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx: rootCtx,
 		Cmd: cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort,

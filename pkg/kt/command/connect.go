@@ -54,7 +54,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
