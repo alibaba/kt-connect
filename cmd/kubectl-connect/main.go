@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rs/zerolog/log"
 	"os"
 
 	"github.com/alibaba/kt-connect/pkg/kt/cmd"
@@ -20,6 +21,7 @@ func main() {
 
 	root := cmd.NewConnectCommand(genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}, version)
 	if err := root.Execute(); err != nil {
+		log.Err(err).Msgf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 }

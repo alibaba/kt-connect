@@ -54,25 +54,19 @@ func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredenti
 }
 
 func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, podName string, localSSHPort int,
-	stop chan bool, options *options.DaemonOptions,
-) error {
-	var err error
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func(wg *sync.WaitGroup) {
-		portforward := kubernetesCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
-		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
-			Ctx:  rootCtx,
-			Cmd:  portforward,
-			Name: "exchange port forward to local",
-			Stop: stop,
-		})
-		util.WaitPortBeReady(options.WaitTime, localSSHPort)
-		wg.Done()
-	}(&wg)
-	wg.Wait()
-	return err
+	stop chan bool, options *options.DaemonOptions) error {
+	portforward := kubernetesCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
+	err := exec.BackgroundRunWithCtx(&exec.CMDContext{
+		Ctx:  rootCtx,
+		Cmd:  portforward,
+		Name: "exchange port forward to local",
+		Stop: stop,
+	})
+	if err != nil {
+		return err
+	}
+	util.WaitPortBeReady(options.WaitTime, localSSHPort)
+	return nil
 }
 
 func exposeLocalPortsToRemote(ssh channel.Channel, exposePorts string, localSSHPort int) {

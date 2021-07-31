@@ -99,7 +99,7 @@ func runCmd(cmdCtx *CMDContext) error {
 		return err
 	}
 
-	time.Sleep(time.Duration(1) * time.Second)
+	time.Sleep(time.Duration(100) * time.Millisecond)
 	pid := cmd.Process.Pid
 	log.Info().Msgf("Start %s at pid: %d", cmdCtx.Name, pid)
 	// will kill the process when parent cancel
@@ -109,7 +109,7 @@ func runCmd(cmdCtx *CMDContext) error {
 			case <-cmdCtx.Ctx.Done():
 				err := cmd.Process.Kill()
 				if err != nil {
-					log.Debug().Msgf("Failed to kill process %s", err.Error())
+					log.Debug().Msgf("Process %s already competed", pid)
 				}
 			}
 		}
