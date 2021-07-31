@@ -6,11 +6,12 @@ import (
 
 // AddRoute add route to kubernetes network.
 func (s *Cli) AddRoute(cidr string) *exec.Cmd {
-	// run command: route add -net 192.168.0.3 dev tun1
+	// run command: route add -net 10.1.1.0/30 dev tun0
 	cmd := exec.Command("route",
 		"add",
 		"-net",
 		cidr,
+		"dev",
 		s.TunName,
 	)
 	return cmd
@@ -42,10 +43,10 @@ func (s *Cli) SetupDeviceIP() *exec.Cmd {
 }
 
 func (s *Cli) RemoveDevice() *exec.Cmd {
-	// run command: ip l d tun0
+	// run command: ip link delete tun0
 	return exec.Command("ip",
-		"l",
-		"d",
+		"link",
+		"delete",
 		s.TunName,
 	)
 }

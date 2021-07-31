@@ -30,7 +30,7 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := CompleteOptions(options); err != nil {
+			if err := completeOptions(options); err != nil {
 				return err
 			}
 			if err := combineKubeOpts(options); err != nil {
@@ -39,19 +39,6 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 			return action.Connect(cli, options)
 		},
 	}
-}
-
-func CompleteOptions(options *options.DaemonOptions) error {
-	if options.ConnectOptions.Method == common.ConnectMethodTun {
-		srcIP, destIP, err := allocateTunIP(options.ConnectOptions.TunCidr)
-		if err != nil {
-			return err
-		}
-		options.ConnectOptions.SourceIP = srcIP
-		options.ConnectOptions.DestIP = destIP
-	}
-
-	return nil
 }
 
 // Connect connect vpn to kubernetes cluster
@@ -79,6 +66,19 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
+	return nil
+}
+
+func completeOptions(options *options.DaemonOptions) error {
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		srcIP, destIP, err := allocateTunIP(options.ConnectOptions.TunCidr)
+		if err != nil {
+			return err
+		}
+		options.ConnectOptions.SourceIP = srcIP
+		options.ConnectOptions.DestIP = destIP
+	}
+
 	return nil
 }
 

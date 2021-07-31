@@ -114,6 +114,7 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 
 // Validate validate the connection options
 func (o *ConnectOptions) Validate() []error {
+	// TODO: check parameters here
 	return nil
 }
 

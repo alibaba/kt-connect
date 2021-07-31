@@ -5,7 +5,6 @@ import "os/exec"
 // CliInterface ...
 type CliInterface interface {
 	AddRoute(cidr string) *exec.Cmd
-
 	AddDevice() *exec.Cmd
 	RemoveDevice() *exec.Cmd
 	SetupDeviceIP() *exec.Cmd
