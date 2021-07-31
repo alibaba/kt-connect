@@ -26,6 +26,7 @@ type ConnectOptions struct {
 	Dump2HostsNamespaces cli.StringSlice
 	ShareShadow          bool
 	LocalDomain          string
+	ClusterDomain        string
 }
 
 // ExchangeOptions ...
