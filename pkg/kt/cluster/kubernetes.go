@@ -294,14 +294,14 @@ func (k *Kubernetes) CreateService(name, namespace string, external bool, port i
 	return cli.Create(svc)
 }
 
-// ClusterCrids get cluster cirds
-func (k *Kubernetes) ClusterCrids(namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
+// ClusterCidrs get cluster Cidrs
+func (k *Kubernetes) ClusterCidrs(namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
 	currentNS := namespace
 	if connectOptions.Global {
-		log.Info().Msgf("Scan proxy CRID in cluster scope")
+		log.Info().Msgf("Scan proxy CIDR in cluster scope")
 		currentNS = ""
 	} else {
-		log.Info().Msgf("Scan proxy CRID in namespace scope")
+		log.Info().Msgf("Scan proxy CIDR in namespace scope")
 	}
 
 	serviceList, err := k.Clientset.CoreV1().Services(currentNS).List(metav1.ListOptions{})
@@ -309,17 +309,17 @@ func (k *Kubernetes) ClusterCrids(namespace string, connectOptions *options.Conn
 		return
 	}
 
-	cidrs, err = getPodCirds(k.Clientset, connectOptions.CIDR)
+	cidrs, err = getPodCidrs(k.Clientset, connectOptions.CIDR)
 	if err != nil {
 		return
 	}
 
 	services := serviceList.Items
-	serviceCird, err := getServiceCird(services)
+	serviceCidr, err := getServiceCidr(services)
 	if err != nil {
 		return
 	}
-	cidrs = append(cidrs, serviceCird...)
+	cidrs = append(cidrs, serviceCidr...)
 	return
 }
 

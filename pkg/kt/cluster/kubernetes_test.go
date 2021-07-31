@@ -88,7 +88,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 	}
 }
 
-func TestKubernetes_ClusterCrids(t *testing.T) {
+func TestKubernetes_ClusterCidrs(t *testing.T) {
 	type args struct {
 		podCIDR string
 	}
@@ -100,7 +100,7 @@ func TestKubernetes_ClusterCrids(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "shouldGetClusterCrid",
+			name: "shouldGetClusterCidr",
 			args: args{
 				podCIDR: "172.168.0.0/24",
 			},
@@ -126,13 +126,13 @@ func TestKubernetes_ClusterCrids(t *testing.T) {
 			ops := &options.ConnectOptions{
 				CIDR: tt.args.podCIDR,
 			}
-			gotCidrs, err := k.ClusterCrids("default", ops)
+			gotCidrs, err := k.ClusterCidrs("default", ops)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Kubernetes.ClusterCrids() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotCidrs, tt.wantCidrs) {
-				t.Errorf("Kubernetes.ClusterCrids() = %v, want %v", gotCidrs, tt.wantCidrs)
+				t.Errorf("Kubernetes.ClusterCidrs() = %v, want %v", gotCidrs, tt.wantCidrs)
 			}
 		})
 	}
