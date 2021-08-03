@@ -38,13 +38,13 @@ tomcat   ClusterIP   172.16.255.111   <none>        8080/TCP   34s
 
 #### ** Mac/Linux **
 
-> 在Mac/Linux环境下默认采用`vpn`模式
+> 在Mac/Linux环境下默认采用`vpn`模式，该模式采用`sshuttle`工具建立本地与集群的虚拟网络通道，请预先安装此工具，详见[sshuttle文档](https://github.com/sshuttle/sshuttle#obtaining-sshuttle)
 
 使用`connect`命令建立本地到集群的VPN网络，注意该命令需要管理员权限，普通用户需加`sudo`执行：
 
 ```bash
 $ sudo ktctl connect
-00:00AM INF Connect start at 43941
+00:00AM INF KtConnect start at 43941
 00:00AM INF Private Key generated
 00:00AM INF Public key generated
 00:00AM INF Successful create ssh config map kt-connect-public-key-nzxo
@@ -83,13 +83,13 @@ kt-connect demo v1
 
 #### ** Windows **
 
-> 在Windows环境下默认采用`socks`模式，且当前默认仅支持服务短域名
+> 在Windows环境下默认采用`socks`模式
 
-使用`connect`命令建立本地到集群的Socks代理，注意该命令需操作系统注册表，请确保当前用户具有管理员权限：
+使用`connect`命令建立本地到集群的Socks代理，注意该命令需要当前用户具有管理员权限：
 
 ```bash
-$ ktctl connect                                   
-00:00AM INF Connect start at 46276
+$ ktctl connect                     
+00:00AM INF KtConnect start at 46276
 00:00AM INF Private Key generated
 00:00AM INF Public key generated
 00:00AM INF Successful create ssh config map kt-connect-public-key-wiku
@@ -118,6 +118,12 @@ $ curl http://172.21.6.39:8080    # 在本地访问ClusterIP
 kt-connect demo v1
 
 $ curl http://tomcat:8080         # 使用<service>作为域名访问服务
+kt-connect demo v1
+
+$ curl http://tomcat.default:8080     # 使用<servicename>.<namespace>域名访问服务
+kt-connect demo v1
+
+$ curl http://tomcat.default.svc.cluster.local:8080    # 使用集群内完整域名访问服务
 kt-connect demo v1
 ```
 
@@ -162,6 +168,7 @@ KtConnect提供了三种能够让集群访问本地服务的命令，分别用�
 
 ```bash
 $ ktctl exchange tomcat --expose 8080
+00:00AM INF KtConnect start at 47813
 00:00AM INF Private Key generated
 00:00AM INF Public key generated
 00:00AM INF Successful create ssh config map kt-exchange-public-key-qmst
@@ -213,7 +220,8 @@ kt-connect local v2
 ```bash
 $ kubectl exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 
-$ ktctl mesh tomcat --expose 8080    
+$ ktctl mesh tomcat --expose 8080  
+00:00AM INF KtConnect start at 49423
 00:00AM INF Private Key generated
 00:00AM INF Public key generated
 00:00AM INF Successful create ssh config map kt-mesh-public-key-tekx
@@ -256,6 +264,7 @@ kt-connect demo v1
 
 ```bash
 $ ktctl provide tomcat-preview --expose 8080
+00:00AM INF KtConnect start at 41285
 10:55PM INF Private Key generated
 10:55PM INF Public key generated
 10:55PM INF Successful create ssh config map kt-provide-public-key-qgju

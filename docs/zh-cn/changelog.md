@@ -2,10 +2,14 @@
 
 ### 0.1.0
 
+> 发布时间：待定
+
+* 增强Windows下的`connect`命令支持
 * 使用`provide`命令替代`run`命令
 * 新增`clean`命令，清理集群中残留的Shadow Pods
-* 增强Windows下的`connect`命令支持
 * 支持`service.namespace.svc`结构的服务域名解析
+* 完善缺失`sshuttle`依赖等运行时错误的报错信息
+* dump2hosts支持完整服务域名
 
 ### 0.0.13-rc13
 
