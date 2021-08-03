@@ -85,8 +85,8 @@ export default class CoreLayout extends Component {
               className="pull-right"
             >
               <Menu.Item key="feedback"><a href="https://github.com/rdc-incubator/kt-docs/issues/new" target="_blank" rel="noopener noreferrer">Feedback</a></Menu.Item>
-              <Menu.Item key="doc"><a href="https://rdc-incubator.github.io/kt-docs/#/" target="_blank" rel="noopener noreferrer">Documents</a></Menu.Item>
-              <Menu.Item key="downloads"><a href="https://rdc-incubator.github.io/kt-docs/#/downloads" target="_blank" rel="noopener noreferrer">Cli Download</a></Menu.Item>
+              <Menu.Item key="doc"><a href="https://alibaba.github.io/kt-connect/" target="_blank" rel="noopener noreferrer">Documents</a></Menu.Item>
+              <Menu.Item key="downloads"><a href="https://alibaba.github.io/kt-connect/#/en-us/downloads" target="_blank" rel="noopener noreferrer">Cli Download</a></Menu.Item>
             </SubMenu>
           </Menu>
         </Header>
