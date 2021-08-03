@@ -72,7 +72,7 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	shadow := connect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		"172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
-	kubernetes.EXPECT().ClusterCrids(gomock.Any(), gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
+	kubernetes.EXPECT().ClusterCidrs(gomock.Any(), gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
 
 	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", gomock.Any(), []string{"10.10.10.0/24"}, gomock.Any()).Return(nil)
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
@@ -117,7 +117,7 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 	shadow := connect.NewMockShadowInterface(ctl)
 	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		"172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
-	kubernetes.EXPECT().ClusterCrids(gomock.Any(), gomock.Any()).Return([]string{}, errors.New("fail to get crid"))
+	kubernetes.EXPECT().ClusterCidrs(gomock.Any(), gomock.Any()).Return([]string{}, errors.New("fail to get cidr"))
 
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)

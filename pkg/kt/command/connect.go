@@ -36,33 +36,34 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
-	if util.IsDaemonRunning(options.RuntimeOptions.PidFile) {
-		return fmt.Errorf("another connect process already running with %s, exiting", options.RuntimeOptions.PidFile)
+func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
+	if util.IsDaemonRunning(common.ComponentConnect) {
+		return fmt.Errorf("another connect process already running, exiting")
 	}
-	ch := SetUpCloseHandler(cli, options, "connect")
+
+	options.RuntimeOptions.Component = common.ComponentConnect
+	err := util.WritePidFile(common.ComponentConnect)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("KtConnect start at %d", os.Getpid())
+
+	ch := SetUpCloseHandler(cli, options, common.ComponentConnect)
 	if err = connectToCluster(cli, options); err != nil {
-		return
+		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
-	return
+	return nil
 }
 
 func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
-
-	pid, err := util.WritePidFile(options.RuntimeOptions.PidFile)
-	if err != nil {
-		return
-	}
-	log.Info().Msgf("Connect start at %d", pid)
-
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return
@@ -87,7 +88,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-	cidrs, err := kubernetes.ClusterCrids(options.Namespace, options.ConnectOptions)
+	cidrs, err := kubernetes.ClusterCidrs(options.Namespace, options.ConnectOptions)
 	if err != nil {
 		return
 	}
@@ -115,24 +116,24 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 }
 
 func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
-	hosts := kubernetes.ServiceHosts(options.Namespace)
-	for k, v := range hosts {
-		log.Info().Msgf("Service found: %s %s", k, v)
+	var namespaceToDump = options.ConnectOptions.Dump2HostsNamespaces
+	if len(namespaceToDump) == 0 {
+		namespaceToDump = append(namespaceToDump, options.Namespace)
 	}
-	if len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
-		for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
-			if namespace == options.Namespace {
+	hosts := map[string]string{}
+	for _, namespace := range namespaceToDump {
+		log.Debug().Msgf("Search service in %s namespace...", namespace)
+		singleHosts := kubernetes.ServiceHosts(namespace)
+		for svc, ip := range singleHosts {
+			if ip == "" || ip == "None" {
 				continue
 			}
-			log.Debug().Msgf("Search service in %s namespace...", namespace)
-			singleHosts := kubernetes.ServiceHosts(namespace)
-			for svc, ip := range singleHosts {
-				if ip == "" || ip == "None" {
-					continue
-				}
-				log.Info().Msgf("Service found: %s.%s %s", svc, namespace, ip)
-				hosts[svc+"."+namespace] = ip
+			log.Debug().Msgf("Service found: %s.%s %s", svc, namespace, ip)
+			if namespace == options.Namespace {
+				hosts[svc] = ip
 			}
+			hosts[svc+"."+namespace] = ip
+			hosts[svc+"."+namespace+"."+options.ConnectOptions.ClusterDomain] = ip
 		}
 	}
 	util.DumpHosts(hosts)

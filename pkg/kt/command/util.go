@@ -52,8 +52,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
-	e, _ := util.PathExists(options.RuntimeOptions.PidFile)
-	if !e {
+	if !util.IsPidFileExist() {
 		log.Info().Msgf("Workspace already cleaned")
 		return
 	}
@@ -91,11 +90,12 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 }
 
 func cleanLocalFiles(options *options.DaemonOptions) {
-	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
-		log.Info().Msgf("- Removing pid %s", options.RuntimeOptions.PidFile)
-		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, options.RuntimeOptions.Component, os.Getpid())
+	if _, err := os.Stat(pidFile); err == nil {
+		log.Info().Msgf("- Removing pid %s", pidFile)
+		if err = os.Remove(pidFile); err != nil {
 			log.Error().Err(err).
-				Msgf("Stop process:%s failed", options.RuntimeOptions.PidFile)
+				Msgf("Stop process:%s failed", pidFile)
 		}
 	}
 

@@ -57,13 +57,20 @@ func newProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // Provide create a new service in cluster
 func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(cli, options, "provide")
+	options.RuntimeOptions.Component = common.ComponentProvide
+	err := util.WritePidFile(common.ComponentProvide)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("KtConnect start at %d", os.Getpid())
+
+	ch := SetUpCloseHandler(cli, options, common.ComponentProvide)
 	if err := provide(serviceName, cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

@@ -16,7 +16,7 @@ type CMDContext struct {
 	Ctx  context.Context
 	Cmd  *exec.Cmd
 	Name string
-	Stop chan bool // notify parent current Cmd occur error
+	Stop chan string // notify parent current Cmd occur error
 }
 
 // RunAndWait run cmd
@@ -63,8 +63,6 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
 	go func() {
 		if err = cmdCtx.Cmd.Wait(); err != nil {
 			log.Debug().Msgf("Background process %s exit abnormally: %s", cmdCtx.Name, err.Error())
-			cmdCtx.Stop <- true
-			return
 		}
 		log.Info().Msgf("- Finished %s with context", cmdCtx.Name)
 	}()
@@ -95,11 +93,11 @@ func runCmd(cmdCtx *CMDContext) error {
 
 	err = cmd.Start()
 	if err != nil {
-		cmdCtx.Stop <- true
+		cmdCtx.Stop <- err.Error()
 		return err
 	}
 
-	time.Sleep(time.Duration(1) * time.Second)
+	time.Sleep(time.Duration(100) * time.Millisecond)
 	pid := cmd.Process.Pid
 	log.Info().Msgf("Start %s at pid: %d", cmdCtx.Name, pid)
 	// will kill the process when parent cancel
@@ -109,7 +107,7 @@ func runCmd(cmdCtx *CMDContext) error {
 			case <-cmdCtx.Ctx.Done():
 				err := cmd.Process.Kill()
 				if err != nil {
-					log.Debug().Msgf("Failed to kill process %s", err.Error())
+					log.Debug().Msgf("Process %s already competed", pid)
 				}
 			}
 		}
