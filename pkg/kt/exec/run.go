@@ -107,7 +107,7 @@ func runCmd(cmdCtx *CMDContext) error {
 			case <-cmdCtx.Ctx.Done():
 				err := cmd.Process.Kill()
 				if err != nil {
-					log.Debug().Msgf("Process %s already competed", pid)
+					log.Debug().Msgf("Process %d already competed", pid)
 				}
 			}
 		}

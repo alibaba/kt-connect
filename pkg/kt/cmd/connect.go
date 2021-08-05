@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd/api"
@@ -74,11 +73,6 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 			if err := opt.Complete(c, args); err != nil {
 				return err
 			}
-
-			if errs := opt.Validate(); len(errs) != 0 {
-				return utilerrors.NewAggregate(errs)
-			}
-
 			if err := opt.Run(); err != nil {
 				return err
 			}
@@ -110,12 +104,6 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().StringVarP(&opt.Dump2hosts, "dump2hosts", "", "", "specify namespaces to dump service into local hosts file")
 
 	return cmd
-}
-
-// Validate validate the connection options
-func (o *ConnectOptions) Validate() []error {
-	// TODO: check parameters here
-	return nil
 }
 
 // Complete ...

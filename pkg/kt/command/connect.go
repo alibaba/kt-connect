@@ -193,16 +193,12 @@ func allocateTunIP(cidr string) (srcIP, destIP string, err error) {
 	rge, err := ipallocator.NewAllocatorCIDRRange(ipnet, func(max int, rangeSpec string) (allocator.Interface, error) {
 		return allocator.NewContiguousAllocationMap(max, rangeSpec), nil
 	})
-	if err != nil {
-		return "", "", err
+	if err == nil {
+		ip1, _ := rge.AllocateNext()
+		ip2, _ := rge.AllocateNext()
+		if ip1 != nil && ip2 != nil {
+			return ip1.String(), ip2.String(), nil
+		}
 	}
-	ip1, err := rge.AllocateNext()
-	if err != nil {
-		return "", "", err
-	}
-	ip2, err := rge.AllocateNext()
-	if err != nil {
-		return "", "", err
-	}
-	return ip1.String(), ip2.String(), nil
+	return "", "", err
 }
