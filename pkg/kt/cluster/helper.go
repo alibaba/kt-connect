@@ -195,7 +195,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	annotations[common.KTLastHeartBeat] = strconv.FormatInt(time.Now().Unix(), 10)
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
-	return &appV1.Deployment{
+	dep := &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   namespace,
@@ -221,6 +221,12 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 			},
 		},
 	}
+
+	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
+		addTunHostPath(dep)
+	}
+
+	return dep
 }
 
 func getSSHVolume(volume string) v1.Volume {
@@ -241,4 +247,30 @@ func getSSHVolume(volume string) v1.Volume {
 		},
 	}
 	return sshVolume
+}
+
+func addTunHostPath(dep *appV1.Deployment) {
+	path := "/dev/net/tun"
+
+	dep.Spec.Template.Spec.Volumes = append(dep.Spec.Template.Spec.Volumes, v1.Volume{
+		Name: "tun",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{Path: path},
+		},
+	})
+
+	for i := range dep.Spec.Template.Spec.Containers {
+		c := &dep.Spec.Template.Spec.Containers[i]
+		if c.Name != "standalone" {
+			continue
+		} else {
+			c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{
+				Name:      "tun",
+				MountPath: path,
+			})
+
+			c.SecurityContext.Capabilities.Add = append(c.SecurityContext.Capabilities.Add, "NET_ADMIN")
+			break
+		}
+	}
 }

@@ -107,6 +107,18 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.LocalDomain,
 		},
 		cli.StringFlag{
+			Name:        "tunName",
+			Usage:       "The tun device name to create on client machine (Alpha)",
+			Value:       "tun0",
+			Destination: &options.ConnectOptions.TunName,
+		},
+		cli.StringFlag{
+			Name:        "tunCidr",
+			Usage:       "The cidr used by local tun and peer tun device, at least 4 ips. This cidr MUST NOT overlay with kubernetes service cidr and pod cidr",
+			Value:       "10.1.1.0/30",
+			Destination: &options.ConnectOptions.TunCidr,
+		},
+		cli.StringFlag{
 			Name:        "clusterDomain",
 			Usage:       "The cluster domain provided to kubernetes api-server",
 			Value:       "cluster.local",
