@@ -17,7 +17,9 @@ if [ -n "${CLIENT_TUN_IP}" -a -n "${SERVER_TUN_IP}" ]; then
   echo "create tun device tun1"
   ip tuntap add dev tun1 mod tun
   echo "setup device ip"
-  ifconfig tun1 "${CLIENT_TUN_IP}" "${SERVER_TUN_IP}"  netmask 255.255.255.252
+  ip address add "${SERVER_TUN_IP}"/"${TUN_MASK_LEN}" dev tun1
+  echo "turn device up"
+  ip link set dev tun1 up
 
   echo "set up iptables"
   iptables -t nat -A POSTROUTING -s "${CLIENT_TUN_IP}" -o eth0 -j MASQUERADE

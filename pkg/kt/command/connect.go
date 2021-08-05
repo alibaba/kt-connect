@@ -166,6 +166,7 @@ func envs(options *options.DaemonOptions) map[string]string {
 	if options.ConnectOptions.Method == common.ConnectMethodTun {
 		envs[common.ClientTunIP] = options.ConnectOptions.SourceIP
 		envs[common.ServerTunIP] = options.ConnectOptions.DestIP
+		envs[common.TunMaskLength] = util.ExtractNetMaskFromCidr(options.ConnectOptions.TunCidr)
 	}
 	return envs
 }

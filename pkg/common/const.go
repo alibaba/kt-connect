@@ -4,6 +4,7 @@ const (
 	EnvVarLocalDomain   = "LOCAL_DOMAIN"
 	ClientTunIP         = "CLIENT_TUN_IP"
 	ServerTunIP         = "SERVER_TUN_IP"
+	TunMaskLength       = "TUN_MASK_LEN"
 	ControlBy           = "control-by"
 	KubernetesTool      = "kt"
 	ComponentConnect    = "connect"
