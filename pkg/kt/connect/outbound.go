@@ -4,17 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/resolvconf"
-	"io/ioutil"
-	"sync"
-
 	"github.com/alibaba/kt-connect/pkg/kt/channel"
-
-	"github.com/alibaba/kt-connect/pkg/kt/options"
-
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"github.com/rs/zerolog/log"
+	"io/ioutil"
 )
 
 // Outbound start vpn connection
@@ -33,8 +29,8 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 			err = startTunConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
 		}
 	default:
-		stop, rootCtx, err := forwardSshPortToLocal(cli, s.Options, name)
-		if err == nil {
+		stop, rootCtx, err2 := forwardSshPortToLocal(cli, s.Options, name)
+		if err2 == nil {
 			if s.Options.ConnectOptions.Method == common.ConnectMethodSocks5 {
 				err = startSocks5Connection(ssh, s.Options)
 			} else {
@@ -50,37 +46,29 @@ func outbound(s *Shadow, name, podIP string, credential *util.SSHCredential, cid
 	return
 }
 
-func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions, name string) (chan bool, context.Context, error) {
-	stop := make(chan bool)
+func forwardSshPortToLocal(cli exec.CliInterface, options *options.DaemonOptions, name string) (chan string, context.Context, error) {
+	stop := make(chan string)
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
 	go func() {
 		util.StopBackendProcess(<-stop, cancel)
 	}()
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	var err error
-	go func(wg *sync.WaitGroup) {
-		err = exec.BackgroundRunWithCtx(&exec.CMDContext{
-			Ctx: rootCtx,
-			Cmd: cli.Kubectl().PortForward(
-				options.Namespace,
-				name,
-				common.SshPort,
-				options.ConnectOptions.SSHPort),
-			Name: "port-forward",
-			Stop: stop,
-		})
-		util.WaitPortBeReady(options.WaitTime, options.ConnectOptions.SSHPort)
-		wg.Done()
-	}(&wg)
-
-	wg.Wait()
+	err := exec.BackgroundRunWithCtx(&exec.CMDContext{
+		Ctx: rootCtx,
+		Cmd: cli.Kubectl().PortForward(
+			options.Namespace,
+			name,
+			common.SshPort,
+			options.ConnectOptions.SSHPort),
+		Name: "port-forward",
+		Stop: stop,
+	})
 	if err != nil {
 		return nil, nil, err
 	}
-	return stop, rootCtx, err
+	util.WaitPortBeReady(options.WaitTime, options.ConnectOptions.SSHPort)
+	return stop, rootCtx, nil
 }
 
 func startSocks4Connection(cli exec.CliInterface, options *options.DaemonOptions, name string) (err error) {
@@ -119,20 +107,19 @@ func showSetupSuccessfulMessage(protocol string, port int) {
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
-	options *options.DaemonOptions, podIP string, cidrs []string, stop chan bool) (err error) {
-	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan string) (err error) {
+	return exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx: rootCtx,
 		Cmd: cli.SSHUttle().Connect(credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort,
 			podIP, options.ConnectOptions.DisableDNS, cidrs, options.Debug),
 		Name: "vpn(sshuttle)",
 		Stop: stop,
 	})
-	return err
 }
 
 // startTunConnection creates a ssh tunnel to pod
 func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
-	options *options.DaemonOptions, podIP string, cidrs []string, stop chan bool) (err error) {
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan string) (err error) {
 
 	// 1. Create tun device.
 	err = exec.RunAndWait(cli.SSHTunnelling().AddDevice(), "add_device", options.Debug)

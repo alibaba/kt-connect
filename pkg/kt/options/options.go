@@ -28,6 +28,7 @@ type ConnectOptions struct {
 	LocalDomain          string
 	TunName              string
 	TunCidr              string
+	ClusterDomain        string
 
 	// Used for tun mode
 	SourceIP string

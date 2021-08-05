@@ -59,7 +59,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		<-util.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
@@ -134,24 +134,24 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 }
 
 func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
-	hosts := kubernetes.ServiceHosts(options.Namespace)
-	for k, v := range hosts {
-		log.Info().Msgf("Service found: %s %s", k, v)
+	var namespaceToDump = options.ConnectOptions.Dump2HostsNamespaces
+	if len(namespaceToDump) == 0 {
+		namespaceToDump = append(namespaceToDump, options.Namespace)
 	}
-	if len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
-		for _, namespace := range options.ConnectOptions.Dump2HostsNamespaces {
-			if namespace == options.Namespace {
+	hosts := map[string]string{}
+	for _, namespace := range namespaceToDump {
+		log.Debug().Msgf("Search service in %s namespace...", namespace)
+		singleHosts := kubernetes.ServiceHosts(namespace)
+		for svc, ip := range singleHosts {
+			if ip == "" || ip == "None" {
 				continue
 			}
-			log.Debug().Msgf("Search service in %s namespace...", namespace)
-			singleHosts := kubernetes.ServiceHosts(namespace)
-			for svc, ip := range singleHosts {
-				if ip == "" || ip == "None" {
-					continue
-				}
-				log.Info().Msgf("Service found: %s.%s %s", svc, namespace, ip)
-				hosts[svc+"."+namespace] = ip
+			log.Debug().Msgf("Service found: %s.%s %s", svc, namespace, ip)
+			if namespace == options.Namespace {
+				hosts[svc] = ip
 			}
+			hosts[svc+"."+namespace] = ip
+			hosts[svc+"."+namespace+"."+options.ConnectOptions.ClusterDomain] = ip
 		}
 	}
 	util.DumpHosts(hosts)

@@ -11,10 +11,10 @@ import (
 	ps "github.com/mitchellh/go-ps"
 )
 
-var interrupt = make(chan bool)
+var interrupt = make(chan string)
 
 // StopBackendProcess ...
-func StopBackendProcess(stop bool, cancel func()) {
+func StopBackendProcess(stop string, cancel func()) {
 	if cancel == nil {
 		return
 	}
@@ -23,7 +23,7 @@ func StopBackendProcess(stop bool, cancel func()) {
 }
 
 // Interrupt ...
-func Interrupt() chan bool {
+func Interrupt() chan string {
 	return interrupt
 }
 

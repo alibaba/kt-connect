@@ -70,13 +70,13 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.Method,
 		},
 		cli.IntFlag{
-			Name:        "proxy",
+			Name:        "proxyPort",
 			Value:       2223,
 			Usage:       "when should method socks5, you can choice which port to proxy",
 			Destination: &options.ConnectOptions.SocksPort,
 		},
 		cli.IntFlag{
-			Name:        "port",
+			Name:        "sshPort",
 			Value:       2222,
 			Usage:       "Local SSH Proxy port",
 			Destination: &options.ConnectOptions.SSHPort,
@@ -117,6 +117,12 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "The cidr used by local tun and peer tun device, at least 4 ips. This cidr MUST NOT overlay with kubernetes service cidr and pod cidr",
 			Value:       "10.1.1.0/30",
 			Destination: &options.ConnectOptions.TunCidr,
+		},
+		cli.StringFlag{
+			Name:        "clusterDomain",
+			Usage:       "The cluster domain provided to kubernetes api-server",
+			Value:       "cluster.local",
+			Destination: &options.ConnectOptions.ClusterDomain,
 		},
 	}
 }
