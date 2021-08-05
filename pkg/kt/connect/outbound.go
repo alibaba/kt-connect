@@ -143,7 +143,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	// 2. Setup device ip
-	err = exec.RunAndWait(cli.SSHTunnelling().SetupDeviceIP(), "setup_device", options.Debug)
+	err = exec.RunAndWait(cli.SSHTunnelling().SetDeviceIP(), "set_device_ip", options.Debug)
 	if err != nil {
 		// clean up
 		return err
@@ -151,7 +151,15 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 		log.Info().Msgf("Set tun device ip successful")
 	}
 
-	// 3. Create ssh tunnel.
+	// 3. Set device up.
+	err = exec.RunAndWait(cli.SSHTunnelling().SetDeviceUp(), "set_device_up", options.Debug)
+	if err != nil {
+		return err
+	} else {
+		log.Info().Msgf("Set tun device up successful")
+	}
+
+	// 4. Create ssh tunnel.
 	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx:  rootCtx,
 		Cmd:  cli.SSH().TunnelToRemote(0, credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort),
@@ -165,7 +173,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 		log.Info().Msgf("Create ssh tun successful")
 	}
 
-	// 4. Add route to kubernetes cluster.
+	// 5. Add route to kubernetes cluster.
 	for i := range cidrs {
 		err = exec.RunAndWait(cli.SSHTunnelling().AddRoute(cidrs[i]), "add_route", options.Debug)
 		if err != nil {
@@ -177,7 +185,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	if !options.ConnectOptions.DisableDNS {
-		// 5. Setup dns config.
+		// 6. Setup dns config.
 		// This will overwrite the file /etc/resolv.conf
 		err = (&resolvconf.Conf{}).AddNameserver(podIP)
 		if err == nil {

@@ -1,15 +1,16 @@
 package sshtunnelling
 
 import (
+	"fmt"
 	"os/exec"
 )
 
 // AddRoute add route to kubernetes network.
 func (s *Cli) AddRoute(cidr string) *exec.Cmd {
-	// run command: route add -net 10.1.1.0/30 dev tun0
-	cmd := exec.Command("route",
+	// run command: ip route add 10.96.0.0/16 dev tun0
+	cmd := exec.Command("ip",
+		"route",
 		"add",
-		"-net",
 		cidr,
 		"dev",
 		s.TunName,
@@ -30,15 +31,26 @@ func (s *Cli) AddDevice() *exec.Cmd {
 	)
 }
 
-// SetupDeviceIP set the ip of tun device
-func (s *Cli) SetupDeviceIP() *exec.Cmd {
-	// run command: ifconfig tun0 10.1.1.1 10.1.1.2 netmask 255.255.255.252
-	return exec.Command("ifconfig",
+// SetDeviceIP set the ip of tun device
+func (s *Cli) SetDeviceIP() *exec.Cmd {
+	// run command: ip address add 10.1.1.1/30 dev tun0
+	return exec.Command("ip",
+		"address",
+		"add",
+		fmt.Sprintf("%s/%s", s.SourceIP, s.MaskLen),
+		"dev",
 		s.TunName,
-		s.SourceIP,
-		s.DestIP,
-		"netmask",
-		"255.255.255.252",
+	)
+}
+
+func (s *Cli) SetDeviceUp() *exec.Cmd {
+	// run command: ip link set dev tun0 up
+	return exec.Command("ip",
+		"link",
+		"set",
+		"dev",
+		s.TunName,
+		"up",
 	)
 }
 

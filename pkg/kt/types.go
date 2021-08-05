@@ -5,6 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"strings"
 )
 
 // CliInterface ...
@@ -36,10 +37,12 @@ func (c *Cli) Shadow() connect.ShadowInterface {
 
 // Exec ...
 func (c *Cli) Exec() exec.CliInterface {
+	maskLen := c.Options.ConnectOptions.TunCidr[strings.Index(c.Options.ConnectOptions.TunCidr, "/")+1:]
 	return &exec.Cli{
 		KubeOptions: c.Options.KubeOptions,
 		TunName:     c.Options.ConnectOptions.TunName,
 		SourceIP:    c.Options.ConnectOptions.SourceIP,
 		DestIP:      c.Options.ConnectOptions.DestIP,
+		MaskLen:     maskLen,
 	}
 }
