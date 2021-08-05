@@ -17,10 +17,10 @@ if [ -n "${CLIENT_TUN_IP}" -a -n "${SERVER_TUN_IP}" ]; then
   echo "create tun device tun1"
   ip tuntap add dev tun1 mod tun
   echo "setup device ip"
-  ifconfig tun1 ${SERVER_TUN_IP} ${CLIENT_TUN_IP} netmask 255.255.255.252
+  ifconfig tun1 "${CLIENT_TUN_IP}" "${SERVER_TUN_IP}"  netmask 255.255.255.252
 
   echo "set up iptables"
-  iptables -t nat -A POSTROUTING -s ${SERVER_TUN_IP} -o eth0 -j MASQUERADE
+  iptables -t nat -A POSTROUTING -s "${CLIENT_TUN_IP}" -o eth0 -j MASQUERADE
 fi
 
 if [[ "${1}" = "--debug" ]]; then

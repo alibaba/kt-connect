@@ -22,6 +22,8 @@ type Cli struct {
 	TunName  string
 	SourceIP string
 	DestIP   string
+	// MaskLen the net mask length of tun cidr
+	MaskLen string
 }
 
 // Kubectl ...
@@ -44,5 +46,6 @@ func (c *Cli) SSHTunnelling() sshtunnelling.CliInterface {
 		TunName:  c.TunName,
 		SourceIP: c.SourceIP,
 		DestIP:   c.DestIP,
+		MaskLen:  c.MaskLen,
 	}
 }
