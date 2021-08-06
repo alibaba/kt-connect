@@ -18,19 +18,19 @@ func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, 
 	var rootCtx context.Context
 	switch s.Options.ConnectOptions.Method {
 	case common.ConnectMethodSocks:
-		err = forwardSocksTunnelToLocal(s.Options, podName)
+		err = forwardSocksTunnelToLocal(cli.PortForward(), s.Options, podName)
 	case common.ConnectMethodTun:
-		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
+		stop, rootCtx, err = forwardSSHTunnelToLocal(cli.PortForward(), s.Options, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
 			err = startTunConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
 		}
 	case common.ConnectMethodSocks5:
-		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
+		stop, rootCtx, err = forwardSSHTunnelToLocal(cli.PortForward(), s.Options, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
 			err = startSocks5Connection(cli.Channel(), s.Options)
 		}
 	default:
-		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
+		stop, rootCtx, err = forwardSSHTunnelToLocal(cli.PortForward(), s.Options, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
 			err = startVPNConnection(rootCtx, cli, SSHVPNRequest{
 				RemoteSSHHost:          credential.RemoteHost,

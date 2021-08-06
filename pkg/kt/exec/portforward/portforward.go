@@ -17,8 +17,8 @@ import (
 	"time"
 )
 
-// PortForwardAPodRequest ...
-type PortForwardAPodRequest struct {
+// Request ...
+type Request struct {
 	// RestConfig is the kubernetes config
 	RestConfig *rest.Config
 	// PodName pod name
@@ -38,7 +38,7 @@ type PortForwardAPodRequest struct {
 }
 
 // ForwardPodPortToLocal ...
-func ForwardPodPortToLocal(request PortForwardAPodRequest) (chan struct{}, context.Context, error) {
+func (s *Cli) ForwardPodPortToLocal(request Request) (chan struct{}, context.Context, error) {
 	stop := make(chan struct{})
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
@@ -64,7 +64,7 @@ func ForwardPodPortToLocal(request PortForwardAPodRequest) (chan struct{}, conte
 }
 
 // PortForward ...
-func portForward(req PortForwardAPodRequest) error {
+func portForward(req Request) error {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Namespace, req.PodName)
 	hostIP := strings.TrimLeft(req.RestConfig.Host, "htps:/")
 

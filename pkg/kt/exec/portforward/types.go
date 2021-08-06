@@ -6,7 +6,7 @@ import (
 
 // CliInterface ...
 type CliInterface interface {
-	ForwardPodPortToLocal(request PortForwardAPodRequest) (chan struct{}, context.Context, error)
+	ForwardPodPortToLocal(request Request) (chan struct{}, context.Context, error)
 }
 
 // Cli ...

@@ -4,6 +4,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	fakeExec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -15,12 +16,12 @@ import (
 
 func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 
-	execCli, sshuttle, kubectl, sshChannel := getHandlers(t)
+	execCli, _, _, sshChannel, portForward := getHandlers(t)
 
 	sshChannel.EXPECT().StartSocks5Proxy(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
-	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectl)
-	execCli.EXPECT().SSHUttle().AnyTimes().Return(sshuttle)
+	portForward.EXPECT().ForwardPodPortToLocal(gomock.Any()).AnyTimes().Return(make(chan struct{}), nil, nil)
+	execCli.EXPECT().Channel().AnyTimes().Return(sshChannel)
+	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
 	socksOptions := options.NewDaemonOptions()
 	socksOptions.ConnectOptions.Method = common.ConnectMethodSocks5
@@ -47,12 +48,13 @@ func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 
 func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
 
-	execCli, sshuttle, kubectl, sshChannel := getHandlers(t)
+	execCli, sshuttle, _, sshChannel, portForward := getHandlers(t)
 
 	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
-	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectl)
+	portForward.EXPECT().ForwardPodPortToLocal(gomock.Any()).AnyTimes().Return(make(chan struct{}), nil, nil)
 	execCli.EXPECT().SSHUttle().AnyTimes().Return(sshuttle)
 	execCli.EXPECT().Channel().AnyTimes().Return(sshChannel)
+	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
 	vpnOptions := options.NewDaemonOptions()
 	vpnOptions.WaitTime = 0
@@ -76,13 +78,14 @@ func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
 	}
 }
 
-func getHandlers(t *testing.T) (*fakeExec.MockCliInterface, *sshuttle.MockCliInterface, *kubectl.MockCliInterface, *sshchannel.MockChannel) {
+func getHandlers(t *testing.T) (*fakeExec.MockCliInterface, *sshuttle.MockCliInterface, *kubectl.MockCliInterface, *sshchannel.MockChannel, *portforward.MockCliInterface) {
 	ctl := gomock.NewController(t)
 	execCli := fakeExec.NewMockCliInterface(ctl)
 	sshuttle := sshuttle.NewMockCliInterface(ctl)
 	kubectl := kubectl.NewMockCliInterface(ctl)
 	sshChannel := sshchannel.NewMockChannel(ctl)
-	return execCli, sshuttle, kubectl, sshChannel
+	portForward := portforward.NewMockCliInterface(ctl)
+	return execCli, sshuttle, kubectl, sshChannel, portForward
 }
 
 type OutboundArgs struct {

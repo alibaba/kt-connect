@@ -14,21 +14,21 @@ import (
 	"io/ioutil"
 )
 
-func forwardSSHTunnelToLocal(s *Shadow, podName string, localSSHPort int) (chan struct{}, context.Context, error) {
-	stop, rootCtx, err := portforward.ForwardPodPortToLocal(portforward.PortForwardAPodRequest{
-		RestConfig: s.Options.RuntimeOptions.RestConfig,
+func forwardSSHTunnelToLocal(cli portforward.CliInterface, options *options.DaemonOptions, podName string, localSSHPort int) (chan struct{}, context.Context, error) {
+	stop, rootCtx, err := cli.ForwardPodPortToLocal(portforward.Request{
+		RestConfig: options.RuntimeOptions.RestConfig,
 		PodName:    podName,
-		Namespace:  s.Options.Namespace,
+		Namespace:  options.Namespace,
 		PodPort:    common.SshPort,
 		LocalPort:  localSSHPort,
-		Timeout:    s.Options.WaitTime,
+		Timeout:    options.WaitTime,
 	})
 	return stop, rootCtx, err
 }
 
-func forwardSocksTunnelToLocal(options *options.DaemonOptions, podName string) error {
+func forwardSocksTunnelToLocal(cli portforward.CliInterface, options *options.DaemonOptions, podName string) error {
 	showSetupSuccessfulMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
-	_, _, err := portforward.ForwardPodPortToLocal(portforward.PortForwardAPodRequest{
+	_, _, err := cli.ForwardPodPortToLocal(portforward.Request{
 		RestConfig: options.RuntimeOptions.RestConfig,
 		PodName:    podName,
 		Namespace:  options.Namespace,
