@@ -118,9 +118,10 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 		}
 	}
 
-	if _, err := os.Stat(".jvmrc"); err == nil {
+	jvmrcFilePath := util.GetJvmrcFilePath(options.ConnectOptions.JvmrcDir)
+	if jvmrcFilePath != "" {
 		log.Info().Msg("Removing .jvmrc")
-		if err = os.Remove(".jvmrc"); err != nil {
+		if err := os.Remove(jvmrcFilePath); err != nil {
 			log.Error().Err(err).Msg("Delete .jvmrc failed")
 		}
 	}

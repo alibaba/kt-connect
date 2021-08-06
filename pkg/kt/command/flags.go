@@ -124,6 +124,11 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Value:       "cluster.local",
 			Destination: &options.ConnectOptions.ClusterDomain,
 		},
+		cli.StringFlag{
+			Name:        "jvmrc",
+			Usage:       "Generate .jvmrc file to specified folder",
+			Destination: &options.ConnectOptions.JvmrcDir,
+		},
 	}
 }
 

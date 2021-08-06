@@ -41,8 +41,11 @@ func forwardSocksTunnelToLocal(cli portforward.CliInterface, options *options.Da
 
 func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOptions) (err error) {
 	showSetupSuccessfulMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
-	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
-		options.ConnectOptions.SocksPort)), 0644)
+	jvmrcFilePath := util.GetJvmrcFilePath(options.ConnectOptions.JvmrcDir)
+	if jvmrcFilePath != "" {
+		ioutil.WriteFile(jvmrcFilePath, []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
+			options.ConnectOptions.SocksPort)), 0644)
+	}
 
 	return ssh.StartSocks5Proxy(
 		&sshchannel.Certificate{

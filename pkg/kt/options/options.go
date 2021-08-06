@@ -30,6 +30,7 @@ type ConnectOptions struct {
 	TunName              string
 	TunCidr              string
 	ClusterDomain        string
+	JvmrcDir             string
 
 	// Used for tun mode
 	SourceIP string
