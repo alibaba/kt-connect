@@ -1,91 +1,58 @@
 package connect
 
 import (
-	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/alibaba/kt-connect/pkg/kt/channel"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
-
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
 
 // Inbound mapping local port from cluster
-func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredential) (err error) {
-	kubernetesCli := &kubectl.Cli{KubeOptions: s.Options.KubeOptions}
-	ssh := &channel.SSHChannel{}
+func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, _ *util.SSHCredential) (err error) {
+	ssh := &sshchannel.SSHChannel{}
+	cli := &portforward.Cli{}
 	log.Info().Msg("Creating shadow inbound(remote->local)")
-	return inbound(exposePorts, podName, remoteIP, credential, s.Options, kubernetesCli, ssh)
+	return inbound(s, exposePorts, podName, remoteIP, ssh, cli)
 }
 
-func inbound(exposePorts, podName, remoteIP string, credential *util.SSHCredential,
-	options *options.DaemonOptions,
-	kubernetesCli kubectl.CliInterface,
-	ssh channel.Channel,
-) (err error) {
-	stop := make(chan string)
-	rootCtx, cancel := context.WithCancel(context.Background())
-
-	// one of the background process start failed and will cancel the started process
-	go func() {
-		util.StopBackendProcess(<-stop, cancel)
-	}()
-
+func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Channel, cli portforward.CliInterface) (err error) {
 	log.Info().Msgf("Remote %s forward to local %s", remoteIP, exposePorts)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
 		return
 	}
-	err = portForward(rootCtx, kubernetesCli, podName, localSSHPort, stop, options)
 
+	_, _, err = forwardSSHTunnelToLocal(cli, s.Options, podName, localSSHPort)
 	if err != nil {
 		return
 	}
 
-	exposeLocalPortsToRemote(ssh, exposePorts, localSSHPort)
+	exposeLocalPorts(ssh, exposePorts, localSSHPort)
 	return nil
 }
 
-func portForward(rootCtx context.Context, kubernetesCli kubectl.CliInterface, podName string, localSSHPort int,
-	stop chan string, options *options.DaemonOptions) error {
-	portforward := kubernetesCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
-	err := exec.BackgroundRunWithCtx(&exec.CMDContext{
-		Ctx:  rootCtx,
-		Cmd:  portforward,
-		Name: "exchange port forward to local",
-		Stop: stop,
-	})
-	if err != nil {
-		return err
-	}
-	util.WaitPortBeReady(options.WaitTime, localSSHPort)
-	return nil
-}
-
-func exposeLocalPortsToRemote(ssh channel.Channel, exposePorts string, localSSHPort int) {
+func exposeLocalPorts(ssh sshchannel.Channel, exposePorts string, localSSHPort int) {
 	var wg sync.WaitGroup
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
-		exposeLocalPortToRemote(&wg, ssh, exposePort, localSSHPort)
+		exposeLocalPort(&wg, ssh, exposePort, localSSHPort)
 	}
 	wg.Wait()
 }
 
-func exposeLocalPortToRemote(wg *sync.WaitGroup, ssh channel.Channel, exposePort string, localSSHPort int) {
+func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, exposePort string, localSSHPort int) {
 	localPort, remotePort := getPortMapping(exposePort)
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Info().Msgf("ExposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
 		err := ssh.ForwardRemoteToLocal(
-			&channel.Certificate{
+			&sshchannel.Certificate{
 				Username: "root",
 				Password: "root",
 			},

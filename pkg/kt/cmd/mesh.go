@@ -5,13 +5,11 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
@@ -53,29 +51,6 @@ func NewMeshCommand(streams genericclioptions.IOStreams, version string) *cobra.
 	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
 	cmd.Flags().StringVarP(&opt.Version, "version-label", "", "0.0.1", "specify the version of mesh service, e.g. '0.0.1'")
 	return cmd
-}
-
-// MeshOptions ...
-type MeshOptions struct {
-	configFlags *genericclioptions.ConfigFlags
-	rawConfig   api.Config
-	args        []string
-
-	userSpecifiedNamespace string
-	genericclioptions.IOStreams
-	clientset kubernetes.Interface
-
-	// global
-	Labels    string
-	Image     string
-	Debug     bool
-	currentNs string
-	Timeout   int
-
-	// mesh
-	Target  string
-	Expose  string
-	Version string
 }
 
 // NewMeshOptions ...
@@ -120,6 +95,7 @@ func (o *MeshOptions) Complete(cmd *cobra.Command, args []string) error {
 	}
 
 	o.clientset = clientset
+	o.restConfig = restConfig
 	if o.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
@@ -160,24 +136,10 @@ func (o *MeshOptions) checkTarget() error {
 }
 
 func (o *MeshOptions) transport() *options.DaemonOptions {
-	userHome := util.UserHome
-	appHome := util.KtHome
-	util.CreateDirIfNotExist(appHome)
-	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
-		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:  userHome,
-			AppHome:   appHome,
-			Clientset: o.clientset,
-		},
-		MeshOptions: &options.MeshOptions{
-			Expose:  o.Expose,
-			Version: o.Version,
-		},
-		ConnectOptions: &options.ConnectOptions{},
+	daemonOptions := o.transportGlobalOptions()
+	daemonOptions.MeshOptions = &options.MeshOptions{
+		Expose:  o.Expose,
+		Version: o.Version,
 	}
+	return daemonOptions
 }

@@ -16,7 +16,7 @@ type CMDContext struct {
 	Ctx  context.Context
 	Cmd  *exec.Cmd
 	Name string
-	Stop chan string // notify parent current Cmd occur error
+	Stop chan struct{} // notify parent current Cmd occur error
 }
 
 // RunAndWait run cmd
@@ -93,7 +93,7 @@ func runCmd(cmdCtx *CMDContext) error {
 
 	err = cmd.Start()
 	if err != nil {
-		cmdCtx.Stop <- err.Error()
+		cmdCtx.Stop <- struct{}{}
 		return err
 	}
 

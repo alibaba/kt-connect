@@ -4,6 +4,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
@@ -55,26 +56,30 @@ type CleanOptions struct {
 // RuntimeOptions ...
 type RuntimeOptions struct {
 	Clientset kubernetes.Interface
-	// Path of user home, same as ${HOME}
+	// UserHome path of user home, same as ${HOME}
 	UserHome string
-	// Path of kt config folder, default to ${UserHome}/.ktctl
+	// AppHome path of kt config folder, default to ${UserHome}/.ktctl
 	AppHome string
+	// PidFile path of kt pid file, default to ${AppHome}/pid
+	PidFile string
 	// Component current sub-command
 	Component string
 	// Shadow deployment name
 	Shadow string
-	// ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
+	// SSHCM ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
 	SSHCM string
-	// The origin app name
+	// Origin the origin app name
 	Origin string
-	// The origin replicas
+	// Replicas the origin replicas
 	Replicas int32
-	// Exposed service name
+	// Service exposed service name
 	Service string
-	// Whether dump2host enabled
+	// Dump2Host whether dump2host enabled
 	Dump2Host bool
-	// Windows global proxy config
+	// ProxyConfig windows global proxy config
 	ProxyConfig registry.ProxyConfig
+	// RestConfig kubectl config
+	RestConfig *rest.Config
 }
 
 type dashboardOptions struct {

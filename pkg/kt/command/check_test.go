@@ -74,7 +74,7 @@ func TestAction_CheckSuccessful(t *testing.T) {
 	fakeCli := fakeKt.NewMockCliInterface(ctl)
 
 	exec.EXPECT().SSH().Return(sshCli)
-	exec.EXPECT().SSHUttle().Return(sshuttleCli)
+	exec.EXPECT().Sshuttle().Return(sshuttleCli)
 	exec.EXPECT().Kubectl().Return(kubectlCli)
 
 	fakeCli.EXPECT().Exec().AnyTimes().Return(exec)

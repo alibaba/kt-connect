@@ -5,13 +5,11 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
@@ -53,28 +51,6 @@ func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *co
 	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
 
 	return cmd
-}
-
-// ExchangeOptions ...
-type ExchangeOptions struct {
-	configFlags *genericclioptions.ConfigFlags
-	rawConfig   api.Config
-	args        []string
-
-	userSpecifiedNamespace string
-	genericclioptions.IOStreams
-	clientset kubernetes.Interface
-
-	// global
-	Labels    string
-	Image     string
-	Debug     bool
-	currentNs string
-	Timeout   int
-
-	// exchange
-	Target string
-	Expose string
 }
 
 // NewExchangeOptions ...
@@ -119,6 +95,8 @@ func (o *ExchangeOptions) Complete(cmd *cobra.Command, args []string) error {
 	}
 
 	o.clientset = clientset
+	o.restConfig = restConfig
+
 	if o.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
@@ -159,23 +137,9 @@ func (o *ExchangeOptions) checkTarget() error {
 }
 
 func (o *ExchangeOptions) transport() *options.DaemonOptions {
-	userHome := util.UserHome
-	appHome := util.KtHome
-	util.CreateDirIfNotExist(appHome)
-	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
-		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:  userHome,
-			AppHome:   appHome,
-			Clientset: o.clientset,
-		},
-		ExchangeOptions: &options.ExchangeOptions{
-			Expose: o.Expose,
-		},
-		ConnectOptions: &options.ConnectOptions{},
+	daemonOptions := o.transportGlobalOptions()
+	daemonOptions.ExchangeOptions = &options.ExchangeOptions{
+		Expose: o.Expose,
 	}
+	return daemonOptions
 }

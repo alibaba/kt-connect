@@ -12,6 +12,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/process"
 	"github.com/cilium/ipam/service/allocator"
 	"github.com/cilium/ipam/service/ipallocator"
 	"github.com/rs/zerolog"
@@ -59,7 +60,8 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
+		<-process.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

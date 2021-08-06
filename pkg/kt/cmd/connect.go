@@ -8,13 +8,11 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd/api"
 )
 
 var (
@@ -32,31 +30,6 @@ var (
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-}
-
-// ConnectOptions ...
-type ConnectOptions struct {
-	configFlags *genericclioptions.ConfigFlags
-	rawConfig   api.Config
-	args        []string
-
-	userSpecifiedNamespace string
-	genericclioptions.IOStreams
-	clientset  kubernetes.Interface
-	Image      string
-	Method     string
-	Debug      bool
-	Labels     string
-	Proxy      int
-	DisableDNS bool
-	Cidr       string
-	Dump2hosts string
-	currentNs  string
-	Port       int
-	Timeout    int
-	Global     bool
-	TunName    string
-	TunCidr    string
 }
 
 // NewConnectCommand ...
@@ -134,6 +107,7 @@ func (o *ConnectOptions) Complete(cmd *cobra.Command, args []string) error {
 	}
 
 	o.clientset = clientset
+	o.restConfig = restConfig
 	return nil
 }
 
@@ -162,40 +136,27 @@ func (o *ConnectOptions) checkContext() error {
 	return nil
 }
 
+// CloneDaemonOptions ...
+func (o *ConnectOptions) transport() *options.DaemonOptions {
+	daemonOptions := o.transportGlobalOptions()
+	daemonOptions.ConnectOptions = &options.ConnectOptions{
+		DisableDNS:           o.DisableDNS,
+		Method:               o.Method,
+		SocksPort:            o.Proxy,
+		CIDR:                 o.Cidr,
+		SSHPort:              o.Port,
+		Global:               o.Global,
+		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
+		TunName:              o.TunName,
+		TunCidr:              o.TunCidr,
+	}
+	return daemonOptions
+}
+
 // NewConnectOptions ...
 func NewConnectOptions(streams genericclioptions.IOStreams) *ConnectOptions {
 	return &ConnectOptions{
 		configFlags: genericclioptions.NewConfigFlags(true),
 		IOStreams:   streams,
-	}
-}
-
-// CloneDaemonOptions ...
-func (o *ConnectOptions) transport() *options.DaemonOptions {
-	userHome := util.UserHome
-	appHome := util.KtHome
-	util.CreateDirIfNotExist(appHome)
-	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
-		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:  userHome,
-			AppHome:   appHome,
-			Clientset: o.clientset,
-		},
-		ConnectOptions: &options.ConnectOptions{
-			DisableDNS:           o.DisableDNS,
-			Method:               o.Method,
-			SocksPort:            o.Proxy,
-			CIDR:                 o.Cidr,
-			SSHPort:              o.Port,
-			Global:               o.Global,
-			Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
-			TunName:              o.TunName,
-			TunCidr:              o.TunCidr,
-		},
 	}
 }

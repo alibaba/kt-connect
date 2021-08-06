@@ -3,20 +3,21 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/resolvconf"
+	"github.com/rs/zerolog/log"
+	"github.com/urfave/cli"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-
-	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli"
 )
 
 // NewCommands return new Connect Action
@@ -72,7 +73,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 
 	if options.ConnectOptions.Method == common.ConnectMethodTun {
-		err := exec.RunAndWait(cli.Exec().SSHTunnelling().RemoveDevice(), "del_device", options.Debug)
+		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device", options.Debug)
 		if err != nil {
 			log.Error().Msgf("Fails to delete tun device")
 			return
@@ -227,5 +228,17 @@ func combineKubeOpts(options *options.DaemonOptions) error {
 	if !namespaced {
 		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", options.Namespace))
 	}
+
+	config, err := clientcmd.BuildConfigFromFlags("", options.KubeConfig)
+	if err != nil {
+		return err
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return err
+	}
+	options.RuntimeOptions.Clientset = clientset
+	options.RuntimeOptions.RestConfig = config
+
 	return nil
 }

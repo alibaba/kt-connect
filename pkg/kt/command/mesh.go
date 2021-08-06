@@ -2,21 +2,20 @@ package command
 
 import (
 	"errors"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strings"
 
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	v1 "k8s.io/api/apps/v1"
-
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-
+	"github.com/alibaba/kt-connect/pkg/process"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
+	"k8s.io/api/apps/v1"
 )
 
 // newMeshCommand return new mesh command
@@ -95,7 +94,8 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
+		<-process.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

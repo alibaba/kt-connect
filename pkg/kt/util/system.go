@@ -11,22 +11,6 @@ import (
 	ps "github.com/mitchellh/go-ps"
 )
 
-var interrupt = make(chan string)
-
-// StopBackendProcess ...
-func StopBackendProcess(stop string, cancel func()) {
-	if cancel == nil {
-		return
-	}
-	cancel()
-	interrupt <- stop
-}
-
-// Interrupt ...
-func Interrupt() chan string {
-	return interrupt
-}
-
 // IsDaemonRunning check daemon is running or not
 func IsDaemonRunning(componentName string) bool {
 	files, _ := ioutil.ReadDir(KtHome)

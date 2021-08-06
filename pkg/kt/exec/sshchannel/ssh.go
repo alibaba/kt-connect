@@ -1,4 +1,4 @@
-package channel
+package sshchannel
 
 import (
 	"fmt"

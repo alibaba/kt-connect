@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/rsa"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -23,13 +24,16 @@ func TestGenerate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "supportZNDirSSHKeyPair",
-			args:    args{privateKeyPath: "/tmp/目录/sshkeypair"},
+			name: "supportZNDirSSHKeyPair",
+			args: args{
+				privateKeyPath: "/tmp/目录/sshkeypair",
+			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			os.Remove(tt.args.privateKeyPath)
 			got, err := Generate(tt.args.privateKeyPath)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
@@ -38,7 +42,6 @@ func TestGenerate(t *testing.T) {
 			if len(got.PrivateKey) == 0 {
 				t.Errorf("fail generate private key")
 			}
-
 			if len(got.PublicKey) == 0 {
 				t.Errorf("fail generate public key")
 			}
@@ -56,7 +59,7 @@ func Test_generatePrivateKey(t *testing.T) {
 		want    *rsa.PrivateKey
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -82,7 +85,7 @@ func Test_generatePublicKey(t *testing.T) {
 		want    []byte
 		wantErr bool
 	}{
-	// TODO: Add test cases.
+		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

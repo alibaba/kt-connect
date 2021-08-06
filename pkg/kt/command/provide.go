@@ -3,17 +3,16 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
-
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/process"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
@@ -70,7 +69,8 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
-		log.Error().Msgf("Command interrupted: %s", <-util.Interrupt())
+		<-process.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

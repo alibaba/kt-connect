@@ -1,7 +1,6 @@
 package kubectl
 
 import (
-	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -37,18 +36,6 @@ func (k *Cli) PortForwardDashboardToLocal(port string) *exec.Cmd {
 	args = append(args, "port-forward",
 		"service/kt-dashboard",
 		port+":80")
-	return exec.Command(
-		KUBECTL,
-		args...,
-	)
-}
-
-// PortForward ...
-func (k *Cli) PortForward(namespace, resource string, remotePort, localPort int) *exec.Cmd {
-	args := kubectl(k, namespace)
-	args = append(args, "port-forward",
-		resource,
-		fmt.Sprintf("%d:%d", localPort, remotePort))
 	return exec.Command(
 		KUBECTL,
 		args...,

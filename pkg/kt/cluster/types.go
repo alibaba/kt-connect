@@ -8,17 +8,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// Create kubernetes instance
-func Create(kubeConfig string) (kubernetes KubernetesInterface, err error) {
-	clientSet, err := getKubernetesClient(kubeConfig)
-	if err != nil {
-		return
-	}
-	return &Kubernetes{
-		Clientset: clientSet,
-	}, nil
-}
-
 // CreateFromClientSet kubernetes instance
 func CreateFromClientSet(clientSet kubernetes.Interface) (kubernetes KubernetesInterface, err error) {
 	return &Kubernetes{
