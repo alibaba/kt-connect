@@ -1,4 +1,4 @@
-package sshtunnelling
+package tunnel
 
 // Copy from `man ssh`
 /*

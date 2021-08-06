@@ -80,7 +80,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	options *options.DaemonOptions, podIP string, cidrs []string, stop chan struct{}) (err error) {
 
 	// 1. Create tun device.
-	err = exec.RunAndWait(cli.SSHTunnelling().AddDevice(), "add_device", options.Debug)
+	err = exec.RunAndWait(cli.Tunnel().AddDevice(), "add_device", options.Debug)
 	if err != nil {
 		return err
 	} else {
@@ -88,7 +88,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	// 2. Setup device ip
-	err = exec.RunAndWait(cli.SSHTunnelling().SetDeviceIP(), "set_device_ip", options.Debug)
+	err = exec.RunAndWait(cli.Tunnel().SetDeviceIP(), "set_device_ip", options.Debug)
 	if err != nil {
 		// clean up
 		return err
@@ -97,7 +97,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	// 3. Set device up.
-	err = exec.RunAndWait(cli.SSHTunnelling().SetDeviceUp(), "set_device_up", options.Debug)
+	err = exec.RunAndWait(cli.Tunnel().SetDeviceUp(), "set_device_up", options.Debug)
 	if err != nil {
 		return err
 	} else {
@@ -120,7 +120,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 
 	// 5. Add route to kubernetes cluster.
 	for i := range cidrs {
-		err = exec.RunAndWait(cli.SSHTunnelling().AddRoute(cidrs[i]), "add_route", options.Debug)
+		err = exec.RunAndWait(cli.Tunnel().AddRoute(cidrs[i]), "add_route", options.Debug)
 		if err != nil {
 			// clean up
 			return err

@@ -14,6 +14,7 @@ generate-mock:
 	mockgen -source=pkg/kt/types.go -destination=pkg/kt/mock.go -package=kt
 	mockgen -source=pkg/kt/exec/types.go -destination=pkg/kt/exec/mock.go -package=exec
 	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=pkg/kt/exec/sshuttle/mock.go -package=sshuttle
+	mockgen -source=pkg/kt/exec/tunnel/types.go -destination=pkg/kt/exec/tunnel/mock.go -package=tunnel
 	mockgen -source=pkg/kt/exec/ssh/types.go -destination=pkg/kt/exec/ssh/mock.go -package=ssh
 	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=pkg/kt/exec/kubectl/mock.go -package=kubectl
 	mockgen -source=pkg/kt/command/types.go -destination=pkg/kt/command/mock.go -package=command

@@ -3,8 +3,8 @@ package exec
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshtunnelling"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/tunnel"
 )
 
 // CliInterface ...
@@ -12,7 +12,7 @@ type CliInterface interface {
 	Kubectl() kubectl.CliInterface
 	SSHUttle() sshuttle.CliInterface
 	SSH() ssh.CliInterface
-	SSHTunnelling() sshtunnelling.CliInterface
+	Tunnel() tunnel.CliInterface
 }
 
 // Cli ...
@@ -41,8 +41,8 @@ func (c *Cli) SSH() ssh.CliInterface {
 	return &ssh.Cli{}
 }
 
-func (c *Cli) SSHTunnelling() sshtunnelling.CliInterface {
-	return &sshtunnelling.Cli{
+func (c *Cli) Tunnel() tunnel.CliInterface {
+	return &tunnel.Cli{
 		TunName:  c.TunName,
 		SourceIP: c.SourceIP,
 		DestIP:   c.DestIP,

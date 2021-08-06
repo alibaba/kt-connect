@@ -1,4 +1,4 @@
-package sshtunnelling
+package tunnel
 
 import "os/exec"
 

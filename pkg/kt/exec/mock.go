@@ -9,8 +9,8 @@ import (
 
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
-	sshtunnelling "github.com/alibaba/kt-connect/pkg/kt/exec/sshtunnelling"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
+	tunnel "github.com/alibaba/kt-connect/pkg/kt/exec/tunnel"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -65,20 +65,6 @@ func (mr *MockCliInterfaceMockRecorder) SSH() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSH", reflect.TypeOf((*MockCliInterface)(nil).SSH))
 }
 
-// SSHTunnelling mocks base method.
-func (m *MockCliInterface) SSHTunnelling() sshtunnelling.CliInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SSHTunnelling")
-	ret0, _ := ret[0].(sshtunnelling.CliInterface)
-	return ret0
-}
-
-// SSHTunnelling indicates an expected call of SSHTunnelling.
-func (mr *MockCliInterfaceMockRecorder) SSHTunnelling() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHTunnelling", reflect.TypeOf((*MockCliInterface)(nil).SSHTunnelling))
-}
-
 // SSHUttle mocks base method.
 func (m *MockCliInterface) SSHUttle() sshuttle.CliInterface {
 	m.ctrl.T.Helper()
@@ -91,4 +77,18 @@ func (m *MockCliInterface) SSHUttle() sshuttle.CliInterface {
 func (mr *MockCliInterfaceMockRecorder) SSHUttle() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHUttle", reflect.TypeOf((*MockCliInterface)(nil).SSHUttle))
+}
+
+// Tunnel mocks base method.
+func (m *MockCliInterface) Tunnel() tunnel.CliInterface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Tunnel")
+	ret0, _ := ret[0].(tunnel.CliInterface)
+	return ret0
+}
+
+// Tunnel indicates an expected call of Tunnel.
+func (mr *MockCliInterfaceMockRecorder) Tunnel() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Tunnel", reflect.TypeOf((*MockCliInterface)(nil).Tunnel))
 }
