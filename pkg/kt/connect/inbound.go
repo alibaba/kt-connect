@@ -6,19 +6,19 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/alibaba/kt-connect/pkg/kt/channel"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
 
 // Inbound mapping local port from cluster
 func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, _ *util.SSHCredential) (err error) {
-	ssh := &channel.SSHChannel{}
+	ssh := &sshchannel.SSHChannel{}
 	log.Info().Msg("Creating shadow inbound(remote->local)")
 	return inbound(s, exposePorts, podName, remoteIP, ssh)
 }
 
-func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh channel.Channel) (err error) {
+func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Channel) (err error) {
 	log.Info().Msgf("Remote %s forward to local %s", remoteIP, exposePorts)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
@@ -34,7 +34,7 @@ func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh channel.Chann
 	return nil
 }
 
-func exposeLocalPorts(ssh channel.Channel, exposePorts string, localSSHPort int) {
+func exposeLocalPorts(ssh sshchannel.Channel, exposePorts string, localSSHPort int) {
 	var wg sync.WaitGroup
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
@@ -44,13 +44,13 @@ func exposeLocalPorts(ssh channel.Channel, exposePorts string, localSSHPort int)
 	wg.Wait()
 }
 
-func exposeLocalPort(wg *sync.WaitGroup, ssh channel.Channel, exposePort string, localSSHPort int) {
+func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, exposePort string, localSSHPort int) {
 	localPort, remotePort := getPortMapping(exposePort)
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Info().Msgf("ExposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
 		err := ssh.ForwardRemoteToLocal(
-			&channel.Certificate{
+			&sshchannel.Certificate{
 				Username: "root",
 				Password: "root",
 			},

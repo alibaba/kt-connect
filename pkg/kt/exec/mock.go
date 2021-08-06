@@ -9,6 +9,7 @@ import (
 
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
+	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	tunnel "github.com/alibaba/kt-connect/pkg/kt/exec/tunnel"
 	gomock "github.com/golang/mock/gomock"
@@ -35,6 +36,20 @@ func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
+}
+
+// Channel mocks base method.
+func (m *MockCliInterface) Channel() sshchannel.Channel {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Channel")
+	ret0, _ := ret[0].(sshchannel.Channel)
+	return ret0
+}
+
+// Channel indicates an expected call of Channel.
+func (mr *MockCliInterfaceMockRecorder) Channel() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Channel", reflect.TypeOf((*MockCliInterface)(nil).Channel))
 }
 
 // Kubectl mocks base method.

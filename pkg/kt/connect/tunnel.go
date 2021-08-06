@@ -3,16 +3,15 @@ package connect
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/resolvconf"
-	"io/ioutil"
-
 	"github.com/alibaba/kt-connect/internal/network"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/channel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"github.com/rs/zerolog/log"
+	"io/ioutil"
 )
 
 func forwardSSHTunnelToLocal(s *Shadow, podName string, localSSHPort int) (chan struct{}, context.Context, error) {
@@ -40,13 +39,13 @@ func forwardSocksTunnelToLocal(options *options.DaemonOptions, podName string) e
 	return err
 }
 
-func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {
+func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOptions) (err error) {
 	showSetupSuccessfulMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
 		options.ConnectOptions.SocksPort)), 0644)
 
 	return ssh.StartSocks5Proxy(
-		&channel.Certificate{
+		&sshchannel.Certificate{
 			Username: "root",
 			Password: "root",
 		},

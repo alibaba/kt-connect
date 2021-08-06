@@ -3,6 +3,7 @@ package exec
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/tunnel"
 )
@@ -13,17 +14,22 @@ type CliInterface interface {
 	SSHUttle() sshuttle.CliInterface
 	SSH() ssh.CliInterface
 	Tunnel() tunnel.CliInterface
+	Channel() sshchannel.Channel
 }
 
 // Cli ...
 type Cli struct {
 	KubeOptions []string
-
-	TunName  string
-	SourceIP string
-	DestIP   string
+	TunName     string
+	SourceIP    string
+	DestIP      string
 	// MaskLen the net mask length of tun cidr
 	MaskLen string
+}
+
+// Channel ...
+func (c *Cli) Channel() sshchannel.Channel {
+	return &sshchannel.SSHChannel{}
 }
 
 // Kubectl ...

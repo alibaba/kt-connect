@@ -3,7 +3,6 @@ package connect
 import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/channel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -11,11 +10,10 @@ import (
 
 // Outbound start vpn connection
 func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
-	ssh := channel.SSHChannel{}
-	return outbound(s, name, podIP, credential, cidrs, cli, &ssh)
+	return outbound(s, name, podIP, credential, cidrs, cli)
 }
 
-func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
+func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
 	var stop chan struct{}
 	var rootCtx context.Context
 	switch s.Options.ConnectOptions.Method {
@@ -29,7 +27,7 @@ func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, 
 	case common.ConnectMethodSocks5:
 		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
-			err = startSocks5Connection(ssh, s.Options)
+			err = startSocks5Connection(cli.Channel(), s.Options)
 		}
 	default:
 		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
