@@ -1,22 +1,20 @@
-package network
+package portforward
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/process"
+	"github.com/rs/zerolog/log"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/portforward"
+	"k8s.io/client-go/transport/spdy"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/alibaba/kt-connect/internal/process"
-
-	"github.com/rs/zerolog/log"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/portforward"
-	"k8s.io/client-go/transport/spdy"
 )
 
 // PortForwardAPodRequest ...

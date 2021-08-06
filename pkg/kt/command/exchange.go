@@ -6,20 +6,16 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alibaba/kt-connect/internal/process"
 	"github.com/alibaba/kt-connect/pkg/common"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
-
-	v1 "k8s.io/api/apps/v1"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/process"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
+	v1 "k8s.io/api/apps/v1"
 )
 
 // newExchangeCommand return new exchange command

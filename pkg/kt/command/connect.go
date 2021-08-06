@@ -6,14 +6,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alibaba/kt-connect/internal/process"
-	"github.com/alibaba/kt-connect/pkg/kt/registry"
-
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/process"
 	"github.com/cilium/ipam/service/allocator"
 	"github.com/cilium/ipam/service/ipallocator"
 	"github.com/rs/zerolog"

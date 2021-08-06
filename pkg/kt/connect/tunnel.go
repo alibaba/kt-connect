@@ -3,9 +3,9 @@ package connect
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/internal/network"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -15,7 +15,7 @@ import (
 )
 
 func forwardSSHTunnelToLocal(s *Shadow, podName string, localSSHPort int) (chan struct{}, context.Context, error) {
-	stop, rootCtx, err := network.ForwardPodPortToLocal(network.PortForwardAPodRequest{
+	stop, rootCtx, err := portforward.ForwardPodPortToLocal(portforward.PortForwardAPodRequest{
 		RestConfig: s.Options.RuntimeOptions.RestConfig,
 		PodName:    podName,
 		Namespace:  s.Options.Namespace,
@@ -28,7 +28,7 @@ func forwardSSHTunnelToLocal(s *Shadow, podName string, localSSHPort int) (chan 
 
 func forwardSocksTunnelToLocal(options *options.DaemonOptions, podName string) error {
 	showSetupSuccessfulMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
-	_, _, err := network.ForwardPodPortToLocal(network.PortForwardAPodRequest{
+	_, _, err := portforward.ForwardPodPortToLocal(portforward.PortForwardAPodRequest{
 		RestConfig: options.RuntimeOptions.RestConfig,
 		PodName:    podName,
 		Namespace:  options.Namespace,
