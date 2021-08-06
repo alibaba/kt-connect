@@ -51,7 +51,7 @@ func ForwardPodPortToLocal(request PortForwardAPodRequest) (chan struct{}, conte
 	request.StopCh = stop
 
 	go func() {
-		err := PortForward(request)
+		err := portForward(request)
 		if err != nil {
 			stop <- struct{}{}
 		}
@@ -66,7 +66,7 @@ func ForwardPodPortToLocal(request PortForwardAPodRequest) (chan struct{}, conte
 }
 
 // PortForward ...
-func PortForward(req PortForwardAPodRequest) error {
+func portForward(req PortForwardAPodRequest) error {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Namespace, req.PodName)
 	hostIP := strings.TrimLeft(req.RestConfig.Host, "htps:/")
 
