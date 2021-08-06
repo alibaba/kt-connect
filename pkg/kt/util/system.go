@@ -71,3 +71,8 @@ func WritePidFile(componentName string) error {
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
+
+// IsLinux check runtime is windows
+func IsLinux() bool {
+	return runtime.GOOS == "linux"
+}

@@ -28,7 +28,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        "debug,d",
-			Usage:       "debug mode",
+			Usage:       "print debug log",
 			Destination: &options.Debug,
 		},
 		cli.StringFlag{
@@ -60,7 +60,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.BoolFlag{
 			Name:        "global",
-			Usage:       "with cluster scope",
+			Usage:       "With cluster scope",
 			Destination: &options.ConnectOptions.Global,
 		},
 		cli.StringFlag{
@@ -72,7 +72,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		cli.IntFlag{
 			Name:        "proxyPort",
 			Value:       2223,
-			Usage:       "when should method socks5, you can choice which port to proxy",
+			Usage:       "When should method socks5, you can choice which port to proxy",
 			Destination: &options.ConnectOptions.SocksPort,
 		},
 		cli.IntFlag{
@@ -137,6 +137,8 @@ func methodDefaultValue() string {
 func methodDefaultUsage() string {
 	if util.IsWindows() {
 		return "Connect method 'socks' or 'socks5'"
+	} else if util.IsLinux() {
+		return "Connect method 'vpn', 'socks', 'socks5' or 'tun'"
 	}
 	return "Connect method 'vpn', 'socks' or 'socks5'"
 }

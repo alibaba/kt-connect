@@ -49,7 +49,7 @@ func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
 		if err != nil {
 			return
 		}
-		log.Info().Msgf("- Finished %s", name)
+		log.Info().Msgf("Finished %s", name)
 	}()
 	return
 }
@@ -64,7 +64,7 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
 		if err = cmdCtx.Cmd.Wait(); err != nil {
 			log.Debug().Msgf("Background process %s exit abnormally: %s", cmdCtx.Name, err.Error())
 		}
-		log.Info().Msgf("- Finished %s with context", cmdCtx.Name)
+		log.Info().Msgf("Finished %s with context", cmdCtx.Name)
 	}()
 	return
 }
