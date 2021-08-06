@@ -39,20 +39,6 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
 }
 
-// Channel mocks base method.
-func (m *MockCliInterface) Channel() sshchannel.Channel {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Channel")
-	ret0, _ := ret[0].(sshchannel.Channel)
-	return ret0
-}
-
-// Channel indicates an expected call of Channel.
-func (mr *MockCliInterfaceMockRecorder) Channel() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Channel", reflect.TypeOf((*MockCliInterface)(nil).Channel))
-}
-
 // Kubectl mocks base method.
 func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
 	m.ctrl.T.Helper()
@@ -95,18 +81,32 @@ func (mr *MockCliInterfaceMockRecorder) SSH() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSH", reflect.TypeOf((*MockCliInterface)(nil).SSH))
 }
 
-// SSHUttle mocks base method.
-func (m *MockCliInterface) SSHUttle() sshuttle.CliInterface {
+// SshChannel mocks base method.
+func (m *MockCliInterface) SshChannel() sshchannel.Channel {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SSHUttle")
+	ret := m.ctrl.Call(m, "SshChannel")
+	ret0, _ := ret[0].(sshchannel.Channel)
+	return ret0
+}
+
+// SshChannel indicates an expected call of SshChannel.
+func (mr *MockCliInterfaceMockRecorder) SshChannel() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SshChannel", reflect.TypeOf((*MockCliInterface)(nil).SshChannel))
+}
+
+// Sshuttle mocks base method.
+func (m *MockCliInterface) Sshuttle() sshuttle.CliInterface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Sshuttle")
 	ret0, _ := ret[0].(sshuttle.CliInterface)
 	return ret0
 }
 
-// SSHUttle indicates an expected call of SSHUttle.
-func (mr *MockCliInterfaceMockRecorder) SSHUttle() *gomock.Call {
+// Sshuttle indicates an expected call of Sshuttle.
+func (mr *MockCliInterfaceMockRecorder) Sshuttle() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHUttle", reflect.TypeOf((*MockCliInterface)(nil).SSHUttle))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Sshuttle", reflect.TypeOf((*MockCliInterface)(nil).Sshuttle))
 }
 
 // Tunnel mocks base method.

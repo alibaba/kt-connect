@@ -52,7 +52,7 @@ func (action *Action) Check(cli kt.CliInterface) (err error) {
 	}
 
 	err = runCommandWithMsg(
-		cli.Exec().SSHUttle().Version(),
+		cli.Exec().Sshuttle().Version(),
 		"Checking sshuttle version", "Sshuttle is missing, you can only use 'ktctl connect --method socks5' with Socks5 proxy mode",
 	)
 

@@ -66,7 +66,7 @@ func showSetupSuccessfulMessage(protocol string, port int) {
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {
 	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx: rootCtx,
-		Cmd: cli.SSHUttle().Connect(request.RemoteSSHHost, request.RemoteSSHPKPath, request.RemoteSSHPort,
+		Cmd: cli.Sshuttle().Connect(request.RemoteSSHHost, request.RemoteSSHPKPath, request.RemoteSSHPort,
 			request.RemoteDNSServerAddress, request.DisableDNS, request.CustomCRID, request.Debug),
 		Name: "vpn(sshuttle)",
 		Stop: request.Stop,

@@ -12,10 +12,10 @@ import (
 // CliInterface ...
 type CliInterface interface {
 	Kubectl() kubectl.CliInterface
-	SSHUttle() sshuttle.CliInterface
+	Sshuttle() sshuttle.CliInterface
 	SSH() ssh.CliInterface
 	Tunnel() tunnel.CliInterface
-	Channel() sshchannel.Channel
+	SshChannel() sshchannel.Channel
 	PortForward() portforward.CliInterface
 }
 
@@ -34,8 +34,8 @@ func (c *Cli) PortForward() portforward.CliInterface {
 	return &portforward.Cli{}
 }
 
-// Channel ...
-func (c *Cli) Channel() sshchannel.Channel {
+// SshChannel ...
+func (c *Cli) SshChannel() sshchannel.Channel {
 	return &sshchannel.SSHChannel{}
 }
 
@@ -44,8 +44,8 @@ func (c *Cli) Kubectl() kubectl.CliInterface {
 	return &kubectl.Cli{KubeOptions: c.KubeOptions}
 }
 
-// SSHUttle ...
-func (c *Cli) SSHUttle() sshuttle.CliInterface {
+// Sshuttle ...
+func (c *Cli) Sshuttle() sshuttle.CliInterface {
 	return &sshuttle.Cli{}
 }
 

@@ -20,7 +20,7 @@ func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 
 	sshChannel.EXPECT().StartSocks5Proxy(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 	portForward.EXPECT().ForwardPodPortToLocal(gomock.Any()).AnyTimes().Return(make(chan struct{}), nil, nil)
-	execCli.EXPECT().Channel().AnyTimes().Return(sshChannel)
+	execCli.EXPECT().SshChannel().AnyTimes().Return(sshChannel)
 	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
 	socksOptions := options.NewDaemonOptions()
@@ -52,8 +52,8 @@ func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
 
 	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
 	portForward.EXPECT().ForwardPodPortToLocal(gomock.Any()).AnyTimes().Return(make(chan struct{}), nil, nil)
-	execCli.EXPECT().SSHUttle().AnyTimes().Return(sshuttle)
-	execCli.EXPECT().Channel().AnyTimes().Return(sshChannel)
+	execCli.EXPECT().Sshuttle().AnyTimes().Return(sshuttle)
+	execCli.EXPECT().SshChannel().AnyTimes().Return(sshChannel)
 	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
 	vpnOptions := options.NewDaemonOptions()
