@@ -9,6 +9,7 @@ import (
 
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
+	sshtunnelling "github.com/alibaba/kt-connect/pkg/kt/exec/sshtunnelling"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -62,6 +63,20 @@ func (m *MockCliInterface) SSH() ssh.CliInterface {
 func (mr *MockCliInterfaceMockRecorder) SSH() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSH", reflect.TypeOf((*MockCliInterface)(nil).SSH))
+}
+
+// SSHTunnelling mocks base method.
+func (m *MockCliInterface) SSHTunnelling() sshtunnelling.CliInterface {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SSHTunnelling")
+	ret0, _ := ret[0].(sshtunnelling.CliInterface)
+	return ret0
+}
+
+// SSHTunnelling indicates an expected call of SSHTunnelling.
+func (mr *MockCliInterfaceMockRecorder) SSHTunnelling() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSHTunnelling", reflect.TypeOf((*MockCliInterface)(nil).SSHTunnelling))
 }
 
 // SSHUttle mocks base method.

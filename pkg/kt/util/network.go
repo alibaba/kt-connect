@@ -37,3 +37,8 @@ func GetOutboundIP() (address string) {
 	address = fmt.Sprintf("%s", localAddr.IP)
 	return
 }
+
+// ExtractNetMaskFromCidr extract net mask length (e.g. 16) from cidr (e.g. 1.2.3.4/16)
+func ExtractNetMaskFromCidr(cidr string) string {
+	return cidr[strings.Index(cidr, "/")+1:]
+}

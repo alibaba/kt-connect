@@ -11,7 +11,7 @@ import (
 	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
-func Test_getPodCirds(t *testing.T) {
+func Test_getPodCidrs(t *testing.T) {
 	tests := []struct {
 		name      string
 		objs      []runtime.Object
@@ -19,7 +19,7 @@ func Test_getPodCirds(t *testing.T) {
 		wantErr   bool
 	}{
 		{
-			name: "should_get_pod_cird_from_pods",
+			name: "should_get_pod_cidr_from_pods",
 			objs: []runtime.Object{
 				buildPod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
 			},
@@ -29,7 +29,7 @@ func Test_getPodCirds(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "should_get_pod_cird_from_nodes",
+			name: "should_get_pod_cidr_from_nodes",
 			objs: []runtime.Object{
 				buildNode("default", "a", "172.168.1.0/24"),
 			},
@@ -44,19 +44,19 @@ func Test_getPodCirds(t *testing.T) {
 
 			client := testclient.NewSimpleClientset(tt.objs...)
 
-			gotCidrs, err := getPodCirds(client, "")
+			gotCidrs, err := getPodCidrs(client, "")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getPodCirds() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getPodCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotCidrs, tt.wantCidrs) {
-				t.Errorf("getPodCirds() = %v, want %v", gotCidrs, tt.wantCidrs)
+				t.Errorf("getPodCidrs() = %v, want %v", gotCidrs, tt.wantCidrs)
 			}
 		})
 	}
 }
 
-func Test_getServiceCird(t *testing.T) {
+func Test_getServiceCidr(t *testing.T) {
 	type args struct {
 		serviceList []v1.Service
 	}
@@ -79,13 +79,13 @@ func Test_getServiceCird(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCidr, err := getServiceCird(tt.args.serviceList)
+			gotCidr, err := getServiceCidr(tt.args.serviceList)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getServiceCird() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("getServiceCidr() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(gotCidr, tt.wantCidr) {
-				t.Errorf("getServiceCird() = %v, want %v", gotCidr, tt.wantCidr)
+				t.Errorf("getServiceCidr() = %v, want %v", gotCidr, tt.wantCidr)
 			}
 		})
 	}

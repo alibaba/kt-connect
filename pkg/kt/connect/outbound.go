@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/channel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
@@ -15,25 +16,34 @@ func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, ci
 }
 
 func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface, ssh channel.Channel) (err error) {
-	if s.Options.ConnectOptions.Method == common.ConnectMethodSocks {
+	var stop chan struct{}
+	var rootCtx context.Context
+	switch s.Options.ConnectOptions.Method {
+	case common.ConnectMethodSocks:
 		err = forwardSocksTunnelToLocal(s.Options, podName)
-	} else {
-		stop, rootCtx, err := forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
+	case common.ConnectMethodTun:
+		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
-			if s.Options.ConnectOptions.Method == common.ConnectMethodSocks5 {
-				err = startSocks5Connection(ssh, s.Options)
-			} else {
-				err = startVPNConnection(rootCtx, cli, SSHVPNRequest{
-					RemoteSSHHost:          credential.RemoteHost,
-					RemoteSSHPKPath:        credential.PrivateKeyPath,
-					RemoteSSHPort:          s.Options.ConnectOptions.SSHPort,
-					RemoteDNSServerAddress: podIP,
-					DisableDNS:             s.Options.ConnectOptions.DisableDNS,
-					CustomCRID:             cidrs,
-					Stop:                   stop,
-					Debug:                  s.Options.Debug,
-				})
-			}
+			err = startTunConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
+		}
+	case common.ConnectMethodSocks5:
+		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
+		if err == nil {
+			err = startSocks5Connection(ssh, s.Options)
+		}
+	default:
+		stop, rootCtx, err = forwardSSHTunnelToLocal(s, podName, s.Options.ConnectOptions.SSHPort)
+		if err == nil {
+			err = startVPNConnection(rootCtx, cli, SSHVPNRequest{
+				RemoteSSHHost:          credential.RemoteHost,
+				RemoteSSHPKPath:        credential.PrivateKeyPath,
+				RemoteSSHPort:          s.Options.ConnectOptions.SSHPort,
+				RemoteDNSServerAddress: podIP,
+				DisableDNS:             s.Options.ConnectOptions.DisableDNS,
+				CustomCRID:             cidrs,
+				Stop:                   stop,
+				Debug:                  s.Options.Debug,
+			})
 		}
 	}
 	if err != nil {

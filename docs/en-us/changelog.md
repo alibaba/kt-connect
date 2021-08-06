@@ -37,7 +37,7 @@
 
 * Add oidc plugin to support TKE
 * Add socks5 method to support WSL
-* Fixed issue when node.Spec.PodCIRD dynamic cal CIRD
+* Fixed issue when node.Spec.PodCIDR dynamic cal CIDR
 
 ### 0.0.6
 

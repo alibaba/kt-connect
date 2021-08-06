@@ -18,7 +18,7 @@ import (
 var (
 	connectExample = `
   # connect to kubernetes cluster
-  ktctl connect
+  kubectl connect
   # connect with debug mode
   kubectl connect -d
   # connect with socks
@@ -60,13 +60,17 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// method
-	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks/socks5")
+	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks/socks5/tun(alpha)")
 	cmd.Flags().IntVarP(&opt.Port, "port", "p", 2222, "Local SSH Proxy port ")
 	cmd.Flags().BoolVarP(&opt.Global, "global", "g", false, "with cluster scope")
 
 	// vpn
 	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
 	cmd.Flags().StringVarP(&opt.Cidr, "cidr", "c", "", "Custom CIDR, e.g. '172.2.0.0/16")
+
+	// tun
+	cmd.Flags().StringVarP(&opt.TunName, "tunName", "", "tun0", "The tun device name to create on client machine (Alpha). Only works on Linux now.")
+	cmd.Flags().StringVarP(&opt.TunCidr, "tunCidr", "", "10.1.1.0/30", "The cidr used by local tun and peer tun device, at least 4 ips. This cidr MUST NOT overlay with kubernetes service cidr and pod cidr.")
 
 	// socks
 	cmd.Flags().IntVarP(&opt.Proxy, "proxy", "", 2223, "when should method socks or socks5, you can choice which port to proxy")
@@ -132,6 +136,7 @@ func (o *ConnectOptions) checkContext() error {
 	return nil
 }
 
+// CloneDaemonOptions ...
 func (o *ConnectOptions) transport() *options.DaemonOptions {
 	daemonOptions := o.transportGlobalOptions()
 	daemonOptions.ConnectOptions = &options.ConnectOptions{
@@ -142,6 +147,8 @@ func (o *ConnectOptions) transport() *options.DaemonOptions {
 		SSHPort:              o.Port,
 		Global:               o.Global,
 		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
+		TunName:              o.TunName,
+		TunCidr:              o.TunCidr,
 	}
 	return daemonOptions
 }

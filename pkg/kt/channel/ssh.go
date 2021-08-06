@@ -62,19 +62,24 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 
 	log.Info().Msgf("Forward %s to localEndpoint %s", remoteEndpoint, localEndpoint)
 
-	// handle incoming connections on reverse forwarded tunnel
+	go c.handleConnections(localEndpoint, listener)
+	return nil
+}
+
+// handleConnections handle incoming connections on reverse forwarded tunnel
+func (c *SSHChannel) handleConnections(localEndpoint string, listener net.Listener) {
 	for {
 		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
 			log.Error().Msgf("Dial INTO local service error: %s", err)
-			return err
+			return
 		}
 
 		client, err := listener.Accept()
 		if err != nil {
 			log.Error().Msgf("Error: %s", err)
-			return err
+			return
 		}
 
 		handleClient(client, local)

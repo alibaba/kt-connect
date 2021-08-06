@@ -57,7 +57,14 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(cli, options, "exchange")
+	options.RuntimeOptions.Component = common.ComponentExchange
+	err := util.WritePidFile(common.ComponentExchange)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("KtConnect start at %d", os.Getpid())
+
+	ch := SetUpCloseHandler(cli, options, common.ComponentExchange)
 
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
@@ -101,6 +108,7 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

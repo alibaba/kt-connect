@@ -1,4 +1,4 @@
-KT Connect
+KT-Connect
 ===========
 
 ![Go](https://github.com/alibaba/kt-connect/workflows/Go/badge.svg)
@@ -9,150 +9,24 @@ KT Connect
 [![Release](https://img.shields.io/github/release/alibaba/kt-connect.svg?style=flat-square)](https://img.shields.io/github/release/alibaba/kt-connect.svg?style=flat-square)
 ![License](https://img.shields.io/github/license/alibaba/kt-connect.svg)
 
-Manage and integrate with your Kubernetes dev environment more efficiently.
+KT-Connect (short for "Kubernetes Toolkit Connect") is a utility tool to
+manage and integrate with your Kubernetes dev environment more efficiently.
 
 ![Arch](./docs/media/arch.png)
 
 ## Features
 
-* Connect: Directly Access a remote Kubernetes cluster. KT Connect use `sshuttle` as the vpn tool to access remote Kubernetes cluster networks.
-* Exchange: Developer can exchange the workload to redirect the requests to a local app.
-* Mesh: You can create a mesh version in local host and redirect to your local
-* Dashboard: A dashboard view can help you know how the environment is been used.
+* `Connect`: Directly Access a remote Kubernetes cluster. KT Connect use ssh-vpn, socks-proxy or tun-device to access remote Kubernetes cluster networks.
+* `Exchange`: Developer can exchange the workload to redirect the requests to a local app.
+* `Mesh`: You can create a mesh version service in local host, and redirect specified workload requests to your local.
+* `Provide`: Expose a local running app to Kubernetes cluster as a common service, all requests to that service are redirect to local app.
+* `Dashboard`: A dashboard view can help you know how the environment has been used.
 
 ## QuickStart
 
-You can download and install the `ktctl` from [Downloads And Install](https://rdc-incubator.github.io/kt-docs/#/downloads)
+You can download and install the `ktctl` from [Downloads And Install](https://alibaba.github.io/kt-connect/#/en-us/downloads)
 
-### Deploy a service in Kubernetes
-
-```
-$ kubectl run tomcat --image=registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0 --expose --port=8080
-service "tomcat" created
-deployment.apps "tomcat" created
-
-# Deployment info
-$ kubectl get deployments -o wide --selector run=tomcat
-NAME      DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE       CONTAINERS   IMAGES                                                                 SELECTOR
-tomcat    1         1         1            1           18s       tomcat       registry.cn-hangzhou.aliyuncs.com/rdc-product/kt-connect-tomcat9:1.0   run=tomcat
-
-# Pods info
-$ kubectl get pods -o wide --selector run=tomcat
-NAME                      READY     STATUS    RESTARTS   AGE       IP             NODE
-tomcat-54d87b848c-2mc9b   1/1       Running   0          1m        172.23.2.234   cn-beijing.192.168.0.8
-
-# Service info
-$ kubectl get svc tomcat
-NAME      TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
-tomcat    ClusterIP   172.21.6.39   <none>        8080/TCP   1m
-```
-
-### Connect: Access Kubernetes resource from local
-
-```
-$ sudo ktctl connect --method=vpn
-10:44PM INF Connect Start At 80073
-10:44PM INF Client address 192.168.3.120
-10:44PM INF Deploying shadow deployment kt-connect-daemon-rarba in namespace default
-
-10:44PM INF Shadow Pod status is Pending
-10:44PM INF Shadow Pod status is Running
-10:44PM INF Shadow is ready.
-10:44PM INF Success deploy proxy deployment kt-connect-daemon-rarba in namespace default
-
-Forwarding from 127.0.0.1:2222 -> 22
-Forwarding from [::1]:2222 -> 22
-Handling connection for 2222
-Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts.
-client: Connected.
-10:44PM INF KT proxy start successful
-```
-
-Access PodIP:
-
-```
-curl http://172.23.2.234:8080 #Access PodIP from local
-kt-connect demo from tomcat9
-```
-
-Access ClusterIP:
-
-```
-$ curl http://172.21.6.39:8080 #Access ClusterIP
-kt-connect demo from tomcat9
-```
-
-Access Server internal DNS address
-
-```
-$ curl http://tomcat:8080 #Access Server internal DNS address
-kt-connect demo from tomcat9
-```
-
-### Exchange: Access local from cluster
-
-Create Tomcat 8 in local and expose 8080 port
-
-```
-docker run -itd -p 8080:8080 tomcat:8
-```
-
-```
-$ sudo ktctl exchange tomcat --expose 8080
-2019/06/19 11:19:10  * tomcat (0 replicas)
-2019/06/19 11:19:10 Scale deployment tomcat to zero
-2019/06/19 11:19:10 Deploying proxy deployment tomcat-kt-oxpjf in namespace default
-2019/06/19 11:19:10 Pod status is Pending
-2019/06/19 11:19:12 Pod status is Running
-2019/06/19 11:19:12 Success deploy proxy deployment tomcat-kt-oxpjf in namespace default
-SSH Remote port-forward for POD starting
-2019/06/19 11:19:14 ssh remote port-forward start at pid: 3567
-```
-
-```
-tips:
-if your remote port diffrent local port, you can user ${remotePort}:{localPort} set expose parameter
-```
-
-Access the local tomcat by internal service DNS address:
-
-> Note: if `ktctl connect` not running, you can only access from cluster
-
-```
-$ curl http://tomcat:8080 | grep '<h1>'
-<h1>Apache Tomcat/8.5.37</h1> #
-```
-
-### Mesh: Build large test environemnt with ServiceMesh
-
-> You can know more from [Mesh Best Practices](https://rdc-incubator.github.io/kt-docs/#/guide/mesh)
-
-The biggest difference from mesh and exchange is exchange will scale the origin workload replicas down to zero, and mesh will keep it and create a pod instance with an random version. After this, user can modify the `Istio` route rule to let the specific request redirect to your local, and the environment can keep working as normal:
-
-```
-$ sudo ktctl mesh tomcat --expose 8080
-2019/06/19 22:10:23 'KT Connect' not runing, you can only access local app from cluster
-2019/06/19 22:10:24 Deploying proxy deployment tomcat-kt-ybocr in namespace default
-2019/06/19 22:10:24 Pod status is Pending
-2019/06/19 22:10:26 Pod status is Pending
-2019/06/19 22:10:28 Pod status is Running
-2019/06/19 22:10:28 Success deploy proxy deployment tomcat-kt-ybocr in namespace default
-2019/06/19 22:10:28 -----------------------------------------------------------
-2019/06/19 22:10:28 |    Mesh Version 'ybocr' You can update Istio rule       |
-2019/06/19 22:10:28 -----------------------------------------------------------
-2019/06/19 22:10:30 exchange port forward to local start at pid: 53173
-SSH Remote port-forward POD 172.16.0.217 22 to 127.0.0.1:2217 starting
-2019/06/19 22:10:30 ssh remote port-forward exited
-2019/06/19 22:10:32 ssh remote port-forward start at pid: 53174
-```
-
-### Dashboard
-
-The dashboard can help your know how your dev environment is been used.
-
-![Dashboard](./docs/media/dashboard-demo.png)
-
-You can install KT Connect Dashboard by following [Install Dashboard](https://rdc-incubator.github.io/kt-docs/#/guide/dashboard)
+Read the [Quick Start Guide](https://alibaba.github.io/kt-connect/#/en-us/quickstart) for more about this tool.
 
 ## Ask For Help
 

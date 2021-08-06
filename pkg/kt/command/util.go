@@ -2,22 +2,22 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
+	"github.com/rs/zerolog/log"
+	"github.com/urfave/cli"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-
-	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/registry"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
-	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli"
 )
 
 // NewCommands return new Connect Action
@@ -55,8 +55,7 @@ func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
-	e, _ := util.PathExists(options.RuntimeOptions.PidFile)
-	if !e {
+	if !util.IsPidFileExist() {
 		log.Info().Msgf("Workspace already cleaned")
 		return
 	}
@@ -71,6 +70,22 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
 		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
+	}
+
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		err := exec.RunAndWait(cli.Exec().SSHTunnelling().RemoveDevice(), "del_device", options.Debug)
+		if err != nil {
+			log.Error().Msgf("Fails to delete tun device")
+			return
+		}
+
+		if !options.ConnectOptions.DisableDNS {
+			err = (&resolvconf.Conf{}).RestoreConfig()
+			if err != nil {
+				log.Error().Msgf("Restore resolv.conf failed, error: %s", err)
+				return
+			}
+		}
 	}
 
 	kubernetes, err := cli.Kubernetes()
@@ -94,11 +109,12 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 }
 
 func cleanLocalFiles(options *options.DaemonOptions) {
-	if _, err := os.Stat(options.RuntimeOptions.PidFile); err == nil {
-		log.Info().Msgf("- Removing pid %s", options.RuntimeOptions.PidFile)
-		if err = os.Remove(options.RuntimeOptions.PidFile); err != nil {
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, options.RuntimeOptions.Component, os.Getpid())
+	if _, err := os.Stat(pidFile); err == nil {
+		log.Info().Msgf("- Removing pid %s", pidFile)
+		if err = os.Remove(pidFile); err != nil {
 			log.Error().Err(err).
-				Msgf("Stop process:%s failed", options.RuntimeOptions.PidFile)
+				Msgf("Stop process:%s failed", pidFile)
 		}
 	}
 

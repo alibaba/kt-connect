@@ -32,7 +32,7 @@ type PortForwardAPodRequest struct {
 	// PodPort is the target port for the pod
 	PodPort int
 	// StopCh is the channel used to manage the port forward lifecycle
-	StopCh <-chan struct{}
+	StopCh chan struct{}
 	// ReadyCh communicates when the tunnel is ready to receive traffic
 	ReadyCh chan struct{}
 	// Timeout connect timeout

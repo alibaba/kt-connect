@@ -27,7 +27,7 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCirds(clientset kubernetes.Interface, podCIDR string) (cidrs []string, err error) {
+func getPodCidrs(clientset kubernetes.Interface, podCIDR string) (cidrs []string, err error) {
 	cidrs = []string{}
 
 	if len(podCIDR) != 0 {
@@ -49,7 +49,7 @@ func getPodCirds(clientset kubernetes.Interface, podCIDR string) (cidrs []string
 	}
 
 	if len(cidrs) == 0 {
-		samples, err2 := getPodCirdByInstance(clientset)
+		samples, err2 := getPodCidrByInstance(clientset)
 		if err2 != nil {
 			err = err2
 			return
@@ -62,7 +62,7 @@ func getPodCirds(clientset kubernetes.Interface, podCIDR string) (cidrs []string
 	return
 }
 
-func getPodCirdByInstance(clientset kubernetes.Interface) (samples mapset.Set, err error) {
+func getPodCidrByInstance(clientset kubernetes.Interface) (samples mapset.Set, err error) {
 	log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
 	podList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
 	if err != nil {
@@ -73,17 +73,17 @@ func getPodCirdByInstance(clientset kubernetes.Interface) (samples mapset.Set, e
 	samples = mapset.NewSet()
 	for _, pod := range podList.Items {
 		if pod.Status.PodIP != "" && pod.Status.PodIP != "None" {
-			samples.Add(getCirdFromSample(pod.Status.PodIP))
+			samples.Add(getCidrFromSample(pod.Status.PodIP))
 		}
 	}
 	return
 }
 
-func getServiceCird(serviceList []v1.Service) (cidr []string, err error) {
+func getServiceCidr(serviceList []v1.Service) (cidr []string, err error) {
 	samples := mapset.NewSet()
 	for _, service := range serviceList {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
-			samples.Add(getCirdFromSample(service.Spec.ClusterIP))
+			samples.Add(getCidrFromSample(service.Spec.ClusterIP))
 		}
 	}
 
@@ -93,7 +93,7 @@ func getServiceCird(serviceList []v1.Service) (cidr []string, err error) {
 	return
 }
 
-func getCirdFromSample(sample string) string {
+func getCidrFromSample(sample string) string {
 	return strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
 }
 
@@ -195,7 +195,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	annotations[common.KTLastHeartBeat] = strconv.FormatInt(time.Now().Unix(), 10)
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
-	return &appV1.Deployment{
+	dep := &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   namespace,
@@ -221,6 +221,12 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 			},
 		},
 	}
+
+	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
+		addTunHostPath(dep)
+	}
+
+	return dep
 }
 
 func getSSHVolume(volume string) v1.Volume {
@@ -241,4 +247,30 @@ func getSSHVolume(volume string) v1.Volume {
 		},
 	}
 	return sshVolume
+}
+
+func addTunHostPath(dep *appV1.Deployment) {
+	path := "/dev/net/tun"
+
+	dep.Spec.Template.Spec.Volumes = append(dep.Spec.Template.Spec.Volumes, v1.Volume{
+		Name: "tun",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{Path: path},
+		},
+	})
+
+	for i := range dep.Spec.Template.Spec.Containers {
+		c := &dep.Spec.Template.Spec.Containers[i]
+		if c.Name != "standalone" {
+			continue
+		} else {
+			c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{
+				Name:      "tun",
+				MountPath: path,
+			})
+
+			c.SecurityContext.Capabilities.Add = append(c.SecurityContext.Capabilities.Add, "NET_ADMIN")
+			break
+		}
+	}
 }

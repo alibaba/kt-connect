@@ -1,10 +1,11 @@
 ![logo](media/logo.png)
 
-# KT Connect<small>0.0.12</small>
+# KT Connect<small>0.1.0</small>
 
 > Management and Integration with your Kubernetes dev environment more efficient.
 
-- Connect, Exchange And Mesh
+- **Local** ⇋ **Cluster**
+- (with KT-Bidirectional-Channel)
 
 [Github](https://github.com/alibaba/kt-connect)
-[Quick start](/en-us/quickstart)
+[QuickStart](/en-us/quickstart)

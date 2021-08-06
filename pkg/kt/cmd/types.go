@@ -52,6 +52,8 @@ type ConnectOptions struct {
 	Dump2hosts string
 	Port       int
 	Global     bool
+	TunName    string
+	TunCidr    string
 }
 
 // MeshOptions ...

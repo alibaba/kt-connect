@@ -3,6 +3,7 @@ package connect
 import (
 	"context"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"io/ioutil"
 
 	"github.com/alibaba/kt-connect/internal/network"
@@ -27,7 +28,7 @@ func forwardSSHTunnelToLocal(s *Shadow, podName string, localSSHPort int) (chan 
 }
 
 func forwardSocksTunnelToLocal(options *options.DaemonOptions, podName string) error {
-	showSocksBanner(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
+	showSetupSuccessfulMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
 	_, _, err := network.ForwardPodPortToLocal(network.PortForwardAPodRequest{
 		RestConfig: options.RuntimeOptions.RestConfig,
 		PodName:    podName,
@@ -40,11 +41,9 @@ func forwardSocksTunnelToLocal(options *options.DaemonOptions, podName string) e
 }
 
 func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) (err error) {
-	showSocksBanner(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
+	showSetupSuccessfulMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	_ = ioutil.WriteFile(".jvmrc", []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
 		options.ConnectOptions.SocksPort)), 0644)
-	_ = ioutil.WriteFile(".envrc", []byte(fmt.Sprintf("KUBERNETES_NAMESPACE=%s",
-		options.Namespace)), 0644)
 
 	return ssh.StartSocks5Proxy(
 		&channel.Certificate{
@@ -56,14 +55,13 @@ func startSocks5Connection(ssh channel.Channel, options *options.DaemonOptions) 
 	)
 }
 
-func showSocksBanner(protocol string, port int) {
-	operation := "export"
-	if util.IsWindows() {
-		operation = "set"
+func showSetupSuccessfulMessage(protocol string, port int) {
+	log.Info().Msgf("Start %s proxy successfully", protocol)
+	if !util.IsWindows() {
+		log.Info().Msgf("==============================================================")
+		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
+		log.Info().Msgf("==============================================================")
 	}
-	log.Info().Msgf("==============================================================")
-	log.Info().Msgf("Start SOCKS Proxy Successful: %s http_proxy=%s://127.0.0.1:%d", operation, protocol, port)
-	log.Info().Msgf("==============================================================")
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {
@@ -75,4 +73,71 @@ func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request 
 		Stop: request.Stop,
 	})
 	return err
+}
+
+// startTunConnection creates a ssh tunnel to pod
+func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
+	options *options.DaemonOptions, podIP string, cidrs []string, stop chan struct{}) (err error) {
+
+	// 1. Create tun device.
+	err = exec.RunAndWait(cli.SSHTunnelling().AddDevice(), "add_device", options.Debug)
+	if err != nil {
+		return err
+	} else {
+		log.Info().Msgf("Add tun device successful")
+	}
+
+	// 2. Setup device ip
+	err = exec.RunAndWait(cli.SSHTunnelling().SetDeviceIP(), "set_device_ip", options.Debug)
+	if err != nil {
+		// clean up
+		return err
+	} else {
+		log.Info().Msgf("Set tun device ip successful")
+	}
+
+	// 3. Set device up.
+	err = exec.RunAndWait(cli.SSHTunnelling().SetDeviceUp(), "set_device_up", options.Debug)
+	if err != nil {
+		return err
+	} else {
+		log.Info().Msgf("Set tun device up successful")
+	}
+
+	// 4. Create ssh tunnel.
+	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+		Ctx:  rootCtx,
+		Cmd:  cli.SSH().TunnelToRemote(0, credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort),
+		Name: "ssh_tun",
+		Stop: stop,
+	})
+
+	if err != nil {
+		return err
+	} else {
+		log.Info().Msgf("Create ssh tun successful")
+	}
+
+	// 5. Add route to kubernetes cluster.
+	for i := range cidrs {
+		err = exec.RunAndWait(cli.SSHTunnelling().AddRoute(cidrs[i]), "add_route", options.Debug)
+		if err != nil {
+			// clean up
+			return err
+		} else {
+			log.Info().Msgf("Add route %s successful", cidrs[i])
+		}
+	}
+
+	if !options.ConnectOptions.DisableDNS {
+		// 6. Setup dns config.
+		// This will overwrite the file /etc/resolv.conf
+		err = (&resolvconf.Conf{}).AddNameserver(podIP)
+		if err == nil {
+			log.Info().Msgf("Add nameserver %s successful", podIP)
+		}
+		return err
+	}
+
+	return nil
 }
