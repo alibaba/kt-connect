@@ -47,6 +47,7 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 			options.ConnectOptions.SocksPort)), 0644)
 	}
 
+	log.Debug().Msgf("Starting socks5 proxy ...")
 	return ssh.StartSocks5Proxy(
 		&sshchannel.Certificate{
 			Username: "root",

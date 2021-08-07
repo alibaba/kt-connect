@@ -1,15 +1,13 @@
 package sshchannel
 
 import (
-	"fmt"
 	"io"
 	"net"
 
 	"github.com/armon/go-socks5"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/net/context"
-
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/net/context"
 )
 
 // SSHChannel ssh channel
@@ -18,10 +16,10 @@ type SSHChannel struct{}
 // StartSocks5Proxy start socks5 proxy
 func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
-	defer conn.Close()
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 
 	conf := &socks5.Config{
 		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
@@ -30,27 +28,26 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 	}
 
 	serverSocks, err := socks5.New(conf)
-
 	if err != nil {
 		return err
 	}
 
 	if err := serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
-		fmt.Println("failed to create socks5 server", err)
+		log.Error().Msgf("Failed to create socks5 server", err)
 		return err
 	}
-	fmt.Println("dynamic port forward successful")
+	log.Info().Msgf("Dynamic port forward successful")
 	return nil
 }
 
 // ForwardRemoteToLocal forward remote request to local
 func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
-	defer conn.Close()
 	if err != nil {
 		log.Error().Msgf("Fail to create ssh tunnel")
 		return err
 	}
+	defer conn.Close()
 
 	// Listen on remote server port
 	listener, err := conn.Listen("tcp", remoteEndpoint)
@@ -72,7 +69,7 @@ func (c *SSHChannel) handleConnections(localEndpoint string, listener net.Listen
 		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
-			log.Error().Msgf("Dial INTO local service error: %s", err)
+			log.Error().Msgf("Dial to local service error: %s", err)
 			return
 		}
 

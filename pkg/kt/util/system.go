@@ -11,15 +11,17 @@ import (
 	ps "github.com/mitchellh/go-ps"
 )
 
-// IsDaemonRunning check daemon is running or not
-func IsDaemonRunning(componentName string) bool {
+// GetDaemonRunning fetch daemon pid if exist
+func GetDaemonRunning(componentName string) string {
 	files, _ := ioutil.ReadDir(KtHome)
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), componentName) && strings.HasSuffix(f.Name(), ".pid") {
-			return true
+			from := len(componentName) + 1
+			to := len(f.Name()) - len(".pid")
+			return f.Name()[from:to]
 		}
 	}
-	return false
+	return ""
 }
 
 // IsPidFileExist check pid file is exist or not
