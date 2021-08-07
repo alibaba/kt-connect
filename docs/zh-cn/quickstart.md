@@ -21,7 +21,7 @@ $ kubectl exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir webapps/ROOT; 
 ```bash
 $ kubectl get pod -o wide --selector app=tomcat
 NAME     READY   STATUS    RESTARTS   AGE   IP            ...
-tomcat   2/2     Running   0          34s   10.51.0.162   ...
+tomcat   1/1     Running   0          34s   10.51.0.162   ...
 
 $ kubectl get svc tomcat
 NAME     TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
@@ -286,6 +286,11 @@ $ ktctl provide tomcat-preview --expose 8080
 10:55PM INF Forward remote 10.51.0.43:8080 -> 127.0.0.1:8080
 ```
 
-现在集群里的服务就可以通过`tomcat-preview`名称来访问本地暴露的服务实例了，其他开发者也可以在执行`ktctl connect`后，直接通过`tomcat-preview`服务名称来预览该服务的当前情况。
+现在集群里的服务就可以通过`tomcat-preview`名称来访问本地暴露的服务实例了，其他开发者也可以在执行`ktctl connect`后，直接通过`tomcat-preview`服务名称来预览该服务的当前情况：
+
+```bash
+$ curl http://tomcat-preview:8080
+kt-connect local v2
+```
 
 <!-- tabs:end -->
