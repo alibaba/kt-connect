@@ -32,27 +32,26 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 		return err
 	}
 
-	if err := serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
+	// Process will hang at here
+	if err = serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
 		log.Error().Msgf("Failed to create socks5 server", err)
-		return err
 	}
-	log.Info().Msgf("Dynamic port forward successful")
-	return nil
+	return
 }
 
 // ForwardRemoteToLocal forward remote request to local
 func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	if err != nil {
-		log.Error().Msgf("Fail to create ssh tunnel")
+		log.Error().Msgf("Fail to create ssh tunnel: %s", err)
 		return err
 	}
 	defer conn.Close()
 
-	// Listen on remote server port
+	// Listen on remote server port, process will hang at here
 	listener, err := conn.Listen("tcp", remoteEndpoint)
 	if err != nil {
-		log.Error().Msgf("Fail to listen remote endpoint ")
+		log.Error().Msgf("Fail to listen remote endpoint: %s", err)
 		return err
 	}
 	defer listener.Close()
@@ -94,7 +93,7 @@ func connection(username string, password string, address string) (*ssh.Client, 
 
 	conn, err := ssh.Dial("tcp", address, config)
 	if err != nil {
-		log.Error().Msgf("Fail create ssh connection %s", err)
+		log.Error().Msgf("Fail create ssh connection: %s", err)
 	}
 	return conn, err
 }

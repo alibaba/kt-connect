@@ -27,7 +27,7 @@ func forwardSSHTunnelToLocal(cli portforward.CliInterface, options *options.Daem
 }
 
 func forwardSocksTunnelToLocal(cli portforward.CliInterface, options *options.DaemonOptions, podName string) error {
-	showSetupSuccessfulMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
+	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	_, _, err := cli.ForwardPodPortToLocal(portforward.Request{
 		RestConfig: options.RuntimeOptions.RestConfig,
 		PodName:    podName,
@@ -40,14 +40,13 @@ func forwardSocksTunnelToLocal(cli portforward.CliInterface, options *options.Da
 }
 
 func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOptions) (err error) {
-	showSetupSuccessfulMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	jvmrcFilePath := util.GetJvmrcFilePath(options.ConnectOptions.JvmrcDir)
 	if jvmrcFilePath != "" {
 		ioutil.WriteFile(jvmrcFilePath, []byte(fmt.Sprintf("-DsocksProxyHost=127.0.0.1\n-DsocksProxyPort=%d",
 			options.ConnectOptions.SocksPort)), 0644)
 	}
 
-	log.Debug().Msgf("Starting socks5 proxy ...")
+	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
 	return ssh.StartSocks5Proxy(
 		&sshchannel.Certificate{
 			Username: "root",
@@ -58,8 +57,8 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 	)
 }
 
-func showSetupSuccessfulMessage(protocol string, port int) {
-	log.Info().Msgf("Start %s proxy successfully", protocol)
+func showSetupSocksMessage(protocol string, port int) {
+	log.Info().Msgf("Starting up %s proxy ...", protocol)
 	if !util.IsWindows() {
 		log.Info().Msgf("==============================================================")
 		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)

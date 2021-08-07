@@ -4,12 +4,14 @@
 
 > 发布时间：待定
 
+* 新增`tun`连接模式（alpha）
 * 增强Windows下的`connect`命令支持
 * 使用`provide`命令替代`run`命令
 * 新增`clean`命令，清理集群中残留的Shadow Pods
 * 支持`service.namespace.svc`结构的服务域名解析
 * 完善缺失`sshuttle`依赖等运行时错误的报错信息
 * dump2hosts支持完整服务域名
+* 移除本地`kubectl`客户端工具依赖
 
 ### 0.0.13-rc13
 

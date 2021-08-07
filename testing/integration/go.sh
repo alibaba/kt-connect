@@ -1,11 +1,27 @@
 #!/usr/bin/env bash
 
-NS="kt-ci-test"
+NS="kt-integration-test"
 IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
+
+# Clean everything up
+function cleanup() {
+  echo "cleaning up ..."
+  if [ "${exchangePid}" != "" ]; then
+    sudo kill -15 ${exchangePid}
+  fi
+  if [ "${connectPid}" != "" ]; then
+    sudo kill -15 ${connectPid}
+  fi
+  docker rm -f tomcat
+  kubectl -n ${NS} delete deployment tomcat
+  kubectl -n ${NS} delete service tomcat
+  kubectl delete namespace ${NS}
+}
 
 # Exit with error
 function fail() {
   echo "${*}"
+  cleanup
   exit -1
 }
 
@@ -23,8 +39,8 @@ function wait_for_pod() {
 }
 
 # Check environment is clean
-declare -i count=`ps aux | grep "ktctl" | grep -v "grep" | wc -l`
-if [ ${count} -ne 0 ]; then fail "ktctl already running before test start"; fi
+existPid=`ps aux | grep "ktctl" | grep -v "grep" | awk '{print $2}' | sort -n | head -1`
+if [ "${existPid}" != "" ]; then fail "ktctl already running before test start (pid: ${existPid})"; fi
 
 # Prepare test resources
 kubectl create namespace ${NS}
@@ -54,11 +70,11 @@ connectPid=`cat ${pidFile}`
 echo "ktctl connect pid: ${connectPid}"
 
 res=`curl -s "http://${podIp}:8080"`
-if [ ${res} != "kt-connect demo v1" ]; then fail "failed to access via pod-ip, got ${res}"; fi
+if [ "${res}" != "kt-connect demo v1" ]; then fail "failed to access via pod-ip, got ${res}"; fi
 res=`curl -s "http://${clusterIP}:8080"`
-if [ ${res} != "kt-connect demo v1" ]; then fail "failed to access via cluster-ip, got ${res}"; fi
+if [ "${res}" != "kt-connect demo v1" ]; then fail "failed to access via cluster-ip, got ${res}"; fi
 res=`curl -s "http://tomcat.${NS}.svc.cluster.local:8080"`
-if [ ${res} != "kt-connect demo v1" ]; then fail "failed to access via service-domain, got ${res}"; fi
+if [ "${res}" != "kt-connect demo v1" ]; then fail "failed to access via service-domain, got ${res}"; fi
 
 # Prepare local service
 docker run -d --name tomcat -p 8080:8080 tomcat:9
@@ -66,7 +82,7 @@ sleep 1
 docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
 
 res=`curl -s "http://127.0.0.1:8080"`
-if [ ${res} != "kt-connect local v2" ]; then fail "failed to setup local service, got ${res}"; fi
+if [ "${res}" != "kt-connect local v2" ]; then fail "failed to setup local service, got ${res}"; fi
 
 # Test exchange
 ktctl -n ${NS} -i ${IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-ci-exchange.log 2>&1 &
@@ -83,9 +99,4 @@ res=`curl -s "http://tomcat.${NS}.svc.cluster.local:8080"`
 if [ "${res}" != "kt-connect local v2" ]; then fail "failed to exchange test service, got ${res}"; fi
 
 # Clean up
-sudo kill -15 ${exchangePid}
-docker rm -f tomcat
-sudo kill -15 ${connectPid}
-kubectl -n ${NS} delete deployment tomcat
-kubectl -n ${NS} delete service tomcat
-kubectl delete namespace ${NS}
+cleanup
