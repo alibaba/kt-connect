@@ -48,7 +48,7 @@ func NewExchangeCommand(streams genericclioptions.IOStreams, version string) *co
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// exchange
-	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
+	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [local:remote]")
 
 	return cmd
 }

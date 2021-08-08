@@ -26,7 +26,7 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 		Flags: []urfave.Flag{
 			urfave.StringFlag{
 				Name:        "expose",
-				Usage:       "expose port [port] or [remote:local]",
+				Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
 				Destination: &options.ExchangeOptions.Expose,
 			},
 		},

@@ -73,8 +73,8 @@ func getPortMapping(exposePort string) (string, string) {
 	remotePort := exposePort
 	ports := strings.SplitN(exposePort, ":", 2)
 	if len(ports) > 1 {
-		localPort = ports[1]
-		remotePort = ports[0]
+		localPort = ports[0]
+		remotePort = ports[1]
 	}
 	return localPort, remotePort
 }

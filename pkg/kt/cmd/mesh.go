@@ -48,7 +48,7 @@ func NewMeshCommand(streams genericclioptions.IOStreams, version string) *cobra.
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// exchange
-	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [remote:local]")
+	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " expose port [port] or [local:remote]")
 	cmd.Flags().StringVarP(&opt.Version, "version-label", "", "0.0.1", "specify the version of mesh service, e.g. '0.0.1'")
 	return cmd
 }

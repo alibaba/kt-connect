@@ -25,8 +25,8 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 		Usage: "mesh kubernetes deployment to local",
 		Flags: []urfave.Flag{
 			urfave.StringFlag{
-				Name:        "expose,e",
-				Usage:       "ports to expose separate by comma, in [port] or [remote:local] format, e.g. 7001,80:8080",
+				Name:        "expose",
+				Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
 				Destination: &options.MeshOptions.Expose,
 			},
 			urfave.StringFlag{
