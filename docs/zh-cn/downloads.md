@@ -19,7 +19,7 @@ brew install sshuttle
 下载并安装KT
 
 ```
-$ curl -OL https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_darwin_amd64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_darwin_amd64.tar.gz
 $ tar -xzvf ktctl_darwin_amd64.tar.gz
 $ mv ktctl_darwin_amd64 /usr/local/bin/ktctl
 $ ktctl -h
@@ -41,7 +41,7 @@ pip install sshuttle
 下载并安装KT
 
 ```
-$ curl -OL https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_linux_amd64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_amd64.tar.gz
 $ tar -xzvf ktctl_linux_amd64.tar.gz
 $ mv ktctl_linux_amd64 /usr/local/bin/ktctl
 $ ktctl -h

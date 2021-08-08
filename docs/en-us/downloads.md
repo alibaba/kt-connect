@@ -8,8 +8,7 @@
 
 Downloads:
 
-* [Darwin amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_darwin_amd64.tar.gz)
-* [Darwin 386](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_darwin_386.tar.gz)
+* [Darwin amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_darwin_amd64.tar.gz)
 
 Install sshuttle
 
@@ -20,7 +19,7 @@ brew install sshuttle
 Download And Install KT
 
 ```
-$ curl -OL https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_darwin_amd64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_darwin_amd64.tar.gz
 $ tar -xzvf ktctl_darwin_amd64.tar.gz
 $ mv ktctl_darwin_amd64 /usr/local/bin/ktctl
 $ ktctl -h
@@ -30,8 +29,8 @@ $ ktctl -h
 
 Downloads:
 
-* [Linux Amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_linux_amd64.tar.gz)
-* [Linux 386](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_linux_386.tar.gz)
+* [Linux Amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_amd64.tar.gz)
+* [Linux 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_386.tar.gz)
 
 
 Install sshuttle
@@ -43,7 +42,7 @@ pip install sshuttle
 Download And Install KT
 
 ```
-$ curl -OL https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_linux_amd64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_amd64.tar.gz
 $ tar -xzvf ktctl_linux_amd64.tar.gz
 $ mv ktctl_linux_amd64 /usr/local/bin/ktctl
 $ ktctl -h
@@ -53,8 +52,8 @@ $ ktctl -h
 
 Downloads:
 
-* [Windws amd64](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_windows_amd64.tar.gz)
-* [Windows 386](https://rdc-incubators.oss-cn-beijing.aliyuncs.com/stable/ktctl_windows_386.tar.gz)
+* [Windws amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_windows_amd64.tar.gz)
+* [Windows 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_windows_386.tar.gz)
 
 Make sure the executable file under PATH
 
