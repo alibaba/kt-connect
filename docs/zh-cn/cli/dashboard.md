@@ -1,6 +1,6 @@
 ## Command: ktctl dashboard
 
-快速安装和使用kt dashboard
+快速安装和使用kt dashboard（已弃用）
 
 ### 示例
 
@@ -12,7 +12,7 @@ ktctl dashboard init
 ktctl dashboard open
 ```
 
-### 参数
+### 常用参数
 
 ```
 COMMANDS:
