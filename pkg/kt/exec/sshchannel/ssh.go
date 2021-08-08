@@ -34,7 +34,7 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 
 	// Process will hang at here
 	if err = serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
-		log.Error().Msgf("Failed to create socks5 server", err)
+		log.Error().Msgf("Failed to create socks5 server: %s", err)
 	}
 	return
 }
@@ -63,7 +63,7 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
-			log.Error().Msgf("Dial INTO local service error: %s", err)
+			log.Error().Msgf("Dial into local service error: %s", err)
 			return err
 		}
 
