@@ -38,7 +38,13 @@ tomcat   ClusterIP   172.16.255.111   <none>        8080/TCP   34s
 
 #### ** Mac/Linux **
 
-> 在Mac/Linux环境下默认采用`vpn`模式，该模式采用`sshuttle`工具建立本地与集群的虚拟网络通道，请预先安装此工具，详见[sshuttle文档](https://github.com/sshuttle/sshuttle#obtaining-sshuttle)
+> 在Mac/Linux环境下默认采用`vpn`模式，该模式采用`sshuttle`工具建立本地与集群的虚拟网络通道，请预先安装此工具
+> 
+> - MacOS：`brew install sshuttle`
+> - Debian/Ubuntu：`apt-get install sshuttle`
+> - RedHat/CentOS/Fedora：`dnf install sshuttle`
+> 
+> 其他系统详见[sshuttle文档](https://github.com/sshuttle/sshuttle#obtaining-sshuttle)
 
 使用`connect`命令建立本地到集群的VPN网络，注意该命令需要管理员权限，普通用户需加`sudo`执行：
 
