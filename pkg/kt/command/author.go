@@ -8,7 +8,7 @@ import (
 func NewCliAuthor() []cli.Author {
 	return []cli.Author{
 		{
-			Name: "rdc incubator",
+			Name: "Alibaba Cloud",
 		},
 	}
 }

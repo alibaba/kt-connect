@@ -12,11 +12,13 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
+			Usage:       "Specify target namespace",
 			Value:       "default",
 			Destination: &options.Namespace,
 		},
 		cli.StringFlag{
 			Name:        "kubeconfig,c",
+			Usage:       "Specify path of KubeConfig file",
 			Value:       util.KubeConfig(),
 			Destination: &options.KubeConfig,
 		},
