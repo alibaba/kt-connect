@@ -113,7 +113,7 @@ func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
 }
 
 func wait(podName string) {
-	time.Sleep(time.Second)
+	time.Sleep(3 * time.Second)
 	if len(podName) > 0 {
 		log.Info().Msgf("Pod: %s is running, but not ready", podName)
 	} else {

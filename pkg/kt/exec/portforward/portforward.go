@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"time"
 )
@@ -58,27 +59,47 @@ func (s *Cli) ForwardPodPortToLocal(request Request) (chan struct{}, context.Con
 	ready := waitPortBeReady(request.Timeout, request.LocalPort)
 
 	if !ready {
-		return nil, nil, errors.New("port-forward not ready")
+		return nil, nil, errors.New("connect to port-forward failed")
 	}
 	return stop, rootCtx, nil
 }
 
 // PortForward ...
 func portForward(req Request) error {
-	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Namespace, req.PodName)
-	hostIP := strings.TrimLeft(req.RestConfig.Host, "htps:/")
+	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Namespace, req.PodName)
+	log.Debug().Msgf("Request port forward to %s", req.RestConfig.Host)
+	apiUrl, err := parseReqHost(req.RestConfig.Host, apiPath)
 
 	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
 	if err != nil {
 		return err
 	}
 
-	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, &url.URL{Scheme: "https", Path: path, Host: hostIP})
-	fw, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", req.LocalPort, req.PodPort)}, req.StopCh, req.ReadyCh, os.Stdout, os.Stderr)
+	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, apiUrl)
+	ports := []string{fmt.Sprintf("%d:%d", req.LocalPort, req.PodPort)}
+	fw, err := portforward.New(dialer, ports, req.StopCh, req.ReadyCh, os.Stdout, os.Stderr)
 	if err != nil {
 		return err
 	}
 	return fw.ForwardPorts()
+}
+
+// parseReqHost get the final url to port forward api
+func parseReqHost(host, apiPath string) (*url.URL, error) {
+	pos := strings.Index(host, "://")
+	if pos < 0 {
+		return nil, fmt.Errorf("invalid host address: %s", host)
+	}
+	protocol := host[0:pos]
+	hostIP := host[pos+3:]
+	baseUrl := ""
+	pos = strings.Index(hostIP, "/")
+	if pos > 0 {
+		baseUrl = hostIP[pos:]
+		hostIP = hostIP[0:pos]
+	}
+	fullPath := path.Join(baseUrl, apiPath)
+	return &url.URL{Scheme: protocol, Host: hostIP, Path: fullPath}, nil
 }
 
 // waitPortBeReady return true when port is ready
@@ -87,11 +108,11 @@ func waitPortBeReady(waitTime, port int) bool {
 	for i := 0; i < waitTime; i++ {
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err != nil {
-			log.Debug().Msgf("Connect to port-forward failed, error: %s, retry: %d", err, i)
+			log.Debug().Msgf("Waiting for port forward (%s), retry: %d", err, i+1)
 			time.Sleep(1 * time.Second)
 		} else {
 			conn.Close()
-			log.Info().Msgf("Connect to port-forward successful")
+			log.Info().Msgf("Port forward connection established")
 			return true
 		}
 	}
