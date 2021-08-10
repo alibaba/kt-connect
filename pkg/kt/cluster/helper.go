@@ -211,6 +211,7 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 					Labels: labels,
 				},
 				Spec: v1.PodSpec{
+					ServiceAccountName: options.ServiceAccount,
 					Containers: []v1.Container{
 						container(image, args, envs, options),
 					},

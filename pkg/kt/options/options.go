@@ -92,6 +92,7 @@ type dashboardOptions struct {
 type DaemonOptions struct {
 	KubeConfig        string
 	Namespace         string
+	ServiceAccount    string
 	Debug             bool
 	Image             string
 	Labels            string

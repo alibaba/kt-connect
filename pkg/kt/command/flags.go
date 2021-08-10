@@ -21,6 +21,12 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Destination: &options.KubeConfig,
 		},
 		cli.StringFlag{
+			Name:        "serviceAccount",
+			Usage:       "Specify ServiceAccount name for shadow pod",
+			Value:       "default",
+			Destination: &options.ServiceAccount,
+		},
+		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Custom proxy image",
 			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + version,
