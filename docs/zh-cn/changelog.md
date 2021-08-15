@@ -6,6 +6,7 @@
 
 * 支持指定代理Pod使用的ServiceAccount
 * 修复Kubernetes地址有上下文路径会导致无法连接的问题
+* 发布包从`tar.gz`格式改为`zip`格式，方便Windows用户下载
 
 ### 0.1.0
 

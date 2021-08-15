@@ -86,7 +86,7 @@ archives:
   - ktctl
   name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: tar.gz
+  format: zip
   files:
   - LICENSE
   - README.md
@@ -95,7 +95,7 @@ archives:
   - kubectl-connect
   name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: tar.gz
+  format: zip
   files:
   - LICENSE
   - README.md
@@ -104,7 +104,7 @@ archives:
     - kubectl-exchange
   name_template: 'kubectl-exchange_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: tar.gz
+  format: zip
   files:
     - LICENSE
     - README.md
@@ -113,7 +113,7 @@ archives:
     - kubectl-mesh
   name_template: 'kubectl-mesh_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: tar.gz
+  format: zip
   files:
     - LICENSE
     - README.md
@@ -122,7 +122,7 @@ archives:
     - kubectl-provide
   name_template: 'kubectl-provide_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
       }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: tar.gz
+  format: zip
   files:
     - LICENSE
     - README.md
