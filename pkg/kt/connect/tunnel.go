@@ -27,7 +27,7 @@ func forwardSSHTunnelToLocal(cli portforward.CliInterface, options *options.Daem
 }
 
 func forwardSocksTunnelToLocal(cli portforward.CliInterface, options *options.DaemonOptions, podName string) error {
-	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
+	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
 	_, _, err := cli.ForwardPodPortToLocal(portforward.Request{
 		RestConfig: options.RuntimeOptions.RestConfig,
 		PodName:    podName,
@@ -59,11 +59,21 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 
 func showSetupSocksMessage(protocol string, port int) {
 	log.Info().Msgf("Starting up %s proxy ...", protocol)
-	if !util.IsWindows() {
-		log.Info().Msgf("==============================================================")
-		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
-		log.Info().Msgf("==============================================================")
+	if util.IsWindows() && protocol == common.ConnectMethodSocks {
+		// socks method in windows will auto setup global proxy config
+		return
 	}
+	log.Info().Msgf("--------------------------------------------------------------")
+	if util.IsWindows() {
+		if util.IsCmd() {
+			log.Info().Msgf("Please setup proxy config by: set http_proxy=%s://127.0.0.1:%d", protocol, port)
+		} else {
+			log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"%s://127.0.0.1:%d\"", protocol, port)
+		}
+	} else {
+		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
+	}
+	log.Info().Msgf("--------------------------------------------------------------")
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {

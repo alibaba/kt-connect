@@ -84,6 +84,15 @@ func GetJvmrcFilePath(jvmrcDir string) string {
 	return ""
 }
 
+// IsCmd check running in windows cmd shell
+func IsCmd() bool {
+	proc, _ := ps.FindProcess(os.Getppid())
+	if proc != nil && !strings.Contains(proc.Executable(), "cmd.exe") {
+		return false
+	}
+	return true
+}
+
 // IsWindows check runtime is windows
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
