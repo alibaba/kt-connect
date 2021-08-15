@@ -6,22 +6,26 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	ps "github.com/mitchellh/go-ps"
 )
 
 // GetDaemonRunning fetch daemon pid if exist
-func GetDaemonRunning(componentName string) string {
+func GetDaemonRunning(componentName string) int {
 	files, _ := ioutil.ReadDir(KtHome)
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), componentName) && strings.HasSuffix(f.Name(), ".pid") {
 			from := len(componentName) + 1
 			to := len(f.Name()) - len(".pid")
-			return f.Name()[from:to]
+			pid, err := strconv.Atoi(f.Name()[from:to])
+			if err == nil && IsProcessExist(pid) {
+				return pid
+			}
 		}
 	}
-	return ""
+	return -1
 }
 
 // IsPidFileExist check pid file is exist or not

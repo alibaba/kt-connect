@@ -43,8 +43,8 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
-	if pid := util.GetDaemonRunning(common.ComponentConnect); pid != "" {
-		return fmt.Errorf("another connect process already running at %s, exiting", pid)
+	if pid := util.GetDaemonRunning(common.ComponentConnect); pid > 0 {
+		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
 	options.RuntimeOptions.Component = common.ComponentConnect
