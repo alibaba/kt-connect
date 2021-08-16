@@ -28,7 +28,7 @@ func main() {
 	options := opt.NewDaemonOptions()
 
 	app := cli.NewApp()
-	app.Name = "KT Connect"
+	app.Name = "KtConnect"
 	app.Usage = ""
 	app.Version = version
 	app.Authors = command.NewCliAuthor()

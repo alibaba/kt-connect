@@ -16,7 +16,7 @@ manage and integrate with your Kubernetes dev environment more efficiently.
 
 ## Features
 
-* `Connect`: Directly Access a remote Kubernetes cluster. KT Connect use ssh-vpn, socks-proxy or tun-device to access remote Kubernetes cluster networks.
+* `Connect`: Directly Access a remote Kubernetes cluster. KtConnect use ssh-vpn, socks-proxy or tun-device to access remote Kubernetes cluster networks.
 * `Exchange`: Developer can exchange the workload to redirect the requests to a local app.
 * `Mesh`: You can create a mesh version service in local host, and redirect specified workload requests to your local.
 * `Provide`: Expose a local running app to Kubernetes cluster as a common service, all requests to that service are redirect to local app.
@@ -24,9 +24,9 @@ manage and integrate with your Kubernetes dev environment more efficiently.
 
 ## QuickStart
 
-You can download and install the `ktctl` from [Downloads And Install](https://alibaba.github.io/kt-connect/#/en-us/downloads)
+You can download and install the `ktctl` from [Downloads And Install](en-us/downloads)
 
-Read the [Quick Start Guide](https://alibaba.github.io/kt-connect/#/en-us/quickstart) for more about this tool.
+Read the [Quick Start Guide](en-us/quickstart) for more about this tool.
 
 ## Ask For Help
 

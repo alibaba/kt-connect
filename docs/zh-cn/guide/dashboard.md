@@ -3,7 +3,7 @@ Dashboard
 
 > Dashboard需配合0.0.4+版本的客户端使用
 
-KT Connect 提供了一个可视化控制台用于查看和管理测试环境的整体状态。如下所示：
+KtConnect 提供了一个可视化控制台用于查看和管理测试环境的整体状态。如下所示：
 
 ![](../../media/guide/kt-dashboard.png)
 

@@ -169,7 +169,7 @@ Add a local joint endpoint:
 
 ```
 $ ktctl --n mesh-demo mesh tomcat --expose 8080
-2019/06/20 11:39:58 'KT Connect' not runing, you can only access local app from cluster
+2019/06/20 11:39:58 'KtConnect' not runing, you can only access local app from cluster
 2019/06/20 11:39:59 Deploying proxy deployment tomcat-kt-ngzlj in namespace mesh-demo
 2019/06/20 11:40:01 Pod status is Pending
 2019/06/20 11:40:03 Pod status is Running

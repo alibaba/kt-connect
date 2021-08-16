@@ -8,7 +8,7 @@ Windows Support
 
 > Precondition: Please make suere kubectl is already install and can connection to Kubernetes Cluster.
 
-User can download the windows exe biranary from [Daily Build](https://alibaba.github.io/kt-connect/#/nightly). Download and install to PATH.
+User can download the windows exe biranary from [Daily Build](nightly). Download and install to PATH.
 
 Exec Command：
 
@@ -32,7 +32,7 @@ Set environment:
 set http_proxy=socks5://127.0.0.1:2223
 ```
 
-For IDEA User，Please see [How to use in IDEA](https://alibaba.github.io/kt-connect/#/guide/how-to-use-in-idea).
+For IDEA User，Please see [How to use in IDEA](guide/how-to-use-in-idea).
 
 ## Windows Subsystem for Linux (WSL)
 
@@ -69,7 +69,7 @@ Warning: Permanently added '[127.0.0.1]:2222' (ECDSA) to the list of known hosts
 4:31PM DBG KT proxy start successful
 ```
 
-KT Connect will create a socks5 proxy in local.
+KtConnect will create a socks5 proxy in local.
 
 ```
 # set http_proxy

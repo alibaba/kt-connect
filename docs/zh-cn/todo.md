@@ -1,33 +1,22 @@
-# TODO:
+# v1.0 版本计划
 
 > 如果你有什么其它好的点子，请在[Github](https://github.com/alibaba/kt-connect/issues/new?assignees=&labels=&template=feature_request.md&title=)中反馈
 
-## 命令行能力增强
+## 命令行全局能力增强
 
-* 命令行交互优化，支持进度展示
-* Remote SSH Volume
-* ~~kubectl dashboard: 命令行打开KT Connect Dashboard (自动安装)~~
-* ~~Socks5代理模式支持本地DNS访问服务集群（自动Dump DNS到hosts文件~~
+* 支持后台运行
+* 支持全局配置，简化命令行参数
+* 支持全局参数和子命令参数任意顺序混用
 
-## Dashboard能力增强
+## 子命令功能增强
 
-> 原生K8S相关
-
-* 支持可视化配置单个服务Istio流量转发规则
-* 支持Namespace级别拓扑可视化能力
-
-> KT Virtual Env相关
-
-* 支持自动安装KT VirtualEnv扩展
-* 当KT VirtualEnv启用后支持Virtual Env的可视化管理
+* `connect`命令的vpn模式支持自动安装sshuttle依赖
+* `exchange`和`mesh`命令支持使用Service名作为目标
+* 支持对StatefulSet资源的`exchange`和`mesh`操作
+* `mesh`命令支持自动设置流量规则（配合Istio）
 
 ## 服务发现能力增强
 
 > KT目前只支持Kubernetes原生的服务发现能力
 
-* Nacos服务发现：Shadow容器能够自动向Nacos服务进行服务实例注册和注销（调研）
-
-## 文档和最佳实践
-
-* 提供各语言的最佳实践帮助文档
-* ~~Cli References~~
+* Nacos服务发现：Shadow容器能够自动向Nacos服务进行服务实例注册和注销（待调研）

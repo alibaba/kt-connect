@@ -29,7 +29,7 @@ func newCheckCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 	}
 }
 
-// Check check local denpendency for kt connect
+// Check check local denpendency for KtConnect
 func (action *Action) Check(cli kt.CliInterface) (err error) {
 	log.Info().Msgf("System info %s-%s", runtime.GOOS, runtime.GOARCH)
 

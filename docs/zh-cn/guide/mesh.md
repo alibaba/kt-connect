@@ -1,7 +1,7 @@
-Mesh： 基于服务网格的开发测试
-===========
+Mesh：基于服务网格的开发测试
+---
 
-## 适用场景：
+## 适用场景
 
 在`Connect`和`Exchange`的适用于个人独占的开发测试环境，在独占的模式下。开发者可以与该环境下的服务进行联调，同时将环境中对特定服务的请求完全转发到本地。
 
@@ -11,19 +11,17 @@ Mesh： 基于服务网格的开发测试
 
 ![logo](../../media/logo-large.png)
 
-## 最佳实践示例：
+## 最佳实践示例
 
-在本示例中，我们将在集群中部署Tomcat7并通过Istio Gateway访问，在确保原有链路可正常访问的情况下通过`kt mesh`加入本地联调端点。最后修改Istio路由规则，让只有满足特定规则的流量转发到本地的调试端点（Tomcat8）。
+在本示例中，我们将在集群中部署服务（Tomcat:7）并通过Istio Gateway访问，在确保原有链路可正常访问的情况下通过`kt mesh`加入本地联调端点。最后修改Istio路由规则，让只有满足特定规则的流量转发到本地的待调试服务（Tomcat:8）。
 
 ### 准备实例应用程序
 
 > 前置条件，当前Kubernetes集群已经部署Istio组件
 
-这里还是用Tomcat为例，来演示`Mesh`的使用方法。
-
 创建命名空间，并启用Istio自动注册：
 
-```
+```bash
 $ kubectl create namespace mesh-demo
 $ kubectl label namespace mesh-demo istio-injection=enabled
 ```
@@ -31,7 +29,7 @@ $ kubectl label namespace mesh-demo istio-injection=enabled
 在集群中准备示例应用：
 
 ``` yaml 
-#tomcat7-deploy.yaml
+# tomcat7-deploy.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -76,7 +74,7 @@ spec:
 
 部署应用：
 
-```
+```bash
 $ kubectl -n mesh-demo apply -f tomcat7-deploy.yaml
 service/tomcat created
 deployment.apps/tomcat created
@@ -87,7 +85,7 @@ deployment.apps/tomcat created
 创建默认的Istio路由规则：
 
 ```yaml
-#tomcat7-istio.yaml
+# tomcat7-istio.yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -120,7 +118,7 @@ metadata:
   name: tomcat
 spec:
   gateways:
-  - tomcat-gateway #绑定gateway
+  - tomcat-gateway  # 绑定gateway
   hosts:
   - tomcat.mesh.com
   - tomcat
@@ -133,7 +131,7 @@ spec:
 
 部署服务网格定义：
 
-```
+```bash
 $ kubectl -n mesh-demo apply -f tomcat7-deploy.yaml
 gateway.networking.istio.io/tomcat-gateway created
 destinationrule.networking.istio.io/tomcat created
@@ -142,15 +140,15 @@ virtualservice.networking.istio.io/tomcat created
 
 获取Istio的访问入口
 
-```
-export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http")].port}')
+```bash
+$ export INGRESS_HOST=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+$ export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.spec.ports[?(@.name=="http")].port}')
 ```
 
 这里在本地Hosts中添加自定义DNS：
 
-```
-# <INGRESS_HOST> tomcat.mesh.com
+```text
+<INGRESS_HOST> tomcat.mesh.com
 ```
 
 通过域名`http://tomcat.mesh.com`访问实例应用:
@@ -161,15 +159,15 @@ export INGRESS_PORT=$(kubectl -n istio-system get service istio-ingressgateway -
 
 在本地使用tomcat:8容器，并监听本地的8080端口：
 
-```
-docker run -itd -p 8080:8080 tomcat:8
+```bash
+$ docker run -itd -p 8080:8080 tomcat:8
 ```
 
 添加本地联调端点：
 
-```
+```bash
 $ ktctl --n mesh-demo mesh tomcat --expose 8080
-2019/06/20 11:39:58 'KT Connect' not runing, you can only access local app from cluster
+2019/06/20 11:39:58 'KtConnect' not runing, you can only access local app from cluster
 2019/06/20 11:39:59 Deploying proxy deployment tomcat-kt-ngzlj in namespace mesh-demo
 2019/06/20 11:40:01 Pod status is Pending
 2019/06/20 11:40:03 Pod status is Running
@@ -187,7 +185,7 @@ SSH Remote port-forward POD 172.16.1.63 22 to 127.0.0.1:2263 starting
 
 ### 定义本地端点访问规则
 
-修改路径规则，并确保当使用Firefox浏览器访问时，流量转移到本地运行的Tomcat8：如下所示
+修改路径规则，并确保当使用Firefox浏览器访问时，流量转移到本地运行的Tomcat:8，如下所示
 
 ```yaml
 apiVersion: networking.istio.io/v1alpha3
@@ -200,7 +198,7 @@ spec:
   - name: v1
     labels:
       version: v1
-  - name: ngzlj # 添加本地端点版本
+  - name: ngzlj  # 添加本地端点版本
     labels:
       version: ngzlj
 ---
@@ -215,9 +213,9 @@ spec:
   - tomcat.mesh.com
   - tomcat
   http:
-  - match: # 定义路由规则
+  - match:  # 定义路由规则
     - headers: 
-        user-agent: # 匹配请求的user-agent
+        user-agent:  # 匹配请求的user-agent
           exact: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:67.0) Gecko/20100101 Firefox/67.0
     route:
     - destination:

@@ -108,7 +108,7 @@ export default class CoreLayout extends Component {
             <Component {...props} onOpenSideMenuClick={this.onOpenSideMenuClick} />
           </div>
         </Content>
-        <Footer style={{ textAlign: 'center' }}>KT Connect@2019</Footer>
+        <Footer style={{ textAlign: 'center' }}>KtConnect@2021</Footer>
 
       </Layout>
     );

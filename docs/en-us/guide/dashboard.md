@@ -3,7 +3,7 @@ Dashboard
 
 > Cli should upgrade to 0.0.4+
 
-KT Connect Dashboard support visualization your test environment status, as follow:
+KtConnect Dashboard support visualization your test environment status, as follow:
 
 ![](../../media/guide/kt-dashboard.png)
 
@@ -15,7 +15,7 @@ Current support features as follow:
 
 ## How to install
 
-You can install `KT Connect Dashboard` as follow
+You can install `KtConnect Dashboard` as follow
 
 Inorder to let Dashboard can watch the resource change, you should Setup RBAC first:
 

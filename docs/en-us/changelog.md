@@ -56,7 +56,7 @@
 
 > Release At 2019-06-26
 
-* Support KT Connect Dashboard
+* Support KtConnect Dashboard
 
 ### 0.0.3
 

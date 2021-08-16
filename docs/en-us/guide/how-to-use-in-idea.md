@@ -2,8 +2,6 @@
 
 > VPN mode is a global system proxy, this guide is only applicable to `SOCKS5` mode
 
-The latest version of KT Connect0.0.8+[Downloads](https://alibaba.github.io/kt-connect/#/nightly) already support integration with IDEA for Java Developer.
-
 ## How to work
 
 ### Start Socks5 connect in local
@@ -35,7 +33,7 @@ JVM Inject Plugin will auto read the .jvmrc content from workspace. if present i
 java ...ignore content... -Djava.rmi.server.hostname=127.0.0.1 -Dspring.liveBeansView.mbeanDomain -Dspring.application.admin.enabled=true -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=2223 "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=58609:/Applications/IntelliJ IDEA.app/Contents/bin" ...ignore content...  sample.Application
 ```
 
-After this all the network request from this java process with proxy by socks5 proxy create by KT Connect, and then you can directly request to Kubernetes Cluster Service:
+After this all the network request from this java process with proxy by socks5 proxy create by KtConnect, and then you can directly request to Kubernetes Cluster Service:
 
 ```
 $ kubectl get svc spring-sample

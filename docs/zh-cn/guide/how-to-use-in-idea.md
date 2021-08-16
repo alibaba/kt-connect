@@ -2,7 +2,7 @@
 
 > VPN模式由于是全局的，已经实现了系统级别的流量代理。 本文只适用于socks5代理模式
 
-KT Connect在最新版本中0.0.8+[点击下载](https://alibaba.github.io/kt-connect/#/nightly)中支持与IDEA集成，从而可以帮助开发者直接在IDEA开发Java程序并直接调用Kubernetes集群中已有的服务。
+KtConnect支持与IDEA集成，从而可以帮助开发者直接在IDEA开发Java程序并直接调用Kubernetes集群中已有的服务。
 
 ## 实现原理
 
@@ -10,11 +10,11 @@ KT Connect在最新版本中0.0.8+[点击下载](https://alibaba.github.io/kt-co
 
 在IDEA的工作目录下使用ktctl启动本地到集群的socks5代理服务：
 
-```
-sudo ktctl -d connect --method=socks5
+```bash
+$ sudo ktctl -d connect --method=socks5 --jvmrc=./
 ```
 
-在运行完成后ktctl会自动在当前工作区生成.jvmrc文件，如下所示：
+在运行完成后ktctl会自动在当前工作区生成`.jvmrc`文件，如下所示：
 
 ```
 -DsocksProxyHost=127.0.0.1
@@ -35,7 +35,7 @@ JVM Inject插件会在Java程序启动时自动读取.jvmrc文件，并追加到
 java ...省略的其他输出... -Djava.rmi.server.hostname=127.0.0.1 -Dspring.liveBeansView.mbeanDomain -Dspring.application.admin.enabled=true -Dhttp.proxyHost=127.0.0.1 -Dhttp.proxyPort=2223 "-javaagent:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar=58609:/Applications/IntelliJ IDEA.app/Contents/bin" ...省略的其他输出...  sample.Application
 ```
 
-通过设置-Dhttp.proxyHost和-Dhttp.proxyPort启动参数，在Java程序中所有网络请求完全通过KT Connect进行转发。从而可以直接在代码中访问Kubernetes集群中的服务。 
+通过设置`-Dhttp.proxyHost`和`-Dhttp.proxyPort`启动参数，在Java程序中所有网络请求完全通过KtConnect进行转发。从而可以直接在代码中访问Kubernetes集群中的服务。 
 
 ```
 $ kubectl get svc spring-sample
