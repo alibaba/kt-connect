@@ -22,6 +22,7 @@ import (
 type ResourceToClean struct {
 	NamesOfDeploymentToDelete *list.List
 	NamesOfServiceToDelete    *list.List
+	NamesOfConfigMapToDelete  *list.List
 	DeploymentsToScale        map[string]int32
 }
 
@@ -63,11 +64,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		return err
 	}
 	log.Debug().Msgf("Found %d shadow deployments", len(deployments))
-	resourceToClean := ResourceToClean{
-		list.New(),
-		list.New(),
-		make(map[string]int32),
-	}
+	resourceToClean := ResourceToClean{list.New(), list.New(), list.New(), make(map[string]int32)}
 	for _, deployment := range deployments {
 		action.analysisShadowDeployment(deployment, options, resourceToClean)
 	}
@@ -115,6 +112,11 @@ func (action *Action) analysisShadowDeployment(deployment v1.Deployment, options
 				resourceToClean.NamesOfServiceToDelete.PushBack(service)
 			}
 		}
+		for _, v := range deployment.Spec.Template.Spec.Volumes {
+			if v.ConfigMap != nil && len(v.ConfigMap.Items) == 1 && v.ConfigMap.Items[0].Key == common.SSHAuthKey {
+				resourceToClean.NamesOfConfigMapToDelete.PushBack(v.ConfigMap.Name)
+			}
+		}
 	}
 }
 
@@ -130,6 +132,12 @@ func (action *Action) cleanResource(r ResourceToClean, kubernetes cluster.Kubern
 		err := kubernetes.RemoveService(name.Value.(string), namespace)
 		if err != nil {
 			log.Error().Msgf("Fail to delete service %s", name.Value.(string))
+		}
+	}
+	for name := r.NamesOfConfigMapToDelete.Front(); name != nil; name = name.Next() {
+		err := kubernetes.RemoveConfigMap(name.Value.(string), namespace)
+		if err != nil {
+			log.Error().Msgf("Fail to delete config map %s", name.Value.(string))
 		}
 	}
 	for name, replica := range r.DeploymentsToScale {
@@ -175,7 +183,6 @@ func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOpti
 
 func (action *Action) getShadowDeployments(cli kt.CliInterface, options *options.DaemonOptions) (
 	cluster.KubernetesInterface, []v1.Deployment, error) {
-
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return nil, nil, err
