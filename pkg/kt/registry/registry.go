@@ -21,3 +21,7 @@ func SetHttpProxyEnvironmentVariable(port int, config *ProxyConfig) error {
 func CleanHttpProxyEnvironmentVariable(config *ProxyConfig) {
 
 }
+
+func ResetGlobalProxyAndEnvironmentVariable() {
+
+}

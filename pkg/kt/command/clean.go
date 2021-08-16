@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -77,8 +78,11 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	} else {
 		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
 	}
-	util.CleanRsaKeys()
-	util.DropHosts()
+	if !options.CleanOptions.DryRun {
+		util.CleanRsaKeys()
+		util.DropHosts()
+		registry.ResetGlobalProxyAndEnvironmentVariable()
+	}
 	return nil
 }
 

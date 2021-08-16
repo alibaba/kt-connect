@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"golang.org/x/sys/windows/registry"
+	"strings"
 	"syscall"
 	"unsafe"
 )
@@ -19,6 +20,8 @@ const (
 	RegKeyHttpProxy     = "HTTP_PROXY"
 	User32Dll           = "user32.dll"
 	ApiSendMessage      = "SendMessageW"
+	IntSocksLocalhost   = "socks=127.0.0.1:"
+	EnvSocksLocalhost   = "socks://127.0.0.1:"
 )
 
 func SetGlobalProxy(port int, config *ProxyConfig) error {
@@ -44,7 +47,7 @@ func SetGlobalProxy(port int, config *ProxyConfig) error {
 	}
 
 	internetSettings.SetDWordValue(RegKeyProxyEnable, 1)
-	internetSettings.SetStringValue(RegKeyProxyServer, fmt.Sprintf("socks=127.0.0.1:%d", port))
+	internetSettings.SetStringValue(RegKeyProxyServer, fmt.Sprintf("%s%d", IntSocksLocalhost, port))
 	internetSettings.SetStringValue(RegKeyProxyOverride, "<local>")
 	return nil
 }
@@ -79,7 +82,7 @@ func SetHttpProxyEnvironmentVariable(port int, config *ProxyConfig) error {
 		config.HttpProxyVar = notExist
 	}
 
-	internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("socks://127.0.0.1:%d", port))
+	internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("%s%d", EnvSocksLocalhost, port))
 	refreshEnvironmentVariable()
 	return nil
 }
@@ -91,6 +94,36 @@ func CleanHttpProxyEnvironmentVariable(config *ProxyConfig) {
 		if config.HttpProxyVar != notExist {
 			internetSettings.SetStringValue(RegKeyHttpProxy, config.HttpProxyVar)
 		} else {
+			internetSettings.DeleteValue(RegKeyHttpProxy)
+		}
+		refreshEnvironmentVariable()
+	}
+}
+
+func ResetGlobalProxyAndEnvironmentVariable() {
+	resetGlobalProxy()
+	resetHttpProxyEnvironmentVariable()
+}
+
+func resetGlobalProxy() {
+	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, InternetSettings, registry.ALL_ACCESS)
+	if err == nil {
+		defer internetSettings.Close()
+		val, _, err := internetSettings.GetStringValue(RegKeyProxyServer)
+		if err == nil && strings.HasPrefix(val, IntSocksLocalhost) {
+			internetSettings.SetDWordValue(RegKeyProxyEnable, 0)
+			internetSettings.DeleteValue(RegKeyProxyServer)
+			internetSettings.DeleteValue(RegKeyProxyOverride)
+		}
+	}
+}
+
+func resetHttpProxyEnvironmentVariable() {
+	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, EnvironmentSettings, registry.ALL_ACCESS)
+	if err == nil {
+		defer internetSettings.Close()
+		val, _, err := internetSettings.GetStringValue(RegKeyHttpProxy)
+		if err == nil && strings.HasPrefix(val, EnvSocksLocalhost) {
 			internetSettings.DeleteValue(RegKeyHttpProxy)
 		}
 		refreshEnvironmentVariable()
