@@ -3,10 +3,9 @@ package cluster
 import (
 	"errors"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
 	"strings"
-
-	"github.com/alibaba/kt-connect/pkg/common"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 
@@ -229,13 +228,13 @@ func increaseRefCount(name string, clientSet kubernetes.Interface, namespace str
 		return err
 	}
 	annotations := deployment.ObjectMeta.Annotations
-	count, err := strconv.Atoi(annotations[common.RefCount])
+	count, err := strconv.Atoi(annotations[common.KTRefCount])
 	if err != nil {
-		log.Error().Msgf("Failed to parse annotations[common.RefCount] of deployment %s with value %s", name, annotations[common.RefCount])
+		log.Error().Msgf("Failed to parse annotations[common.KTRefCount] of deployment %s with value %s", name, annotations[common.KTRefCount])
 		return err
 	}
 
-	deployment.ObjectMeta.Annotations[common.RefCount] = strconv.Itoa(count + 1)
+	deployment.ObjectMeta.Annotations[common.KTRefCount] = strconv.Itoa(count + 1)
 
 	_, err = clientSet.AppsV1().Deployments(namespace).Update(deployment)
 	return err
@@ -255,31 +254,33 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	resourceMeta := metaAndSpec.Meta
 	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
-	client := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
+	cli := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
+	setupDeploymentHeartBeat(cli, resourceMeta.Name)
 
 	deployment := deployment(metaAndSpec, sshcm, options)
 	log.Info().Msg("Shadow template is prepare ready.")
-	result, err := client.Create(deployment)
+	result, err := cli.Create(deployment)
 	if err != nil {
 		return
 	}
 	log.Info().Msgf("Deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
-	setupHeartBeat(client, resourceMeta.Name)
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
 }
 
 func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *v1.ConfigMap, err error) {
-	clientSet := k.Clientset
 
+	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
 	labels[common.KTName] = sshcm
-	cli := clientSet.CoreV1().ConfigMaps(namespace)
+	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
+	setupConfigMapHeartBeat(cli, sshcm)
 
 	return cli.Create(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      sshcm,
-			Namespace: namespace,
-			Labels:    labels,
+			Name:        sshcm,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Data: map[string]string{
 			common.SSHAuthKey:        string(generator.PublicKey),
@@ -291,6 +292,7 @@ func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, nam
 // CreateService create kubernetes service
 func (k *Kubernetes) CreateService(name, namespace string, external bool, port int, labels map[string]string) (*v1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
+	setupServiceHeartBeat(cli, name)
 	svc := service(name, namespace, labels, external, port)
 	return cli.Create(svc)
 }
@@ -406,7 +408,7 @@ func (k *Kubernetes) DecreaseRef(namespace string, app string) (cleanup bool, er
 }
 
 func decreaseOrRemove(k *Kubernetes, deployment *appv1.Deployment) (cleanup bool, err error) {
-	refCount := deployment.ObjectMeta.Annotations[common.RefCount]
+	refCount := deployment.ObjectMeta.Annotations[common.KTRefCount]
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
@@ -430,7 +432,7 @@ func decreaseDeploymentRef(refCount string, k *Kubernetes, deployment *appv1.Dep
 	if err != nil {
 		return
 	}
-	deployment.ObjectMeta.Annotations[common.RefCount] = count
+	deployment.ObjectMeta.Annotations[common.KTRefCount] = count
 	_, err = k.UpdateDeployment(deployment.GetObjectMeta().GetNamespace(), deployment)
 	return
 }

@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	ps "github.com/mitchellh/go-ps"
 )
@@ -82,6 +83,10 @@ func GetJvmrcFilePath(jvmrcDir string) string {
 		}
 	}
 	return ""
+}
+
+func GetTimestamp() string {
+	return strconv.FormatInt(time.Now().Unix(), 10)
 }
 
 // IsCmd check running in windows cmd shell

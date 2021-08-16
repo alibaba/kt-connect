@@ -16,7 +16,6 @@ const (
 	ConnectMethodSocks  = "socks"
 	ConnectMethodSocks5 = "socks5"
 	PostfixRsaKey       = "_id_rsa"
-	KTLastHeartBeat     = "kt-last-heart-beat"
 	YyyyMmDdHhMmSs      = "2006-01-02 15:04:05"
 	SshPort             = 22
 	Socks4Port          = 1080
@@ -31,6 +30,10 @@ const (
 	KTName = "kt-name"
 	// KTConfig annotation used for clean up context
 	KTConfig = "kt-config"
+	// KTRefCount the count of shared
+	KTRefCount = "kt-ref-count"
+	// KTLastHeartBeat timestamp of last heart beat
+	KTLastHeartBeat = "kt-last-heart-beat"
 
 	// SSHPrivateKeyName ssh private key name
 	SSHPrivateKeyName = "kt_%s" + PostfixRsaKey
@@ -40,8 +43,6 @@ const (
 	SSHAuthKey = "authorized"
 	// SSHAuthPrivateKey ssh private key
 	SSHAuthPrivateKey = "privateKey"
-	// RefCount the count of shared
-	RefCount = "refCount"
 	// DefNamespace default namespace
 	DefNamespace = "default"
 )

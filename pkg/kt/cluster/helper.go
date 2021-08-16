@@ -2,7 +2,7 @@ package cluster
 
 import (
 	"fmt"
-	"strconv"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"strings"
 	"time"
 
@@ -123,6 +123,8 @@ func wait(podName string) {
 
 func service(name, namespace string, labels map[string]string, external bool, port int) *v1.Service {
 	var ports []v1.ServicePort
+	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
+
 	ports = append(ports, v1.ServicePort{
 		Name:       name,
 		Port:       int32(port),
@@ -131,9 +133,10 @@ func service(name, namespace string, labels map[string]string, external bool, po
 
 	service := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-			Labels:    labels,
+			Name:        name,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Spec: v1.ServiceSpec{
 			Selector: labels,
@@ -191,8 +194,8 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
 	annotations := metaAndSpec.Meta.Annotations
-	annotations[common.RefCount] = "1"
-	annotations[common.KTLastHeartBeat] = strconv.FormatInt(time.Now().Unix(), 10)
+	annotations[common.KTRefCount] = "1"
+	annotations[common.KTLastHeartBeat] = util.GetTimestamp()
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
 	dep := &appV1.Deployment{
