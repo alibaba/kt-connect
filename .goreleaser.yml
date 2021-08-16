@@ -1,131 +1,131 @@
 # Make sure to check the documentation at http://goreleaser.com
 env:
-- GO_VERSION=1.15.6
+  - GO_VERSION=1.15.6
 before:
   hooks:
     - go mod download
 builds:
-- id: "ktctl"
-  main: ./cmd/ktctl/main.go
-  binary: ktctl
-  goos:
-  - linux
-  - darwin
-  - windows
-  env:
-  - CGO_ENABLED=0
-- id: "kubectl-connect"
-  main: ./cmd/kubectl-connect/main.go
-  binary: kubectl-connect
-  goos:
-  - linux
-  - darwin
-  - windows
-- id: "kubectl-exchange"
-  main: ./cmd/kubectl-exchange/main.go
-  binary: kubectl-exchange
-  goos:
-    - linux
-    - darwin
-    - windows
-- id: "kubectl-mesh"
-  main: ./cmd/kubectl-mesh/main.go
-  binary: kubectl-mesh
-  goos:
-    - linux
-    - darwin
-    - windows
-- id: "kubectl-provide"
-  main: ./cmd/kubectl-provide/main.go
-  binary: kubectl-provide
-  goos:
-    - linux
-    - darwin
-    - windows
-- id: "shadow"
-  main: ./cmd/shadow/main.go
-  binary: shadow
-  goos:
-  - linux
-  goarch:
-  - amd64
-- id: "apiserver"
-  main: ./cmd/server/main.go
-  binary: apiserver
-  goos:
-    - linux
-  goarch:
-    - amd64
+  - id: "ktctl"
+    main: ./cmd/ktctl/main.go
+    binary: ktctl
+    goos:
+      - linux
+      - darwin
+      - windows
+    env:
+      - CGO_ENABLED=0
+  - id: "kubectl-connect"
+    main: ./cmd/kubectl-connect/main.go
+    binary: kubectl-connect
+    goos:
+      - linux
+      - darwin
+      - windows
+  - id: "kubectl-exchange"
+    main: ./cmd/kubectl-exchange/main.go
+    binary: kubectl-exchange
+    goos:
+      - linux
+      - darwin
+      - windows
+  - id: "kubectl-mesh"
+    main: ./cmd/kubectl-mesh/main.go
+    binary: kubectl-mesh
+    goos:
+      - linux
+      - darwin
+      - windows
+  - id: "kubectl-provide"
+    main: ./cmd/kubectl-provide/main.go
+    binary: kubectl-provide
+    goos:
+      - linux
+      - darwin
+      - windows
+  - id: "shadow"
+    main: ./cmd/shadow/main.go
+    binary: shadow
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: "apiserver"
+    main: ./cmd/server/main.go
+    binary: apiserver
+    goos:
+      - linux
+    goarch:
+      - amd64
 dockers:
-- goos: linux
-  goarch: amd64
-  ids:
-  - shadow
-  image_templates:
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Version }}"
-  dockerfile: build/docker/shadow/Dockerfile_releaser
-  skip_push: false
-  extra_files:
-    - build/docker/shadow/run.sh
-- goos: linux
-  goarch: amd64
-  ids:
-    - apiserver
-  image_templates:
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:latest"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
-  - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Version }}"
-  dockerfile: build/docker/apiserver/Dockerfile_releaser
+  - goos: linux
+    goarch: amd64
+    ids:
+      - shadow
+    image_templates:
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Version }}"
+    dockerfile: build/docker/shadow/Dockerfile_releaser
+    skip_push: false
+    extra_files:
+      - build/docker/shadow/run.sh
+  - goos: linux
+    goarch: amd64
+    ids:
+      - apiserver
+    image_templates:
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:latest"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:{{ .Tag }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Major }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-server:v{{ .Version }}"
+    dockerfile: build/docker/apiserver/Dockerfile_releaser
 archives:
-- id: ktctl
-  builds:
-  - ktctl
-  name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: zip
-  files:
-  - LICENSE
-  - README.md
-- id: kubectl-connect
-  builds:
-  - kubectl-connect
-  name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: zip
-  files:
-  - LICENSE
-  - README.md
-- id: kubectl-exchange
-  builds:
-    - kubectl-exchange
-  name_template: 'kubectl-exchange_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: zip
-  files:
-    - LICENSE
-    - README.md
-- id: kubectl-mesh
-  builds:
-    - kubectl-mesh
-  name_template: 'kubectl-mesh_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: zip
-  files:
-    - LICENSE
-    - README.md
-- id: kubectl-provide
-  builds:
-    - kubectl-provide
-  name_template: 'kubectl-provide_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-      }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-  format: zip
-  files:
-    - LICENSE
-    - README.md
+  - id: ktctl
+    builds:
+      - ktctl
+    name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    format: zip
+    files:
+      - LICENSE
+      - README.md
+  - id: kubectl-connect
+    builds:
+      - kubectl-connect
+    name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    format: zip
+    files:
+      - LICENSE
+      - README.md
+  - id: kubectl-exchange
+    builds:
+      - kubectl-exchange
+    name_template: 'kubectl-exchange_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    format: zip
+    files:
+      - LICENSE
+      - README.md
+  - id: kubectl-mesh
+    builds:
+      - kubectl-mesh
+    name_template: 'kubectl-mesh_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    format: zip
+    files:
+      - LICENSE
+      - README.md
+  - id: kubectl-provide
+    builds:
+      - kubectl-provide
+    name_template: 'kubectl-provide_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
+        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+    format: zip
+    files:
+      - LICENSE
+      - README.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -134,8 +134,8 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
+      - '^docs:'
+      - '^test:'
 release:
   github:
     owner: alibaba
