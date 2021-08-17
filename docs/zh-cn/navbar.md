@@ -3,7 +3,7 @@
 * [下载](/zh-cn/downloads)
 * Kt系列工具
   * KtConnect (当前项目)
-  * [KtVirtualEnvironment](https://alibaba.github.io/virtual-environment/#/zh-cn/)
+  * [KtEnv](https://alibaba.github.io/virtual-environment/#/zh-cn/)
 * 语言
   * [English](/en-us/)
   * 中文

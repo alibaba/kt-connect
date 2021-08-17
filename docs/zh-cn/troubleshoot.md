@@ -1,8 +1,9 @@
-## Connect故障排查
+Connect故障排查
+---
 
 本文将通过手动的方式模拟本地与集群之间建立连接的过程
 
-### 在集群中手动部署Shadow容器和验证应用
+## 在集群中手动部署Shadow容器和验证应用
 
 > 注意，如果使用了自定义shadow镜像请将image替换为自己的镜像即可
 
@@ -19,7 +20,7 @@ NAME                                                              READY   STATUS
 troubleshoot-6f9958b7f7-g8vgs                                     1/1     Running            0          3m     172.16.1.114
 ```
 
-### 将Shodw容器的22端口映射到本地2222
+## 将Shodw容器的22端口映射到本地2222
 
 > 当前步骤是为了将集群的ssh协议端口转发到本地端口
 
@@ -29,7 +30,7 @@ Forwarding from 127.0.0.1:2222 -> 22
 Forwarding from [::1]:2222 -> 22
 ```
 
-### 建立SSH免密认证
+## 建立SSH免密认证
 
 > troubleshoot容器的默认账号是root:root
 
@@ -39,7 +40,7 @@ $ ssh-copy-id root@127.0.0.1 -p 2222
 
 上传公钥后，验证本地是否能够正常通过ssh登录到root@127.0.0.1 -p 2222
 
-### 验证本地到集群网络通道
+## 验证本地到集群网络通道
 
 <!-- tabs:start -->
 

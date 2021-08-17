@@ -1,4 +1,5 @@
-# 使用DNS服务
+使用DNS服务
+---
 
 在KtConnect的实现原理中，Shadow容器作为SSH通道用于打通本地与集群之间网络以实现双向的网络访问。 同时Shadow容器也内置了DNS服务，以支持Kubernetes集群的DNS域名解析。 
 

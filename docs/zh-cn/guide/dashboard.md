@@ -1,5 +1,5 @@
 Dashboard
-====
+---
 
 > Dashboard需配合0.0.4+版本的客户端使用
 
