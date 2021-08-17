@@ -12,7 +12,7 @@ v1.0 版本计划
 
 #### v0.2.x
 
-- 支持WireGuard协议连接，进一步优化Windows体验
+* 支持WireGuard协议连接，进一步优化Windows体验
 * `exchange`和`mesh`命令使用Service名作为目标
 * 支持对StatefulSet资源的`exchange`和`mesh`操作
 

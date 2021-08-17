@@ -85,6 +85,26 @@ func GetJvmrcFilePath(jvmrcDir string) string {
 	return ""
 }
 
+// FixFileOwner set owner to original user when run with sudo
+func FixFileOwner(path string) {
+	var uid int
+	var gid int
+	sudoUid := os.Getenv("SUDO_UID")
+	if sudoUid == "" {
+		uid = os.Getuid()
+	} else {
+		uid, _ = strconv.Atoi(sudoUid)
+	}
+	sudoGid := os.Getenv("SUDO_GID")
+	if sudoGid == "" {
+		gid = os.Getuid()
+	} else {
+		gid, _ = strconv.Atoi(sudoGid)
+	}
+	_ = os.Chown(path, uid, gid)
+}
+
+// GetTimestamp get current time stamp
 func GetTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
 }

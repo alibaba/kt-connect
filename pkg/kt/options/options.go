@@ -61,8 +61,6 @@ type RuntimeOptions struct {
 	UserHome string
 	// AppHome path of kt config folder, default to ${UserHome}/.ktctl
 	AppHome string
-	// PidFile path of kt pid file, default to ${AppHome}/pid
-	PidFile string
 	// Component current sub-command
 	Component string
 	// Shadow deployment name
@@ -110,16 +108,13 @@ type DaemonOptions struct {
 
 // NewDaemonOptions return new cli default options
 func NewDaemonOptions() *DaemonOptions {
-	userHome := util.UserHome
-	appHome := util.KtHome
-	util.CreateDirIfNotExist(appHome)
 	return &DaemonOptions{
 		Namespace:  common.DefNamespace,
 		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{
-			UserHome: userHome,
-			AppHome:  appHome,
+			UserHome: util.UserHome,
+			AppHome:  util.KtHome,
 		},
 		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &ExchangeOptions{},

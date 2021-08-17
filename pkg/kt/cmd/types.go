@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -90,9 +91,8 @@ func (o *GlobalOptions) transportGlobalOptions() *options.DaemonOptions {
 		Namespace: o.currentNs,
 		WaitTime:  o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
-			UserHome:   userHome,
-			AppHome:    appHome,
-			PidFile:    pidFile,
+			UserHome:   util.UserHome,
+			AppHome:    util.KtHome,
 			Clientset:  o.clientset,
 			RestConfig: o.restConfig,
 		},

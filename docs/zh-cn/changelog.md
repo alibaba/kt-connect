@@ -6,10 +6,11 @@
 > 发布时间：待定
 
 * 发布包从`tar.gz`格式改为`zip`格式，方便Windows用户使用
-* 支持指定代理Pod使用的ServiceAccount
-* 修复Kubernetes地址有上下文路径会导致无法连接的问题
-* 增强`clean`命令支持清理残留的ConfigMap和注册表数据
+* 新增`--serviceAccount`参数支持指定代理Pod使用的ServiceAccount
 * 新增`--useKubectl`参数支持使用本地`kubectl`工具连接集群
+* 增强`clean`命令支持清理残留的ConfigMap和注册表数据
+* 修复Kubernetes地址有上下文路径会导致无法连接的问题
+* 修复执行connect使用sudo导致.ktctl目录owner变成root的问题
 
 ### 0.1.0
 
