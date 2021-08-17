@@ -104,6 +104,7 @@ type DaemonOptions struct {
 	DashboardOptions  *dashboardOptions
 	WaitTime          int
 	ForceUpdateShadow bool
+	UseKubectl        bool
 }
 
 // NewDaemonOptions return new cli default options

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -14,28 +15,38 @@ import (
 	"io/ioutil"
 )
 
-func forwardSSHTunnelToLocal(cli portforward.CliInterface, options *options.DaemonOptions, podName string, localSSHPort int) (chan struct{}, context.Context, error) {
-	stop, rootCtx, err := cli.ForwardPodPortToLocal(portforward.Request{
-		RestConfig: options.RuntimeOptions.RestConfig,
-		PodName:    podName,
-		Namespace:  options.Namespace,
-		PodPort:    common.SshPort,
-		LocalPort:  localSSHPort,
-		Timeout:    options.WaitTime,
-	})
+func forwardSSHTunnelToLocal(cli portforward.CliInterface, kubectlCli kubectl.CliInterface,
+	options *options.DaemonOptions, podName string, localSSHPort int) (stop chan struct{}, rootCtx context.Context, err error) {
+	if options.UseKubectl {
+		kubectlCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
+	} else {
+		stop, rootCtx, err = cli.ForwardPodPortToLocal(portforward.Request{
+			RestConfig: options.RuntimeOptions.RestConfig,
+			PodName:    podName,
+			Namespace:  options.Namespace,
+			PodPort:    common.SshPort,
+			LocalPort:  localSSHPort,
+			Timeout:    options.WaitTime,
+		})
+	}
 	return stop, rootCtx, err
 }
 
-func forwardSocksTunnelToLocal(cli portforward.CliInterface, options *options.DaemonOptions, podName string) error {
+func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubectl.CliInterface,
+	options *options.DaemonOptions, podName string) (err error) {
 	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
-	_, _, err := cli.ForwardPodPortToLocal(portforward.Request{
-		RestConfig: options.RuntimeOptions.RestConfig,
-		PodName:    podName,
-		Namespace:  options.Namespace,
-		PodPort:    common.Socks4Port,
-		LocalPort:  options.ConnectOptions.SocksPort,
-		Timeout:    options.WaitTime,
-	})
+	if options.UseKubectl {
+		kubectlCli.PortForward(options.Namespace, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
+	} else {
+		_, _, err = pfCli.ForwardPodPortToLocal(portforward.Request{
+			RestConfig: options.RuntimeOptions.RestConfig,
+			PodName:    podName,
+			Namespace:  options.Namespace,
+			PodPort:    common.Socks4Port,
+			LocalPort:  options.ConnectOptions.SocksPort,
+			Timeout:    options.WaitTime,
+		})
+	}
 	return err
 }
 

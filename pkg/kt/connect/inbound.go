@@ -2,7 +2,7 @@ package connect
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -14,20 +14,18 @@ import (
 
 // Inbound mapping local port from cluster
 func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, _ *util.SSHCredential) (err error) {
-	ssh := &sshchannel.SSHChannel{}
-	cli := &portforward.Cli{}
 	log.Info().Msg("Creating shadow inbound(remote->local)")
-	return inbound(s, exposePorts, podName, remoteIP, ssh, cli)
+	return inbound(s, exposePorts, podName, remoteIP, &sshchannel.SSHChannel{}, &exec.Cli{})
 }
 
-func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Channel, cli portforward.CliInterface) (err error) {
+func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Channel, cli exec.CliInterface) (err error) {
 	log.Info().Msgf("Remote %s forward to local %s", remoteIP, exposePorts)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
 		return
 	}
 
-	_, _, err = forwardSSHTunnelToLocal(cli, s.Options, podName, localSSHPort)
+	_, _, err = forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
 	if err != nil {
 		return
 	}

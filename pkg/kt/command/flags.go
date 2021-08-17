@@ -60,6 +60,11 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Usage:       "always update shadow image",
 			Destination: &options.ForceUpdateShadow,
 		},
+		cli.BoolFlag{
+			Name:        "useKubectl",
+			Usage:       "use kubectl for port-forward",
+			Destination: &options.UseKubectl,
+		},
 	}
 }
 
