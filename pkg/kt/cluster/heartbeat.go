@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+const HeartBeatIntervalMinus = 5
+
 // setupDeploymentHeartBeat setup heartbeat watcher for deployment
 func setupDeploymentHeartBeat(client appV1.DeploymentInterface, name string) {
 	ticker := time.NewTicker(time.Minute * 10)
@@ -34,7 +36,7 @@ func refreshDeploymentHeartBeat(client appV1.DeploymentInterface, name string) {
 
 // setupServiceHeartBeat setup heartbeat watcher for service
 func setupServiceHeartBeat(client v1.ServiceInterface, name string) {
-	ticker := time.NewTicker(time.Minute * 10)
+	ticker := time.NewTicker(time.Minute * HeartBeatIntervalMinus)
 	go func() {
 		for _ = range ticker.C {
 			refreshServiceHeartBeat(client, name)
@@ -43,7 +45,7 @@ func setupServiceHeartBeat(client v1.ServiceInterface, name string) {
 }
 
 func refreshServiceHeartBeat(client v1.ServiceInterface, name string) {
-	log.Info().Msgf("Heart beat ticked at %s", time.Now().Format(common.YyyyMmDdHhMmSs))
+	log.Debug().Msgf("Heart beat ticked at %s", time.Now().Format(common.YyyyMmDdHhMmSs))
 	value := fmt.Sprintf("[ { \"op\" : \"replace\" , \"path\" : \"/metadata/annotations/%s\" , \"value\" : \"%s\" } ]",
 		common.KTLastHeartBeat, util.GetTimestamp())
 	_, err := client.Patch(name, types.JSONPatchType, []byte(value))

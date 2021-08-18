@@ -42,7 +42,7 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 				Name:        "thresholdInMinus",
 				Usage:       "Length of allowed disconnection time before a unavailing shadow pod be deleted",
 				Destination: &options.CleanOptions.ThresholdInMinus,
-				Value:       30,
+				Value:       cluster.HeartBeatIntervalMinus * 3,
 			},
 		},
 		Action: func(c *urfave.Context) error {
