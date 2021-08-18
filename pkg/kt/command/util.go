@@ -73,7 +73,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 
 	if options.ConnectOptions.Method == common.ConnectMethodTun {
-		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device", options.Debug)
+		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
 		if err != nil {
 			log.Error().Msgf("Fails to delete tun device")
 			return

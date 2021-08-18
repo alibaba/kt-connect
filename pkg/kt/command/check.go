@@ -66,7 +66,7 @@ func (action *Action) Check(cli kt.CliInterface) (err error) {
 
 func runCommandWithMsg(cmd *osexec.Cmd, title string, msg string) (err error) {
 	log.Info().Msg(title)
-	err = exec.RunAndWait(cmd, title, true)
+	err = exec.RunAndWait(cmd, title)
 	if err != nil {
 		log.Warn().Msg(msg)
 	}

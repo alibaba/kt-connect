@@ -4,18 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/process"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"strings"
-	"time"
 )
 
 // Request ...
@@ -56,9 +55,7 @@ func (s *Cli) ForwardPodPortToLocal(request Request) (chan struct{}, context.Con
 		}
 	}()
 
-	ready := waitPortBeReady(request.Timeout, request.LocalPort)
-
-	if !ready {
+	if !util.WaitPortBeReady(request.Timeout, request.LocalPort) {
 		return nil, nil, errors.New("connect to port-forward failed")
 	}
 	return stop, rootCtx, nil
@@ -100,21 +97,4 @@ func parseReqHost(host, apiPath string) (*url.URL, error) {
 	}
 	fullPath := path.Join(baseUrl, apiPath)
 	return &url.URL{Scheme: protocol, Host: hostIP, Path: fullPath}, nil
-}
-
-// waitPortBeReady return true when port is ready
-// It waits at most waitTime seconds, then return false.
-func waitPortBeReady(waitTime, port int) bool {
-	for i := 0; i < waitTime; i++ {
-		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
-			log.Debug().Msgf("Waiting for port forward (%s), retry: %d", err, i+1)
-			time.Sleep(1 * time.Second)
-		} else {
-			conn.Close()
-			log.Info().Msgf("Port forward connection established")
-			return true
-		}
-	}
-	return false
 }

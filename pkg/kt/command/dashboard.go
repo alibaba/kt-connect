@@ -58,7 +58,7 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	command := cli.Exec().Kubectl().ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
-	err = exec.RunAndWait(command, "apply kt dashboard", true)
+	err = exec.RunAndWait(command, "apply kt dashboard")
 	if err != nil {
 		log.Error().Msg("Fail to apply dashboard, please check the log")
 		return
@@ -70,7 +70,7 @@ func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.Daemo
 func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	ch := SetUpWaitingChannel()
 	command := ktCli.Exec().Kubectl().PortForwardDashboardToLocal(options.DashboardOptions.Port)
-	err = exec.BackgroundRun(command, "forward dashboard to localhost", true)
+	err = exec.BackgroundRun(command, "forward dashboard to localhost")
 	if err != nil {
 		return
 	}

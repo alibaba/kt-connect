@@ -2,6 +2,7 @@ package connect
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
@@ -18,7 +19,13 @@ import (
 func forwardSSHTunnelToLocal(cli portforward.CliInterface, kubectlCli kubectl.CliInterface,
 	options *options.DaemonOptions, podName string, localSSHPort int) (stop chan struct{}, rootCtx context.Context, err error) {
 	if options.UseKubectl {
-		kubectlCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
+		command := kubectlCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
+		err = exec.BackgroundRun(command, "forward ssh to localhost")
+		if err == nil {
+			if !util.WaitPortBeReady(options.WaitTime, localSSHPort) {
+				err = errors.New("connect to port-forward failed")
+			}
+		}
 	} else {
 		stop, rootCtx, err = cli.ForwardPodPortToLocal(portforward.Request{
 			RestConfig: options.RuntimeOptions.RestConfig,
@@ -36,7 +43,13 @@ func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubect
 	options *options.DaemonOptions, podName string) (err error) {
 	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
 	if options.UseKubectl {
-		kubectlCli.PortForward(options.Namespace, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
+		command := kubectlCli.PortForward(options.Namespace, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
+		err = exec.BackgroundRun(command, "forward socks to localhost")
+		if err == nil {
+			if !util.WaitPortBeReady(options.WaitTime, options.ConnectOptions.SocksPort) {
+				err = errors.New("connect to port-forward failed")
+			}
+		}
 	} else {
 		_, _, err = pfCli.ForwardPodPortToLocal(portforward.Request{
 			RestConfig: options.RuntimeOptions.RestConfig,
@@ -103,7 +116,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	options *options.DaemonOptions, podIP string, cidrs []string, stop chan struct{}) (err error) {
 
 	// 1. Create tun device.
-	err = exec.RunAndWait(cli.Tunnel().AddDevice(), "add_device", options.Debug)
+	err = exec.RunAndWait(cli.Tunnel().AddDevice(), "add_device")
 	if err != nil {
 		return err
 	} else {
@@ -111,7 +124,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	// 2. Setup device ip
-	err = exec.RunAndWait(cli.Tunnel().SetDeviceIP(), "set_device_ip", options.Debug)
+	err = exec.RunAndWait(cli.Tunnel().SetDeviceIP(), "set_device_ip")
 	if err != nil {
 		// clean up
 		return err
@@ -120,7 +133,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	// 3. Set device up.
-	err = exec.RunAndWait(cli.Tunnel().SetDeviceUp(), "set_device_up", options.Debug)
+	err = exec.RunAndWait(cli.Tunnel().SetDeviceUp(), "set_device_up")
 	if err != nil {
 		return err
 	} else {
@@ -143,7 +156,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 
 	// 5. Add route to kubernetes cluster.
 	for i := range cidrs {
-		err = exec.RunAndWait(cli.Tunnel().AddRoute(cidrs[i]), "add_route", options.Debug)
+		err = exec.RunAndWait(cli.Tunnel().AddRoute(cidrs[i]), "add_route")
 		if err != nil {
 			// clean up
 			return err

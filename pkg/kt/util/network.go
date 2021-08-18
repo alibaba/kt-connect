@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -41,4 +42,21 @@ func GetOutboundIP() (address string) {
 // ExtractNetMaskFromCidr extract net mask length (e.g. 16) from cidr (e.g. 1.2.3.4/16)
 func ExtractNetMaskFromCidr(cidr string) string {
 	return cidr[strings.Index(cidr, "/")+1:]
+}
+
+// WaitPortBeReady return true when port is ready
+// It waits at most waitTime seconds, then return false.
+func WaitPortBeReady(waitTime, port int) bool {
+	for i := 0; i < waitTime; i++ {
+		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			log.Debug().Msgf("Waiting for port forward (%s), retry: %d", err, i+1)
+			time.Sleep(1 * time.Second)
+		} else {
+			_ = conn.Close()
+			log.Info().Msgf("Port forward connection established")
+			return true
+		}
+	}
+	return false
 }

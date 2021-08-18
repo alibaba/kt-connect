@@ -20,7 +20,7 @@ type CMDContext struct {
 }
 
 // RunAndWait run cmd
-func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
+func RunAndWait(cmd *exec.Cmd, name string) (err error) {
 	ctx := &CMDContext{
 		Cmd:  cmd,
 		Name: name,
@@ -35,7 +35,7 @@ func RunAndWait(cmd *exec.Cmd, name string, debug bool) (err error) {
 }
 
 // BackgroundRun run cmd in background
-func BackgroundRun(cmd *exec.Cmd, name string, debug bool) (err error) {
+func BackgroundRun(cmd *exec.Cmd, name string) (err error) {
 	ctx := &CMDContext{
 		Cmd:  cmd,
 		Name: name,

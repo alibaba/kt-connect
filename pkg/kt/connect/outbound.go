@@ -25,7 +25,7 @@ func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, 
 			err = startTunConnection(rootCtx, cli, credential, s.Options, podIP, cidrs, stop)
 		}
 	case common.ConnectMethodSocks5:
-		stop, rootCtx, err = forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, s.Options.ConnectOptions.SSHPort)
+		_, _, err = forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
 			err = startSocks5Connection(cli.SshChannel(), s.Options)
 		}
