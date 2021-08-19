@@ -3,6 +3,7 @@
 NS="kt-integration-test"
 IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
 MODE="vpn"
+DOCKER_HOST="ubuntu@192.168.64.2"
 
 # Log
 function log() {
@@ -16,6 +17,12 @@ function cleanup() {
     log "killing process ${i}"
     sudo kill -15 ${i};
   done
+  if [ "${DOCKER_HOST}" != "" ]; then
+    PID=`ps aux | grep 'ssh -CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
+    if [ "${PID}" != "" ]; then
+      kill -15 ${PID}
+    fi
+  fi
   docker rm -f tomcat
   kubectl -n ${NS} delete deployment tomcat
   kubectl -n ${NS} delete service tomcat
@@ -112,9 +119,9 @@ check_pid_file connect
 
 verify "pod-ip" "http://${podIp}:8080" "kt-connect demo v1"
 verify "cluster-ip" "http://${clusterIP}:8080" "kt-connect demo v1"
-verify "service-domain" "http://tomcat:8080" "kt-connect demo v1"
-verify "service-domain-with-namespace" "http://tomcat.${NS}:8080" "kt-connect demo v1"
 verify "service-domain-full-qualified" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect demo v1"
+verify "service-domain-with-namespace" "http://tomcat.${NS}:8080" "kt-connect demo v1"
+verify "service-domain" "http://tomcat:8080" "kt-connect demo v1"
 success "ktctl connect test passed"
 
 # Prepare local service
@@ -124,6 +131,10 @@ sleep 1
 exist=`docker ps -a | grep ' tomcat$' | grep -i ' Up '`
 if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; fi
 docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
+
+if [ "${DOCKER_HOST}" != "" ]; then
+  ssh -CfNgL 8080:localhost:8080 ${DOCKER_HOST}
+fi
 
 verify "local-service" "http://127.0.0.1:8080" "kt-connect local v2"
 
