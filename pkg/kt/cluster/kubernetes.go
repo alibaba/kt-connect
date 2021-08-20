@@ -255,7 +255,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
 	cli := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
-	setupDeploymentHeartBeat(cli, resourceMeta.Name)
+	util.SetupDeploymentHeartBeat(cli, resourceMeta.Name)
 
 	deployment := deployment(metaAndSpec, sshcm, options)
 	log.Info().Msg("Shadow template is prepare ready.")
@@ -273,7 +273,7 @@ func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, nam
 	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
 	labels[common.KTName] = sshcm
 	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
-	setupConfigMapHeartBeat(cli, sshcm)
+	util.SetupConfigMapHeartBeat(cli, sshcm)
 
 	return cli.Create(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -292,7 +292,7 @@ func (k *Kubernetes) createConfigMap(labels map[string]string, sshcm string, nam
 // CreateService create kubernetes service
 func (k *Kubernetes) CreateService(name, namespace string, external bool, port int, labels map[string]string) (*v1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
-	setupServiceHeartBeat(cli, name)
+	util.SetupServiceHeartBeat(cli, name)
 	svc := service(name, namespace, labels, external, port)
 	return cli.Create(svc)
 }

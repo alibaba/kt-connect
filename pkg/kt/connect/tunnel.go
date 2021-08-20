@@ -11,7 +11,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 )
@@ -168,7 +167,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	if !options.ConnectOptions.DisableDNS {
 		// 6. Setup dns config.
 		// This will overwrite the file /etc/resolv.conf
-		err = resolvconf.AddNameserver(podIP)
+		err = util.AddNameserver(podIP)
 		if err == nil {
 			log.Info().Msgf("Add nameserver %s successful", podIP)
 		}

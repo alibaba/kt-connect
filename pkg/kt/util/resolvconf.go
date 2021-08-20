@@ -1,6 +1,6 @@
 // +build !windows
 
-package resolvconf
+package util
 
 import (
 	"bufio"

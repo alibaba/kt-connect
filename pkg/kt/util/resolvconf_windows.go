@@ -1,4 +1,4 @@
-package resolvconf
+package util
 
 func AddNameserver(nameserver string) error {
 	return nil

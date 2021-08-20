@@ -9,7 +9,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli"
 	"k8s.io/client-go/kubernetes"
@@ -80,7 +79,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 
 		if !options.ConnectOptions.DisableDNS {
-			err = resolvconf.RestoreConfig()
+			err = util.RestoreConfig()
 			if err != nil {
 				log.Error().Msgf("Restore resolv.conf failed, error: %s", err)
 				return

@@ -58,6 +58,7 @@ func (s *Cli) ForwardPodPortToLocal(request Request) (chan struct{}, context.Con
 	if !util.WaitPortBeReady(request.Timeout, request.LocalPort) {
 		return nil, nil, errors.New("connect to port-forward failed")
 	}
+	util.SetupPortForwardHeartBeat(request.LocalPort)
 	return stop, rootCtx, nil
 }
 
