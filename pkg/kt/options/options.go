@@ -26,7 +26,6 @@ type ConnectOptions struct {
 	Method               string
 	Dump2HostsNamespaces cli.StringSlice
 	ShareShadow          bool
-	LocalDomain          string
 	TunName              string
 	TunCidr              string
 	ClusterDomain        string

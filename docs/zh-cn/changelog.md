@@ -1,9 +1,15 @@
 更新日志
 ---
 
-### 0.1.1
+### 0.1.2
 
 > 发布时间：待定
+
+* 自动解析本地DNS配置，移除connect命令的`--localDomain`参数
+
+### 0.1.1
+
+> 发布时间：2021-08-19
 
 * 发布包从`tar.gz`格式改为`zip`格式，方便Windows用户使用
 * 新增`--serviceAccount`参数支持指定代理Pod使用的ServiceAccount

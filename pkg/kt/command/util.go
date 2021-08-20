@@ -80,7 +80,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 
 		if !options.ConnectOptions.DisableDNS {
-			err = (&resolvconf.Conf{}).RestoreConfig()
+			err = resolvconf.RestoreConfig()
 			if err != nil {
 				log.Error().Msgf("Restore resolv.conf failed, error: %s", err)
 				return

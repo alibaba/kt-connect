@@ -115,11 +115,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
 		cli.StringFlag{
-			Name:        "localDomain",
-			Usage:       "Set local domain suffix to help dns resolve properly",
-			Destination: &options.ConnectOptions.LocalDomain,
-		},
-		cli.StringFlag{
 			Name:        "tunName",
 			Usage:       "The tun device name to create on client machine (Alpha)",
 			Value:       "tun0",

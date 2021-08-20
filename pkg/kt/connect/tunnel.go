@@ -168,7 +168,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	if !options.ConnectOptions.DisableDNS {
 		// 6. Setup dns config.
 		// This will overwrite the file /etc/resolv.conf
-		err = (&resolvconf.Conf{}).AddNameserver(podIP)
+		err = resolvconf.AddNameserver(podIP)
 		if err == nil {
 			log.Info().Msgf("Add nameserver %s successful", podIP)
 		}

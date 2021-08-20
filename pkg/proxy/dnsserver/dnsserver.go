@@ -74,9 +74,14 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 		// This should never happen, just in case
 		name = name + "."
 	}
-	localDomain := os.Getenv(common.EnvVarLocalDomain)
-	if localDomain != "" && strings.HasSuffix(name, localDomain+".") {
-		name = name[0:(len(name) - len(localDomain) - 1)]
+	localDomains := os.Getenv(common.EnvVarLocalDomains)
+	if localDomains != "" {
+		for _, d := range strings.Split(localDomains, ",") {
+			if strings.HasSuffix(name, d+".") {
+				name = name[0:(len(name) - len(d) - 1)]
+				break
+			}
+		}
 	}
 	log.Info().Msgf("Looking up %s", name)
 

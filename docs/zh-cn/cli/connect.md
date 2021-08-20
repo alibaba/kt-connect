@@ -13,7 +13,6 @@ ktctl --debug --namespace=default connect --method=socks5
 ```
 --method value         与集群建立虚拟连接的方式，可选值有 'vpn'（仅Linux/Mac）、'tun'（仅Linux）、'socks' 和 'socks5'
 --shareShadow          与其他开发者共用代理Pod
---localDomain value    指定本地的域名尾缀（默认值：无）
 --clusterDomain value  指定集群的域名尾缀（默认值：cluster.local）
 ```
 

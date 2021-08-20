@@ -1,7 +1,7 @@
 package common
 
 const (
-	EnvVarLocalDomain   = "LOCAL_DOMAIN"
+	EnvVarLocalDomains  = "LOCAL_DOMAIN"
 	ClientTunIP         = "CLIENT_TUN_IP"
 	ServerTunIP         = "SERVER_TUN_IP"
 	TunMaskLength       = "TUN_MASK_LEN"

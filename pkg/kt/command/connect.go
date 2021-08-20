@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/resolvconf"
 	"net"
 	"os"
 	"strings"
@@ -162,8 +163,10 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 
 func envs(options *options.DaemonOptions) map[string]string {
 	envs := make(map[string]string)
-	if options.ConnectOptions.LocalDomain != "" {
-		envs[common.EnvVarLocalDomain] = options.ConnectOptions.LocalDomain
+	localDomains := resolvconf.GetLocalDomains()
+	log.Debug().Msgf("Found local domains: %s", localDomains)
+	if localDomains != "" {
+		envs[common.EnvVarLocalDomains] = localDomains
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodTun {
 		envs[common.ClientTunIP] = options.ConnectOptions.SourceIP
