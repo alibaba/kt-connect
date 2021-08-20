@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/process"
 	"github.com/rs/zerolog/log"
-	"k8s.io/client-go/rest"
+	"io"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net/http"
@@ -17,65 +18,47 @@ import (
 	"strings"
 )
 
-// Request ...
-type Request struct {
-	// RestConfig is the kubernetes config
-	RestConfig *rest.Config
-	// PodName pod name
-	PodName string
-	// Namespace target namespace
-	Namespace string
-	// LocalPort is the local port that will be selected to expose the PodPort
-	LocalPort int
-	// PodPort is the target port for the pod
-	PodPort int
-	// StopCh is the channel used to manage the port forward lifecycle
-	StopCh chan struct{}
-	// ReadyCh communicates when the tunnel is ready to receive traffic
-	ReadyCh chan struct{}
-	// Timeout connect timeout
-	Timeout int
-}
-
 // ForwardPodPortToLocal ...
-func (s *Cli) ForwardPodPortToLocal(request Request) (chan struct{}, context.Context, error) {
+func (s *Cli) ForwardPodPortToLocal(options *options.DaemonOptions, podName string, remotePort, localPort int) (chan struct{}, context.Context, error) {
 	stop := make(chan struct{})
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
 	go func() {
 		process.Stop(<-stop, cancel)
 	}()
-
-	request.StopCh = stop
-
 	go func() {
-		err := portForward(request)
+		err := portForward(options, podName, remotePort, localPort, stop)
 		if err != nil {
 			stop <- struct{}{}
 		}
 	}()
 
-	if !util.WaitPortBeReady(request.Timeout, request.LocalPort) {
+	if !util.WaitPortBeReady(options.WaitTime, localPort) {
 		return nil, nil, errors.New("connect to port-forward failed")
 	}
-	util.SetupPortForwardHeartBeat(request.LocalPort)
+	util.SetupPortForwardHeartBeat(localPort)
 	return stop, rootCtx, nil
 }
 
 // PortForward ...
-func portForward(req Request) error {
-	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", req.Namespace, req.PodName)
-	log.Debug().Msgf("Request port forward to %s", req.RestConfig.Host)
-	apiUrl, err := parseReqHost(req.RestConfig.Host, apiPath)
+func portForward(options *options.DaemonOptions, podName string, remotePort, localPort int, stop chan struct{}) error {
+	ready := make(chan struct{})
+	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", options.Namespace, podName)
+	log.Debug().Msgf("Request port forward to %s", options.RuntimeOptions.RestConfig.Host)
+	apiUrl, err := parseReqHost(options.RuntimeOptions.RestConfig.Host, apiPath)
 
-	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(options.RuntimeOptions.RestConfig)
 	if err != nil {
 		return err
 	}
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, apiUrl)
-	ports := []string{fmt.Sprintf("%d:%d", req.LocalPort, req.PodPort)}
-	fw, err := portforward.New(dialer, ports, req.StopCh, req.ReadyCh, os.Stdout, os.Stderr)
+	ports := []string{fmt.Sprintf("%d:%d", localPort, remotePort)}
+	var out io.Writer = nil
+	if options.Debug {
+		out = os.Stdout
+	}
+	fw, err := portforward.New(dialer, ports, stop, ready, out, os.Stderr)
 	if err != nil {
 		return err
 	}

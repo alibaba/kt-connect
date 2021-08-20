@@ -18,22 +18,9 @@ import (
 func forwardSSHTunnelToLocal(cli portforward.CliInterface, kubectlCli kubectl.CliInterface,
 	options *options.DaemonOptions, podName string, localSSHPort int) (stop chan struct{}, rootCtx context.Context, err error) {
 	if options.UseKubectl {
-		command := kubectlCli.PortForward(options.Namespace, podName, common.SshPort, localSSHPort)
-		err = exec.BackgroundRun(command, "forward ssh to localhost")
-		if err == nil {
-			if !util.WaitPortBeReady(options.WaitTime, localSSHPort) {
-				err = errors.New("connect to port-forward failed")
-			}
-		}
+		err = portForwardViaKubectl(kubectlCli, options, podName, common.SshPort, localSSHPort)
 	} else {
-		stop, rootCtx, err = cli.ForwardPodPortToLocal(portforward.Request{
-			RestConfig: options.RuntimeOptions.RestConfig,
-			PodName:    podName,
-			Namespace:  options.Namespace,
-			PodPort:    common.SshPort,
-			LocalPort:  localSSHPort,
-			Timeout:    options.WaitTime,
-		})
+		stop, rootCtx, err = cli.ForwardPodPortToLocal(options, podName, common.SshPort, localSSHPort)
 	}
 	return stop, rootCtx, err
 }
@@ -42,22 +29,21 @@ func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubect
 	options *options.DaemonOptions, podName string) (err error) {
 	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
 	if options.UseKubectl {
-		command := kubectlCli.PortForward(options.Namespace, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
-		err = exec.BackgroundRun(command, "forward socks to localhost")
-		if err == nil {
-			if !util.WaitPortBeReady(options.WaitTime, options.ConnectOptions.SocksPort) {
-				err = errors.New("connect to port-forward failed")
-			}
-		}
+		err = portForwardViaKubectl(kubectlCli, options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
 	} else {
-		_, _, err = pfCli.ForwardPodPortToLocal(portforward.Request{
-			RestConfig: options.RuntimeOptions.RestConfig,
-			PodName:    podName,
-			Namespace:  options.Namespace,
-			PodPort:    common.Socks4Port,
-			LocalPort:  options.ConnectOptions.SocksPort,
-			Timeout:    options.WaitTime,
-		})
+		_, _, err = pfCli.ForwardPodPortToLocal(options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
+	}
+	return err
+}
+
+func portForwardViaKubectl(kubectlCli kubectl.CliInterface, options *options.DaemonOptions, podName string, remotePort, localPort int) error {
+	command := kubectlCli.PortForward(options.Namespace, podName, remotePort, localPort)
+	err := exec.BackgroundRun(command, fmt.Sprintf("forward %d to localhost:%d", remotePort, localPort))
+	if err == nil {
+		if !util.WaitPortBeReady(options.WaitTime, localPort) {
+			err = errors.New("connect to port-forward failed")
+		}
+		util.SetupPortForwardHeartBeat(localPort)
 	}
 	return err
 }

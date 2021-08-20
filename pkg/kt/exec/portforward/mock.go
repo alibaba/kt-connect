@@ -8,6 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,9 +36,9 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 }
 
 // ForwardPodPortToLocal mocks base method.
-func (m *MockCliInterface) ForwardPodPortToLocal(request Request) (chan struct{}, context.Context, error) {
+func (m *MockCliInterface) ForwardPodPortToLocal(options *options.DaemonOptions, podName string, remotePort, localPort int) (chan struct{}, context.Context, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ForwardPodPortToLocal", request)
+	ret := m.ctrl.Call(m, "ForwardPodPortToLocal", options, podName, remotePort, localPort)
 	ret0, _ := ret[0].(chan struct{})
 	ret1, _ := ret[1].(context.Context)
 	ret2, _ := ret[2].(error)
@@ -45,7 +46,7 @@ func (m *MockCliInterface) ForwardPodPortToLocal(request Request) (chan struct{}
 }
 
 // ForwardPodPortToLocal indicates an expected call of ForwardPodPortToLocal.
-func (mr *MockCliInterfaceMockRecorder) ForwardPodPortToLocal(request interface{}) *gomock.Call {
+func (mr *MockCliInterfaceMockRecorder) ForwardPodPortToLocal(options, podName, remotePort, localPort interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardPodPortToLocal", reflect.TypeOf((*MockCliInterface)(nil).ForwardPodPortToLocal), request)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardPodPortToLocal", reflect.TypeOf((*MockCliInterface)(nil).ForwardPodPortToLocal), options, podName, remotePort, localPort)
 }

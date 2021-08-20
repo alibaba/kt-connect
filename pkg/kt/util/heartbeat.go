@@ -12,7 +12,7 @@ import (
 )
 
 const ResourceHeartBeatIntervalMinus = 5
-const portForwardHeartBeatIntervalSec = 10
+const portForwardHeartBeatIntervalSec = 30
 
 // SetupDeploymentHeartBeat setup heartbeat watcher for deployment
 func SetupDeploymentHeartBeat(client appV1.DeploymentInterface, name string) {
