@@ -150,7 +150,7 @@ func (action *Action) cleanResource(r ResourceToClean, kubernetes cluster.Kubern
 			log.Error().Msgf("Fail to scale deployment %s to %d", name, replica)
 		}
 	}
-	log.Info().Msg("Done.")
+	log.Info().Msg("Done")
 }
 
 func (action *Action) toPid(pidFileName string) int {

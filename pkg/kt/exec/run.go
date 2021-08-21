@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"bytes"
 	"context"
 	"io"
 	"os"
@@ -62,7 +61,7 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
 	}
 	go func() {
 		if err = cmdCtx.Cmd.Wait(); err != nil {
-			log.Debug().Msgf("Background process %s exit abnormally: %s", cmdCtx.Name, err.Error())
+			log.Info().Msgf("Background process %s exit abnormally: %s", cmdCtx.Name, err.Error())
 		}
 		log.Info().Msgf("Finished %s with context", cmdCtx.Name)
 	}()
@@ -75,21 +74,12 @@ func runCmd(cmdCtx *CMDContext) error {
 	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
 	log.Debug().Msgf("Child, name = %s, cmd.Args = %+v", cmdCtx.Name, cmd.Args)
 
-	var stdoutBuf, stderrBuf bytes.Buffer
-	stdoutIn, _ := cmd.StdoutPipe()
-	stderrIn, _ := cmd.StderrPipe()
-	stdout := io.MultiWriter(os.Stdout, &stdoutBuf)
-	stderr := io.MultiWriter(os.Stderr, &stderrBuf)
-	go func() {
-		if stdoutIn != nil {
-			_, _ = io.Copy(stdout, stdoutIn)
-		}
-	}()
-	go func() {
-		if stderrIn != nil {
-			_, _ = io.Copy(stderr, stderrIn)
-		}
-	}()
+	stdout, _ := cmd.StdoutPipe()
+	stderr, _ := cmd.StderrPipe()
+	if stdout != nil && stderr != nil {
+		go io.Copy(os.Stdout, stdout)
+		go io.Copy(os.Stderr, stderr)
+	}
 
 	err = cmd.Start()
 	if err != nil {

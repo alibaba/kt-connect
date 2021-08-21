@@ -1,7 +1,9 @@
 package sshuttle
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os/exec"
 )
 
@@ -12,17 +14,27 @@ func (s *Cli) Version() *exec.Cmd {
 
 // Connect ssh-baed vpn connect
 func (s *Cli) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
-	args := []string{}
+	var args []string
 	if !disableDNS {
 		args = append(args, "--dns", "--to-ns", DNSServer)
 	}
 
 	if debug {
-		args = append(args, "-v")
+		args = append(args, "--verbose")
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", privateKeyPath)
-	args = append(args, "-e", subCommand, "-r", fmt.Sprintf("root@%s:%d", remoteHost, remotePort), "-x", remoteHost)
+	remoteAddr := fmt.Sprintf("root@%s:%d", remoteHost, remotePort)
+	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", remoteHost)
 	args = append(args, cidrs...)
-	return exec.Command("sshuttle", args...)
+	cmd := exec.Command("sshuttle", args...)
+	if !debug {
+		stdoutPipe, _ := cmd.StdoutPipe()
+		stderrPipe, _ := cmd.StderrPipe()
+		if stdoutPipe != nil && stderrPipe != nil {
+			go io.Copy(bufio.NewWriter(nil), stdoutPipe)
+			go io.Copy(bufio.NewWriter(nil), stderrPipe)
+		}
+	}
+	return cmd
 }

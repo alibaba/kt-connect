@@ -163,8 +163,8 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 func envs(options *options.DaemonOptions) map[string]string {
 	envs := make(map[string]string)
 	localDomains := util.GetLocalDomains()
-	log.Debug().Msgf("Found local domains: %s", localDomains)
 	if localDomains != "" {
+		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodTun {

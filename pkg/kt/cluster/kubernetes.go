@@ -152,7 +152,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 		err = err2
 		return
 	}
-	log.Info().Msgf("Successful create ssh config map %v", configMap.ObjectMeta.Name)
+	log.Info().Msgf("Successful create config map %v", configMap.ObjectMeta.Name)
 
 	pod, err2 := k.createAndGetPod(metaAndSpec, sshKeyMeta.Sshcm, options)
 	if err2 != nil {
@@ -250,7 +250,7 @@ func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *ut
 
 func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (pod v1.Pod, err error) {
 	localIPAddress := util.GetOutboundIP()
-	log.Info().Msgf("Client address %s", localIPAddress)
+	log.Debug().Msgf("Client address %s", localIPAddress)
 	resourceMeta := metaAndSpec.Meta
 	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
@@ -258,7 +258,6 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string, 
 	util.SetupDeploymentHeartBeat(cli, resourceMeta.Name)
 
 	deployment := deployment(metaAndSpec, sshcm, options)
-	log.Info().Msg("Shadow template is prepare ready.")
 	result, err := cli.Create(deployment)
 	if err != nil {
 		return
@@ -372,7 +371,7 @@ wait_loop:
 			if p != nil {
 				if p.Status.Phase == "Running" {
 					pod = *p
-					log.Info().Msgf("Shadow pod: %s is ready.", pod.Name)
+					log.Info().Msgf("Shadow pod %s is ready", pod.Name)
 					break wait_loop
 				}
 				podName = p.Name

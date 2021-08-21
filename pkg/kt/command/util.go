@@ -156,7 +156,7 @@ func cleanDeploymentAndConfigMap(options *options.DaemonOptions, kubernetes clus
 
 	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil {
 		if shouldDelWithShared || !options.ConnectOptions.ShareShadow {
-			log.Info().Msgf("Cleaning sshcm %s", options.RuntimeOptions.SSHCM)
+			log.Info().Msgf("Cleaning config map %s", options.RuntimeOptions.SSHCM)
 			err = kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete configmap %s failed", options.RuntimeOptions.SSHCM)
