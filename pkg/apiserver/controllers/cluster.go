@@ -1,15 +1,16 @@
 package controllers
 
 import (
+	context2 "context"
 	"encoding/json"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/apiserver/controllers/resource/container"
+	"github.com/alibaba/kt-connect/pkg/apiserver/controllers/resource/logs"
 	"net/http"
 	"strconv"
 
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
 	"github.com/gin-gonic/gin"
-	"github.com/kubernetes/dashboard/src/app/backend/resource/container"
-	"github.com/kubernetes/dashboard/src/app/backend/resource/logs"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -48,7 +49,7 @@ func (c *ClusterController) Services(context *gin.Context) {
 func (c *ClusterController) Service(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	service, err := c.Context.Client().CoreV1().Services(namespace).Get(name, metav1.GetOptions{})
+	service, err := c.Context.Client().CoreV1().Services(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get service " + name,
@@ -75,7 +76,7 @@ func (c *ClusterController) Endpoints(context *gin.Context) {
 func (c *ClusterController) Endpoint(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	endpoint, err := c.Context.Client().CoreV1().Endpoints(namespace).Get(name, metav1.GetOptions{})
+	endpoint, err := c.Context.Client().CoreV1().Endpoints(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get endpoint",
@@ -102,7 +103,7 @@ func (c *ClusterController) Deployments(context *gin.Context) {
 		options.FieldSelector = fmt.Sprintf("spec.selector.matchLabels=%s", labelSelector.String())
 	}
 
-	resource, err := c.Context.Client().AppsV1().Deployments(namespace).List(options)
+	resource, err := c.Context.Client().AppsV1().Deployments(namespace).List(context2.TODO(), options)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get deployment",
@@ -116,7 +117,7 @@ func (c *ClusterController) Deployments(context *gin.Context) {
 func (c *ClusterController) Deployment(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	resource, err := c.Context.Client().AppsV1().Deployments(namespace).Get(name, metav1.GetOptions{})
+	resource, err := c.Context.Client().AppsV1().Deployments(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get deployment",
@@ -130,7 +131,7 @@ func (c *ClusterController) Deployment(context *gin.Context) {
 func (c *ClusterController) ReplicaSet(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
-	resource, err := c.Context.Client().AppsV1().ReplicaSets(namespace).Get(name, metav1.GetOptions{})
+	resource, err := c.Context.Client().AppsV1().ReplicaSets(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get replicaSet",
@@ -166,7 +167,7 @@ func (c *ClusterController) Pod(context *gin.Context) {
 	namespace := context.Param("namespace")
 	name := context.Param("name")
 
-	pod, err := c.Context.Client().CoreV1().Pods(namespace).Get(name, metav1.GetOptions{})
+	pod, err := c.Context.Client().CoreV1().Pods(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get pod",
