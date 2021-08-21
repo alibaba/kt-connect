@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"os"
 	"strings"
@@ -73,7 +74,8 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 		return err
 	}
 
-	app, err := kubernetes.Deployment(deploymentName, options.Namespace)
+	ctx := context.Background()
+	app, err := kubernetes.Deployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -83,7 +85,7 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	workload := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
 	labels := getMeshLabels(workload, meshVersion, app, options)
 
-	err = createShadowAndInbound(workload, labels, options, kubernetes)
+	err = createShadowAndInbound(ctx, workload, labels, options, kubernetes)
 	if err != nil {
 		return err
 	}
@@ -106,12 +108,12 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	return nil
 }
 
-func createShadowAndInbound(workload string, labels map[string]string, options *options.DaemonOptions,
+func createShadowAndInbound(ctx context.Context, workload string, labels map[string]string, options *options.DaemonOptions,
 	kubernetes cluster.KubernetesInterface) error {
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels, annotations, envs)
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(ctx, workload, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}

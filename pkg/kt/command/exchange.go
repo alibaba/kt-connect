@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -66,8 +67,8 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 	if err != nil {
 		return err
 	}
-
-	app, err := kubernetes.Deployment(deploymentName, options.Namespace)
+	ctx := context.Background()
+	app, err := kubernetes.Deployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 	workload := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options,
+	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(ctx, workload, options,
 		getExchangeLabels(options, workload, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", workload, options.Namespace)
 
@@ -92,7 +93,7 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 	options.RuntimeOptions.SSHCM = sshcm
 
 	down := int32(0)
-	if err = kubernetes.Scale(app, &down); err != nil {
+	if err = kubernetes.Scale(ctx, app, &down); err != nil {
 		return err
 	}
 

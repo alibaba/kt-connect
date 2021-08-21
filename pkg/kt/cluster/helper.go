@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"strings"
@@ -27,7 +28,7 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCidrs(clientset kubernetes.Interface, podCIDR string) (cidrs []string, err error) {
+func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDR string) (cidrs []string, err error) {
 	cidrs = []string{}
 
 	if len(podCIDR) != 0 {
@@ -35,7 +36,7 @@ func getPodCidrs(clientset kubernetes.Interface, podCIDR string) (cidrs []string
 		return
 	}
 
-	nodeList, err := clientset.CoreV1().Nodes().List(metav1.ListOptions{})
+	nodeList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 
 	if err != nil {
 		log.Error().Msgf("Fails to get node info of cluster")
@@ -49,7 +50,7 @@ func getPodCidrs(clientset kubernetes.Interface, podCIDR string) (cidrs []string
 	}
 
 	if len(cidrs) == 0 {
-		samples, err2 := getPodCidrByInstance(clientset)
+		samples, err2 := getPodCidrByInstance(ctx, clientset)
 		if err2 != nil {
 			err = err2
 			return
@@ -62,9 +63,9 @@ func getPodCidrs(clientset kubernetes.Interface, podCIDR string) (cidrs []string
 	return
 }
 
-func getPodCidrByInstance(clientset kubernetes.Interface) (samples mapset.Set, err error) {
+func getPodCidrByInstance(ctx context.Context, clientset kubernetes.Interface) (samples mapset.Set, err error) {
 	log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
-	podList, err := clientset.CoreV1().Pods("").List(metav1.ListOptions{})
+	podList, err := clientset.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Error().Msg("Fails to get service info of cluster")
 		return

@@ -2,6 +2,7 @@ package command
 
 import (
 	"container/list"
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -60,7 +61,8 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 //Clean delete unavailing shadow pods
 func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
 	action.cleanPidFiles()
-	kubernetes, deployments, err := action.getShadowDeployments(cli, options)
+	ctx := context.Background()
+	kubernetes, deployments, err := action.getShadowDeployments(ctx, cli, options)
 	if err != nil {
 		return err
 	}
@@ -73,7 +75,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		if options.CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
 		} else {
-			action.cleanResource(resourceToClean, kubernetes, options.Namespace)
+			action.cleanResource(ctx, resourceToClean, kubernetes, options.Namespace)
 		}
 	} else {
 		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
@@ -124,28 +126,28 @@ func (action *Action) analysisShadowDeployment(deployment v1.Deployment, options
 	}
 }
 
-func (action *Action) cleanResource(r ResourceToClean, kubernetes cluster.KubernetesInterface, namespace string) {
+func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, kubernetes cluster.KubernetesInterface, namespace string) {
 	log.Info().Msgf("Deleting %d unavailing shadow deployments", r.NamesOfDeploymentToDelete.Len())
 	for name := r.NamesOfDeploymentToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveDeployment(name.Value.(string), namespace)
+		err := kubernetes.RemoveDeployment(ctx, name.Value.(string), namespace)
 		if err != nil {
 			log.Error().Msgf("Fail to delete deployment %s", name.Value.(string))
 		}
 	}
 	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveService(name.Value.(string), namespace)
+		err := kubernetes.RemoveService(ctx, name.Value.(string), namespace)
 		if err != nil {
 			log.Error().Msgf("Fail to delete service %s", name.Value.(string))
 		}
 	}
 	for name := r.NamesOfConfigMapToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveConfigMap(name.Value.(string), namespace)
+		err := kubernetes.RemoveConfigMap(ctx, name.Value.(string), namespace)
 		if err != nil {
 			log.Error().Msgf("Fail to delete config map %s", name.Value.(string))
 		}
 	}
 	for name, replica := range r.DeploymentsToScale {
-		err := kubernetes.ScaleTo(name, namespace, &replica)
+		err := kubernetes.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
 			log.Error().Msgf("Fail to scale deployment %s to %d", name, replica)
 		}
@@ -185,13 +187,13 @@ func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOpti
 	return time.Now().Unix()-lastHeartBeat > options.CleanOptions.ThresholdInMinus*60
 }
 
-func (action *Action) getShadowDeployments(cli kt.CliInterface, options *options.DaemonOptions) (
+func (action *Action) getShadowDeployments(ctx context.Context, cli kt.CliInterface, options *options.DaemonOptions) (
 	cluster.KubernetesInterface, []v1.Deployment, error) {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return nil, nil, err
 	}
-	deployments, err := kubernetes.GetAllExistingShadowDeployments(options.Namespace)
+	deployments, err := kubernetes.GetAllExistingShadowDeployments(ctx, options.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}

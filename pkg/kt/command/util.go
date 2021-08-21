@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -92,10 +93,10 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
 		return
 	}
-
+	ctx := context.Background()
 	if len(options.RuntimeOptions.Origin) > 0 {
 		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
-		err := kubernetes.ScaleTo(options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
+		err := kubernetes.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().
 				Str("namespace", options.Namespace).
@@ -103,8 +104,8 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 	}
 
-	cleanDeploymentAndConfigMap(options, kubernetes)
-	cleanService(options, kubernetes)
+	cleanDeploymentAndConfigMap(ctx, options, kubernetes)
+	cleanService(ctx, options, kubernetes)
 }
 
 func cleanLocalFiles(options *options.DaemonOptions) {
@@ -126,28 +127,28 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	}
 }
 
-func cleanService(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
+func cleanService(ctx context.Context, options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
 	if options.RuntimeOptions.Service != "" {
 		log.Info().Msgf("Cleaning service %s", options.RuntimeOptions.Service)
-		err := kubernetes.RemoveService(options.RuntimeOptions.Service, options.Namespace)
+		err := kubernetes.RemoveService(ctx, options.RuntimeOptions.Service, options.Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Delete service %s failed", options.RuntimeOptions.Service)
 		}
 	}
 }
 
-func cleanDeploymentAndConfigMap(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
+func cleanDeploymentAndConfigMap(ctx context.Context, options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
 	shouldDelWithShared := false
 	var err error
 	if options.RuntimeOptions.Shadow != "" {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(kubernetes, options)
+			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(ctx, kubernetes, options)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete shared deployment %s failed", options.RuntimeOptions.Shadow)
 			}
 		} else {
 			log.Info().Msgf("Cleaning shadow %s", options.RuntimeOptions.Shadow)
-			err = kubernetes.RemoveDeployment(options.RuntimeOptions.Shadow, options.Namespace)
+			err = kubernetes.RemoveDeployment(ctx, options.RuntimeOptions.Shadow, options.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete deployment %s failed", options.RuntimeOptions.Shadow)
 			}
@@ -157,7 +158,7 @@ func cleanDeploymentAndConfigMap(options *options.DaemonOptions, kubernetes clus
 	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil {
 		if shouldDelWithShared || !options.ConnectOptions.ShareShadow {
 			log.Info().Msgf("Cleaning config map %s", options.RuntimeOptions.SSHCM)
-			err = kubernetes.RemoveConfigMap(options.RuntimeOptions.SSHCM, options.Namespace)
+			err = kubernetes.RemoveConfigMap(ctx, options.RuntimeOptions.SSHCM, options.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete configmap %s failed", options.RuntimeOptions.SSHCM)
 			}
@@ -166,8 +167,8 @@ func cleanDeploymentAndConfigMap(options *options.DaemonOptions, kubernetes clus
 }
 
 // decreaseRefOrRemoveTheShadow
-func decreaseRefOrRemoveTheShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (bool, error) {
-	return kubernetes.DecreaseRef(options.Namespace, options.RuntimeOptions.Shadow)
+func decreaseRefOrRemoveTheShadow(ctx context.Context, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (bool, error) {
+	return kubernetes.DecreaseRef(ctx, options.Namespace, options.RuntimeOptions.Shadow)
 }
 
 // removePrivateKey remove the private key of ssh
