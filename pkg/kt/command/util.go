@@ -94,7 +94,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 
 	if len(options.RuntimeOptions.Origin) > 0 {
-		log.Info().Msgf("Recovering Origin App %s", options.RuntimeOptions.Origin)
+		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
 		err := kubernetes.ScaleTo(options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().

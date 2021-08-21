@@ -14,7 +14,6 @@ import (
 
 // Inbound mapping local port from cluster
 func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, _ *util.SSHCredential) (err error) {
-	log.Info().Msg("Creating shadow inbound(remote->local)")
 	return inbound(s, exposePorts, podName, remoteIP, &sshchannel.SSHChannel{}, &exec.Cli{})
 }
 
@@ -48,7 +47,7 @@ func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, exposePort stri
 	localPort, remotePort := getPortMapping(exposePort)
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		log.Info().Msgf("ExposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s", remotePort, localPort)
+		log.Debug().Msgf("Exposing remote pod:%s to local port localhost:%s", remotePort, localPort)
 		err := ssh.ForwardRemoteToLocal(
 			&sshchannel.Certificate{
 				Username: "root",
@@ -61,7 +60,6 @@ func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, exposePort stri
 		if err != nil {
 			log.Error().Msgf("Error happen when forward remote request to local %s", err)
 		}
-		log.Info().Msgf("ExposeLocalPortsToRemote request from pod:%s to 127.0.0.1:%s finished", remotePort, localPort)
 		wg.Done()
 	}(wg)
 }
