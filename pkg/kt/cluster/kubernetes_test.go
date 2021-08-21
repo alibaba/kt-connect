@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -70,7 +71,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			envs := make(map[string]string)
 			annotations := make(map[string]string)
 			option := options.DaemonOptions{Namespace: tt.args.namespace, Image: tt.args.image, Debug: tt.args.debug}
-			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(tt.args.name, &option, tt.args.labels, annotations, envs)
+			gotPodIP, gotPodName, gotSshcm, _, err := k.GetOrCreateShadow(context.TODO(), tt.args.name, &option, tt.args.labels, annotations, envs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -126,7 +127,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 			ops := &options.ConnectOptions{
 				CIDR: tt.args.podCIDR,
 			}
-			gotCidrs, err := k.ClusterCidrs("default", ops)
+			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default", ops)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -168,7 +169,7 @@ func TestKubernetes_CreateService(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(),
 			}
-			_, err := k.CreateService(tt.args.name, tt.args.namespace, false, tt.args.port, tt.args.labels)
+			_, err := k.CreateService(context.TODO(), tt.args.name, tt.args.namespace, false, tt.args.port, tt.args.labels)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.CreateService() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -212,7 +213,7 @@ func TestKubernetes_ScaleTo(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			if err := k.ScaleTo(tt.args.deployment, tt.args.namespace, &tt.args.replicas); (err != nil) != tt.wantErr {
+			if err := k.ScaleTo(context.TODO(), tt.args.deployment, tt.args.namespace, &tt.args.replicas); (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ScaleTo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
