@@ -7,6 +7,7 @@
 
 * 自动解析本地DNS配置，移除connect命令的`--localDomain`参数
 * 解决Exchange和Mesh连接闲置超时报"lost connection to pod"的问题
+* 修复Connect命令开启debug模式时无法连接的错误
 
 ### 0.1.1
 

@@ -185,11 +185,6 @@ func container(image string, args []string, envs map[string]string, options *opt
 
 func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *appV1.Deployment {
 	var args []string
-	if options.Debug {
-		log.Debug().Msg("Create shadow with debug mode")
-		args = append(args, "--debug")
-	}
-
 	namespace := metaAndSpec.Meta.Namespace
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
