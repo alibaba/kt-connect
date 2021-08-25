@@ -26,7 +26,7 @@ if [ -n "${CLIENT_TUN_IP}" -a -n "${SERVER_TUN_IP}" ]; then
 fi
 
 if [[ "${1}" = "--debug" ]]; then
-   /usr/sbin/dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /usr/sbin/shadow-linux-amd64
+   /usr/sbin/dlv --listen=:2345 --headless=true --api-version=2 --accept-multiclient exec /usr/sbin/shadow
 else
-   /usr/sbin/shadow-linux-amd64
+   /usr/sbin/shadow
 fi

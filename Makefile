@@ -3,6 +3,7 @@ PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
 TAG				  ?= $(shell date +%s)
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
+ROUTER_IMAGE	  =  kt-connect-router
 BUILDER_IMAGE	  =  builder
 DASHBOARD_IMAGE   =  kt-connect-dashboard
 SERVER_IMAGE	  =  kt-connect-server
@@ -49,7 +50,8 @@ build-shadow:
 
 # build router
 build-router:
-    GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
+	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
+	docker build -t $(PREFIX)/$(ROUTER_IMAGE):$(TAG) -f build/docker/router/Dockerfile .
 
 # dlv for debug
 build-shadow-dlv:

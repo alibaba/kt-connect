@@ -1,10 +1,10 @@
-FROM golang:1.15
+FROM golang:1.16
 ENV GO111MODULE on
 # Install go debugger
 RUN GO111MODULE=off go get -u github.com/go-delve/delve/cmd/dlv
 
-FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base:v0.1.13
-COPY shadow /usr/sbin/shadow-linux-amd64
+FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base:v0.1.0
+COPY shadow /usr/sbin/shadow
 COPY --from=0 /go/bin/dlv /usr/sbin/dlv
 RUN apt-get install -y net-tools
 ADD build/docker/shadow/run.sh /run.sh

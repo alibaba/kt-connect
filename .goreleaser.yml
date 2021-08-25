@@ -1,6 +1,6 @@
 # Make sure to check the documentation at http://goreleaser.com
 env:
-  - GO_VERSION=1.15.6
+  - GO_VERSION=1.16.7
 before:
   hooks:
     - go mod download
@@ -49,6 +49,13 @@ builds:
       - linux
     goarch:
       - amd64
+  - id: "router"
+    main: ./cmd/router/main.go
+    binary: router
+    goos:
+      - linux
+    goarch:
+      - amd64
   - id: "apiserver"
     main: ./cmd/server/main.go
     binary: apiserver
@@ -70,6 +77,19 @@ dockers:
     skip_push: false
     extra_files:
       - build/docker/shadow/run.sh
+  - goos: linux
+    goarch: amd64
+    ids:
+      - router
+    image_templates:
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:latest"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:{{ .Tag }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v{{ .Major }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v{{ .Version }}"
+    dockerfile: build/docker/router/Dockerfile_releaser
+    skip_push: false
+    extra_files:
+      - build/docker/router/nginx.conf
   - goos: linux
     goarch: amd64
     ids:
@@ -153,6 +173,3 @@ release:
   # If set to true, will mark the release as not ready for production.
   # Default is false.
   prerelease: auto
-
-
-
