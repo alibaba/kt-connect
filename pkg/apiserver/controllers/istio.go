@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	context2 "context"
 	"fmt"
 	"net/http"
 
@@ -30,7 +31,7 @@ func (c *IstioController) VirtualServices(context *gin.Context) {
 		return
 	}
 
-	vsList, err := ic.NetworkingV1alpha3().VirtualServices(namespace).List(metav1.ListOptions{})
+	vsList, err := ic.NetworkingV1alpha3().VirtualServices(namespace).List(context2.TODO(), metav1.ListOptions{})
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to get VirtualService in %s namespace", namespace)
 	}
@@ -59,7 +60,7 @@ func (c *IstioController) VirtualService(context *gin.Context) {
 		return
 	}
 
-	vs, err := ic.NetworkingV1alpha3().VirtualServices(namespace).Get(name, metav1.GetOptions{})
+	vs, err := ic.NetworkingV1alpha3().VirtualServices(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
@@ -83,7 +84,7 @@ func (c *IstioController) DestinationRules(context *gin.Context) {
 		return
 	}
 
-	destinationrules, err := ic.NetworkingV1alpha3().DestinationRules(namespace).List(metav1.ListOptions{})
+	destinationrules, err := ic.NetworkingV1alpha3().DestinationRules(namespace).List(context2.TODO(), metav1.ListOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get destinationrules",
@@ -107,7 +108,7 @@ func (c *IstioController) DestinationRule(context *gin.Context) {
 		return
 	}
 
-	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(name, metav1.GetOptions{})
+	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Sprintf("fail get destinationrule %s", name),
@@ -133,7 +134,7 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 		return
 	}
 
-	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(name, metav1.GetOptions{})
+	destinationrule, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Get(context2.TODO(), name, metav1.GetOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail get destinationrule",
@@ -158,7 +159,7 @@ func (c *IstioController) AddVersionToDestinationRule(context *gin.Context) {
 	}
 	destinationrule.Spec.Subsets = append(destinationrule.Spec.Subsets, newSubset)
 
-	result, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Update(destinationrule)
+	result, err := ic.NetworkingV1alpha3().DestinationRules(namespace).Update(context2.TODO(), destinationrule, metav1.UpdateOptions{})
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),

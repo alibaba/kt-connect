@@ -1,9 +1,11 @@
 package util
 
 import (
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	appV1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
@@ -15,12 +17,12 @@ const ResourceHeartBeatIntervalMinus = 5
 const portForwardHeartBeatIntervalSec = 30
 
 // SetupDeploymentHeartBeat setup heartbeat watcher for deployment
-func SetupDeploymentHeartBeat(client appV1.DeploymentInterface, name string) {
+func SetupDeploymentHeartBeat(ctx context.Context, client appV1.DeploymentInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, formattedTime())
-			_, err := client.Patch(name, types.JSONPatchType, []byte(resourceHeartbeatPatch()))
+			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Msg(err.Error())
 				return
@@ -30,12 +32,12 @@ func SetupDeploymentHeartBeat(client appV1.DeploymentInterface, name string) {
 }
 
 // SetupServiceHeartBeat setup heartbeat watcher for service
-func SetupServiceHeartBeat(client v1.ServiceInterface, name string) {
+func SetupServiceHeartBeat(ctx context.Context, client v1.ServiceInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat service %s ticked at %s", name, formattedTime())
-			_, err := client.Patch(name, types.JSONPatchType, []byte(resourceHeartbeatPatch()))
+			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Msg(err.Error())
 				return
@@ -45,12 +47,12 @@ func SetupServiceHeartBeat(client v1.ServiceInterface, name string) {
 }
 
 // SetupConfigMapHeartBeat setup heartbeat watcher for config map
-func SetupConfigMapHeartBeat(client v1.ConfigMapInterface, name string) {
+func SetupConfigMapHeartBeat(ctx context.Context, client v1.ConfigMapInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
-			_, err := client.Patch(name, types.JSONPatchType, []byte(resourceHeartbeatPatch()))
+			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Msg(err.Error())
 				return

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
@@ -129,7 +130,7 @@ func (o *MeshOptions) checkContext() error {
 
 // checkTarget
 func (o *MeshOptions) checkTarget() error {
-	if _, err := o.clientset.AppsV1().Deployments(o.currentNs).Get(o.Target, metav1.GetOptions{}); err != nil {
+	if _, err := o.clientset.AppsV1().Deployments(o.currentNs).Get(context.TODO(), o.Target, metav1.GetOptions{}); err != nil {
 		return err
 	}
 	return nil

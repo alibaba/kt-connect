@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -55,7 +56,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	log.Info().Msgf("KtConnect start at %d", os.Getpid())
 
 	ch := SetUpCloseHandler(cli, options, common.ComponentConnect)
-	if err = connectToCluster(cli, options); err != nil {
+	if err = connectToCluster(context.TODO(), cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
@@ -83,7 +84,7 @@ func completeOptions(options *options.DaemonOptions) error {
 	return nil
 }
 
-func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
+func connectToCluster(ctx context.Context, cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return
@@ -108,7 +109,7 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 		return
 	}
 
-	cidrs, err := kubernetes.ClusterCidrs(options.Namespace, options.ConnectOptions)
+	cidrs, err := kubernetes.ClusterCidrs(ctx, options.Namespace, options.ConnectOptions)
 	if err != nil {
 		return
 	}
@@ -123,7 +124,7 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 	}
 
 	annotations := make(map[string]string)
-	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(workload, options, labels(workload, options), annotations, envs(options))
+	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(context.TODO(), workload, options, labels(workload, options), annotations, envs(options))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -143,7 +144,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 	hosts := map[string]string{}
 	for _, namespace := range namespaceToDump {
 		log.Debug().Msgf("Search service in %s namespace...", namespace)
-		singleHosts := kubernetes.ServiceHosts(namespace)
+		singleHosts := kubernetes.ServiceHosts(context.TODO(), namespace)
 		for svc, ip := range singleHosts {
 			if ip == "" || ip == "None" {
 				continue

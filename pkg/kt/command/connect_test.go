@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"io/ioutil"
@@ -70,9 +71,9 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	kubernetes := cluster.NewMockKubernetesInterface(ctl)
 	exec := exec.NewMockCliInterface(ctl)
 	shadow := connect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		"172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
-	kubernetes.EXPECT().ClusterCidrs(gomock.Any(), gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
+	kubernetes.EXPECT().ClusterCidrs(context.TODO(), gomock.Any(), gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
 
 	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", gomock.Any(), []string{"10.10.10.0/24"}, gomock.Any()).Return(nil)
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
@@ -82,7 +83,7 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	opts := options.NewDaemonOptions()
 	opts.Labels = "a:b"
 
-	if err := connectToCluster(ktctl, opts); err != nil {
+	if err := connectToCluster(context.TODO(), ktctl, opts); err != nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, false)
 	}
 
@@ -95,13 +96,13 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 
 	kubernetes := cluster.NewMockKubernetesInterface(ctl)
 	shadow := connect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		"", "", "", nil, errors.New("")).AnyTimes()
 
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 
-	if err := connectToCluster(ktctl, options.NewDaemonOptions()); err == nil {
+	if err := connectToCluster(context.TODO(), ktctl, options.NewDaemonOptions()); err == nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
 	}
 
@@ -115,9 +116,9 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 
 	kubernetes := cluster.NewMockKubernetesInterface(ctl)
 	shadow := connect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().GetOrCreateShadow(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
+	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
 		"172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
-	kubernetes.EXPECT().ClusterCidrs(gomock.Any(), gomock.Any()).Return([]string{}, errors.New("fail to get cidr"))
+	kubernetes.EXPECT().ClusterCidrs(context.TODO(), gomock.Any(), gomock.Any()).Return([]string{}, errors.New("fail to get cidr"))
 
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
@@ -125,7 +126,7 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 	opts := options.NewDaemonOptions()
 	opts.Labels = "a:b"
 
-	if err := connectToCluster(ktctl, opts); err == nil {
+	if err := connectToCluster(context.TODO(), ktctl, opts); err == nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
 	}
 
