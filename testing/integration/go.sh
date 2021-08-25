@@ -133,7 +133,7 @@ if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; f
 docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
 
 if [ "${DOCKER_HOST}" != "" ]; then
-  ssh -CfNgL 8080:localhost:8080 ${DOCKER_HOST}
+  ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -CfNgL 8080:localhost:8080 ${DOCKER_HOST}
 fi
 
 verify "local-service" "http://127.0.0.1:8080" "kt-connect local v2"
