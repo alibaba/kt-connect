@@ -14,7 +14,12 @@ var routeTemplate string
 const pathRouteConf = "/etc/nginx/conf.d/route.conf"
 
 func WriteAndReloadRouteConf(ktConf *KtConf) error {
-	err := writeRouteConf(ktConf)
+	var err error
+	if len(ktConf.Versions) > 0 {
+		err = writeRouteConf(ktConf)
+	} else {
+		err = removeRouteConf()
+	}
 	if err != nil {
 		return err
 	}
@@ -53,6 +58,14 @@ func writeRouteConf(ktConf *KtConf) error {
 	err = tmpl.Execute(routeConfFile, ktConf)
 	if err != nil {
 		return fmt.Errorf("failed to generate route configuration: %s", err)
+	}
+	return nil
+}
+
+func removeRouteConf() error {
+	err := os.Remove(pathRouteConf)
+	if err != nil {
+		return fmt.Errorf("failed to remove route configuration: %s", err)
 	}
 	return nil
 }
