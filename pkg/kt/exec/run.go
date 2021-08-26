@@ -68,6 +68,11 @@ func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
 	return
 }
 
+// CanRun check whether a command can execute successful
+func CanRun(cmd *exec.Cmd) bool {
+	return cmd.Run() == nil
+}
+
 func runCmd(cmdCtx *CMDContext) error {
 	var err error
 	cmd := cmdCtx.Cmd
