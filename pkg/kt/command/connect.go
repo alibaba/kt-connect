@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"net"
 	"os"
 	"strings"
@@ -92,15 +94,10 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	if util.IsWindows() || len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
 		setupDump2Host(options, kubernetes)
 	}
-	if options.ConnectOptions.Method == common.ConnectMethodSocks {
-		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
-		if err != nil {
-			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
-		}
-		err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
-		if err != nil {
-			log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
-		}
+	if options.ConnectOptions.Method == common.ConnectMethodVpn {
+		checkSshuttleInstalled(cli.Exec().Sshuttle())
+	} else if options.ConnectOptions.Method == common.ConnectMethodSocks {
+		setupGlobalProxy(options)
 	}
 
 	endPointIP, podName, credential, err := getOrCreateShadow(options, err, kubernetes)
@@ -114,6 +111,26 @@ func connectToCluster(cli kt.CliInterface, options *options.DaemonOptions) (err 
 	}
 
 	return cli.Shadow().Outbound(podName, endPointIP, credential, cidrs, cli.Exec())
+}
+
+func checkSshuttleInstalled(cli sshuttle.CliInterface) {
+	if !exec.CanRun(cli.Version()) {
+		err := exec.RunAndWait(cli.Install(), "install_sshuttle")
+		if err != nil {
+			log.Error().Msgf("Failed find or install sshuttle: %s", err)
+		}
+	}
+}
+
+func setupGlobalProxy(options *options.DaemonOptions) {
+	err := registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+	if err != nil {
+		log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
+	}
+	err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+	if err != nil {
+		log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
+	}
 }
 
 func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes cluster.KubernetesInterface) (string, string, *util.SSHCredential, error) {
