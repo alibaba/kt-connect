@@ -1,16 +1,10 @@
 package main
 
 import (
-	_ "embed"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"syscall"
-	"text/template"
-
+	"github.com/alibaba/kt-connect/pkg/router"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"os"
 )
 
 func init() {
@@ -18,38 +12,30 @@ func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 }
 
-//go:embed route.conf
-var routeTemplate string
-
-const pathKtLock = "/var/kt.lock"
-const pathKtConf = "/etc/kt.conf"
-const pathRouteConf = "/etc/nginx/conf.d/route.conf"
-const fieldService = "Service"
-const fieldPort = "Port"
-const fieldVersions = "Versions"
 const actionSetup = "setup"
 const actionAdd = "add"
 const actionRemove = "remove"
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		usage()
 	} else {
-		switch os.Args[0] {
+		switch os.Args[1] {
 		case actionSetup:
-			setup(os.Args[1:])
+			setup(os.Args[2:])
 		case actionAdd:
-			add(os.Args[1:])
+			add(os.Args[2:])
 		case actionRemove:
-			remove(os.Args[1:])
+			remove(os.Args[2:])
 		default:
+			log.Error().Msgf("invalid action action: %s", os.Args[1])
 			usage()
 		}
 	}
 }
 
 func usage() {
-	log.Error().Msgf(`Usage: 
+	log.Info().Msgf(`Usage: 
 router %s <service-name> <service-port> <custom-version>
 router %s <custom-version>
 router %s <custom-version>
@@ -61,17 +47,17 @@ func setup(args []string) {
 		usage()
 		return
 	}
-	content := map[string]interface{}{
-		fieldService:  args[0],
-		fieldPort:     args[1],
-		fieldVersions: []string{args[2]},
+	ktConf := router.KtConf{
+		Service:  args[0],
+		Port:     args[1],
+		Versions: []string{args[2]},
 	}
-	err := writeKtConf(content)
+	err := router.WriteKtConf(&ktConf)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		return
 	}
-	err = writeAndReloadRouteConf(content)
+	err = router.WriteAndReloadRouteConf(&ktConf)
 	if err != nil {
 		log.Error().Msg(err.Error())
 		return
@@ -98,94 +84,29 @@ func remove(args []string) {
 }
 
 func updateRoute(version string, action string) error {
-	content, err := readKtConf()
+	ktConf, err := router.ReadKtConf()
 	if err != nil {
 		return err
 	}
 	switch action {
 	case actionAdd:
-		content[fieldVersions] = append(content[fieldVersions].([]string), version)
+		ktConf.Versions = append(ktConf.Versions, version)
 	case actionRemove:
-		versions := content[fieldVersions].([]string)
+		versions := ktConf.Versions
 		for i, v := range versions {
 			if v == version {
-				content[fieldVersions] = append(versions[:i], versions[i+1:]...)
+				ktConf.Versions = append(versions[:i], versions[i+1:]...)
 				break
 			}
 		}
 	}
-	err = writeAndReloadRouteConf(content)
+	err = router.WriteKtConf(ktConf)
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func writeAndReloadRouteConf(content map[string]interface{}) error {
-	err := writeRouteConf(content)
+	err = router.WriteAndReloadRouteConf(ktConf)
 	if err != nil {
 		return err
-	}
-	err = reloadRouteConf()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func reloadRouteConf() error {
-	process, err := os.FindProcess(1)
-	if err != nil {
-		return fmt.Errorf("failed to find route process: %s", err)
-	}
-	err = process.Signal(syscall.SIGHUP)
-	if err != nil {
-		return fmt.Errorf("failed to reload route configuration: %s", err)
-	}
-	return nil
-}
-
-func writeRouteConf(content map[string]interface{}) error {
-	tmpl, err := template.New("route").Parse(routeTemplate)
-	if err != nil {
-		return fmt.Errorf("failed to load route template: %s", err)
-	}
-
-	_ = os.Remove(pathRouteConf)
-	routeConf, err := os.Create(pathRouteConf)
-	if err != nil {
-		return fmt.Errorf("failed to create route configuration file: %s", err)
-	}
-	defer routeConf.Close()
-
-	err = tmpl.Execute(routeConf, content)
-	if err != nil {
-		return fmt.Errorf("failed to generate route configuration: %s", err)
-	}
-	return nil
-}
-
-func readKtConf() (map[string]interface{}, error) {
-	ktConf, err := ioutil.ReadFile(pathKtConf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read kt configuration file: %s", err)
-	}
-	var content map[string]interface{}
-	err = json.Unmarshal(ktConf, &content)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse kt configuration file: %s", err)
-	}
-	return content, nil
-}
-
-func writeKtConf(content map[string]interface{}) error {
-	bytes, err := json.Marshal(content)
-	if err != nil {
-		return fmt.Errorf("failed to parse setup parameters: %s", err)
-	}
-	err = ioutil.WriteFile(pathKtConf, bytes, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to create kt configuration: %s", err)
 	}
 	return nil
 }
