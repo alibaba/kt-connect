@@ -24,6 +24,7 @@
   - [FAQ](zh-cn/faq.md)
 
 - [版本日志](zh-cn/changelog.md)
-- [TODO](zh-cn/todo.md)
+- [升级说明](zh-cn/update.md)
+- [开发计划](zh-cn/todo.md)
 
 <!-- - [Need Help](es-us/needhelp.md) -->
