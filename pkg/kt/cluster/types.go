@@ -22,6 +22,8 @@ type KubernetesInterface interface {
 	RemoveConfigMap(ctx context.Context, name, namespace string) (err error)
 	RemoveService(ctx context.Context, name, namespace string) (err error)
 	Deployment(ctx context.Context, name, namespace string) (deployment *appV1.Deployment, err error)
+	Pod(ctx context.Context, name, namespace string) (pod *coreV1.Pod, err error)
+	Pods(ctx context.Context, label, namespace string) (pods *coreV1.PodList, err error)
 	Scale(ctx context.Context, deployment *appV1.Deployment, replicas *int32) (err error)
 	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
 	ServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
@@ -32,6 +34,8 @@ type KubernetesInterface interface {
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
 	UpdateDeployment(ctx context.Context, namespace string, deployment *appV1.Deployment) (*appV1.Deployment, error)
 	DecreaseRef(ctx context.Context, namespace string, deployment string) (cleanup bool, err error)
+	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
+	DeletePod(ctx context.Context,  podName, namespace string) (err error)
 }
 
 // Kubernetes implements KubernetesInterface

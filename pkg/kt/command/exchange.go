@@ -4,9 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
@@ -17,6 +14,8 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	v1 "k8s.io/api/apps/v1"
+	"os"
+	"strings"
 )
 
 // newExchangeCommand return new exchange command

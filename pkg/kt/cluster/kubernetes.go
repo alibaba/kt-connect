@@ -2,9 +2,11 @@ package cluster
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	"strconv"
 	"strings"
 
@@ -94,6 +96,75 @@ func (k *Kubernetes) Scale(ctx context.Context, deployment *appv1.Deployment, re
 // Deployment get deployment
 func (k *Kubernetes) Deployment(ctx context.Context, name, namespace string) (*appv1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+// Pod get pod
+func (k *Kubernetes) Pod(ctx context.Context, name, namespace string) (*v1.Pod, error) {
+	return k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+// Pods get pods
+func (k *Kubernetes) Pods(ctx context.Context, label, namespace string) (*v1.PodList, error) {
+	return k.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: label,
+	})
+}
+
+func (k *Kubernetes) DeletePod(ctx context.Context, podName, namespace string ) (err error) {
+	k.Clientset.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+	if errors2.IsNotFound(err){
+		return nil
+	}
+	return err
+}
+
+func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error) {
+	pod, err := k.Pod(ctx, podName, options.Namespace)
+	if err != nil {
+		return "", err
+	}
+	identifier := strings.ToLower(util.RandomString(4))
+	sshcm = fmt.Sprintf("kt-%s-public-key-%s", "exchangepod", identifier)
+
+	privateKeyPath := util.PrivateKeyPath("exchangepod", identifier)
+	generator, err := util.Generate(privateKeyPath)
+	if err != nil {
+		return
+	}
+	configMap, err2 := k.createConfigMap(ctx, map[string]string{}, sshcm, options.Namespace, generator)
+
+	if err2 != nil {
+		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment " + pod.Name)
+		return
+	}
+
+	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SSHAuthPrivateKey]))
+
+	authKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SSHAuthKey]))
+	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SSHAuthPrivateKey]))
+
+	ec := v1.EphemeralContainer{
+		EphemeralContainerCommon: v1.EphemeralContainerCommon{
+			Name:  containerName,
+			Image: options.Image,
+			Env: []v1.EnvVar{
+				{Name: common.SSHAuthKey, Value: authKey},
+				{Name: common.SSHAuthPrivateKey, Value: privateKey},
+			},
+			SecurityContext: &v1.SecurityContext{
+				Capabilities: &v1.Capabilities{Add: []v1.Capability{"NET_ADMIN"}},
+			},
+		},
+	}
+
+	for k, v := range envs {
+		ec.Env = append(ec.Env, v1.EnvVar{Name: k, Value: v})
+	}
+
+	pod.Spec.EphemeralContainers = append(pod.Spec.EphemeralContainers, ec)
+
+	pod, err = k.Clientset.CoreV1().Pods(pod.Namespace).UpdateEphemeralContainers(ctx, pod.Name, pod, metav1.UpdateOptions{})
+	return sshcm, err
 }
 
 // GetOrCreateShadow create shadow

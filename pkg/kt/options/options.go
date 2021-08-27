@@ -41,6 +41,12 @@ type ExchangeOptions struct {
 	Expose string
 }
 
+// ExchangePodOptions ...
+type ExchangePodOptions struct {
+	Label string
+	Expose string
+}
+
 // MeshOptions ...
 type MeshOptions struct {
 	Expose  string
@@ -78,6 +84,7 @@ type RuntimeOptions struct {
 	ProxyConfig registry.ProxyConfig
 	// RestConfig kubectl config
 	RestConfig *rest.Config
+	PodName string
 }
 
 type dashboardOptions struct {
@@ -87,23 +94,24 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	KubeConfig        string
-	Namespace         string
-	ServiceAccount    string
-	Debug             bool
-	Image             string
-	Labels            string
-	KubeOptions       cli.StringSlice
-	RuntimeOptions    *RuntimeOptions
-	ProvideOptions    *ProvideOptions
-	ConnectOptions    *ConnectOptions
-	ExchangeOptions   *ExchangeOptions
-	MeshOptions       *MeshOptions
-	CleanOptions      *CleanOptions
-	DashboardOptions  *dashboardOptions
-	WaitTime          int
-	ForceUpdateShadow bool
-	UseKubectl        bool
+	KubeConfig         string
+	Namespace          string
+	ServiceAccount     string
+	Debug              bool
+	Image              string
+	Labels             string
+	KubeOptions        cli.StringSlice
+	RuntimeOptions     *RuntimeOptions
+	ProvideOptions     *ProvideOptions
+	ConnectOptions     *ConnectOptions
+	ExchangeOptions    *ExchangeOptions
+	ExchangePodOptions *ExchangePodOptions
+	MeshOptions        *MeshOptions
+	CleanOptions       *CleanOptions
+	DashboardOptions   *dashboardOptions
+	WaitTime           int
+	ForceUpdateShadow  bool
+	UseKubectl         bool
 }
 
 // NewDaemonOptions return new cli default options
@@ -116,12 +124,13 @@ func NewDaemonOptions() *DaemonOptions {
 			UserHome: util.UserHome,
 			AppHome:  util.KtHome,
 		},
-		ConnectOptions:   &ConnectOptions{},
-		ExchangeOptions:  &ExchangeOptions{},
-		MeshOptions:      &MeshOptions{},
-		CleanOptions:     &CleanOptions{},
-		DashboardOptions: &dashboardOptions{},
-		ProvideOptions:   &ProvideOptions{},
+		ConnectOptions:     &ConnectOptions{},
+		ExchangeOptions:    &ExchangeOptions{},
+		ExchangePodOptions: &ExchangePodOptions{},
+		MeshOptions:        &MeshOptions{},
+		CleanOptions:       &CleanOptions{},
+		DashboardOptions:   &dashboardOptions{},
+		ProvideOptions:     &ProvideOptions{},
 	}
 }
 

@@ -25,6 +25,7 @@ func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.Da
 	return []cli.Command{
 		newConnectCommand(kt, options, action),
 		newExchangeCommand(kt, options, action),
+		newExchangePodCommand(kt, options, action),
 		newMeshCommand(kt, options, action),
 		newProvideCommand(kt, options, action),
 		newCleanCommand(kt, options, action),
@@ -102,6 +103,11 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 				Str("namespace", options.Namespace).
 				Msgf("Scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
 		}
+	}
+
+	if len(options.RuntimeOptions.PodName) > 0 {
+		log.Info().Msgf("Delete pod: %s", options.RuntimeOptions.PodName)
+		err = kubernetes.DeletePod(ctx, options.RuntimeOptions.PodName, options.Namespace)
 	}
 
 	cleanDeploymentAndConfigMap(ctx, options, kubernetes)
