@@ -29,7 +29,6 @@ func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.Da
 		newProvideCommand(kt, options, action),
 		newCleanCommand(kt, options, action),
 		newDashboardCommand(kt, options, action),
-		newCheckCommand(kt, options, action),
 	}
 }
 

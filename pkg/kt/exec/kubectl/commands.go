@@ -9,15 +9,6 @@ import (
 // KUBECTL the path to kubectl
 var KUBECTL = "kubectl"
 
-// Version ...
-func (k *Cli) Version() *exec.Cmd {
-	args := kubectl(k, "")
-	args = append(args, "version", "--short", "port-forward")
-	return exec.Command(KUBECTL,
-		args...,
-	)
-}
-
 // ApplyDashboardToCluster ...
 func (k *Cli) ApplyDashboardToCluster() *exec.Cmd {
 	args := kubectl(k, "kube-system")

@@ -17,7 +17,6 @@
   - [ktctl run](zh-cn/cli/run.md)
   - [ktctl clean](zh-cn/cli/clean.md)
   - [ktctl dashboard](zh-cn/cli/dashboard.md)
-  - [ktctl check](zh-cn/cli/check.md)
 
 - 问题排查：
   - [connect](zh-cn/troubleshoot.md)
