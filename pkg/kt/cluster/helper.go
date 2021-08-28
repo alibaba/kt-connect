@@ -216,9 +216,6 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 					Volumes: []v1.Volume{
 						getSSHVolume(volume),
 					},
-					ImagePullSecrets: []v1.LocalObjectReference{
-						localObjectReference(options.ImagePullSecret),
-					},
 				},
 			},
 		},
@@ -226,6 +223,9 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 
 	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
 		addTunHostPath(dep)
+	}
+	if options.ImagePullSecret != "" {
+		addImagePullSecret(dep, options.ImagePullSecret)
 	}
 
 	return dep
@@ -277,8 +277,10 @@ func addTunHostPath(dep *appV1.Deployment) {
 	}
 }
 
-func localObjectReference(secret string) v1.LocalObjectReference {
-	return v1.LocalObjectReference{
-		Name: secret,
+func addImagePullSecret(dep *appV1.Deployment, imagePullSecret string) {
+	dep.Spec.Template.Spec.ImagePullSecrets = []v1.LocalObjectReference{
+		{
+			Name: imagePullSecret,
+		},
 	}
 }

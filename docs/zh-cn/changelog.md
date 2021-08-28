@@ -9,6 +9,7 @@
 * 解决Exchange和Mesh连接闲置超时报"lost connection to pod"的问题
 * 修复Connect命令开启debug模式时无法连接的错误
 * 使用vpn模式时自动检测并安装sshuttle，简化初次使用的准备工作
+* 新增`--imagePullSecret`参数支持指定拉取代理Pod镜像使用的Secret
 
 ### 0.1.1
 

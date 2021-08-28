@@ -35,7 +35,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Destination: &options.Image,
 		},
 		cli.StringFlag{
-			Name:        "imagePullSecret,s",
+			Name:        "imagePullSecret",
 			Usage:       "Custom image pull secret",
 			Value:       "",
 			Destination: &options.ImagePullSecret,
