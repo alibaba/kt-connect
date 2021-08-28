@@ -64,14 +64,17 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	removePrivateKey(options)
 
 	if options.RuntimeOptions.Dump2Host {
+		log.Debug().Msg("Dropping hosts records ...")
 		util.DropHosts()
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
+		log.Debug().Msg("Cleaning up global proxy and environment variable ...")
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
 		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
 	}
 
 	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		log.Debug().Msg("Removing tun device ...")
 		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
 		if err != nil {
 			log.Error().Msgf("Fails to delete tun device")

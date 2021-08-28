@@ -225,6 +225,9 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
 		addTunHostPath(dep)
 	}
+	if options.ImagePullSecret != "" {
+		addImagePullSecret(dep, options.ImagePullSecret)
+	}
 
 	return dep
 }
@@ -272,5 +275,13 @@ func addTunHostPath(dep *appV1.Deployment) {
 			c.SecurityContext.Capabilities.Add = append(c.SecurityContext.Capabilities.Add, "NET_ADMIN")
 			break
 		}
+	}
+}
+
+func addImagePullSecret(dep *appV1.Deployment, imagePullSecret string) {
+	dep.Spec.Template.Spec.ImagePullSecrets = []v1.LocalObjectReference{
+		{
+			Name: imagePullSecret,
+		},
 	}
 }
