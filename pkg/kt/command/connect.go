@@ -125,12 +125,11 @@ func checkSshuttleInstalled(cli sshuttle.CliInterface) {
 func setupGlobalProxy(options *options.DaemonOptions) {
 	err := registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 	if err != nil {
-		log.Error().Msgf("Unable to setup global connect proxy: %s, if you are not administrator,"+
-			" please consider use '--method=socks5' parameter", err.Error())
+		log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
 	}
 	err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 	if err != nil {
-		log.Error().Msgf("Unable to setup global http proxy: %s", err.Error())
+		log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
 	}
 }
 
