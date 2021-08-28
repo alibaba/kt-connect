@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 )
 
@@ -12,7 +13,17 @@ func (s *Cli) Version() *exec.Cmd {
 	return exec.Command("sshuttle", "--version")
 }
 
-// Connect ssh-baed vpn connect
+// Install try to install sshuttle
+func (s *Cli) Install() *exec.Cmd {
+	sudoUser := os.Getenv("SUDO_USER")
+	if sudoUser != "" {
+		return exec.Command("sudo", "-u", sudoUser, "pip3", "install", "sshuttle")
+	} else {
+		return exec.Command("pip3", "install", "sshuttle")
+	}
+}
+
+// Connect ssh-based vpn connect
 func (s *Cli) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
 	var args []string
 	if !disableDNS {

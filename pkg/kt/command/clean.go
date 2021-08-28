@@ -81,8 +81,11 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
 	}
 	if !options.CleanOptions.DryRun {
+		log.Debug().Msg("Cleaning up unused local rsa keys ...")
 		util.CleanRsaKeys()
+		log.Debug().Msg("Cleaning up hosts file ...")
 		util.DropHosts()
+		log.Debug().Msg("Cleaning up global proxy and environment variable ...")
 		registry.ResetGlobalProxyAndEnvironmentVariable()
 	}
 	return nil

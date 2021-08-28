@@ -16,7 +16,6 @@
   - [ktctl run](en-us/cli/run.md)
   - [ktctl clean](en-us/cli/clean.md)
   - [ktctl dashboard](en-us/cli/dashboard.md)
-  - [ktctl check](en-us/cli/check.md)
 
 - Troubleshot
   - [connect](en-us/troubleshoot.md)

@@ -5,11 +5,6 @@ import (
 	"os/exec"
 )
 
-// Version check sshuttle version
-func (s *Cli) Version() *exec.Cmd {
-	return exec.Command("ssh", "-V")
-}
-
 func (s *Cli) TunnelToRemote(localTun int, remoteHost, privateKeyPath string, remoteSSHPort int) *exec.Cmd {
 	return exec.Command("ssh",
 		"-oStrictHostKeyChecking=no",

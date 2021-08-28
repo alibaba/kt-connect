@@ -34,6 +34,12 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + version,
 			Destination: &options.Image,
 		},
+		cli.StringFlag{
+			Name:        "imagePullSecret",
+			Usage:       "Custom image pull secret",
+			Value:       "",
+			Destination: &options.ImagePullSecret,
+		},
 		cli.BoolFlag{
 			Name:        "debug,d",
 			Usage:       "print debug log",
