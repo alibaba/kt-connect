@@ -48,7 +48,7 @@ func DumpHosts(hostsMap map[string]string) {
 	}
 	err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap)))
 	if err != nil {
-		log.Warn().Msgf("Unable to update hosts file, you may need %s permission.")
+		log.Warn().Msgf("Unable to update hosts file, you may need %s permission.", getAdminUserName())
 		log.Debug().Msg(err.Error())
 	} else {
 		log.Info().Msg("Dump hosts successful")

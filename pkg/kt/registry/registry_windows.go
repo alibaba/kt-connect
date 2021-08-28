@@ -46,7 +46,7 @@ func SetGlobalProxy(port int, config *ProxyConfig) error {
 	if err != nil {
 		config.ProxyOverride = notExist
 	}
-	log.Debug().Msgf("Original proxy configuration is: RegKeyProxyEnable=$d, RegKeyProxyServer=%s, RegKeyProxyOverride=%s",
+	log.Debug().Msgf("Original proxy configuration is: RegKeyProxyEnable=%d, RegKeyProxyServer=%s, RegKeyProxyOverride=%s",
 		config.ProxyEnable, config.ProxyServer, config.ProxyOverride)
 
 	err = internetSettings.SetDWordValue(RegKeyProxyEnable, 1)
@@ -89,10 +89,13 @@ func SetHttpProxyEnvironmentVariable(port int, config *ProxyConfig) error {
 	if err != nil {
 		config.HttpProxyVar = notExist
 	}
-	log.Debug().Msgf("Original proxy environment variable is: config.HttpProxyVar",
-		RegKeyProxyEnable, RegKeyProxyServer, RegKeyProxyOverride)
+	log.Debug().Msgf("Original proxy environment variable is: %s", config.HttpProxyVar)
 
-	internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("%s%d", EnvSocksLocalhost, port))
+	err = internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("%s%d", EnvSocksLocalhost, port))
+	if err != nil {
+		return err
+	}
+
 	refreshEnvironmentVariable()
 	return nil
 }
@@ -143,6 +146,7 @@ func resetHttpProxyEnvironmentVariable() {
 }
 
 func refreshEnvironmentVariable() {
+	log.Debug().Msg("Refreshing environment variable ...")
 	syscall.NewLazyDLL(User32Dll).NewProc(ApiSendMessage).Call(
 		HWND_BROADCAST, WM_SETTINGCHANGE, 0, uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr("Environment"))))
 }
