@@ -14,7 +14,7 @@ const (
 	WM_SETTINGCHANGE    = uintptr(0x001A)
 	InternetSettings    = "Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings"
 	EnvironmentSettings = "Environment"
-	notExist            = "<NotExist>"
+	notExist            = "<N/A>"
 	RegKeyProxyEnable   = "ProxyEnable"
 	RegKeyProxyServer   = "ProxyServer"
 	RegKeyProxyOverride = "ProxyOverride"
@@ -46,6 +46,8 @@ func SetGlobalProxy(port int, config *ProxyConfig) error {
 	if err != nil {
 		config.ProxyOverride = notExist
 	}
+	log.Debug().Msgf("Original proxy configuration is: RegKeyProxyEnable=$d, RegKeyProxyServer=%s, RegKeyProxyOverride=%s",
+		config.ProxyEnable, config.ProxyServer, config.ProxyOverride)
 
 	err = internetSettings.SetDWordValue(RegKeyProxyEnable, 1)
 	if err != nil {
@@ -87,6 +89,8 @@ func SetHttpProxyEnvironmentVariable(port int, config *ProxyConfig) error {
 	if err != nil {
 		config.HttpProxyVar = notExist
 	}
+	log.Debug().Msgf("Original proxy environment variable is: config.HttpProxyVar",
+		RegKeyProxyEnable, RegKeyProxyServer, RegKeyProxyOverride)
 
 	internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("%s%d", EnvSocksLocalhost, port))
 	refreshEnvironmentVariable()
