@@ -2,6 +2,7 @@ package registry
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sys/windows/registry"
 	"strings"
 	"syscall"
@@ -46,7 +47,10 @@ func SetGlobalProxy(port int, config *ProxyConfig) error {
 		config.ProxyOverride = notExist
 	}
 
-	internetSettings.SetDWordValue(RegKeyProxyEnable, 1)
+	err = internetSettings.SetDWordValue(RegKeyProxyEnable, 1)
+	if err != nil {
+		return err
+	}
 	internetSettings.SetStringValue(RegKeyProxyServer, fmt.Sprintf("%s%d", IntSocksLocalhost, port))
 	internetSettings.SetStringValue(RegKeyProxyOverride, "<local>")
 	return nil
@@ -67,6 +71,8 @@ func CleanGlobalProxy(config *ProxyConfig) {
 		} else {
 			internetSettings.DeleteValue(RegKeyProxyOverride)
 		}
+	} else {
+		log.Error().Msgf("Failed to reset global proxy configuration: %s", err)
 	}
 }
 
@@ -97,6 +103,8 @@ func CleanHttpProxyEnvironmentVariable(config *ProxyConfig) {
 			internetSettings.DeleteValue(RegKeyHttpProxy)
 		}
 		refreshEnvironmentVariable()
+	} else {
+		log.Error().Msgf("Failed to reset global proxy environment variable: %s", err)
 	}
 }
 
