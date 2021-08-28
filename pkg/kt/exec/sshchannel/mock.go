@@ -47,6 +47,21 @@ func (mr *MockChannelMockRecorder) ForwardRemoteToLocal(certificate, sshAddress,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForwardRemoteToLocal", reflect.TypeOf((*MockChannel)(nil).ForwardRemoteToLocal), certificate, sshAddress, remoteEndpoint, localEndpoint)
 }
 
+// RunScript mocks base method.
+func (m *MockChannel) RunScript(certificate *Certificate, sshAddress, script string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunScript", certificate, sshAddress, script)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RunScript indicates an expected call of RunScript.
+func (mr *MockChannelMockRecorder) RunScript(certificate, sshAddress, script interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunScript", reflect.TypeOf((*MockChannel)(nil).RunScript), certificate, sshAddress, script)
+}
+
 // StartSocks5Proxy mocks base method.
 func (m *MockChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) error {
 	m.ctrl.T.Helper()
