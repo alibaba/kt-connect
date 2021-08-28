@@ -216,6 +216,9 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 					Volumes: []v1.Volume{
 						getSSHVolume(volume),
 					},
+					ImagePullSecrets: []v1.LocalObjectReference{
+						localObjectReference(options.ImagePullSecret),
+					},
 				},
 			},
 		},
@@ -271,5 +274,11 @@ func addTunHostPath(dep *appV1.Deployment) {
 			c.SecurityContext.Capabilities.Add = append(c.SecurityContext.Capabilities.Add, "NET_ADMIN")
 			break
 		}
+	}
+}
+
+func localObjectReference(secret string) v1.LocalObjectReference {
+	return v1.LocalObjectReference{
+		Name: secret,
 	}
 }
