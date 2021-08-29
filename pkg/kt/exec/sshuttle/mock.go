@@ -48,6 +48,20 @@ func (mr *MockCliInterfaceMockRecorder) Connect(remoteHost, privateKeyPath, remo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockCliInterface)(nil).Connect), remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug)
 }
 
+// Install mocks base method.
+func (m *MockCliInterface) Install() *exec.Cmd {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Install")
+	ret0, _ := ret[0].(*exec.Cmd)
+	return ret0
+}
+
+// Install indicates an expected call of Install.
+func (mr *MockCliInterfaceMockRecorder) Install() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Install", reflect.TypeOf((*MockCliInterface)(nil).Install))
+}
+
 // Version mocks base method.
 func (m *MockCliInterface) Version() *exec.Cmd {
 	m.ctrl.T.Helper()

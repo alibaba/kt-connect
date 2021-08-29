@@ -49,20 +49,6 @@ func (mr *MockActionInterfaceMockRecorder) ApplyDashboard(cli, options interface
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyDashboard", reflect.TypeOf((*MockActionInterface)(nil).ApplyDashboard), cli, options)
 }
 
-// Check mocks base method.
-func (m *MockActionInterface) Check(cli kt.CliInterface) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Check", cli)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Check indicates an expected call of Check.
-func (mr *MockActionInterfaceMockRecorder) Check(cli interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Check", reflect.TypeOf((*MockActionInterface)(nil).Check), cli)
-}
-
 // Clean mocks base method.
 func (m *MockActionInterface) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
