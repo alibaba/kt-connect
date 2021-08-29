@@ -10,12 +10,6 @@ Downloads:
 
 * [Darwin amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_darwin_amd64.tar.gz)
 
-Install sshuttle
-
-```
-brew install sshuttle
-```
-
 Download And Install KT
 
 ```
@@ -31,13 +25,6 @@ Downloads:
 
 * [Linux Amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_amd64.tar.gz)
 * [Linux 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_386.tar.gz)
-
-
-Install sshuttle
-
-```
-pip install sshuttle
-```
 
 Download And Install KT
 

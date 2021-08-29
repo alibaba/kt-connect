@@ -38,13 +38,7 @@ KtConnect use command `connect` to let all cluster resources accessible from loc
 
 #### ** MacOS/Linux **
 
-> KtConnect run in `vpn` mode in MacOS/Linux by default, this mode use `sshuttle` tool must be installed in order to establish connection between local environment and cluster network.
->
-> - MacOS：`brew install sshuttle`
-> - Debian/Ubuntu：`apt-get install sshuttle`
-> - RedHat/CentOS/Fedora：`dnf install sshuttle`
->
-> Please check [sshuttle doc](https://github.com/sshuttle/sshuttle#obtaining-sshuttle) for other operating systems.
+> KtConnect run in `vpn` mode in MacOS/Linux by default, this mode use [sshuttle](https://github.com/sshuttle/sshuttle) tool to establish connection between local environment and cluster network, please make sure **Python 3.6 or higher version** is available in local environment.
 
 The `connect` command require root access to tackle networking configurations, `sudo` should be used for none-root users.
 

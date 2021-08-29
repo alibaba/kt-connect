@@ -1,15 +1,23 @@
 更新日志
 ---
 
-### 0.1.2
+### 0.2.0
 
 > 发布时间：待定
 
+* Kubernetes最低兼容版本提高到`1.16`
+* 新增exchange的`ephemeral`模式（for k8s 1.23+）
+
+### 0.1.2
+
+> 发布时间：2021-08-29
+
 * 自动解析本地DNS配置，移除connect命令的`--localDomain`参数
+* 使用vpn模式时自动检测并安装sshuttle，简化初次使用的准备工作
 * 解决Exchange和Mesh连接闲置超时报"lost connection to pod"的问题
 * 修复Connect命令开启debug模式时无法连接的错误
-* 使用vpn模式时自动检测并安装sshuttle，简化初次使用的准备工作
-* 新增`--imagePullSecret`参数支持指定拉取代理Pod镜像使用的Secret
+* 优化Windows环境的屏幕输出，适配非管理员用户场景
+* 新增`--imagePullSecret`参数支持指定拉取代理Pod镜像使用的Secret（感谢@[pvtyuan](https://github.com/pvtyuan)）
 
 ### 0.1.1
 
@@ -28,7 +36,7 @@
 
 * 增强Windows下的`connect`命令支持
 * 移除对本地`kubectl`客户端工具的依赖
-* 新增适用于Linux的`tun`连接模式（alpha）
+* 新增适用于Linux的`tun`连接模式（感谢@[xyz-li](https://github.com/xyz-li)）
 * 使用`provide`命令替代`run`命令
 * 新增`clean`命令，清理集群中残留的Shadow Pods
 * 支持`service.namespace.svc`结构的服务域名解析
