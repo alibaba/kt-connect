@@ -1,4 +1,5 @@
-# Downloads And Install
+Downloads And Install
+---
 
 > You can downloads latest build from [Github Releases](https://github.com/alibaba/kt-connect/releases)
 
@@ -8,14 +9,14 @@
 
 Downloads:
 
-* [Darwin amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_darwin_amd64.tar.gz)
+* [Darwin amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_darwin_amd64.zip)
 
 Download And Install KT
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_darwin_amd64.tar.gz
-$ tar -xzvf ktctl_darwin_amd64.tar.gz
-$ mv ktctl_darwin_amd64 /usr/local/bin/ktctl
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_darwin_amd64.zip
+$ unzip ktctl_0.1.2_darwin_amd64.zip
+$ mv ktctl /usr/local/bin/ktctl
 $ ktctl -h
 ```
 
@@ -23,15 +24,15 @@ $ ktctl -h
 
 Downloads:
 
-* [Linux Amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_amd64.tar.gz)
-* [Linux 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_386.tar.gz)
+* [Linux Amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_linux_amd64.zip)
+* [Linux 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_linux_386.zip)
 
 Download And Install KT
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_linux_amd64.tar.gz
-$ tar -xzvf ktctl_linux_amd64.tar.gz
-$ mv ktctl_linux_amd64 /usr/local/bin/ktctl
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_linux_amd64.zip
+$ unzip ktctl_0.1.2_linux_amd64.zip
+$ mv ktctl /usr/local/bin/ktctl
 $ ktctl -h
 ```
 
@@ -39,10 +40,9 @@ $ ktctl -h
 
 Downloads:
 
-* [Windws amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_windows_amd64.tar.gz)
-* [Windows 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.0/ktctl_0.1.0_windows_386.tar.gz)
+* [Windws amd64](https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_windows_amd64.zip)
+* [Windows 386](https://github.com/alibaba/kt-connect/releases/download/v0.1.2/ktctl_0.1.2_windows_386.zip)
 
-Make sure the executable file under PATH
+Put the executable file to a folder included in `PATH` environment variable.
 
 <!-- tabs:end -->
-
