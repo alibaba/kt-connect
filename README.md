@@ -24,9 +24,9 @@ manage and integrate with your Kubernetes dev environment more efficiently.
 
 ## QuickStart
 
-You can download and install the `ktctl` from [Downloads And Install](en-us/downloads)
+You can download and install the `ktctl` from [Downloads And Install](docs/en-us/downloads.md)
 
-Read the [Quick Start Guide](en-us/quickstart) for more about this tool.
+Read the [Quick Start Guide](docs/en-us/quickstart.md) for more about this tool.
 
 ## Ask For Help
 
