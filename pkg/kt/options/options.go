@@ -87,6 +87,7 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
+	Version           string
 	KubeConfig        string
 	Namespace         string
 	ServiceAccount    string
@@ -108,11 +109,12 @@ type DaemonOptions struct {
 }
 
 // NewDaemonOptions return new cli default options
-func NewDaemonOptions() *DaemonOptions {
+func NewDaemonOptions(version string) *DaemonOptions {
 	return &DaemonOptions{
 		Namespace:  common.DefNamespace,
 		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
+		Version:    version,
 		RuntimeOptions: &RuntimeOptions{
 			UserHome: util.UserHome,
 			AppHome:  util.KtHome,
@@ -124,12 +126,4 @@ func NewDaemonOptions() *DaemonOptions {
 		DashboardOptions: &dashboardOptions{},
 		ProvideOptions:   &ProvideOptions{},
 	}
-}
-
-// NewProvideDaemonOptions ...
-func NewProvideDaemonOptions(labels string, options *ProvideOptions) *DaemonOptions {
-	daemonOptions := NewDaemonOptions()
-	daemonOptions.Labels = labels
-	daemonOptions.ProvideOptions = options
-	return daemonOptions
 }

@@ -46,7 +46,7 @@ func Test_newConnectCommand(t *testing.T) {
 
 		context := cli.NewContext(app, set, nil)
 
-		opts := options.NewDaemonOptions()
+		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
 		command := newConnectCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
@@ -80,7 +80,7 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 	ktctl.EXPECT().Exec().AnyTimes().Return(exec)
 
-	opts := options.NewDaemonOptions()
+	opts := options.NewDaemonOptions("test")
 	opts.Labels = "a:b"
 
 	if err := connectToCluster(context.TODO(), ktctl, opts); err != nil {
@@ -102,7 +102,7 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 
-	if err := connectToCluster(context.TODO(), ktctl, options.NewDaemonOptions()); err == nil {
+	if err := connectToCluster(context.TODO(), ktctl, options.NewDaemonOptions("test")); err == nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
 	}
 
@@ -123,7 +123,7 @@ func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
 	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 
-	opts := options.NewDaemonOptions()
+	opts := options.NewDaemonOptions("test")
 	opts.Labels = "a:b"
 
 	if err := connectToCluster(context.TODO(), ktctl, opts); err == nil {

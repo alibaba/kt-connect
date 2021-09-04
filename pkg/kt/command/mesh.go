@@ -65,7 +65,7 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("KtConnect start at %d", os.Getpid())
+	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
 
 	ch := SetUpCloseHandler(cli, options, common.ComponentMesh)
 

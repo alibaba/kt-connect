@@ -46,7 +46,7 @@ func Test_runCommand(t *testing.T) {
 
 		context := cli.NewContext(app, set, nil)
 
-		opts := options.NewDaemonOptions()
+		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
 		command := newProvideCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
@@ -66,7 +66,7 @@ func Test_shouldExposeLocalServiceToCluster(t *testing.T) {
 
 	args := args{
 		service: "test",
-		options: options.NewProvideDaemonOptions(
+		options: testDaemonOptions(
 			"aa=bb",
 			&options.ProvideOptions{
 				External: false,
@@ -107,7 +107,7 @@ func Test_shouldExposeLocalServiceFailWhenShadowCreateFail(t *testing.T) {
 
 	args := args{
 		service: "test2",
-		options: options.NewProvideDaemonOptions(
+		options: testDaemonOptions(
 			"aaa=bbb",
 			&options.ProvideOptions{
 				External: false,
@@ -134,6 +134,13 @@ func Test_shouldExposeLocalServiceFailWhenShadowCreateFail(t *testing.T) {
 	if err := provide(context.TODO(), args.service, fakeKtCli, args.options); err == nil {
 		t.Errorf("expect error = %v, actual is nil", err)
 	}
+}
+
+func testDaemonOptions(labels string, opt *options.ProvideOptions) *options.DaemonOptions {
+	daemonOptions := options.NewDaemonOptions("test")
+	daemonOptions.Labels = labels
+	daemonOptions.ProvideOptions = opt
+	return daemonOptions
 }
 
 func getHandlers(t *testing.T) (*fakeKt.MockCliInterface, *cluster.MockKubernetesInterface, *connect.MockShadowInterface) {
