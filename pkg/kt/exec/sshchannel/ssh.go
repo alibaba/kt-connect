@@ -3,6 +3,7 @@ package sshchannel
 import (
 	"io"
 	"net"
+	"sync"
 
 	"github.com/armon/go-socks5"
 	"github.com/rs/zerolog/log"
@@ -60,6 +61,12 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 
 	// handle incoming connections on reverse forwarded tunnel
 	for {
+		client, err := listener.Accept()
+		if err != nil {
+			log.Error().Msgf("Error: %s", err)
+			return err
+		}
+
 		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
@@ -67,13 +74,7 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 			return err
 		}
 
-		client, err := listener.Accept()
-		if err != nil {
-			log.Error().Msgf("Error: %s", err)
-			return err
-		}
-
-		handleClient(client, local)
+		go handleClient(client, local)
 	}
 }
 
@@ -94,7 +95,8 @@ func connection(username string, password string, address string) (*ssh.Client, 
 }
 
 func handleClient(client net.Conn, remote net.Conn) {
-	chDone := make(chan bool)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 
 	// Start remote -> local data transfer
 	go func() {
@@ -102,7 +104,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 		if err != nil {
 			log.Error().Msgf("Error while copy remote->local: %s", err)
 		}
-		chDone <- true
+		wg.Done()
 	}()
 
 	// Start local -> remote data transfer
@@ -111,8 +113,16 @@ func handleClient(client net.Conn, remote net.Conn) {
 		if err != nil {
 			log.Error().Msgf("Error while copy local->remote: %s", err)
 		}
-		chDone <- true
+		wg.Done()
 	}()
 
-	<-chDone
+	wg.Wait()
+	err := remote.Close()
+	if err != nil {
+		log.Error().Msgf("close connection failed, error: %s", err)
+	}
+	err = client.Close()
+	if err != nil {
+		log.Error().Msgf("close connection failed, error: %s", err)
+	}
 }
