@@ -145,7 +145,6 @@ func (o *ConnectOptions) transport() *options.DaemonOptions {
 		SocksPort:            o.Proxy,
 		CIDR:                 o.Cidr,
 		SSHPort:              o.Port,
-		Global:               o.Global,
 		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
 		TunName:              o.TunName,
 		TunCidr:              o.TunCidr,

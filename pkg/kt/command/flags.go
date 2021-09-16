@@ -71,11 +71,6 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 // ConnectActionFlag ...
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
-		cli.BoolFlag{
-			Name:        "global",
-			Usage:       "With cluster scope",
-			Destination: &options.ConnectOptions.Global,
-		},
 		cli.StringFlag{
 			Name:        "method",
 			Value:       methodDefaultValue(),

@@ -18,7 +18,6 @@ type ProvideOptions struct {
 
 // ConnectOptions ...
 type ConnectOptions struct {
-	Global               bool
 	DisableDNS           bool
 	SSHPort              int
 	SocksPort            int
