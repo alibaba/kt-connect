@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"strconv"
 	"strings"
+
+	"github.com/alibaba/kt-connect/pkg/common"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 
@@ -299,15 +300,7 @@ func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, 
 
 // ClusterCidrs get cluster Cidrs
 func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
-	currentNS := namespace
-	if connectOptions.Global {
-		log.Info().Msgf("Scan proxy CIDR in cluster scope")
-		currentNS = ""
-	} else {
-		log.Info().Msgf("Scan proxy CIDR in namespace scope")
-	}
-
-	serviceList, err := k.Clientset.CoreV1().Services(currentNS).List(ctx, metav1.ListOptions{})
+	serviceList, err := fetchServiceList(ctx, k, namespace)
 	if err != nil {
 		return
 	}
@@ -324,6 +317,15 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, connect
 	}
 	cidrs = append(cidrs, serviceCidr...)
 	return
+}
+
+// fetchServiceList try list service at cluster scope. fallback to namespace scope
+func fetchServiceList(ctx context.Context, k *Kubernetes, namespace string) (*v1.ServiceList, error) {
+	serviceList, err := k.Clientset.CoreV1().Services("").List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
+	}
+	return serviceList, err
 }
 
 // ServiceHosts get service dns map
