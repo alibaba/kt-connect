@@ -38,6 +38,13 @@ func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubect
 
 func portForwardViaKubectl(kubectlCli kubectl.CliInterface, options *options.DaemonOptions, podName string, remotePort, localPort int) error {
 	command := kubectlCli.PortForward(options.Namespace, podName, remotePort, localPort)
+
+	// If localSSHPort is in use by another process, return an error.
+	ready := util.WaitPortBeReady(1, localPort)
+	if ready {
+		return fmt.Errorf("127.0.0.1:%d already in use", localPort)
+	}
+
 	err := exec.BackgroundRun(command, fmt.Sprintf("forward %d to localhost:%d", remotePort, localPort))
 	if err == nil {
 		if !util.WaitPortBeReady(options.WaitTime, localPort) {
