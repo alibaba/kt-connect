@@ -20,6 +20,13 @@ import (
 
 // ForwardPodPortToLocal ...
 func (s *Cli) ForwardPodPortToLocal(options *options.DaemonOptions, podName string, remotePort, localPort int) (chan struct{}, context.Context, error) {
+
+	// If localSSHPort is in use by another process, return an error.
+	ready := util.WaitPortBeReady(1, localPort)
+	if ready {
+		return nil, nil, fmt.Errorf("127.0.0.1:%d already in use", localPort)
+	}
+
 	stop := make(chan struct{})
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
