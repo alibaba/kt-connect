@@ -39,6 +39,7 @@ func (k *Cli) PortForward(namespace, resource string, remotePort, localPort int)
 	args := kubectl(k, namespace)
 	args = append(args, "port-forward",
 		resource,
+		"--address=127.0.0.1",
 		fmt.Sprintf("%d:%d", localPort, remotePort))
 	return exec.Command(
 		KUBECTL,
