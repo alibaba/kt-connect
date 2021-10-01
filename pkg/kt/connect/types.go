@@ -32,7 +32,7 @@ type SSHVPNRequest struct {
 	RemoteSSHPKPath        string
 	RemoteDNSServerAddress string
 	DisableDNS             bool
-	CustomCRID             []string
+	CustomCIDR             []string
 	Stop                   chan struct{}
 	Debug                  bool
 }

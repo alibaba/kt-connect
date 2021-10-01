@@ -305,7 +305,7 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, connect
 		return
 	}
 
-	cidrs, err = getPodCidrs(ctx, k.Clientset, connectOptions.CIDR)
+	cidrs, err = getPodCidrs(ctx, k.Clientset, connectOptions.CIDRs)
 	if err != nil {
 		return
 	}

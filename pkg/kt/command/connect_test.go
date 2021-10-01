@@ -108,7 +108,7 @@ func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
 
 }
 
-func Test_shouldConnectClusterFailWhenFailGetCrids(t *testing.T) {
+func Test_shouldConnectClusterFailWhenFailGetCidrs(t *testing.T) {
 
 	ctl := gomock.NewController(t)
 

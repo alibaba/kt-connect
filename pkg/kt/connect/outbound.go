@@ -38,7 +38,7 @@ func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, 
 				RemoteSSHPort:          s.Options.ConnectOptions.SSHPort,
 				RemoteDNSServerAddress: podIP,
 				DisableDNS:             s.Options.ConnectOptions.DisableDNS,
-				CustomCRID:             cidrs,
+				CustomCIDR:             cidrs,
 				Stop:                   stop,
 				Debug:                  s.Options.Debug,
 			})

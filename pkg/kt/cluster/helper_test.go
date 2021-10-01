@@ -68,7 +68,7 @@ func Test_getServiceCidr(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name: "should_get_service_crid_by_svc_sample",
+			name: "should_get_service_cidr_by_svc_sample",
 			args: args{
 				[]v1.Service{
 					buildService("default", "name", "173.168.0.1"),
@@ -143,11 +143,11 @@ func buildService2(namespace, name, clusterIP string) *v1.Service {
 	}
 }
 
-func buildNode(namespace, name, crid string) *v1.Node {
+func buildNode(namespace, name, cidr string) *v1.Node {
 	return &v1.Node{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: v1.NodeSpec{
-			PodCIDR: crid,
+			PodCIDR: cidr,
 		},
 	}
 }

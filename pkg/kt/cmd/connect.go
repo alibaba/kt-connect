@@ -142,7 +142,7 @@ func (o *ConnectOptions) transport() *options.DaemonOptions {
 		DisableDNS:           o.DisableDNS,
 		Method:               o.Method,
 		SocksPort:            o.Proxy,
-		CIDR:                 o.Cidr,
+		CIDRs:                strings.Split(o.Cidr, ","),
 		SSHPort:              o.Port,
 		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
 		TunName:              o.TunName,

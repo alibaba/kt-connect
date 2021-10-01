@@ -100,10 +100,10 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Disable Cluster DNS",
 			Destination: &options.ConnectOptions.DisableDNS,
 		},
-		cli.StringFlag{
-			Name:        "cidr",
-			Usage:       "Custom CIDR, e.g. '172.2.0.0/16'",
-			Destination: &options.ConnectOptions.CIDR,
+		cli.StringSliceFlag{
+			Name:  "cidr",
+			Usage: "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
+			Value: &options.ConnectOptions.CIDRs,
 		},
 		cli.StringSliceFlag{
 			Name:  "dump2hosts",
