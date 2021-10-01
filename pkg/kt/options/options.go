@@ -30,6 +30,7 @@ type ConnectOptions struct {
 	TunCidr              string
 	ClusterDomain        string
 	JvmrcDir             string
+	UseGlobalProxy       bool
 
 	// Used for tun mode
 	SourceIP string

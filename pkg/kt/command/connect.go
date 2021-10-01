@@ -97,8 +97,12 @@ func connectToCluster(ctx context.Context, cli kt.CliInterface, options *options
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodVpn {
 		checkSshuttleInstalled(cli.Exec().Sshuttle())
-	} else if options.ConnectOptions.Method == common.ConnectMethodSocks {
-		setupGlobalProxy(options)
+	} else if options.ConnectOptions.UseGlobalProxy {
+		if options.ConnectOptions.Method == common.ConnectMethodSocks {
+			setupGlobalProxy(options)
+		} else {
+			log.Warn().Msg("Parameter \"--setupGlobalProxy\" only works with \"socks\" method")
+		}
 	}
 
 	endPointIP, podName, credential, err := getOrCreateShadow(options, err, kubernetes)

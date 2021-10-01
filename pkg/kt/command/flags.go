@@ -77,11 +77,6 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 // ConnectActionFlag ...
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
-		cli.BoolFlag{
-			Name:        "global",
-			Usage:       "With cluster scope",
-			Destination: &options.ConnectOptions.Global,
-		},
 		cli.StringFlag{
 			Name:        "method",
 			Value:       methodDefaultValue(),
@@ -140,8 +135,13 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "jvmrc",
-			Usage:       "Generate .jvmrc file to specified folder",
+			Usage:       "(Windows only) Generate .jvmrc file to specified folder",
 			Destination: &options.ConnectOptions.JvmrcDir,
+		},
+		cli.BoolFlag{
+			Name:        "setupGlobalProxy",
+			Usage:       "(Windows only) Auto setup HTTP_PROXY variable and system global proxy configuration",
+			Destination: &options.ConnectOptions.UseGlobalProxy,
 		},
 	}
 }

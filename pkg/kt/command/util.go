@@ -67,7 +67,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		log.Debug().Msg("Dropping hosts records ...")
 		util.DropHosts()
 	}
-	if options.ConnectOptions.Method == common.ConnectMethodSocks {
+	if options.ConnectOptions.Method == common.ConnectMethodSocks && options.ConnectOptions.UseGlobalProxy {
 		log.Debug().Msg("Cleaning up global proxy and environment variable ...")
 		registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
 		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
