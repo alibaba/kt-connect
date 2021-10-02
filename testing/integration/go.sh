@@ -18,7 +18,7 @@ function cleanup() {
     sudo kill -15 ${i};
   done
   if [ "${DOCKER_HOST}" != "" ]; then
-    PID=`ps aux | grep 'ssh -CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
+    PID=`ps aux | grep 'CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
     if [ "${PID}" != "" ]; then
       kill -15 ${PID}
     fi
@@ -34,7 +34,7 @@ function fail() {
   log "\e[31m${*} !!!\e[0m"
   log "check logs for detail: \e[33m`ls -t /tmp/kt-it-*.log`\e[0m"
   cleanup
-  exit -1
+  exit 1
 }
 
 # Test passed
@@ -63,7 +63,7 @@ function check_job() {
 
 # Check if ktctl pid file exists
 function check_pid_file() {
-    pidFile=`ls -t ~/.ktctl/${1}-*.pid | less -1`
+    pidFile=`ls -t ${HOME}/.ktctl/${1}-*.pid | head -1`
     pid=`cat ${pidFile}`
     log "ktctl ${1} pid: ${pid}"
 }
@@ -106,10 +106,10 @@ kubectl -n ${NS} exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir -p weba
 
 podIp=`kubectl -n ${NS} get pod --selector app=tomcat -o jsonpath='{.items[0].status.podIP}'`
 log "tomcat pod-ip: ${podIp}"
-if [ ${podIp} = "" ]; then fail "failed to setup test deployment"; fi
+if [ "${podIp}" = "" ]; then fail "failed to setup test deployment"; fi
 clusterIP=`kubectl -n ${NS} get service tomcat -o jsonpath='{.spec.clusterIP}'`
 log "tomcat cluster-ip: ${clusterIP}"
-if [ ${clusterIP} = "" ]; then fail "failed to setup test service"; fi
+if [ "${clusterIP}" = "" ]; then fail "failed to setup test service"; fi
 
 # Test connect
 sudo ktctl -n ${NS} -i ${IMAGE} -f connect --method ${MODE} >/tmp/kt-it-connect.log 2>&1 &
