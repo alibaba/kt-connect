@@ -27,7 +27,7 @@ func forwardSSHTunnelToLocal(cli portforward.CliInterface, kubectlCli kubectl.Cl
 
 func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubectl.CliInterface,
 	options *options.DaemonOptions, podName string) (err error) {
-	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
+	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions)
 	if options.UseKubectl {
 		err = portForwardViaKubectl(kubectlCli, options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
 	} else {
@@ -62,7 +62,7 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 			options.ConnectOptions.SocksPort)), 0644)
 	}
 
-	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
+	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions)
 	return ssh.StartSocks5Proxy(
 		&sshchannel.Certificate{
 			Username: "root",
@@ -73,23 +73,22 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 	)
 }
 
-func showSetupSocksMessage(protocol string, port int) {
+func showSetupSocksMessage(protocol string, connectOptions *options.ConnectOptions) {
+	port := connectOptions.SocksPort
 	log.Info().Msgf("Starting up %s proxy ...", protocol)
-	if util.IsWindows() && protocol == common.ConnectMethodSocks {
-		// socks method in windows will auto setup global proxy config
-		return
-	}
-	log.Info().Msgf("--------------------------------------------------------------")
-	if util.IsWindows() {
-		if util.IsCmd() {
-			log.Info().Msgf("Please setup proxy config by: set http_proxy=%s://127.0.0.1:%d", protocol, port)
+	if !connectOptions.UseGlobalProxy {
+		log.Info().Msgf("--------------------------------------------------------------")
+		if util.IsWindows() {
+			if util.IsCmd() {
+				log.Info().Msgf("Please setup proxy config by: set http_proxy=%s://127.0.0.1:%d", protocol, port)
+			} else {
+				log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"%s://127.0.0.1:%d\"", protocol, port)
+			}
 		} else {
-			log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"%s://127.0.0.1:%d\"", protocol, port)
+			log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
 		}
-	} else {
-		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
+		log.Info().Msgf("--------------------------------------------------------------")
 	}
-	log.Info().Msgf("--------------------------------------------------------------")
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {

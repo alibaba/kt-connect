@@ -22,7 +22,7 @@ const (
 	User32Dll           = "user32.dll"
 	ApiSendMessage      = "SendMessageW"
 	IntSocksLocalhost   = "socks=127.0.0.1:"
-	EnvSocksLocalhost   = "socks://127.0.0.1:"
+	EnvSocksLocalhost   = "://127.0.0.1:"
 )
 
 func SetGlobalProxy(port int, config *ProxyConfig) error {
@@ -78,7 +78,7 @@ func CleanGlobalProxy(config *ProxyConfig) {
 	}
 }
 
-func SetHttpProxyEnvironmentVariable(port int, config *ProxyConfig) error {
+func SetHttpProxyEnvironmentVariable(protocol string, port int, config *ProxyConfig) error {
 	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, EnvironmentSettings, registry.ALL_ACCESS)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func SetHttpProxyEnvironmentVariable(port int, config *ProxyConfig) error {
 	}
 	log.Debug().Msgf("Original proxy environment variable is: %s", config.HttpProxyVar)
 
-	err = internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("%s%d", EnvSocksLocalhost, port))
+	err = internetSettings.SetStringValue(RegKeyHttpProxy, fmt.Sprintf("%s%s%d", protocol, EnvSocksLocalhost, port))
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func resetHttpProxyEnvironmentVariable() {
 	if err == nil {
 		defer internetSettings.Close()
 		val, _, err := internetSettings.GetStringValue(RegKeyHttpProxy)
-		if err == nil && strings.HasPrefix(val, EnvSocksLocalhost) {
+		if err == nil && strings.HasPrefix(val, "socks") && strings.Contains(val, EnvSocksLocalhost) {
 			internetSettings.DeleteValue(RegKeyHttpProxy)
 		}
 		refreshEnvironmentVariable()
