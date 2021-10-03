@@ -32,5 +32,5 @@ Read the [Quick Start Guide](docs/en-us/quickstart.md) for more about this tool.
 
 Please contact us with DingTalk（钉钉）:
 
-<img src="https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/media/dingtalk.png" width="50%"></img>
+<img src="https://img.alicdn.com/imgextra/i4/O1CN01sTW3D61NzAFgUCNqz_!!6000000001640-0-tps-573-657.jpg" width="50%"></img>
 
