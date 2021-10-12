@@ -20,7 +20,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	v1 "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -77,8 +77,8 @@ func GetLogDetails(client kubernetes.Interface, namespace, podID string, contain
 
 // Maps the log selection to the corresponding api object
 // Read limits are set to avoid out of memory issues
-func mapToLogOptions(container string, logSelector *logs.Selection, previous bool) *v1.PodLogOptions {
-	logOptions := &v1.PodLogOptions{
+func mapToLogOptions(container string, logSelector *logs.Selection, previous bool) *coreV1.PodLogOptions {
+	logOptions := &coreV1.PodLogOptions{
 		Container:  container,
 		Follow:     false,
 		Previous:   previous,
@@ -95,7 +95,7 @@ func mapToLogOptions(container string, logSelector *logs.Selection, previous boo
 }
 
 // Construct a request for getting the logs for a pod and retrieves the logs.
-func readRawLogs(client kubernetes.Interface, namespace, podID string, logOptions *v1.PodLogOptions) (
+func readRawLogs(client kubernetes.Interface, namespace, podID string, logOptions *coreV1.PodLogOptions) (
 	string, error) {
 	readCloser, err := openStream(client, namespace, podID, logOptions)
 	if err != nil {
@@ -114,8 +114,8 @@ func readRawLogs(client kubernetes.Interface, namespace, podID string, logOption
 
 // GetLogFile returns a stream to the log file which can be piped directly to the response. This avoids out of memory
 // issues. Previous indicates to read archived logs created by log rotation or container crash
-func GetLogFile(client kubernetes.Interface, namespace, podID string, container string, opts *v1.PodLogOptions) (io.ReadCloser, error) {
-	logOptions := &v1.PodLogOptions{
+func GetLogFile(client kubernetes.Interface, namespace, podID string, container string, opts *coreV1.PodLogOptions) (io.ReadCloser, error) {
+	logOptions := &coreV1.PodLogOptions{
 		Container:  container,
 		Follow:     false,
 		Previous:   opts.Previous,
@@ -125,7 +125,7 @@ func GetLogFile(client kubernetes.Interface, namespace, podID string, container 
 	return logStream, err
 }
 
-func openStream(client kubernetes.Interface, namespace, podID string, logOptions *v1.PodLogOptions) (io.ReadCloser, error) {
+func openStream(client kubernetes.Interface, namespace, podID string, logOptions *coreV1.PodLogOptions) (io.ReadCloser, error) {
 	return client.CoreV1().RESTClient().Get().
 		Namespace(namespace).
 		Name(podID).

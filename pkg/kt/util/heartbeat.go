@@ -7,8 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	appV1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	v1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	coreV1 "k8s.io/client-go/kubernetes/typed/core/v1"
 	"net"
 	"time"
 )
@@ -16,8 +15,8 @@ import (
 const ResourceHeartBeatIntervalMinus = 5
 const portForwardHeartBeatIntervalSec = 30
 
-// SetupDeploymentHeartBeat setup heartbeat watcher for deployment
-func SetupDeploymentHeartBeat(ctx context.Context, client appV1.DeploymentInterface, name string) {
+// SetupPodHeartBeat setup heartbeat watcher for deployment
+func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {
@@ -32,7 +31,7 @@ func SetupDeploymentHeartBeat(ctx context.Context, client appV1.DeploymentInterf
 }
 
 // SetupServiceHeartBeat setup heartbeat watcher for service
-func SetupServiceHeartBeat(ctx context.Context, client v1.ServiceInterface, name string) {
+func SetupServiceHeartBeat(ctx context.Context, client coreV1.ServiceInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {
@@ -47,7 +46,7 @@ func SetupServiceHeartBeat(ctx context.Context, client v1.ServiceInterface, name
 }
 
 // SetupConfigMapHeartBeat setup heartbeat watcher for config map
-func SetupConfigMapHeartBeat(ctx context.Context, client v1.ConfigMapInterface, name string) {
+func SetupConfigMapHeartBeat(ctx context.Context, client coreV1.ConfigMapInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {

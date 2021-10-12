@@ -11,8 +11,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
-	appV1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
@@ -80,7 +79,7 @@ func getPodCidrByInstance(ctx context.Context, clientset kubernetes.Interface) (
 	return
 }
 
-func getServiceCidr(serviceList []v1.Service) (cidr []string, err error) {
+func getServiceCidr(serviceList []coreV1.Service) (cidr []string, err error) {
 	samples := mapset.NewSet()
 	for _, service := range serviceList {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
@@ -98,7 +97,7 @@ func getCidrFromSample(sample string) string {
 	return strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
 }
 
-func getTargetPod(name string, labelsKeys []string, podList []*v1.Pod) *v1.Pod {
+func getTargetPod(name string, labelsKeys []string, podList []*coreV1.Pod) *coreV1.Pod {
 	for _, p := range podList {
 		if len(p.Labels) <= 0 {
 			// almost impossible
@@ -122,61 +121,61 @@ func wait(podName string) {
 	}
 }
 
-func service(name, namespace string, labels map[string]string, external bool, port int) *v1.Service {
-	var ports []v1.ServicePort
+func createService(name, namespace string, labels map[string]string, external bool, port int) *coreV1.Service {
+	var ports []coreV1.ServicePort
 	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
 
-	ports = append(ports, v1.ServicePort{
+	ports = append(ports, coreV1.ServicePort{
 		Name:       name,
 		Port:       int32(port),
 		TargetPort: intstr.FromInt(port),
 	})
 
-	service := &v1.Service{
+	service := &coreV1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   namespace,
 			Labels:      labels,
 			Annotations: annotations,
 		},
-		Spec: v1.ServiceSpec{
+		Spec: coreV1.ServiceSpec{
 			Selector: labels,
-			Type:     v1.ServiceTypeClusterIP,
+			Type:     coreV1.ServiceTypeClusterIP,
 			Ports:    ports,
 		},
 	}
 	if external {
-		service.Spec.Type = v1.ServiceTypeLoadBalancer
+		service.Spec.Type = coreV1.ServiceTypeLoadBalancer
 	}
 	return service
 }
 
-func container(image string, args []string, envs map[string]string, options *options.DaemonOptions) v1.Container {
-	var envVar []v1.EnvVar
+func createContainer(image string, args []string, envs map[string]string, options *options.DaemonOptions) coreV1.Container {
+	var envVar []coreV1.EnvVar
 	for k, v := range envs {
-		envVar = append(envVar, v1.EnvVar{Name: k, Value: v})
+		envVar = append(envVar, coreV1.EnvVar{Name: k, Value: v})
 	}
-	var pullPolicy v1.PullPolicy
+	var pullPolicy coreV1.PullPolicy
 	if options.ForceUpdateShadow {
 		pullPolicy = "Always"
 	} else {
 		pullPolicy = "IfNotPresent"
 	}
-	return v1.Container{
+	return coreV1.Container{
 		Name:            "standalone",
 		Image:           image,
 		ImagePullPolicy: pullPolicy,
 		Args:            args,
 		Env:             envVar,
-		VolumeMounts: []v1.VolumeMount{
+		VolumeMounts: []coreV1.VolumeMount{
 			{
 				Name:      "ssh-public-key",
 				MountPath: fmt.Sprintf("/root/%s", common.SSHAuthKey),
 			},
 		},
-		SecurityContext: &v1.SecurityContext{
-			Capabilities: &v1.Capabilities{
-				Add: []v1.Capability{
+		SecurityContext: &coreV1.SecurityContext{
+			Capabilities: &coreV1.Capabilities{
+				Add: []coreV1.Capability{
 					"AUDIT_WRITE",
 				},
 			},
@@ -184,7 +183,7 @@ func container(image string, args []string, envs map[string]string, options *opt
 	}
 }
 
-func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *appV1.Deployment {
+func createPod(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *coreV1.Pod {
 	var args []string
 	namespace := metaAndSpec.Meta.Namespace
 	name := metaAndSpec.Meta.Name
@@ -194,53 +193,43 @@ func deployment(metaAndSpec *PodMetaAndSpec, volume string, options *options.Dae
 	annotations[common.KTLastHeartBeat] = util.GetTimestamp()
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
-	dep := &appV1.Deployment{
+	pod := &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
 			Namespace:   namespace,
 			Labels:      labels,
 			Annotations: annotations,
 		},
-		Spec: appV1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+		Spec: coreV1.PodSpec{
+			ServiceAccountName: options.ServiceAccount,
+			Containers: []coreV1.Container{
+				createContainer(image, args, envs, options),
 			},
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: v1.PodSpec{
-					ServiceAccountName: options.ServiceAccount,
-					Containers: []v1.Container{
-						container(image, args, envs, options),
-					},
-					Volumes: []v1.Volume{
-						getSSHVolume(volume),
-					},
-				},
+			Volumes: []coreV1.Volume{
+				getSSHVolume(volume),
 			},
 		},
 	}
 
 	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
-		addTunHostPath(dep)
+		addTunHostPath(pod)
 	}
 	if options.ImagePullSecret != "" {
-		addImagePullSecret(dep, options.ImagePullSecret)
+		addImagePullSecret(pod, options.ImagePullSecret)
 	}
 
-	return dep
+	return pod
 }
 
-func getSSHVolume(volume string) v1.Volume {
-	sshVolume := v1.Volume{
+func getSSHVolume(volume string) coreV1.Volume {
+	sshVolume := coreV1.Volume{
 		Name: "ssh-public-key",
-		VolumeSource: v1.VolumeSource{
-			ConfigMap: &v1.ConfigMapVolumeSource{
-				LocalObjectReference: v1.LocalObjectReference{
+		VolumeSource: coreV1.VolumeSource{
+			ConfigMap: &coreV1.ConfigMapVolumeSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
 					Name: volume,
 				},
-				Items: []v1.KeyToPath{
+				Items: []coreV1.KeyToPath{
 					{
 						Key:  common.SSHAuthKey,
 						Path: "authorized_keys",
@@ -252,34 +241,33 @@ func getSSHVolume(volume string) v1.Volume {
 	return sshVolume
 }
 
-func addTunHostPath(dep *appV1.Deployment) {
+func addTunHostPath(pod *coreV1.Pod) {
 	path := "/dev/net/tun"
 
-	dep.Spec.Template.Spec.Volumes = append(dep.Spec.Template.Spec.Volumes, v1.Volume{
+	pod.Spec.Volumes = append(pod.Spec.Volumes, coreV1.Volume{
 		Name: "tun",
-		VolumeSource: v1.VolumeSource{
-			HostPath: &v1.HostPathVolumeSource{Path: path},
+		VolumeSource: coreV1.VolumeSource{
+			HostPath: &coreV1.HostPathVolumeSource{Path: path},
 		},
 	})
 
-	for i := range dep.Spec.Template.Spec.Containers {
-		c := &dep.Spec.Template.Spec.Containers[i]
+	for i := range pod.Spec.Containers {
+		c := &pod.Spec.Containers[i]
 		if c.Name != "standalone" {
 			continue
 		} else {
-			c.VolumeMounts = append(c.VolumeMounts, v1.VolumeMount{
+			c.VolumeMounts = append(c.VolumeMounts, coreV1.VolumeMount{
 				Name:      "tun",
 				MountPath: path,
 			})
-
 			c.SecurityContext.Capabilities.Add = append(c.SecurityContext.Capabilities.Add, "NET_ADMIN")
 			break
 		}
 	}
 }
 
-func addImagePullSecret(dep *appV1.Deployment, imagePullSecret string) {
-	dep.Spec.Template.Spec.ImagePullSecrets = []v1.LocalObjectReference{
+func addImagePullSecret(pod *coreV1.Pod, imagePullSecret string) {
+	pod.Spec.ImagePullSecrets = []coreV1.LocalObjectReference{
 		{
 			Name: imagePullSecret,
 		},

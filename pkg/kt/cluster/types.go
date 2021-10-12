@@ -30,7 +30,8 @@ type KubernetesInterface interface {
 	GetAllExistingShadowDeployments(ctx context.Context, namespace string) (list []appV1.Deployment, err error)
 	CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error)
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
-	UpdateDeployment(ctx context.Context, namespace string, deployment *appV1.Deployment) (*appV1.Deployment, error)
+	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
+	UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error)
 	DecreaseRef(ctx context.Context, namespace string, deployment string) (cleanup bool, err error)
 }
 

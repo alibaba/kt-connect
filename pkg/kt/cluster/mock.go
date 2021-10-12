@@ -11,7 +11,7 @@ import (
 	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
-	v1 "k8s.io/api/apps/v1"
+	appV1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
 )
 
@@ -84,10 +84,10 @@ func (mr *MockKubernetesInterfaceMockRecorder) DecreaseRef(ctx, namespace, deplo
 }
 
 // Deployment mocks base method.
-func (m *MockKubernetesInterface) Deployment(ctx context.Context, name, namespace string) (*v1.Deployment, error) {
+func (m *MockKubernetesInterface) Deployment(ctx context.Context, name, namespace string) (*appV1.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Deployment", ctx, name, namespace)
-	ret0, _ := ret[0].(*v1.Deployment)
+	ret0, _ := ret[0].(*appV1.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -99,10 +99,10 @@ func (mr *MockKubernetesInterfaceMockRecorder) Deployment(ctx, name, namespace i
 }
 
 // GetAllExistingShadowDeployments mocks base method.
-func (m *MockKubernetesInterface) GetAllExistingShadowDeployments(ctx context.Context, namespace string) ([]v1.Deployment, error) {
+func (m *MockKubernetesInterface) GetAllExistingShadowDeployments(ctx context.Context, namespace string) ([]appV1.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllExistingShadowDeployments", ctx, namespace)
-	ret0, _ := ret[0].([]v1.Deployment)
+	ret0, _ := ret[0].([]appV1.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -114,10 +114,10 @@ func (mr *MockKubernetesInterfaceMockRecorder) GetAllExistingShadowDeployments(c
 }
 
 // GetDeployment mocks base method.
-func (m *MockKubernetesInterface) GetDeployment(ctx context.Context, name, namespace string) (*v1.Deployment, error) {
+func (m *MockKubernetesInterface) GetDeployment(ctx context.Context, name, namespace string) (*appV1.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeployment", ctx, name, namespace)
-	ret0, _ := ret[0].(*v1.Deployment)
+	ret0, _ := ret[0].(*appV1.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -144,6 +144,21 @@ func (m *MockKubernetesInterface) GetOrCreateShadow(ctx context.Context, name st
 func (mr *MockKubernetesInterfaceMockRecorder) GetOrCreateShadow(ctx, name, options, labels, annotations, envs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrCreateShadow", reflect.TypeOf((*MockKubernetesInterface)(nil).GetOrCreateShadow), ctx, name, options, labels, annotations, envs)
+}
+
+// GetPod mocks base method.
+func (m *MockKubernetesInterface) GetPod(ctx context.Context, name, namespace string) (*v10.Pod, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPod", ctx, name, namespace)
+	ret0, _ := ret[0].(*v10.Pod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPod indicates an expected call of GetPod.
+func (mr *MockKubernetesInterfaceMockRecorder) GetPod(ctx, name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPod", reflect.TypeOf((*MockKubernetesInterface)(nil).GetPod), ctx, name, namespace)
 }
 
 // RemoveConfigMap mocks base method.
@@ -189,7 +204,7 @@ func (mr *MockKubernetesInterfaceMockRecorder) RemoveService(ctx, name, namespac
 }
 
 // Scale mocks base method.
-func (m *MockKubernetesInterface) Scale(ctx context.Context, deployment *v1.Deployment, replicas *int32) error {
+func (m *MockKubernetesInterface) Scale(ctx context.Context, deployment *appV1.Deployment, replicas *int32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Scale", ctx, deployment, replicas)
 	ret0, _ := ret[0].(error)
@@ -230,17 +245,17 @@ func (mr *MockKubernetesInterfaceMockRecorder) ServiceHosts(ctx, namespace inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ServiceHosts", reflect.TypeOf((*MockKubernetesInterface)(nil).ServiceHosts), ctx, namespace)
 }
 
-// UpdateDeployment mocks base method.
-func (m *MockKubernetesInterface) UpdateDeployment(ctx context.Context, namespace string, deployment *v1.Deployment) (*v1.Deployment, error) {
+// UpdatePod mocks base method.
+func (m *MockKubernetesInterface) UpdatePod(ctx context.Context, namespace string, pod *v10.Pod) (*v10.Pod, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDeployment", ctx, namespace, deployment)
-	ret0, _ := ret[0].(*v1.Deployment)
+	ret := m.ctrl.Call(m, "UpdatePod", ctx, namespace, pod)
+	ret0, _ := ret[0].(*v10.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// UpdateDeployment indicates an expected call of UpdateDeployment.
-func (mr *MockKubernetesInterfaceMockRecorder) UpdateDeployment(ctx, namespace, deployment interface{}) *gomock.Call {
+// UpdatePod indicates an expected call of UpdatePod.
+func (mr *MockKubernetesInterfaceMockRecorder) UpdatePod(ctx, namespace, pod interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDeployment", reflect.TypeOf((*MockKubernetesInterface)(nil).UpdateDeployment), ctx, namespace, deployment)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePod", reflect.TypeOf((*MockKubernetesInterface)(nil).UpdatePod), ctx, namespace, pod)
 }

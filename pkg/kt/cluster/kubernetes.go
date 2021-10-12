@@ -15,7 +15,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appv1 "k8s.io/api/apps/v1"
-	v1 "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
@@ -122,7 +122,7 @@ func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options
 			return
 		}
 		if pod != nil && generator != nil {
-			podIP, podName, credential = shadowResult(*pod, generator)
+			podIP, podName, credential = shadowResult(pod, generator)
 			return
 		}
 	}
@@ -178,8 +178,8 @@ func (k *Kubernetes) GetAllExistingShadowDeployments(ctx context.Context, namesp
 	return list.Items, err
 }
 
-func (k *Kubernetes) tryGetExistingShadowRelatedObjs(ctx context.Context, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *v1.Pod, generator *util.SSHGenerator, err error) {
-	_, shadowError := k.GetDeployment(ctx, resourceMeta.Name, resourceMeta.Namespace)
+func (k *Kubernetes) tryGetExistingShadowRelatedObjs(ctx context.Context, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *coreV1.Pod, generator *util.SSHGenerator, err error) {
+	_, shadowError := k.GetPod(ctx, resourceMeta.Name, resourceMeta.Namespace)
 	if shadowError != nil {
 		return
 	}
@@ -201,7 +201,7 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(ctx context.Context, resour
 	return k.getShadowPod(ctx, resourceMeta, generator)
 }
 
-func (k *Kubernetes) getShadowPod(ctx context.Context, resourceMeta *ResourceMeta, generator *util.SSHGenerator) (pod *v1.Pod, sshGenerator *util.SSHGenerator, err error) {
+func (k *Kubernetes) getShadowPod(ctx context.Context, resourceMeta *ResourceMeta, generator *util.SSHGenerator) (pod *coreV1.Pod, sshGenerator *util.SSHGenerator, err error) {
 	podList, err := k.Clientset.CoreV1().Pods(resourceMeta.Namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: resourceMeta.Labels}.MatchLabels).String(),
 	})
@@ -225,24 +225,25 @@ func (k *Kubernetes) getShadowPod(ctx context.Context, resourceMeta *ResourceMet
 }
 
 func increaseRefCount(ctx context.Context, name string, clientSet kubernetes.Interface, namespace string) error {
-	deployment, err := clientSet.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+	pod, err := clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	annotations := deployment.ObjectMeta.Annotations
+	annotations := pod.ObjectMeta.Annotations
 	count, err := strconv.Atoi(annotations[common.KTRefCount])
 	if err != nil {
-		log.Error().Msgf("Failed to parse annotations[common.KTRefCount] of deployment %s with value %s", name, annotations[common.KTRefCount])
+		log.Error().Msgf("Failed to parse annotations[%s] of pod %s with value %s",
+			common.KTRefCount, name, annotations[common.KTRefCount])
 		return err
 	}
 
-	deployment.ObjectMeta.Annotations[common.KTRefCount] = strconv.Itoa(count + 1)
+	pod.ObjectMeta.Annotations[common.KTRefCount] = strconv.Itoa(count + 1)
 
-	_, err = clientSet.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
+	_, err = clientSet.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
 	return err
 }
 
-func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *util.SSHCredential) {
+func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, *util.SSHCredential) {
 	podIP := pod.Status.PodIP
 	podName := pod.GetObjectMeta().GetName()
 	credential := util.NewDefaultSSHCredential()
@@ -250,33 +251,33 @@ func shadowResult(pod v1.Pod, generator *util.SSHGenerator) (string, string, *ut
 	return podIP, podName, credential
 }
 
-func (k *Kubernetes) createAndGetPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (pod v1.Pod, err error) {
+func (k *Kubernetes) createAndGetPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (*coreV1.Pod, error) {
 	localIPAddress := util.GetOutboundIP()
 	log.Debug().Msgf("Client address %s", localIPAddress)
 	resourceMeta := metaAndSpec.Meta
 	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
 	resourceMeta.Labels[common.KTName] = resourceMeta.Name
-	cli := k.Clientset.AppsV1().Deployments(resourceMeta.Namespace)
-	util.SetupDeploymentHeartBeat(ctx, cli, resourceMeta.Name)
+	cli := k.Clientset.CoreV1().Pods(resourceMeta.Namespace)
+	util.SetupPodHeartBeat(ctx, cli, resourceMeta.Name)
 
-	deployment := deployment(metaAndSpec, sshcm, options)
-	result, err := cli.Create(ctx, deployment, metav1.CreateOptions{})
+	pod := createPod(metaAndSpec, sshcm, options)
+	result, err := cli.Create(ctx, pod, metav1.CreateOptions{})
 	if err != nil {
-		return
+		return nil, err
 	}
 	log.Info().Msgf("Deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
 }
 
-func (k *Kubernetes) createConfigMap(ctx context.Context, labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *v1.ConfigMap, err error) {
+func (k *Kubernetes) createConfigMap(ctx context.Context, labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
 
 	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
 	labels[common.KTName] = sshcm
 	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
 	util.SetupConfigMapHeartBeat(ctx, cli, sshcm)
 
-	return cli.Create(ctx, &v1.ConfigMap{
+	return cli.Create(ctx, &coreV1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        sshcm,
 			Namespace:   namespace,
@@ -291,10 +292,10 @@ func (k *Kubernetes) createConfigMap(ctx context.Context, labels map[string]stri
 }
 
 // CreateService create kubernetes service
-func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*v1.Service, error) {
+func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
 	util.SetupServiceHeartBeat(ctx, cli, name)
-	svc := service(name, namespace, labels, external, port)
+	svc := createService(name, namespace, labels, external, port)
 	return cli.Create(ctx, svc, metav1.CreateOptions{})
 }
 
@@ -320,7 +321,7 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, connect
 }
 
 // fetchServiceList try list service at cluster scope. fallback to namespace scope
-func fetchServiceList(ctx context.Context, k *Kubernetes, namespace string) (*v1.ServiceList, error) {
+func fetchServiceList(ctx context.Context, k *Kubernetes, namespace string) (*coreV1.ServiceList, error) {
 	serviceList, err := k.Clientset.CoreV1().Services("").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
@@ -341,14 +342,14 @@ func (k *Kubernetes) ServiceHosts(ctx context.Context, namespace string) (hosts 
 	return
 }
 
-func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Interface) (pod v1.Pod, err error) {
+func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Interface) (pod *coreV1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)
 	podListener, err := clusterWatcher.PodListenerWithNamespace(clientset, namespace, stopSignal)
 	if err != nil {
 		return
 	}
-	pod = v1.Pod{}
+	pod = &coreV1.Pod{}
 	podLabels := k8sLabels.NewSelector()
 	labelKeys := []string{
 		common.KTName,
@@ -363,7 +364,7 @@ func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Inte
 	if err != nil {
 		return pod, err
 	}
-wait_loop:
+
 	for {
 		hasRunningPod := len(pods) > 0
 		var podName string
@@ -373,9 +374,9 @@ wait_loop:
 			p := getTargetPod(name, labelKeys, pods)
 			if p != nil {
 				if p.Status.Phase == "Running" {
-					pod = *p
+					pod = p
 					log.Info().Msgf("Shadow pod %s is ready", pod.Name)
-					break wait_loop
+					break
 				}
 				podName = p.Name
 			}
@@ -394,32 +395,37 @@ func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace s
 	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-// UpdateDeployment ...
-func (k *Kubernetes) UpdateDeployment(ctx context.Context, namespace string, deployment *appv1.Deployment) (*appv1.Deployment, error) {
-	return k.Clientset.AppsV1().Deployments(namespace).Update(ctx, deployment, metav1.UpdateOptions{})
+// GoPod ...
+func (k *Kubernetes) GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error) {
+	return k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+// UpdatePod ...
+func (k *Kubernetes) UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error) {
+	return k.Clientset.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
 }
 
 // DecreaseRef ...
 func (k *Kubernetes) DecreaseRef(ctx context.Context, namespace string, app string) (cleanup bool, err error) {
-	deployment, err := k.GetDeployment(ctx, app, namespace)
+	pod, err := k.GetPod(ctx, app, namespace)
 	if err != nil {
 		return
 	}
-	cleanup, err = decreaseOrRemove(ctx, k, deployment)
+	cleanup, err = decreaseOrRemove(ctx, k, pod)
 	return
 }
 
-func decreaseOrRemove(ctx context.Context, k *Kubernetes, deployment *appv1.Deployment) (cleanup bool, err error) {
-	refCount := deployment.ObjectMeta.Annotations[common.KTRefCount]
+func decreaseOrRemove(ctx context.Context, k *Kubernetes, pod *coreV1.Pod) (cleanup bool, err error) {
+	refCount := pod.ObjectMeta.Annotations[common.KTRefCount]
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
-		err = k.RemoveDeployment(ctx, deployment.GetObjectMeta().GetName(), deployment.GetObjectMeta().GetNamespace())
+		err = k.RemoveDeployment(ctx, pod.GetObjectMeta().GetName(), pod.GetObjectMeta().GetNamespace())
 		if err != nil {
 			return
 		}
 	} else {
-		err2 := decreaseDeploymentRef(ctx, refCount, k, deployment)
+		err2 := decreaseDeploymentRef(ctx, refCount, k, pod)
 		if err2 != nil {
 			err = err2
 			return
@@ -428,14 +434,14 @@ func decreaseOrRemove(ctx context.Context, k *Kubernetes, deployment *appv1.Depl
 	return
 }
 
-func decreaseDeploymentRef(ctx context.Context, refCount string, k *Kubernetes, deployment *appv1.Deployment) (err error) {
+func decreaseDeploymentRef(ctx context.Context, refCount string, k *Kubernetes, pod *coreV1.Pod) (err error) {
 	log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
 	count, err := decreaseRef(refCount)
 	if err != nil {
 		return
 	}
-	deployment.ObjectMeta.Annotations[common.KTRefCount] = count
-	_, err = k.UpdateDeployment(ctx, deployment.GetObjectMeta().GetNamespace(), deployment)
+	pod.ObjectMeta.Annotations[common.KTRefCount] = count
+	_, err = k.UpdatePod(ctx, pod.GetObjectMeta().GetNamespace(), pod)
 	return
 }
 

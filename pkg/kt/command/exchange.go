@@ -16,7 +16,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
-	v1 "k8s.io/api/apps/v1"
+	appV1 "k8s.io/api/apps/v1"
 )
 
 // newExchangeCommand return new exchange command
@@ -29,6 +29,12 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 				Name:        "expose",
 				Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
 				Destination: &options.ExchangeOptions.Expose,
+			},
+			urfave.StringFlag{
+				Name:        "method",
+				Value:       "auto",
+				Usage:       "Exchange method 'auto' or 'manual'",
+				Destination: &options.ExchangeOptions.Method,
 			},
 		},
 		Action: func(c *urfave.Context) error {
@@ -122,7 +128,7 @@ func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
 	}
 }
 
-func getExchangeLabels(options *options.DaemonOptions, workload string, origin *v1.Deployment) map[string]string {
+func getExchangeLabels(options *options.DaemonOptions, workload string, origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentExchange,

@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	v1 "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -59,7 +59,7 @@ func Test_getPodCidrs(t *testing.T) {
 
 func Test_getServiceCidr(t *testing.T) {
 	type args struct {
-		serviceList []v1.Service
+		serviceList []coreV1.Service
 	}
 	tests := []struct {
 		name     string
@@ -70,7 +70,7 @@ func Test_getServiceCidr(t *testing.T) {
 		{
 			name: "should_get_service_cidr_by_svc_sample",
 			args: args{
-				[]v1.Service{
+				[]coreV1.Service{
 					buildService("default", "name", "173.168.0.1"),
 				},
 			},
@@ -125,46 +125,46 @@ func Test_getKubernetesClient(t *testing.T) {
 	}
 }
 
-func buildService(namespace, name, clusterIP string) v1.Service {
-	return v1.Service{
+func buildService(namespace, name, clusterIP string) coreV1.Service {
+	return coreV1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: v1.ServiceSpec{
+		Spec: coreV1.ServiceSpec{
 			ClusterIP: clusterIP,
 		},
 	}
 }
 
-func buildService2(namespace, name, clusterIP string) *v1.Service {
-	return &v1.Service{
+func buildService2(namespace, name, clusterIP string) *coreV1.Service {
+	return &coreV1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: v1.ServiceSpec{
+		Spec: coreV1.ServiceSpec{
 			ClusterIP: clusterIP,
 		},
 	}
 }
 
-func buildNode(namespace, name, cidr string) *v1.Node {
-	return &v1.Node{
+func buildNode(namespace, name, cidr string) *coreV1.Node {
+	return &coreV1.Node{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: v1.NodeSpec{
+		Spec: coreV1.NodeSpec{
 			PodCIDR: cidr,
 		},
 	}
 }
 
-func buildPod(name, namespace, image string, ip string, labels map[string]string) *v1.Pod {
-	return &v1.Pod{
+func buildPod(name, namespace, image string, ip string, labels map[string]string) *coreV1.Pod {
+	return &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      name,
 			Labels:    labels,
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{{Image: image}},
+		Spec: coreV1.PodSpec{
+			Containers: []coreV1.Container{{Image: image}},
 		},
-		Status: v1.PodStatus{
+		Status: coreV1.PodStatus{
 			PodIP: ip,
-			Phase: v1.PodRunning,
+			Phase: coreV1.PodRunning,
 		},
 	}
 }

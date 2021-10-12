@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/apiserver/common"
 	"github.com/alibaba/kt-connect/pkg/apiserver/ws"
 	"github.com/gin-gonic/gin"
-	v1 "k8s.io/api/core/v1"
+	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -43,7 +43,7 @@ func (c *TerminalController) Terminal(context *gin.Context) {
 		Name(pod).
 		Namespace(ns).
 		SubResource("exec").
-		VersionedParams(&v1.PodExecOptions{
+		VersionedParams(&coreV1.PodExecOptions{
 			Container: container,
 			Command:   []string{shell},
 			Stdin:     true,

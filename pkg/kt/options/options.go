@@ -40,6 +40,7 @@ type ConnectOptions struct {
 // ExchangeOptions ...
 type ExchangeOptions struct {
 	Expose string
+	Method string
 }
 
 // MeshOptions ...
