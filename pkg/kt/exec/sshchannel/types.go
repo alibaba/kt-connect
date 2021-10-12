@@ -11,4 +11,5 @@ type Certificate struct {
 type Channel interface {
 	StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) error
 	ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) error
+	RunScript(certificate *Certificate, sshAddress, script string) (string, error)
 }

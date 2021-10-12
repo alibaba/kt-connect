@@ -43,6 +43,12 @@ type ExchangeOptions struct {
 	Method string
 }
 
+// ExchangePodOptions ...
+type ExchangePodOptions struct {
+	Label string
+	Expose string
+}
+
 // MeshOptions ...
 type MeshOptions struct {
 	Expose  string
@@ -80,6 +86,7 @@ type RuntimeOptions struct {
 	ProxyConfig registry.ProxyConfig
 	// RestConfig kubectl config
 	RestConfig *rest.Config
+	PodName string
 }
 
 type dashboardOptions struct {
@@ -102,6 +109,7 @@ type DaemonOptions struct {
 	ProvideOptions    *ProvideOptions
 	ConnectOptions    *ConnectOptions
 	ExchangeOptions   *ExchangeOptions
+	ExchangePodOptions *ExchangePodOptions
 	MeshOptions       *MeshOptions
 	CleanOptions      *CleanOptions
 	DashboardOptions  *dashboardOptions
@@ -121,11 +129,12 @@ func NewDaemonOptions(version string) *DaemonOptions {
 			UserHome: util.UserHome,
 			AppHome:  util.KtHome,
 		},
-		ConnectOptions:   &ConnectOptions{},
-		ExchangeOptions:  &ExchangeOptions{},
-		MeshOptions:      &MeshOptions{},
-		CleanOptions:     &CleanOptions{},
-		DashboardOptions: &dashboardOptions{},
-		ProvideOptions:   &ProvideOptions{},
+		ConnectOptions:     &ConnectOptions{},
+		ExchangeOptions:    &ExchangeOptions{},
+		ExchangePodOptions: &ExchangePodOptions{},
+		MeshOptions:        &MeshOptions{},
+		CleanOptions:       &CleanOptions{},
+		DashboardOptions:   &dashboardOptions{},
+		ProvideOptions:     &ProvideOptions{},
 	}
 }

@@ -1,6 +1,7 @@
 package sshchannel
 
 import (
+	"bytes"
 	"io"
 	"net"
 	"sync"
@@ -38,6 +39,33 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 		log.Error().Msgf("Failed to create socks5 server: %s", err)
 	}
 	return
+}
+
+// RunScript run the script on remote host.
+func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script string) (result string, err error) {
+	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
+	if err != nil {
+		log.Error().Msgf("Fail to create ssh tunnel: %s", err)
+		return "", err
+	}
+	defer conn.Close()
+
+	session, err := conn.NewSession()
+	if err != nil {
+		log.Error().Msgf("Fail to create ssh session: %s", err)
+		return "", err
+	}
+	defer session.Close()
+
+	var stdoutBuf bytes.Buffer
+	session.Stdout = &stdoutBuf
+	err = session.Run(script)
+	if err != nil {
+		log.Error().Msgf("Failed to run ssh script: %s", err)
+		return "", err
+	}
+	output := stdoutBuf.String()
+	return output, nil
 }
 
 // ForwardRemoteToLocal forward remote request to local

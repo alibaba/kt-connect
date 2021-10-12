@@ -11,7 +11,7 @@ import (
 	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	util "github.com/alibaba/kt-connect/pkg/kt/util"
 	gomock "github.com/golang/mock/gomock"
-	appV1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/apps/v1"
 	v10 "k8s.io/api/core/v1"
 )
 
@@ -36,6 +36,21 @@ func NewMockKubernetesInterface(ctrl *gomock.Controller) *MockKubernetesInterfac
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockKubernetesInterface) EXPECT() *MockKubernetesInterfaceMockRecorder {
 	return m.recorder
+}
+
+// AddEphemeralContainer mocks base method.
+func (m *MockKubernetesInterface) AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddEphemeralContainer", ctx, containerName, podName, options, envs)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddEphemeralContainer indicates an expected call of AddEphemeralContainer.
+func (mr *MockKubernetesInterfaceMockRecorder) AddEphemeralContainer(ctx, containerName, podName, options, envs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEphemeralContainer", reflect.TypeOf((*MockKubernetesInterface)(nil).AddEphemeralContainer), ctx, containerName, podName, options, envs)
 }
 
 // ClusterCidrs mocks base method.
@@ -83,11 +98,25 @@ func (mr *MockKubernetesInterfaceMockRecorder) DecreaseRef(ctx, namespace, deplo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecreaseRef", reflect.TypeOf((*MockKubernetesInterface)(nil).DecreaseRef), ctx, namespace, deployment)
 }
 
+// DeletePod mocks base method.
+func (m *MockKubernetesInterface) DeletePod(ctx context.Context, podName, namespace string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePod", ctx, podName, namespace)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePod indicates an expected call of DeletePod.
+func (mr *MockKubernetesInterfaceMockRecorder) DeletePod(ctx, podName, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePod", reflect.TypeOf((*MockKubernetesInterface)(nil).DeletePod), ctx, podName, namespace)
+}
+
 // Deployment mocks base method.
-func (m *MockKubernetesInterface) Deployment(ctx context.Context, name, namespace string) (*appV1.Deployment, error) {
+func (m *MockKubernetesInterface) Deployment(ctx context.Context, name, namespace string) (*v1.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Deployment", ctx, name, namespace)
-	ret0, _ := ret[0].(*appV1.Deployment)
+	ret0, _ := ret[0].(*v1.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -99,10 +128,10 @@ func (mr *MockKubernetesInterfaceMockRecorder) Deployment(ctx, name, namespace i
 }
 
 // GetAllExistingShadowDeployments mocks base method.
-func (m *MockKubernetesInterface) GetAllExistingShadowDeployments(ctx context.Context, namespace string) ([]appV1.Deployment, error) {
+func (m *MockKubernetesInterface) GetAllExistingShadowDeployments(ctx context.Context, namespace string) ([]v1.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllExistingShadowDeployments", ctx, namespace)
-	ret0, _ := ret[0].([]appV1.Deployment)
+	ret0, _ := ret[0].([]v1.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -114,10 +143,10 @@ func (mr *MockKubernetesInterfaceMockRecorder) GetAllExistingShadowDeployments(c
 }
 
 // GetDeployment mocks base method.
-func (m *MockKubernetesInterface) GetDeployment(ctx context.Context, name, namespace string) (*appV1.Deployment, error) {
+func (m *MockKubernetesInterface) GetDeployment(ctx context.Context, name, namespace string) (*v1.Deployment, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDeployment", ctx, name, namespace)
-	ret0, _ := ret[0].(*appV1.Deployment)
+	ret0, _ := ret[0].(*v1.Deployment)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -159,6 +188,36 @@ func (m *MockKubernetesInterface) GetPod(ctx context.Context, name, namespace st
 func (mr *MockKubernetesInterfaceMockRecorder) GetPod(ctx, name, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPod", reflect.TypeOf((*MockKubernetesInterface)(nil).GetPod), ctx, name, namespace)
+}
+
+// Pod mocks base method.
+func (m *MockKubernetesInterface) Pod(ctx context.Context, name, namespace string) (*v10.Pod, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pod", ctx, name, namespace)
+	ret0, _ := ret[0].(*v10.Pod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Pod indicates an expected call of Pod.
+func (mr *MockKubernetesInterfaceMockRecorder) Pod(ctx, name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pod", reflect.TypeOf((*MockKubernetesInterface)(nil).Pod), ctx, name, namespace)
+}
+
+// Pods mocks base method.
+func (m *MockKubernetesInterface) Pods(ctx context.Context, label, namespace string) (*v10.PodList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Pods", ctx, label, namespace)
+	ret0, _ := ret[0].(*v10.PodList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Pods indicates an expected call of Pods.
+func (mr *MockKubernetesInterfaceMockRecorder) Pods(ctx, label, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pods", reflect.TypeOf((*MockKubernetesInterface)(nil).Pods), ctx, label, namespace)
 }
 
 // RemoveConfigMap mocks base method.
@@ -204,7 +263,7 @@ func (mr *MockKubernetesInterfaceMockRecorder) RemoveService(ctx, name, namespac
 }
 
 // Scale mocks base method.
-func (m *MockKubernetesInterface) Scale(ctx context.Context, deployment *appV1.Deployment, replicas *int32) error {
+func (m *MockKubernetesInterface) Scale(ctx context.Context, deployment *v1.Deployment, replicas *int32) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Scale", ctx, deployment, replicas)
 	ret0, _ := ret[0].(error)

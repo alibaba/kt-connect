@@ -3,6 +3,7 @@ package connect
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,8 +30,116 @@ func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Ch
 		return
 	}
 
-	exposeLocalPorts(ssh, exposePorts, localSSHPort)
+	if len(s.Options.RuntimeOptions.PodName) > 0 {
+		err = exchangeWithPod(ssh, exposePorts, localSSHPort)
+		if err !=nil{
+			return err
+		}
+	} else {
+		exposeLocalPorts(ssh, exposePorts, localSSHPort)
+	}
 	return nil
+}
+
+func remoteRedirectPort(exposePorts string, listenedPorts map[string]struct{}) (redirectPort map[string]string, err error) {
+	portPairs := strings.Split(exposePorts, ",")
+	redirectPort = make(map[string]string)
+	for _, exposePort := range portPairs {
+		_, remotePort := getPortMapping(exposePort)
+		port := randPort(listenedPorts)
+		if port == "" {
+			return nil, fmt.Errorf("failed to find redirect port for port: %s", remotePort)
+		}
+		redirectPort[remotePort] = port
+	}
+
+	return redirectPort, nil
+}
+
+func exchangeWithPod(ssh sshchannel.Channel, exposePorts string, localSSHPort int) error {
+	// Get all listened ports on remote host
+	listenedPorts, err := getListenedPorts(ssh, localSSHPort)
+	if err != nil {
+		return err
+	}
+
+	redirectPorts, err := remoteRedirectPort(exposePorts, listenedPorts)
+	if err != nil {
+		return err
+	}
+	var redirectPortStr string
+	for k, v := range redirectPorts {
+		redirectPortStr += fmt.Sprintf("%s:%s,", k, v)
+	}
+	redirectPortStr = redirectPortStr[:len(redirectPortStr)-1]
+	err = setupIptables(ssh, redirectPortStr, localSSHPort)
+	if err != nil {
+		return err
+	}
+	portPairs := strings.Split(exposePorts, ",")
+	for _, exposePort := range portPairs {
+		localPort, remotePort := getPortMapping(exposePort)
+		var wg sync.WaitGroup
+		exposeLocalPort(&wg, ssh, localPort, redirectPorts[remotePort], localSSHPort)
+		wg.Done()
+	}
+
+	return nil
+}
+
+func randPort(listenedPorts map[string]struct{}) string {
+	for i := 0; i < 100; i++ {
+		port := strconv.Itoa(rand.Intn(65535-1024) + 1024)
+		if _, exists := listenedPorts[port]; !exists {
+			return port
+		}
+	}
+	return ""
+}
+
+func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort int) error {
+	res, err := ssh.RunScript(
+		&sshchannel.Certificate{
+			Username: "root",
+			Password: "root",
+		},
+		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
+		fmt.Sprintf("/setup_iptables.sh %s", redirectPorts))
+
+	if err != nil {
+		log.Error().Msgf("Setup iptables failed, error: %s", err)
+	}
+
+	log.Debug().Msgf("Run setup iptables result: %s", res)
+	return err
+}
+
+func getListenedPorts(ssh sshchannel.Channel, localSSHPort int) (map[string]struct{}, error) {
+	result, err := ssh.RunScript(
+		&sshchannel.Certificate{
+			Username: "root",
+			Password: "root",
+		},
+		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
+		`netstat -tuln | grep -E '^(tcp|udp|tcp6)' |grep LISTEN |awk '{print $4}' | awk -F: '{printf("%s\n", $NF)}'`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debug().Msgf("Run get listened ports result: %s", result)
+	var listenedPorts = make(map[string]struct{})
+	// The result should be a string like
+	// 38059
+	// 22
+	parts := strings.Split(result, "\n")
+	for i := range parts {
+		if len(parts[i]) > 0 {
+			listenedPorts[parts[i]] = struct{}{}
+		}
+	}
+
+	return listenedPorts, nil
 }
 
 func exposeLocalPorts(ssh sshchannel.Channel, exposePorts string, localSSHPort int) {
@@ -38,13 +147,13 @@ func exposeLocalPorts(ssh sshchannel.Channel, exposePorts string, localSSHPort i
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
-		exposeLocalPort(&wg, ssh, exposePort, localSSHPort)
+		localPort, remotePort := getPortMapping(exposePort)
+		exposeLocalPort(&wg, ssh, localPort, remotePort, localSSHPort)
 	}
 	wg.Wait()
 }
 
-func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, exposePort string, localSSHPort int) {
-	localPort, remotePort := getPortMapping(exposePort)
+func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remotePort string, localSSHPort int) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Debug().Msgf("Exposing remote pod:%s to local port localhost:%s", remotePort, localPort)
@@ -54,7 +163,7 @@ func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, exposePort stri
 				Password: "root",
 			},
 			fmt.Sprintf("127.0.0.1:%d", localSSHPort),
-			fmt.Sprintf("0.0.0.0:%s", remotePort),
+			fmt.Sprintf("0.0.0.0:%s", fmt.Sprintf("%s", remotePort)),
 			fmt.Sprintf("127.0.0.1:%s", localPort),
 		)
 		if err != nil {
