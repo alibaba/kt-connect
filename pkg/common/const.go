@@ -1,24 +1,28 @@
 package common
 
 const (
-	EnvVarLocalDomains  = "LOCAL_DOMAIN"
-	ClientTunIP         = "CLIENT_TUN_IP"
-	ServerTunIP         = "SERVER_TUN_IP"
-	TunMaskLength       = "TUN_MASK_LEN"
-	ControlBy           = "control-by"
-	KubernetesTool      = "kt"
-	ComponentConnect    = "connect"
-	ComponentExchange   = "exchange"
-	ComponentMesh       = "mesh"
-	ComponentProvide    = "provide"
-	ConnectMethodVpn    = "vpn"
-	ConnectMethodTun    = "tun"
-	ConnectMethodSocks  = "socks"
-	ConnectMethodSocks5 = "socks5"
-	PostfixRsaKey       = "_id_rsa"
-	YyyyMmDdHhMmSs      = "2006-01-02 15:04:05"
-	SshPort             = 22
-	Socks4Port          = 1080
+	EnvVarLocalDomains      = "LOCAL_DOMAIN"
+	ClientTunIP             = "CLIENT_TUN_IP"
+	ServerTunIP             = "SERVER_TUN_IP"
+	TunMaskLength           = "TUN_MASK_LEN"
+	ControlBy               = "control-by"
+	KubernetesTool          = "kt"
+	ComponentConnect        = "connect"
+	ComponentExchange       = "exchange"
+	ComponentMesh           = "mesh"
+	ComponentProvide        = "provide"
+	ConnectMethodVpn        = "vpn"
+	ConnectMethodTun        = "tun"
+	ConnectMethodSocks      = "socks"
+	ConnectMethodSocks5     = "socks5"
+	ExchangeMethodScale     = "scale"
+	ExchangeMethodEphemeral = "ephemeral"
+	MeshMethodAuto          = "auto"
+	MeshMethodManual        = "manual"
+	PostfixRsaKey           = "_id_rsa"
+	YyyyMmDdHhMmSs          = "2006-01-02 15:04:05"
+	SshPort                 = 22
+	Socks4Port              = 1080
 
 	// KTVersion label used for fetch shadow mark in UI
 	KTVersion = "kt-version"

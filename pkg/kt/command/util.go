@@ -25,7 +25,6 @@ func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.Da
 	return []cli.Command{
 		newConnectCommand(kt, options, action),
 		newExchangeCommand(kt, options, action),
-		newExchangePodCommand(kt, options, action),
 		newMeshCommand(kt, options, action),
 		newProvideCommand(kt, options, action),
 		newCleanCommand(kt, options, action),

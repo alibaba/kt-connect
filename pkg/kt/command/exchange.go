@@ -14,8 +14,10 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	appV1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 	"os"
 	"strings"
+	"time"
 )
 
 // newExchangeCommand return new exchange command
@@ -31,9 +33,14 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			},
 			urfave.StringFlag{
 				Name:        "method",
-				Value:       "auto",
-				Usage:       "Exchange method 'auto' or 'manual'",
+				Value:       "scale",
+				Usage:       "Exchange method 'scale' or 'ephemeral'",
 				Destination: &options.ExchangeOptions.Method,
+			},
+			urfave.StringFlag{
+				Name:        "label",
+				Usage:       "(ephemeral mode only) Label of the pod, e.g. app=test,version=1",
+				Destination: &options.ExchangePodOptions.Label,
 			},
 		},
 		Action: func(c *urfave.Context) error {
@@ -46,12 +53,10 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			deploymentToExchange := c.Args().First()
 			expose := options.ExchangeOptions.Expose
 
-			if len(deploymentToExchange) == 0 {
-				return errors.New("name of deployment to exchange is required")
-			}
 			if len(expose) == 0 {
 				return errors.New("--expose is required")
 			}
+
 			return action.Exchange(deploymentToExchange, cli, options)
 		},
 	}
@@ -66,8 +71,24 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 	}
 	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
 
-	ch := SetUpCloseHandler(cli, options, common.ComponentExchange)
+	method := options.ExchangeOptions.Method
+	if method == common.ExchangeMethodScale {
+		if len(deploymentName) == 0 {
+			return errors.New("name of deployment to exchange is required")
+		}
+		return exchangeByScale(deploymentName, cli, options)
+	} else if method == common.ExchangeMethodEphemeral {
+		if len(deploymentName) == 0 && len(options.ExchangePodOptions.Label) == 0 {
+			return errors.New("name of pod or label of the pod to exchange is required")
+		}
+		return exchangeByEphemeralContainer(deploymentName, cli, options)
+	} else {
+		return fmt.Errorf("invalid exchange method \"%s\"", method)
+	}
+}
 
+func exchangeByScale(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+	ch := SetUpCloseHandler(cli, options, common.ComponentExchange)
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
@@ -104,6 +125,93 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 
 	shadow := connect.Create(options)
 	if err = shadow.Inbound(options.ExchangeOptions.Expose, podName, podIP, credential); err != nil {
+		return err
+	}
+
+	// watch background process, clean the workspace and exit if background process occur exception
+	go func() {
+		<-process.Interrupt()
+		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
+		CleanupWorkspace(cli, options)
+		os.Exit(0)
+	}()
+	s := <-ch
+	log.Info().Msgf("Terminal signal is %s", s)
+
+	return nil
+}
+
+func exchangeByEphemeralContainer(podName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23. It can NOT work with istio now.")
+	ch := SetUpCloseHandler(cli, options, common.ComponentExchange)
+	kubernetes, err := cli.Kubernetes()
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+
+	var pod *coreV1.Pod
+	if podName != "" {
+		pod, err = kubernetes.Pod(ctx, podName, options.Namespace)
+		if err != nil {
+			return err
+		}
+	} else {
+		pods, err := kubernetes.Pods(ctx, options.ExchangePodOptions.Label, options.Namespace)
+		if err != nil {
+			return err
+		}
+
+		for i := range pods.Items {
+			pod = &pods.Items[i]
+			if pod.Status.Phase != coreV1.PodRunning {
+				log.Info().Msgf("Pod %s phase is %s", pod.Name, &pod.Status.Phase)
+			} else {
+				break
+			}
+		}
+		if pod.Status.Phase != coreV1.PodRunning {
+			return fmt.Errorf("got 0 running pod for label: %s", options.ExchangePodOptions.Label)
+		}
+		log.Info().Msgf("Exchange with pod: %s", pod.Name)
+		podName = pod.Name
+	}
+
+	containerName := "kt-" + strings.ToLower(util.RandomString(5))
+
+	envs := make(map[string]string)
+	sshcm, err := kubernetes.AddEphemeralContainer(ctx, containerName, pod.Name, options, envs)
+	if err != nil {
+		return err
+	}
+
+breakLoop:
+	for i := 0; i < 100; i++ {
+		log.Info().Msgf("Waiting for ephemeral container: %s be ready", containerName)
+		pod, err := kubernetes.Pod(ctx, pod.Name, options.Namespace)
+		if err != nil {
+			return err
+		}
+		cStats := pod.Status.EphemeralContainerStatuses
+		for i := range cStats {
+			if cStats[i].Name == containerName {
+				if cStats[i].State.Running != nil {
+					break breakLoop
+				} else if cStats[i].State.Terminated != nil {
+					log.Error().Msgf("Ephemeral container: %s is terminated, code: %s", containerName, cStats[i].State.Terminated.ExitCode)
+				}
+			}
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	// record data
+	options.RuntimeOptions.PodName = pod.Name
+	options.RuntimeOptions.SSHCM = sshcm
+
+	shadow := connect.Create(options)
+	if err = shadow.Inbound(options.ExchangePodOptions.Expose, podName, pod.Status.PodIP, nil); err != nil {
 		return err
 	}
 

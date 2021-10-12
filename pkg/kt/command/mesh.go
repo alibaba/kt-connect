@@ -35,6 +35,12 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 				Usage:       "specify the version of mesh service, e.g. '0.0.1'",
 				Destination: &options.MeshOptions.Version,
 			},
+			urfave.StringFlag{
+				Name:        "method",
+				Value:       "auto",
+				Usage:       "Mesh method 'auto' or 'manual'",
+				Destination: &options.MeshOptions.Method,
+			},
 		},
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
@@ -53,6 +59,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			if len(expose) == 0 {
 				return errors.New("--expose is required")
 			}
+
 			return action.Mesh(deploymentToMesh, cli, options)
 		},
 	}

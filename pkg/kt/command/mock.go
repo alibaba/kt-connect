@@ -92,17 +92,17 @@ func (mr *MockActionInterfaceMockRecorder) Exchange(deploymentName, cli, options
 }
 
 // ExchangePod mocks base method.
-func (m *MockActionInterface) ExchangePod(podName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) ExchangePod(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ExchangePod", podName, cli, options)
+	ret := m.ctrl.Call(m, "ExchangePod", deploymentName, cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ExchangePod indicates an expected call of ExchangePod.
-func (mr *MockActionInterfaceMockRecorder) ExchangePod(podName, cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) ExchangePod(deploymentName, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExchangePod", reflect.TypeOf((*MockActionInterface)(nil).ExchangePod), podName, cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExchangePod", reflect.TypeOf((*MockActionInterface)(nil).ExchangePod), deploymentName, cli, options)
 }
 
 // Mesh mocks base method.

@@ -107,9 +107,9 @@ func (k *Kubernetes) Pods(ctx context.Context, label, namespace string) (*coreV1
 	})
 }
 
-func (k *Kubernetes) DeletePod(ctx context.Context, podName, namespace string ) (err error) {
+func (k *Kubernetes) DeletePod(ctx context.Context, podName, namespace string) (err error) {
 	k.Clientset.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
-	if errors2.IsNotFound(err){
+	if errors2.IsNotFound(err) {
 		return nil
 	}
 	return err
@@ -333,7 +333,7 @@ func (k *Kubernetes) createAndGetPod(ctx context.Context, metaAndSpec *PodMetaAn
 	if err != nil {
 		return nil, err
 	}
-	log.Info().Msgf("Deploy shadow deployment %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
+	log.Info().Msgf("Deploy shadow pod %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
 
 	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
 }

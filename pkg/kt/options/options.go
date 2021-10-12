@@ -39,18 +39,20 @@ type ConnectOptions struct {
 
 // ExchangeOptions ...
 type ExchangeOptions struct {
-	Expose string
 	Method string
+	Expose string
+	Label  string
 }
 
 // ExchangePodOptions ...
 type ExchangePodOptions struct {
-	Label string
+	Label  string
 	Expose string
 }
 
 // MeshOptions ...
 type MeshOptions struct {
+	Method  string
 	Expose  string
 	Version string
 }
@@ -86,7 +88,7 @@ type RuntimeOptions struct {
 	ProxyConfig registry.ProxyConfig
 	// RestConfig kubectl config
 	RestConfig *rest.Config
-	PodName string
+	PodName    string
 }
 
 type dashboardOptions struct {
@@ -96,26 +98,26 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	Version           string
-	KubeConfig        string
-	Namespace         string
-	ServiceAccount    string
-	Debug             bool
-	Image             string
-	ImagePullSecret   string
-	Labels            string
-	KubeOptions       cli.StringSlice
-	RuntimeOptions    *RuntimeOptions
-	ProvideOptions    *ProvideOptions
-	ConnectOptions    *ConnectOptions
-	ExchangeOptions   *ExchangeOptions
+	Version            string
+	KubeConfig         string
+	Namespace          string
+	ServiceAccount     string
+	Debug              bool
+	Image              string
+	ImagePullSecret    string
+	Labels             string
+	KubeOptions        cli.StringSlice
+	RuntimeOptions     *RuntimeOptions
+	ProvideOptions     *ProvideOptions
+	ConnectOptions     *ConnectOptions
+	ExchangeOptions    *ExchangeOptions
 	ExchangePodOptions *ExchangePodOptions
-	MeshOptions       *MeshOptions
-	CleanOptions      *CleanOptions
-	DashboardOptions  *dashboardOptions
-	WaitTime          int
-	ForceUpdateShadow bool
-	UseKubectl        bool
+	MeshOptions        *MeshOptions
+	CleanOptions       *CleanOptions
+	DashboardOptions   *dashboardOptions
+	WaitTime           int
+	ForceUpdateShadow  bool
+	UseKubectl         bool
 }
 
 // NewDaemonOptions return new cli default options
