@@ -18,7 +18,7 @@ func CreateFromClientSet(clientSet kubernetes.Interface) (kubernetes KubernetesI
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
-	RemoveDeployment(ctx context.Context, name, namespace string) (err error)
+	RemovePod(ctx context.Context, name, namespace string) (err error)
 	RemoveConfigMap(ctx context.Context, name, namespace string) (err error)
 	RemoveService(ctx context.Context, name, namespace string) (err error)
 	Deployment(ctx context.Context, name, namespace string) (deployment *appV1.Deployment, err error)
@@ -29,14 +29,14 @@ type KubernetesInterface interface {
 	ServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
 	ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error)
 	GetOrCreateShadow(ctx context.Context, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
-	GetAllExistingShadowDeployments(ctx context.Context, namespace string) (list []appV1.Deployment, err error)
+	GetAllExistingShadowPods(ctx context.Context, namespace string) (list []coreV1.Pod, err error)
 	CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error)
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
 	UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error)
 	DecreaseRef(ctx context.Context, namespace string, deployment string) (cleanup bool, err error)
 	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
-	DeletePod(ctx context.Context,  podName, namespace string) (err error)
+	DeletePod(ctx context.Context, podName, namespace string) (err error)
 }
 
 // Kubernetes implements KubernetesInterface

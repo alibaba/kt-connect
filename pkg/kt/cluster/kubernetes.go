@@ -48,11 +48,11 @@ func (k *Kubernetes) RemoveService(ctx context.Context, name, namespace string) 
 	return client.Delete(ctx, name, metav1.DeleteOptions{})
 }
 
-// RemoveDeployment remove deployment instances
-func (k *Kubernetes) RemoveDeployment(ctx context.Context, name, namespace string) (err error) {
-	deploymentsClient := k.Clientset.AppsV1().Deployments(namespace)
+// RemovePod remove pod instances
+func (k *Kubernetes) RemovePod(ctx context.Context, name, namespace string) (err error) {
+	podsClient := k.Clientset.CoreV1().Pods(namespace)
 	deletePolicy := metav1.DeletePropagationBackground
-	return deploymentsClient.Delete(ctx, name, metav1.DeleteOptions{
+	return podsClient.Delete(ctx, name, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 }
@@ -233,9 +233,9 @@ func (k *Kubernetes) createShadow(ctx context.Context, metaAndSpec *PodMetaAndSp
 	return
 }
 
-// GetAllExistingShadowDeployments fetch all shadow deployments
-func (k *Kubernetes) GetAllExistingShadowDeployments(ctx context.Context, namespace string) ([]appv1.Deployment, error) {
-	list, err := k.Clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{
+// GetAllExistingShadowPods fetch all shadow pods
+func (k *Kubernetes) GetAllExistingShadowPods(ctx context.Context, namespace string) ([]coreV1.Pod, error) {
+	list, err := k.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: k8sLabels.Set(metav1.LabelSelector{
 			MatchLabels: map[string]string{common.ControlBy: common.KubernetesTool},
 		}.MatchLabels).String(),
@@ -488,12 +488,12 @@ func decreaseOrRemove(ctx context.Context, k *Kubernetes, pod *coreV1.Pod) (clea
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
-		err = k.RemoveDeployment(ctx, pod.GetObjectMeta().GetName(), pod.GetObjectMeta().GetNamespace())
+		err = k.RemovePod(ctx, pod.GetObjectMeta().GetName(), pod.GetObjectMeta().GetNamespace())
 		if err != nil {
 			return
 		}
 	} else {
-		err2 := decreaseDeploymentRef(ctx, refCount, k, pod)
+		err2 := decreasePodRef(ctx, refCount, k, pod)
 		if err2 != nil {
 			err = err2
 			return
@@ -502,7 +502,7 @@ func decreaseOrRemove(ctx context.Context, k *Kubernetes, pod *coreV1.Pod) (clea
 	return
 }
 
-func decreaseDeploymentRef(ctx context.Context, refCount string, k *Kubernetes, pod *coreV1.Pod) (err error) {
+func decreasePodRef(ctx context.Context, refCount string, k *Kubernetes, pod *coreV1.Pod) (err error) {
 	log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
 	count, err := decreaseRef(refCount)
 	if err != nil {

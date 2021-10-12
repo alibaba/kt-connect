@@ -92,7 +92,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 	}
 
-	kubernetes, err := cli.Kubernetes()
+	k8s, err := cli.Kubernetes()
 	if err != nil {
 		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
 		return
@@ -100,7 +100,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 	ctx := context.Background()
 	if len(options.RuntimeOptions.Origin) > 0 {
 		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
-		err := kubernetes.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
+		err := k8s.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().
 				Str("namespace", options.Namespace).
@@ -110,11 +110,11 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 
 	if len(options.RuntimeOptions.PodName) > 0 {
 		log.Info().Msgf("Delete pod: %s", options.RuntimeOptions.PodName)
-		err = kubernetes.DeletePod(ctx, options.RuntimeOptions.PodName, options.Namespace)
+		err = k8s.DeletePod(ctx, options.RuntimeOptions.PodName, options.Namespace)
 	}
 
-	cleanDeploymentAndConfigMap(ctx, options, kubernetes)
-	cleanService(ctx, options, kubernetes)
+	cleanDeploymentAndConfigMap(ctx, options, k8s)
+	cleanService(ctx, options, k8s)
 }
 
 func cleanLocalFiles(options *options.DaemonOptions) {
@@ -146,18 +146,18 @@ func cleanService(ctx context.Context, options *options.DaemonOptions, kubernete
 	}
 }
 
-func cleanDeploymentAndConfigMap(ctx context.Context, options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
+func cleanDeploymentAndConfigMap(ctx context.Context, options *options.DaemonOptions, k8s cluster.KubernetesInterface) {
 	shouldDelWithShared := false
 	var err error
 	if options.RuntimeOptions.Shadow != "" {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(ctx, kubernetes, options)
+			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(ctx, k8s, options)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete shared deployment %s failed", options.RuntimeOptions.Shadow)
 			}
 		} else {
 			log.Info().Msgf("Cleaning shadow %s", options.RuntimeOptions.Shadow)
-			err = kubernetes.RemoveDeployment(ctx, options.RuntimeOptions.Shadow, options.Namespace)
+			err = k8s.RemovePod(ctx, options.RuntimeOptions.Shadow, options.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete deployment %s failed", options.RuntimeOptions.Shadow)
 			}
@@ -167,7 +167,7 @@ func cleanDeploymentAndConfigMap(ctx context.Context, options *options.DaemonOpt
 	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil {
 		if shouldDelWithShared || !options.ConnectOptions.ShareShadow {
 			log.Info().Msgf("Cleaning config map %s", options.RuntimeOptions.SSHCM)
-			err = kubernetes.RemoveConfigMap(ctx, options.RuntimeOptions.SSHCM, options.Namespace)
+			err = k8s.RemoveConfigMap(ctx, options.RuntimeOptions.SSHCM, options.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete configmap %s failed", options.RuntimeOptions.SSHCM)
 			}
