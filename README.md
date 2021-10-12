@@ -24,13 +24,13 @@ manage and integrate with your Kubernetes dev environment more efficiently.
 
 ## QuickStart
 
-You can download and install the `ktctl` from [Downloads And Install](en-us/downloads)
+You can download and install the `ktctl` from [Downloads And Install](docs/en-us/downloads.md)
 
-Read the [Quick Start Guide](en-us/quickstart) for more about this tool.
+Read the [Quick Start Guide](docs/en-us/quickstart.md) for more about this tool.
 
 ## Ask For Help
 
 Please contact us with DingTalk（钉钉）:
 
-<img src="https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/media/dingtalk.png" width="50%"></img>
+<img src="https://img.alicdn.com/imgextra/i4/O1CN01sTW3D61NzAFgUCNqz_!!6000000001640-0-tps-573-657.jpg" width="50%"></img>
 

@@ -91,7 +91,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 
 func TestKubernetes_ClusterCidrs(t *testing.T) {
 	type args struct {
-		podCIDR string
+		podCIDR []string
 	}
 	tests := []struct {
 		name      string
@@ -103,7 +103,9 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 		{
 			name: "shouldGetClusterCidr",
 			args: args{
-				podCIDR: "172.168.0.0/24",
+				podCIDR: []string{
+					"172.168.0.0/24",
+				},
 			},
 			objs: []runtime.Object{
 				buildNode("default", "node1", ""),
@@ -125,7 +127,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 			ops := &options.ConnectOptions{
-				CIDR: tt.args.podCIDR,
+				CIDRs: tt.args.podCIDR,
 			}
 			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default", ops)
 			if (err != nil) != tt.wantErr {

@@ -39,9 +39,9 @@ tomcat   ClusterIP   172.16.255.111   <none>        8080/TCP   34s
 
 #### ** MacOS/Linux **
 
-> 在MacOS/Linux环境下默认采用`vpn`模式，该模式采用[sshuttle](https://github.com/sshuttle/sshuttle)工具建立本地与集群的虚拟网络通道，请确保本地具有Python 3.6+运行环境，并通过`pip3 install sshuttle`命令预先安装此工具。
+> 在MacOS/Linux环境下默认采用`vpn`模式，该模式采用[sshuttle](https://github.com/sshuttle/sshuttle)工具建立本地与集群的虚拟网络通道，请确保本地具有Python 3.6+运行环境。
 
-使用`connect`命令建立本地到集群的VPN网络，注意该命令需要管理员权限，普通用户需加`sudo`执行：
+使用`connect`命令建立本地到集群的"类VPN"网络隧道，注意该命令需要管理员权限，普通用户需加`sudo`执行：
 
 ```bash
 $ sudo ktctl connect
@@ -70,42 +70,46 @@ kt-connect demo v1
 
 #### ** Windows **
 
-> 在Windows环境下默认采用`socks`模式
+> 在Windows环境下默认采用`socks`模式，该模式本质是在本地创建可访问集群网络的流量代理服务
 
-使用`connect`命令建立本地到集群的Socks代理，注意该命令需要当前用户具有管理员权限：
+使用`connect`命令建立本地到集群的Socks代理：
 
 ```bash
-$ ktctl connect                     
+> ktctl connect                     
 00:00AM INF KtConnect start at <PID>
 ... ...
 ```
 
-现在本地已经能够直接访问集群资源了。
-
-由于环境变量和系统代理的修改对已运行的进程无效，在Windows环境中，`ktctl connect`仅对该命令执行之后新创建的进程自动生效。
-
-打开一个新的浏览器或控制台（新窗口，而不是新Tab页），然后在浏览器输入以下地址或使用`curl`命令来验证：
+打开一个新的控制台窗口，根据`ktctl connect`命令输出的提示，设置`http_proxy`环境变量。如使用CMD时，命令如下：
 
 ```bash
-$ curl http://10.51.0.162:8080    # 在本地直接访问PodIP
+> set http_proxy=socks://127.0.0.1:2223    # 若使用PowerShell，则提示命令应为 $env:http_proxy="socks://127.0.0.1:2223"
+```
+
+然后使用`curl`命令来验证：
+
+```bash
+> curl http://10.51.0.162:8080    # 在本地直接访问PodIP
 kt-connect demo v1
 
-$ curl http://172.21.6.39:8080    # 在本地访问ClusterIP
+> curl http://172.21.6.39:8080    # 在本地访问ClusterIP
 kt-connect demo v1
 
-$ curl http://tomcat:8080         # 使用<service>作为域名访问服务
+> curl http://tomcat:8080         # 使用<service>作为域名访问服务
 kt-connect demo v1
 
-$ curl http://tomcat.default:8080     # 使用<servicename>.<namespace>域名访问服务
+> curl http://tomcat.default:8080     # 使用<servicename>.<namespace>域名访问服务
 kt-connect demo v1
 
-$ curl http://tomcat.default.svc.cluster.local:8080    # 使用集群内完整域名访问服务
+> curl http://tomcat.default.svc.cluster.local:8080    # 使用集群内完整域名访问服务
 kt-connect demo v1
 ```
 
-> 注意 1：在**PowerShell**中`curl`与内置命令重名，需用`curl.exe`替代上述命令中的`curl`
+也可以在浏览器中进行访问，只需将浏览器的代理设置为`socks=127.0.0.1:2223`，详见[Windows支持](zh-cn/guide/windows-support.md)文档。
+
+> 注意 1：对于非管理员用户，域名访问功能不可用，仅支持访问Pod IP和服务的Cluster IP
 >
-> 注意 2：KtConnect的`socks`模式本质是系统全局代理，但在Windows下并非所有软件都会遵循系统代理配置。譬如基于Spring的Java应用开发可参考[在IDEA中联调](zh-cn/guide/how-to-use-in-idea.md)文档
+> 注意 2：在**PowerShell**中`curl`与内置命令重名，需用`curl.exe`替代上述命令中的`curl`
 
 <!-- tabs:end -->
 

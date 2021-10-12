@@ -27,7 +27,7 @@ func forwardSSHTunnelToLocal(cli portforward.CliInterface, kubectlCli kubectl.Cl
 
 func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubectl.CliInterface,
 	options *options.DaemonOptions, podName string) (err error) {
-	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions.SocksPort)
+	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions)
 	if options.UseKubectl {
 		err = portForwardViaKubectl(kubectlCli, options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
 	} else {
@@ -38,6 +38,13 @@ func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubect
 
 func portForwardViaKubectl(kubectlCli kubectl.CliInterface, options *options.DaemonOptions, podName string, remotePort, localPort int) error {
 	command := kubectlCli.PortForward(options.Namespace, podName, remotePort, localPort)
+
+	// If localSSHPort is in use by another process, return an error.
+	ready := util.WaitPortBeReady(1, localPort)
+	if ready {
+		return fmt.Errorf("127.0.0.1:%d already in use", localPort)
+	}
+
 	err := exec.BackgroundRun(command, fmt.Sprintf("forward %d to localhost:%d", remotePort, localPort))
 	if err == nil {
 		if !util.WaitPortBeReady(options.WaitTime, localPort) {
@@ -55,7 +62,7 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 			options.ConnectOptions.SocksPort)), 0644)
 	}
 
-	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions.SocksPort)
+	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions)
 	return ssh.StartSocks5Proxy(
 		&sshchannel.Certificate{
 			Username: "root",
@@ -66,30 +73,29 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 	)
 }
 
-func showSetupSocksMessage(protocol string, port int) {
+func showSetupSocksMessage(protocol string, connectOptions *options.ConnectOptions) {
+	port := connectOptions.SocksPort
 	log.Info().Msgf("Starting up %s proxy ...", protocol)
-	if util.IsWindows() && protocol == common.ConnectMethodSocks {
-		// socks method in windows will auto setup global proxy config
-		return
-	}
-	log.Info().Msgf("--------------------------------------------------------------")
-	if util.IsWindows() {
-		if util.IsCmd() {
-			log.Info().Msgf("Please setup proxy config by: set http_proxy=%s://127.0.0.1:%d", protocol, port)
+	if !connectOptions.UseGlobalProxy {
+		log.Info().Msgf("--------------------------------------------------------------")
+		if util.IsWindows() {
+			if util.IsCmd() {
+				log.Info().Msgf("Please setup proxy config by: set http_proxy=%s://127.0.0.1:%d", protocol, port)
+			} else {
+				log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"%s://127.0.0.1:%d\"", protocol, port)
+			}
 		} else {
-			log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"%s://127.0.0.1:%d\"", protocol, port)
+			log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
 		}
-	} else {
-		log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
+		log.Info().Msgf("--------------------------------------------------------------")
 	}
-	log.Info().Msgf("--------------------------------------------------------------")
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {
 	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
 		Ctx: rootCtx,
 		Cmd: cli.Sshuttle().Connect(request.RemoteSSHHost, request.RemoteSSHPKPath, request.RemoteSSHPort,
-			request.RemoteDNSServerAddress, request.DisableDNS, request.CustomCRID, request.Debug),
+			request.RemoteDNSServerAddress, request.DisableDNS, request.CustomCIDR, request.Debug),
 		Name: "vpn(sshuttle)",
 		Stop: request.Stop,
 	})

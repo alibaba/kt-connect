@@ -52,7 +52,6 @@ type ConnectOptions struct {
 	Cidr       string
 	Dump2hosts string
 	Port       int
-	Global     bool
 	TunName    string
 	TunCidr    string
 }

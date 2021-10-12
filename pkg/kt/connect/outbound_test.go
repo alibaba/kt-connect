@@ -24,7 +24,7 @@ func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 	execCli.EXPECT().SshChannel().AnyTimes().Return(sshChannel)
 	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
-	socksOptions := options.NewDaemonOptions()
+	socksOptions := options.NewDaemonOptions("test")
 	socksOptions.ConnectOptions.Method = common.ConnectMethodSocks5
 	socksOptions.WaitTime = 0
 
@@ -58,7 +58,7 @@ func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
 	execCli.EXPECT().SshChannel().AnyTimes().Return(sshChannel)
 	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
-	vpnOptions := options.NewDaemonOptions()
+	vpnOptions := options.NewDaemonOptions("test")
 	vpnOptions.WaitTime = 0
 
 	args := OutboundArgs{

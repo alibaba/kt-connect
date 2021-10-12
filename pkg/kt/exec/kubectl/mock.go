@@ -75,17 +75,3 @@ func (mr *MockCliInterfaceMockRecorder) PortForwardDashboardToLocal(port interfa
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PortForwardDashboardToLocal", reflect.TypeOf((*MockCliInterface)(nil).PortForwardDashboardToLocal), port)
 }
-
-// Version mocks base method.
-func (m *MockCliInterface) Version() *exec.Cmd {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Version")
-	ret0, _ := ret[0].(*exec.Cmd)
-	return ret0
-}
-
-// Version indicates an expected call of Version.
-func (mr *MockCliInterfaceMockRecorder) Version() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockCliInterface)(nil).Version))
-}

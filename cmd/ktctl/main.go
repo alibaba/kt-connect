@@ -25,7 +25,7 @@ func init() {
 }
 
 func main() {
-	options := opt.NewDaemonOptions()
+	options := opt.NewDaemonOptions(version)
 
 	app := cli.NewApp()
 	app.Name = "KtConnect"

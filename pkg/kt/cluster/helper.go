@@ -28,11 +28,11 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDR string) (cidrs []string, err error) {
+func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs []string) (cidrs []string, err error) {
 	cidrs = []string{}
 
-	if len(podCIDR) != 0 {
-		cidrs = append(cidrs, podCIDR)
+	if len(podCIDRs) > 0 {
+		cidrs = append(cidrs, podCIDRs...)
 		return
 	}
 

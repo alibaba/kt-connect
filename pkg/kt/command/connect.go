@@ -55,7 +55,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("KtConnect start at %d", os.Getpid())
+	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
 
 	ch := SetUpCloseHandler(cli, options, common.ComponentConnect)
 	if err = connectToCluster(context.TODO(), cli, options); err != nil {
@@ -97,7 +97,7 @@ func connectToCluster(ctx context.Context, cli kt.CliInterface, options *options
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodVpn {
 		checkSshuttleInstalled(cli.Exec().Sshuttle())
-	} else if options.ConnectOptions.Method == common.ConnectMethodSocks {
+	} else if options.ConnectOptions.UseGlobalProxy {
 		setupGlobalProxy(options)
 	}
 
@@ -124,11 +124,14 @@ func checkSshuttleInstalled(cli sshuttle.CliInterface) {
 }
 
 func setupGlobalProxy(options *options.DaemonOptions) {
-	err := registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
-	if err != nil {
-		log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
+	var err error
+	if options.ConnectOptions.Method == common.ConnectMethodSocks {
+		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+		if err != nil {
+			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
+		}
 	}
-	err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
+	err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.Method, options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 	if err != nil {
 		log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
 	}

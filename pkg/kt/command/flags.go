@@ -77,11 +77,6 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 // ConnectActionFlag ...
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
-		cli.BoolFlag{
-			Name:        "global",
-			Usage:       "With cluster scope",
-			Destination: &options.ConnectOptions.Global,
-		},
 		cli.StringFlag{
 			Name:        "method",
 			Value:       methodDefaultValue(),
@@ -105,10 +100,10 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Disable Cluster DNS",
 			Destination: &options.ConnectOptions.DisableDNS,
 		},
-		cli.StringFlag{
-			Name:        "cidr",
-			Usage:       "Custom CIDR, e.g. '172.2.0.0/16'",
-			Destination: &options.ConnectOptions.CIDR,
+		cli.StringSliceFlag{
+			Name:  "cidr",
+			Usage: "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
+			Value: &options.ConnectOptions.CIDRs,
 		},
 		cli.StringSliceFlag{
 			Name:  "dump2hosts",
@@ -140,8 +135,13 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "jvmrc",
-			Usage:       "Generate .jvmrc file to specified folder",
+			Usage:       "(Windows only) Generate .jvmrc file to specified folder",
 			Destination: &options.ConnectOptions.JvmrcDir,
+		},
+		cli.BoolFlag{
+			Name:        "setupGlobalProxy",
+			Usage:       "(Windows only) Auto setup HTTP_PROXY variable and system global proxy configuration",
+			Destination: &options.ConnectOptions.UseGlobalProxy,
 		},
 	}
 }

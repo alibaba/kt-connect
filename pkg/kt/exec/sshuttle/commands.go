@@ -1,7 +1,6 @@
 package sshuttle
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -43,8 +42,8 @@ func (s *Cli) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServ
 		stdoutPipe, _ := cmd.StdoutPipe()
 		stderrPipe, _ := cmd.StderrPipe()
 		if stdoutPipe != nil && stderrPipe != nil {
-			go io.Copy(bufio.NewWriter(nil), stdoutPipe)
-			go io.Copy(bufio.NewWriter(nil), stderrPipe)
+			go io.Copy(io.Discard, stdoutPipe)
+			go io.Copy(io.Discard, stderrPipe)
 		}
 	}
 	return cmd

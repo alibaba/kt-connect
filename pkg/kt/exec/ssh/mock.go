@@ -47,17 +47,3 @@ func (mr *MockCliInterfaceMockRecorder) TunnelToRemote(localTun, remoteHost, pri
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TunnelToRemote", reflect.TypeOf((*MockCliInterface)(nil).TunnelToRemote), localTun, remoteHost, privateKeyPath, remoteSSHPort)
 }
-
-// Version mocks base method.
-func (m *MockCliInterface) Version() *exec.Cmd {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Version")
-	ret0, _ := ret[0].(*exec.Cmd)
-	return ret0
-}
-
-// Version indicates an expected call of Version.
-func (mr *MockCliInterfaceMockRecorder) Version() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockCliInterface)(nil).Version))
-}

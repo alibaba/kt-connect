@@ -62,7 +62,6 @@ func NewConnectCommand(streams genericclioptions.IOStreams, version string) *cob
 	// method
 	cmd.Flags().StringVarP(&opt.Method, "method", "m", "", "connect provider vpn/socks/socks5/tun(alpha)")
 	cmd.Flags().IntVarP(&opt.Port, "port", "p", 2222, "Local SSH Proxy port ")
-	cmd.Flags().BoolVarP(&opt.Global, "global", "g", false, "with cluster scope")
 
 	// vpn
 	cmd.Flags().BoolVarP(&opt.DisableDNS, "disableDNS", "", false, "disable Cluster DNS")
@@ -143,9 +142,8 @@ func (o *ConnectOptions) transport() *options.DaemonOptions {
 		DisableDNS:           o.DisableDNS,
 		Method:               o.Method,
 		SocksPort:            o.Proxy,
-		CIDR:                 o.Cidr,
+		CIDRs:                strings.Split(o.Cidr, ","),
 		SSHPort:              o.Port,
-		Global:               o.Global,
 		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
 		TunName:              o.TunName,
 		TunCidr:              o.TunCidr,
