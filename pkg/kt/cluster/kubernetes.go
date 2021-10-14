@@ -172,8 +172,15 @@ func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options
 	component := labels[common.KTComponent]
 	identifier := strings.ToLower(util.RandomString(4))
 	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, identifier)
-
 	privateKeyPath := util.PrivateKeyPath(component, identifier)
+
+	// extra labels must be applied after origin labels
+	for k, v := range util.String2Map(options.WithLabels) {
+		labels[k] = v
+	}
+	for k, v := range util.String2Map(options.WithAnnotations) {
+		annotations[k] = v
+	}
 
 	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(ctx, &ResourceMeta{

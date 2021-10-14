@@ -149,10 +149,6 @@ func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, opti
 			labels[k] = v
 		}
 	}
-	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
-	}
 	return labels
 }
 

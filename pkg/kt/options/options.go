@@ -106,7 +106,8 @@ type DaemonOptions struct {
 	Debug              bool
 	Image              string
 	ImagePullSecret    string
-	Labels             string
+	WithLabels         string
+	WithAnnotations    string
 	KubeOptions        cli.StringSlice
 	RuntimeOptions     *RuntimeOptions
 	ProvideOptions     *ProvideOptions

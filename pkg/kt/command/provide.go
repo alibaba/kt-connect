@@ -98,11 +98,6 @@ func provide(ctx context.Context, serviceName string, cli kt.CliInterface, optio
 		common.KTConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
-	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
-	}
-
 	return exposeLocalService(ctx, serviceName, deploymentName, labels, annotations, options, kubernetes, cli)
 }
 

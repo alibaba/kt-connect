@@ -84,11 +84,11 @@ type ProvideOptions struct {
 
 func (o *GlobalOptions) transportGlobalOptions() *options.DaemonOptions {
 	return &options.DaemonOptions{
-		Image:     o.Image,
-		Debug:     o.Debug,
-		Labels:    o.Labels,
-		Namespace: o.currentNs,
-		WaitTime:  o.Timeout,
+		Image:      o.Image,
+		Debug:      o.Debug,
+		WithLabels: o.Labels,
+		Namespace:  o.currentNs,
+		WaitTime:   o.Timeout,
 		RuntimeOptions: &options.RuntimeOptions{
 			UserHome:   util.UserHome,
 			AppHome:    util.KtHome,

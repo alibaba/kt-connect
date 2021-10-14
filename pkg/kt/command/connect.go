@@ -142,9 +142,10 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 	if options.ConnectOptions.ShareShadow {
 		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
 	}
-
 	annotations := make(map[string]string)
-	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(context.TODO(), workload, options, labels(workload, options), annotations, envs(options))
+
+	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(context.TODO(), workload, options,
+		getLabels(workload, options), annotations, getEnvs(options))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -181,7 +182,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 	options.RuntimeOptions.Dump2Host = true
 }
 
-func envs(options *options.DaemonOptions) map[string]string {
+func getEnvs(options *options.DaemonOptions) map[string]string {
 	envs := make(map[string]string)
 	localDomains := util.GetLocalDomains()
 	if localDomains != "" {
@@ -196,14 +197,11 @@ func envs(options *options.DaemonOptions) map[string]string {
 	return envs
 }
 
-func labels(workload string, options *options.DaemonOptions) map[string]string {
+func getLabels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentConnect,
 		common.KTName:      workload,
-	}
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
 	}
 	splits := strings.Split(workload, "-")
 	labels[common.KTVersion] = splits[len(splits)-1]

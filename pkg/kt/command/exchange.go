@@ -166,7 +166,7 @@ func exchangeByEphemeralContainer(podName string, cli kt.CliInterface, options *
 		for i := range pods.Items {
 			pod = &pods.Items[i]
 			if pod.Status.Phase != coreV1.PodRunning {
-				log.Info().Msgf("Pod %s phase is %s", pod.Name, &pod.Status.Phase)
+				log.Info().Msgf("Pod %s phase is %s", pod.Name, pod.Status.Phase)
 			} else {
 				break
 			}
@@ -199,7 +199,7 @@ breakLoop:
 				if cStats[i].State.Running != nil {
 					break breakLoop
 				} else if cStats[i].State.Terminated != nil {
-					log.Error().Msgf("Ephemeral container: %s is terminated, code: %s", containerName, cStats[i].State.Terminated.ExitCode)
+					log.Error().Msgf("Ephemeral container: %s is terminated, code: %d", containerName, cStats[i].State.Terminated.ExitCode)
 				}
 			}
 		}
@@ -245,10 +245,6 @@ func getExchangeLabels(options *options.DaemonOptions, workload string, origin *
 		for k, v := range origin.Spec.Selector.MatchLabels {
 			labels[k] = v
 		}
-	}
-	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(options.Labels) {
-		labels[k] = v
 	}
 	splits := strings.Split(workload, "-")
 	labels[common.KTVersion] = splits[len(splits)-1]
