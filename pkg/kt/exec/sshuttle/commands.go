@@ -2,6 +2,7 @@ package sshuttle
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"io"
 	"os"
@@ -24,25 +25,25 @@ func (s *Cli) Install() *exec.Cmd {
 }
 
 // Connect ssh-based vpn connect
-func (s *Cli) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
+func (s *Cli) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
 	var args []string
-	if !disableDNS {
-		args = append(args, "--dns", "--to-ns", DNSServer)
+	if !opt.DisableDNS {
+		args = append(args, "--dns", "--to-ns", req.RemoteDNSServerAddress)
 	}
 
-	if debug {
+	if req.Debug {
 		args = append(args, "--verbose")
 	}
 
-	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", privateKeyPath)
-	remoteAddr := fmt.Sprintf("root@%s:%d", remoteHost, remotePort)
-	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", remoteHost)
+	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", req.RemoteSSHPKPath)
+	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, opt.SSHPort)
+	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", req.RemoteSSHHost)
 	for _, ip := range util.GetLocalIps() {
 		args = append(args, "--exclude", ip)
 	}
-	args = append(args, cidrs...)
+	args = append(args, req.CustomCIDR...)
 	cmd := exec.Command("sshuttle", args...)
-	if !debug {
+	if !req.Debug {
 		stdoutPipe, _ := cmd.StdoutPipe()
 		stderrPipe, _ := cmd.StderrPipe()
 		if stdoutPipe != nil && stderrPipe != nil {

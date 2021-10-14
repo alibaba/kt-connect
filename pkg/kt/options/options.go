@@ -20,6 +20,7 @@ type ProvideOptions struct {
 type ConnectOptions struct {
 	Global               bool
 	DisableDNS           bool
+	DisablePodIp         bool
 	SSHPort              int
 	SocksPort            int
 	CIDRs                cli.StringSlice

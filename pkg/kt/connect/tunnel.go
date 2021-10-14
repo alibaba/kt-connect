@@ -9,6 +9,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -91,13 +92,12 @@ func showSetupSocksMessage(protocol string, connectOptions *options.ConnectOptio
 	}
 }
 
-func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, request SSHVPNRequest) (err error) {
+func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, opt *options.ConnectOptions, req *sshuttle.SSHVPNRequest) (err error) {
 	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
-		Ctx: rootCtx,
-		Cmd: cli.Sshuttle().Connect(request.RemoteSSHHost, request.RemoteSSHPKPath, request.RemoteSSHPort,
-			request.RemoteDNSServerAddress, request.DisableDNS, request.CustomCIDR, request.Debug),
+		Ctx:  rootCtx,
+		Cmd:  cli.Sshuttle().Connect(opt, req),
 		Name: "vpn(sshuttle)",
-		Stop: request.Stop,
+		Stop: req.Stop,
 	})
 	return err
 }

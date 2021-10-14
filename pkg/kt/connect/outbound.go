@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
@@ -32,12 +33,10 @@ func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, 
 	default:
 		stop, rootCtx, err = forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, s.Options.ConnectOptions.SSHPort)
 		if err == nil {
-			err = startVPNConnection(rootCtx, cli, SSHVPNRequest{
+			err = startVPNConnection(rootCtx, cli, s.Options.ConnectOptions, &sshuttle.SSHVPNRequest{
 				RemoteSSHHost:          credential.RemoteHost,
 				RemoteSSHPKPath:        credential.PrivateKeyPath,
-				RemoteSSHPort:          s.Options.ConnectOptions.SSHPort,
 				RemoteDNSServerAddress: podIP,
-				DisableDNS:             s.Options.ConnectOptions.DisableDNS,
 				CustomCIDR:             cidrs,
 				Stop:                   stop,
 				Debug:                  s.Options.Debug,

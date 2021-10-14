@@ -100,6 +100,11 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Disable Cluster DNS",
 			Destination: &options.ConnectOptions.DisableDNS,
 		},
+		cli.BoolFlag{
+			Name:        "disablePodIp",
+			Usage:       "Disable access to pod IP address",
+			Destination: &options.ConnectOptions.DisablePodIp,
+		},
 		cli.StringSliceFlag{
 			Name:  "cidr",
 			Usage: "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",

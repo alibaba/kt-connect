@@ -368,15 +368,17 @@ func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, 
 }
 
 // ClusterCidrs get cluster Cidrs
-func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error) {
+func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *options.ConnectOptions) (cidrs []string, err error) {
 	serviceList, err := fetchServiceList(ctx, k, namespace)
 	if err != nil {
 		return
 	}
 
-	cidrs, err = getPodCidrs(ctx, k.Clientset, connectOptions.CIDRs)
-	if err != nil {
-		return
+	if !opt.DisablePodIp {
+		cidrs, err = getPodCidrs(ctx, k.Clientset, opt.CIDRs)
+		if err != nil {
+			return
+		}
 	}
 
 	services := serviceList.Items
