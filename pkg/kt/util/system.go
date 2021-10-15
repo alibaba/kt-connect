@@ -112,6 +112,10 @@ func GetTimestamp() string {
 
 // GetLocalUserName get current username
 func GetLocalUserName() string {
+	sudoUser := os.Getenv("SUDO_USER")
+	if sudoUser != "" {
+		return sudoUser
+	}
 	u, err := user.Current()
 	if err != nil {
 		return ""

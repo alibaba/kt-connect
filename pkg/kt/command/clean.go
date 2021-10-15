@@ -130,11 +130,11 @@ func (action *Action) analysisShadowPod(pod coreV1.Pod, options *options.DaemonO
 }
 
 func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, kubernetes cluster.KubernetesInterface, namespace string) {
-	log.Info().Msgf("Deleting %d unavailing shadow deployments", r.NamesOfPodToDelete.Len())
+	log.Info().Msgf("Deleting %d unavailing shadow pods", r.NamesOfPodToDelete.Len())
 	for name := r.NamesOfPodToDelete.Front(); name != nil; name = name.Next() {
 		err := kubernetes.RemovePod(ctx, name.Value.(string), namespace)
 		if err != nil {
-			log.Error().Msgf("Fail to delete deployment %s", name.Value.(string))
+			log.Error().Msgf("Fail to delete pods %s", name.Value.(string))
 		}
 	}
 	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
