@@ -68,7 +68,7 @@ func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.Daemo
 
 // OpenDashboard ...
 func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.DaemonOptions) (err error) {
-	ch := SetUpWaitingChannel()
+	ch := setupWaitingChannel()
 	command := ktCli.Exec().Kubectl().PortForwardDashboardToLocal(options.DashboardOptions.Port)
 	err = exec.BackgroundRun(command, "forward dashboard to localhost")
 	if err != nil {

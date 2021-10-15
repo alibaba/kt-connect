@@ -34,7 +34,7 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			urfave.StringFlag{
 				Name:        "method",
 				Value:       "scale",
-				Usage:       "Exchange method 'scale' or 'ephemeral'",
+				Usage:       "Exchange method 'scale' or 'ephemeral'(beta)",
 				Destination: &options.ExchangeOptions.Method,
 			},
 			// TODO: should be replace with service name
@@ -68,25 +68,22 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	options.RuntimeOptions.Component = common.ComponentExchange
-	err := util.WritePidFile(common.ComponentExchange)
+	ch, err := setupProcess(cli, options, common.ComponentExchange)
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
 
 	method := options.ExchangeOptions.Method
 	if method == common.ExchangeMethodScale {
-		return exchangeByScale(resourceName, cli, options)
+		return exchangeByScale(ch, resourceName, cli, options)
 	} else if method == common.ExchangeMethodEphemeral {
-		return exchangeByEphemeralContainer(resourceName, cli, options)
+		return exchangeByEphemeralContainer(ch, resourceName, cli, options)
 	} else {
 		return fmt.Errorf("invalid exchange method \"%s\"", method)
 	}
 }
 
-func exchangeByScale(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch := SetUpCloseHandler(cli, options, common.ComponentExchange)
+func exchangeByScale(ch chan os.Signal, deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err
@@ -139,9 +136,8 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	return nil
 }
 
-func exchangeByEphemeralContainer(podName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func exchangeByEphemeralContainer(ch chan os.Signal, podName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23. It can NOT work with istio now.")
-	ch := SetUpCloseHandler(cli, options, common.ComponentExchange)
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err

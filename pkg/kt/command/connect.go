@@ -50,14 +50,11 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
-	options.RuntimeOptions.Component = common.ComponentConnect
-	err := util.WritePidFile(common.ComponentConnect)
+	ch, err := setupProcess(cli, options, common.ComponentConnect)
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
 
-	ch := SetUpCloseHandler(cli, options, common.ComponentConnect)
 	if err = connectToCluster(context.TODO(), cli, options); err != nil {
 		return err
 	}

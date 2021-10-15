@@ -57,14 +57,11 @@ func newProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // Provide create a new service in cluster
 func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	options.RuntimeOptions.Component = common.ComponentProvide
-	err := util.WritePidFile(common.ComponentProvide)
+	ch, err := setupProcess(cli, options, common.ComponentProvide)
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
 
-	ch := SetUpCloseHandler(cli, options, common.ComponentProvide)
 	if err := provide(context.TODO(), serviceName, cli, options); err != nil {
 		return err
 	}

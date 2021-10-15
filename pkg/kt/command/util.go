@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"os/signal"
+	"runtime"
 	"strings"
 	"syscall"
 )
@@ -32,15 +33,27 @@ func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.Da
 	}
 }
 
-// SetUpWaitingChannel registry waiting channel
-func SetUpWaitingChannel() (ch chan os.Signal) {
+// setupProcess write pid file and print setup message
+func setupProcess(cli kt.CliInterface, options *options.DaemonOptions, componentName string) (chan os.Signal, error) {
+	options.RuntimeOptions.Component = componentName
+	err := util.WritePidFile(componentName)
+	if err != nil {
+		return nil, err
+	}
+	log.Info().Msgf("KtConnect %s start at %d (%s)", options.Version, os.Getpid(), runtime.GOOS)
+	ch := SetupCloseHandler(cli, options, common.ComponentProvide)
+	return ch, nil
+}
+
+// setupWaitingChannel registry waiting channel
+func setupWaitingChannel() (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	return
 }
 
-// SetUpCloseHandler registry close handler
-func SetUpCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, action string) (ch chan os.Signal) {
+// SetupCloseHandler registry close handler
+func SetupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, action string) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	// see https://en.wikipedia.org/wiki/Signal_(IPC)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)

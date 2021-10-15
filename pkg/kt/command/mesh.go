@@ -38,7 +38,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			urfave.StringFlag{
 				Name:        "method",
 				Value:       "manual",
-				Usage:       "Mesh method 'auto' or 'manual'",
+				Usage:       "Mesh method 'manual' or 'auto'(coming soon)",
 				Destination: &options.MeshOptions.Method,
 			},
 		},
@@ -67,14 +67,10 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	options.RuntimeOptions.Component = common.ComponentMesh
-	err := util.WritePidFile(common.ComponentMesh)
+	ch, err := setupProcess(cli, options, common.ComponentMesh)
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("KtConnect %s start at %d", options.Version, os.Getpid())
-
-	ch := SetUpCloseHandler(cli, options, common.ComponentMesh)
 
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
