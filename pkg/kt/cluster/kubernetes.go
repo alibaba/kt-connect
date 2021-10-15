@@ -181,6 +181,7 @@ func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options
 	for k, v := range util.String2Map(options.WithAnnotations) {
 		annotations[k] = v
 	}
+	annotations[common.KtUser] = util.GetLocalUserName()
 
 	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(ctx, &ResourceMeta{

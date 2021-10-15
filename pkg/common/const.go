@@ -34,6 +34,8 @@ const (
 	KTName = "kt-name"
 	// KTConfig annotation used for clean up context
 	KTConfig = "kt-config"
+	// KtUser annotation used for record independent username
+	KtUser = "kt-user"
 	// KTRefCount the count of shared
 	KTRefCount = "kt-ref-count"
 	// KTLastHeartBeat timestamp of last heart beat

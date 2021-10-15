@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -107,6 +108,15 @@ func FixFileOwner(path string) {
 // GetTimestamp get current time stamp
 func GetTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
+}
+
+// GetLocalUserName get current username
+func GetLocalUserName() string {
+	u, err := user.Current()
+	if err != nil {
+		return ""
+	}
+	return u.Username
 }
 
 // IsCmd check running in windows cmd shell
