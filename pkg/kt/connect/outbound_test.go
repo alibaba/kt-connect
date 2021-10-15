@@ -51,7 +51,7 @@ func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
 
 	execCli, sshuttle, kubectl, sshChannel, portForward := getHandlers(t)
 
-	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
+	sshuttle.EXPECT().Connect(gomock.Any(), gomock.Any()).AnyTimes().Return(exec.Command("echo", "sshuttle conect"))
 	portForward.EXPECT().ForwardPodPortToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(make(chan struct{}), nil, nil)
 	execCli.EXPECT().Sshuttle().AnyTimes().Return(sshuttle)
 	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectl)

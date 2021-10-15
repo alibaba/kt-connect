@@ -127,19 +127,19 @@ func (mr *MockKubernetesInterfaceMockRecorder) Deployment(ctx, name, namespace i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Deployment", reflect.TypeOf((*MockKubernetesInterface)(nil).Deployment), ctx, name, namespace)
 }
 
-// GetAllExistingShadowDeployments mocks base method.
-func (m *MockKubernetesInterface) GetAllExistingShadowDeployments(ctx context.Context, namespace string) ([]v1.Deployment, error) {
+// GetAllExistingShadowPods mocks base method.
+func (m *MockKubernetesInterface) GetAllExistingShadowPods(ctx context.Context, namespace string) ([]v10.Pod, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAllExistingShadowDeployments", ctx, namespace)
-	ret0, _ := ret[0].([]v1.Deployment)
+	ret := m.ctrl.Call(m, "GetAllExistingShadowPods", ctx, namespace)
+	ret0, _ := ret[0].([]v10.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetAllExistingShadowDeployments indicates an expected call of GetAllExistingShadowDeployments.
-func (mr *MockKubernetesInterfaceMockRecorder) GetAllExistingShadowDeployments(ctx, namespace interface{}) *gomock.Call {
+// GetAllExistingShadowPods indicates an expected call of GetAllExistingShadowPods.
+func (mr *MockKubernetesInterfaceMockRecorder) GetAllExistingShadowPods(ctx, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllExistingShadowDeployments", reflect.TypeOf((*MockKubernetesInterface)(nil).GetAllExistingShadowDeployments), ctx, namespace)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllExistingShadowPods", reflect.TypeOf((*MockKubernetesInterface)(nil).GetAllExistingShadowPods), ctx, namespace)
 }
 
 // GetDeployment mocks base method.
@@ -234,18 +234,18 @@ func (mr *MockKubernetesInterfaceMockRecorder) RemoveConfigMap(ctx, name, namesp
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveConfigMap", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveConfigMap), ctx, name, namespace)
 }
 
-// RemoveDeployment mocks base method.
-func (m *MockKubernetesInterface) RemoveDeployment(ctx context.Context, name, namespace string) error {
+// RemovePod mocks base method.
+func (m *MockKubernetesInterface) RemovePod(ctx context.Context, name, namespace string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveDeployment", ctx, name, namespace)
+	ret := m.ctrl.Call(m, "RemovePod", ctx, name, namespace)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// RemoveDeployment indicates an expected call of RemoveDeployment.
-func (mr *MockKubernetesInterfaceMockRecorder) RemoveDeployment(ctx, name, namespace interface{}) *gomock.Call {
+// RemovePod indicates an expected call of RemovePod.
+func (mr *MockKubernetesInterfaceMockRecorder) RemovePod(ctx, name, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveDeployment", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveDeployment), ctx, name, namespace)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePod", reflect.TypeOf((*MockKubernetesInterface)(nil).RemovePod), ctx, name, namespace)
 }
 
 // RemoveService mocks base method.

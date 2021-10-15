@@ -8,6 +8,7 @@ import (
 	exec "os/exec"
 	reflect "reflect"
 
+	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,17 +36,17 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 }
 
 // Connect mocks base method.
-func (m *MockCliInterface) Connect(remoteHost, privateKeyPath string, remotePort int, DNSServer string, disableDNS bool, cidrs []string, debug bool) *exec.Cmd {
+func (m *MockCliInterface) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Connect", remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug)
+	ret := m.ctrl.Call(m, "Connect", opt, req)
 	ret0, _ := ret[0].(*exec.Cmd)
 	return ret0
 }
 
 // Connect indicates an expected call of Connect.
-func (mr *MockCliInterfaceMockRecorder) Connect(remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug interface{}) *gomock.Call {
+func (mr *MockCliInterfaceMockRecorder) Connect(opt, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockCliInterface)(nil).Connect), remoteHost, privateKeyPath, remotePort, DNSServer, disableDNS, cidrs, debug)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockCliInterface)(nil).Connect), opt, req)
 }
 
 // Install mocks base method.

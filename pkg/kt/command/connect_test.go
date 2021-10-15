@@ -81,7 +81,7 @@ func Test_shouldConnectToCluster(t *testing.T) {
 	ktctl.EXPECT().Exec().AnyTimes().Return(exec)
 
 	opts := options.NewDaemonOptions("test")
-	opts.Labels = "a:b"
+	opts.WithLabels = "a:b"
 
 	if err := connectToCluster(context.TODO(), ktctl, opts); err != nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, false)
@@ -124,7 +124,7 @@ func Test_shouldConnectClusterFailWhenFailGetCidrs(t *testing.T) {
 	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 
 	opts := options.NewDaemonOptions("test")
-	opts.Labels = "a:b"
+	opts.WithLabels = "a:b"
 
 	if err := connectToCluster(context.TODO(), ktctl, opts); err == nil {
 		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)

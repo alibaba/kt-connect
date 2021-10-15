@@ -37,11 +37,12 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 				Usage:       "Exchange method 'scale' or 'ephemeral'",
 				Destination: &options.ExchangeOptions.Method,
 			},
-			urfave.StringFlag{
-				Name:        "label",
-				Usage:       "(ephemeral mode only) Label of the pod, e.g. app=test,version=1",
-				Destination: &options.ExchangePodOptions.Label,
-			},
+			// TODO: should be replace with service name
+			//urfave.StringFlag{
+			//	Name:        "label",
+			//	Usage:       "(ephemeral mode only) Label of the pod, e.g. app=test,version=1",
+			//	Destination: &options.ExchangePodOptions.Label,
+			//},
 		},
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
@@ -50,20 +51,23 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			if err := combineKubeOpts(options); err != nil {
 				return err
 			}
-			deploymentToExchange := c.Args().First()
+			resourceToExchange := c.Args().First()
 			expose := options.ExchangeOptions.Expose
 
+			if len(resourceToExchange) == 0 {
+				return errors.New("name of resource to exchange is required")
+			}
 			if len(expose) == 0 {
 				return errors.New("--expose is required")
 			}
 
-			return action.Exchange(deploymentToExchange, cli, options)
+			return action.Exchange(resourceToExchange, cli, options)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	options.RuntimeOptions.Component = common.ComponentExchange
 	err := util.WritePidFile(common.ComponentExchange)
 	if err != nil {
@@ -73,15 +77,9 @@ func (action *Action) Exchange(deploymentName string, cli kt.CliInterface, optio
 
 	method := options.ExchangeOptions.Method
 	if method == common.ExchangeMethodScale {
-		if len(deploymentName) == 0 {
-			return errors.New("name of deployment to exchange is required")
-		}
-		return exchangeByScale(deploymentName, cli, options)
+		return exchangeByScale(resourceName, cli, options)
 	} else if method == common.ExchangeMethodEphemeral {
-		if len(deploymentName) == 0 && len(options.ExchangePodOptions.Label) == 0 {
-			return errors.New("name of pod or label of the pod to exchange is required")
-		}
-		return exchangeByEphemeralContainer(deploymentName, cli, options)
+		return exchangeByEphemeralContainer(resourceName, cli, options)
 	} else {
 		return fmt.Errorf("invalid exchange method \"%s\"", method)
 	}

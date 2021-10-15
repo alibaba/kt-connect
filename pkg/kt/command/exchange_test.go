@@ -19,7 +19,7 @@ func Test_exchangeCommand(t *testing.T) {
 	fakeKtCli := kt.NewMockCliInterface(ctl)
 	mockAction := NewMockActionInterface(ctl)
 
-	mockAction.EXPECT().Exchange(gomock.Eq("service"), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Exchange(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -29,7 +29,7 @@ func Test_exchangeCommand(t *testing.T) {
 	}{
 		{testArgs: []string{"exchange", "service", "--expose", "8080"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
 		{testArgs: []string{"exchange", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--expose is required")},
-		{testArgs: []string{"exchange"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("name of deployment to exchange is required")},
+		{testArgs: []string{"exchange"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("name of resource to exchange is required")},
 	}
 
 	for _, c := range cases {

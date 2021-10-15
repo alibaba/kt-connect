@@ -138,7 +138,7 @@ func Test_shouldExposeLocalServiceFailWhenShadowCreateFail(t *testing.T) {
 
 func testDaemonOptions(labels string, opt *options.ProvideOptions) *options.DaemonOptions {
 	daemonOptions := options.NewDaemonOptions("test")
-	daemonOptions.Labels = labels
+	daemonOptions.WithLabels = labels
 	daemonOptions.ProvideOptions = opt
 	return daemonOptions
 }

@@ -37,7 +37,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			},
 			urfave.StringFlag{
 				Name:        "method",
-				Value:       "auto",
+				Value:       "manual",
 				Usage:       "Mesh method 'auto' or 'manual'",
 				Destination: &options.MeshOptions.Method,
 			},
