@@ -84,40 +84,40 @@ func provide(ctx context.Context, serviceName string, cli kt.CliInterface, optio
 	}
 
 	version := strings.ToLower(util.RandomString(5))
-	deploymentName := fmt.Sprintf("%s-kt-%s", serviceName, version)
+	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentProvide,
-		common.KTName:      deploymentName,
+		common.KTName:      shadowPodName,
 		common.KTVersion:   version,
 	}
 	annotations := map[string]string{
 		common.KTConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
-	return exposeLocalService(ctx, serviceName, deploymentName, labels, annotations, options, kubernetes, cli)
+	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, options, kubernetes, cli)
 }
 
 // exposeLocalService create shadow and expose service if need
-func exposeLocalService(ctx context.Context, serviceName, deploymentName string, labels, annotations map[string]string,
+func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string,
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
-	podIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(ctx, deploymentName, options, labels, annotations, envs)
+	podIP, podName, sshConfigMapName, credential, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
 	log.Info().Msgf("Create shadow pod %s ip %s", podName, podIP)
 
-	log.Info().Msgf("Expose deployment %s to service %s:%v", deploymentName, serviceName, options.ProvideOptions.Expose)
+	log.Info().Msgf("Expose deployment %s to service %s:%v", shadowPodName, serviceName, options.ProvideOptions.Expose)
 	_, err = kubernetes.CreateService(ctx, serviceName, options.Namespace, options.ProvideOptions.External, options.ProvideOptions.Expose, labels)
 	if err != nil {
 		return err
 	}
 	options.RuntimeOptions.Service = serviceName
 
-	options.RuntimeOptions.Shadow = deploymentName
-	options.RuntimeOptions.SSHCM = sshcm
+	options.RuntimeOptions.Shadow = shadowPodName
+	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName, podIP, credential)
 	if err != nil {

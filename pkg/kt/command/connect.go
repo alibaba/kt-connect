@@ -135,21 +135,21 @@ func setupGlobalProxy(options *options.DaemonOptions) {
 }
 
 func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes cluster.KubernetesInterface) (string, string, *util.SSHCredential, error) {
-	workload := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	shadowPodName := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
 	if options.ConnectOptions.ShareShadow {
-		workload = fmt.Sprintf("kt-connect-daemon-connect-shared")
+		shadowPodName = fmt.Sprintf("kt-connect-daemon-shared")
 	}
 	annotations := make(map[string]string)
 
-	endPointIP, podName, sshcm, credential, err := kubernetes.GetOrCreateShadow(context.TODO(), workload, options,
-		getLabels(workload, options), annotations, getEnvs(options))
+	endPointIP, podName, sshConfigMapName, credential, err := kubernetes.GetOrCreateShadow(context.TODO(),
+		shadowPodName, options, getLabels(shadowPodName, options), annotations, getEnvs(options))
 	if err != nil {
 		return "", "", nil, err
 	}
 
 	// record shadow name will clean up terminal
-	options.RuntimeOptions.Shadow = workload
-	options.RuntimeOptions.SSHCM = sshcm
+	options.RuntimeOptions.Shadow = shadowPodName
+	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	return endPointIP, podName, credential, nil
 }

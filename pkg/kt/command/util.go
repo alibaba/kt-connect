@@ -126,7 +126,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		err = k8s.DeletePod(ctx, options.RuntimeOptions.PodName, options.Namespace)
 	}
 
-	cleanDeploymentAndConfigMap(ctx, options, k8s)
+	cleanShadowPodAndConfigMap(ctx, options, k8s)
 	cleanService(ctx, options, k8s)
 }
 
@@ -159,27 +159,27 @@ func cleanService(ctx context.Context, options *options.DaemonOptions, kubernete
 	}
 }
 
-func cleanDeploymentAndConfigMap(ctx context.Context, options *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+func cleanShadowPodAndConfigMap(ctx context.Context, options *options.DaemonOptions, k8s cluster.KubernetesInterface) {
 	shouldDelWithShared := false
 	var err error
 	if options.RuntimeOptions.Shadow != "" {
 		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(ctx, k8s, options)
 			if err != nil {
-				log.Error().Err(err).Msgf("Delete shared deployment %s failed", options.RuntimeOptions.Shadow)
+				log.Error().Err(err).Msgf("Delete shared shadow pod %s failed", options.RuntimeOptions.Shadow)
 			}
 		} else {
-			log.Info().Msgf("Cleaning shadow %s", options.RuntimeOptions.Shadow)
+			log.Info().Msgf("Cleaning shadow pod %s", options.RuntimeOptions.Shadow)
 			err = k8s.RemovePod(ctx, options.RuntimeOptions.Shadow, options.Namespace)
 			if err != nil {
-				log.Error().Err(err).Msgf("Delete deployment %s failed", options.RuntimeOptions.Shadow)
+				log.Error().Err(err).Msgf("Delete shadow pod %s failed", options.RuntimeOptions.Shadow)
 			}
 		}
 	}
 
 	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil {
 		if shouldDelWithShared || !options.ConnectOptions.ShareShadow {
-			log.Info().Msgf("Cleaning config map %s", options.RuntimeOptions.SSHCM)
+			log.Info().Msgf("Cleaning configmap %s", options.RuntimeOptions.SSHCM)
 			err = k8s.RemoveConfigMap(ctx, options.RuntimeOptions.SSHCM, options.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete configmap %s failed", options.RuntimeOptions.SSHCM)

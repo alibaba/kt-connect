@@ -15,6 +15,7 @@ import (
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
+	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes"
 	"strconv"
@@ -38,8 +39,8 @@ type ResourceMeta struct {
 
 // SSHkeyMeta ...
 type SSHkeyMeta struct {
-	Sshcm          string
-	PrivateKeyPath string
+	SshConfigMapName string
+	PrivateKeyPath   string
 }
 
 // RemoveService remove service
@@ -95,15 +96,20 @@ func (k *Kubernetes) Deployment(ctx context.Context, name, namespace string) (*a
 	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
+// Service get service
+func (k *Kubernetes) Service(ctx context.Context, name, namespace string) (*coreV1.Service, error) {
+	return k.Clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
 // Pod get pod
 func (k *Kubernetes) Pod(ctx context.Context, name, namespace string) (*coreV1.Pod, error) {
 	return k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 // Pods get pods
-func (k *Kubernetes) Pods(ctx context.Context, label, namespace string) (*coreV1.PodList, error) {
+func (k *Kubernetes) Pods(ctx context.Context, labels map[string]string, namespace string) (*coreV1.PodList, error) {
 	return k.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: label,
+		LabelSelector: labelApi.SelectorFromSet(labels).String(),
 	})
 }
 
@@ -190,8 +196,8 @@ func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options
 			Labels:      labels,
 			Annotations: annotations,
 		}, &SSHkeyMeta{
-			Sshcm:          sshcm,
-			PrivateKeyPath: privateKeyPath,
+			SshConfigMapName: sshcm,
+			PrivateKeyPath:   privateKeyPath,
 		})
 		if err2 != nil {
 			err = err2
@@ -211,8 +217,8 @@ func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options
 			Annotations: annotations,
 		}, options.Image, envs,
 	}, &SSHkeyMeta{
-		Sshcm:          sshcm,
-		PrivateKeyPath: privateKeyPath,
+		SshConfigMapName: sshcm,
+		PrivateKeyPath:   privateKeyPath,
 	}, options)
 	return
 }
@@ -224,7 +230,7 @@ func (k *Kubernetes) createShadow(ctx context.Context, metaAndSpec *PodMetaAndSp
 	if err != nil {
 		return
 	}
-	configMap, err2 := k.createConfigMap(ctx, metaAndSpec.Meta.Labels, sshKeyMeta.Sshcm, metaAndSpec.Meta.Namespace, generator)
+	configMap, err2 := k.createConfigMap(ctx, metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
 
 	if err2 != nil {
 		err = err2
@@ -232,7 +238,7 @@ func (k *Kubernetes) createShadow(ctx context.Context, metaAndSpec *PodMetaAndSp
 	}
 	log.Info().Msgf("Successful create config map %v", configMap.ObjectMeta.Name)
 
-	pod, err2 := k.createAndGetPod(ctx, metaAndSpec, sshKeyMeta.Sshcm, options)
+	pod, err2 := k.createAndGetPod(ctx, metaAndSpec, sshKeyMeta.SshConfigMapName, options)
 	if err2 != nil {
 		err = err2
 		return
@@ -260,7 +266,7 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(ctx context.Context, resour
 		return
 	}
 	cli := k.Clientset.CoreV1().ConfigMaps(resourceMeta.Namespace)
-	configMap, configMapError := cli.Get(ctx, sshKeyMeta.Sshcm, metav1.GetOptions{})
+	configMap, configMapError := cli.Get(ctx, sshKeyMeta.SshConfigMapName, metav1.GetOptions{})
 
 	if configMapError != nil {
 		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment " + resourceMeta.Name)
