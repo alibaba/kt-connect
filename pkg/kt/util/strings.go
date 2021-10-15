@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"math/rand"
 	"strings"
 	"time"
@@ -32,4 +33,13 @@ func String2Map(str string) map[string]string {
 		}
 	}
 	return res
+}
+
+// Append Add segment to a comma separated string
+func Append(base string, inc string) string {
+	if len(base) == 0 {
+		return inc
+	} else {
+		return fmt.Sprintf("%s,%s", base, inc)
+	}
 }

@@ -40,6 +40,8 @@ const (
 	KTRefCount = "kt-ref-count"
 	// KTLastHeartBeat timestamp of last heart beat
 	KTLastHeartBeat = "kt-last-heart-beat"
+	// KtExchangeContainer name of exchange ephemeral container
+	KtExchangeContainer = "kt-exchange"
 
 	// SSHPrivateKeyName ssh private key name
 	SSHPrivateKeyName = "kt_%s" + PostfixRsaKey

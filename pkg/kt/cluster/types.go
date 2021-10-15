@@ -37,7 +37,7 @@ type KubernetesInterface interface {
 	UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error)
 	DecreaseRef(ctx context.Context, namespace string, deployment string) (cleanup bool, err error)
 	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
-	DeletePod(ctx context.Context, podName, namespace string) (err error)
+	RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error)
 }
 
 // Kubernetes implements KubernetesInterface

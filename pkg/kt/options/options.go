@@ -82,7 +82,6 @@ type RuntimeOptions struct {
 	ProxyConfig registry.ProxyConfig
 	// RestConfig kubectl config
 	RestConfig *rest.Config
-	PodName    string
 }
 
 type dashboardOptions struct {

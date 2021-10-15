@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"net"
@@ -62,7 +63,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		CleanupWorkspace(cli, options)
+		clean.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	s := <-ch

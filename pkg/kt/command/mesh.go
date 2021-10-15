@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"os"
 	"strings"
 
@@ -101,7 +102,7 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		CleanupWorkspace(cli, options)
+		clean.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 

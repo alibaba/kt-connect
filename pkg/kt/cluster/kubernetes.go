@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 	appv1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
-	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	labelApi "k8s.io/apimachinery/pkg/labels"
@@ -113,14 +112,7 @@ func (k *Kubernetes) Pods(ctx context.Context, labels map[string]string, namespa
 	})
 }
 
-func (k *Kubernetes) DeletePod(ctx context.Context, podName, namespace string) (err error) {
-	k.Clientset.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
-	if errors2.IsNotFound(err) {
-		return nil
-	}
-	return err
-}
-
+// AddEphemeralContainer add ephemeral container to specified pod
 func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, podName string,
 	options *options.DaemonOptions, envs map[string]string) (sshcm string, err error) {
 	pod, err := k.Pod(ctx, podName, options.Namespace)
@@ -128,7 +120,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 		return "", err
 	}
 	identifier := strings.ToLower(util.RandomString(4))
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", "exchangepod", identifier)
+	sshcm = fmt.Sprintf("kt-%s-public-key-%s", common.ComponentExchange, identifier)
 
 	privateKeyPath := util.PrivateKeyPath("exchangepod", identifier)
 	generator, err := util.Generate(privateKeyPath)
@@ -169,6 +161,11 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 
 	pod, err = k.Clientset.CoreV1().Pods(pod.Namespace).UpdateEphemeralContainers(ctx, pod.Name, pod, metav1.UpdateOptions{})
 	return sshcm, err
+}
+
+// RemoveEphemeralContainer remove ephemeral container from specified pod
+func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error) {
+	return k.RemovePod(ctx, podName, namespace)
 }
 
 // GetOrCreateShadow create shadow

@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -35,7 +36,7 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			urfave.StringFlag{
 				Name:        "method",
 				Value:       "scale",
-				Usage:       "Exchange method 'scale' or 'ephemeral'(beta)",
+				Usage:       "Exchange method 'scale' or 'ephemeral'(experimental)",
 				Destination: &options.ExchangeOptions.Method,
 			},
 		},
@@ -84,7 +85,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		CleanupWorkspace(cli, options)
+		clean.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	s := <-ch
@@ -136,7 +137,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 }
 
 func exchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23. It can NOT work with istio now.")
+	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23, and it can NOT work with istio.")
 	k8s, err := cli.Kubernetes()
 	if err != nil {
 		return err
@@ -144,45 +145,20 @@ func exchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, opti
 
 	ctx := context.Background()
 	pods, err := getPodsOfResource(ctx, k8s, resourceName, options.Namespace)
-	containerName := "kt-" + strings.ToLower(util.RandomString(5))
 
 	for _, pod := range pods {
 		if pod.Status.Phase != coreV1.PodRunning {
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		log.Info().Msgf("Adding ephemeral container for pod %s", pod.Name)
-
-		envs := make(map[string]string)
-		sshConfigMapName, err := k8s.AddEphemeralContainer(ctx, containerName, pod.Name, options, envs)
-		if err != nil {
-			return err
-		}
-
-	breakLoop:
-		for i := 0; i < 100; i++ {
-			log.Info().Msgf("Waiting for ephemeral container %s to be ready", containerName)
-			pod, err := k8s.Pod(ctx, pod.Name, options.Namespace)
-			if err != nil {
-				return err
-			}
-			cStats := pod.Status.EphemeralContainerStatuses
-			for i := range cStats {
-				if cStats[i].Name == containerName {
-					if cStats[i].State.Running != nil {
-						break breakLoop
-					} else if cStats[i].State.Terminated != nil {
-						log.Error().Msgf("Ephemeral container %s is terminated, code: %d",
-							containerName, cStats[i].State.Terminated.ExitCode)
-					}
-				}
-			}
-			time.Sleep(2 * time.Second)
+		sshConfigMapName, err2 := createEphemeralContainer(ctx, k8s, common.KtExchangeContainer, pod.Name, options)
+		if err2 != nil {
+			return err2
 		}
 
 		// record data
-		options.RuntimeOptions.PodName = pod.Name
-		options.RuntimeOptions.SSHCM = sshConfigMapName
+		options.RuntimeOptions.Shadow = util.Append(options.RuntimeOptions.Shadow, pod.Name)
+		options.RuntimeOptions.SSHCM = util.Append(options.RuntimeOptions.SSHCM, sshConfigMapName)
 
 		shadow := connect.Create(options)
 		if err = shadow.Inbound(options.ExchangeOptions.Expose, pod.Name, pod.Status.PodIP, nil); err != nil {
@@ -190,6 +166,47 @@ func exchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, opti
 		}
 	}
 	return nil
+}
+
+func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string, options *options.DaemonOptions) (string, error) {
+	log.Info().Msgf("Adding ephemeral container for pod %s", podName)
+
+	envs := make(map[string]string)
+	sshConfigMapName, err := k8s.AddEphemeralContainer(ctx, containerName, podName, options, envs)
+	if err != nil {
+		return "", err
+	}
+
+	for i := 0; i < 10; i++ {
+		log.Info().Msgf("Waiting for ephemeral container %s to be ready", containerName)
+		ready, err2 := isEphemeralContainerReady(ctx, k8s, containerName, podName, options.Namespace)
+		if err2 != nil {
+			return "", err
+		} else if ready {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+	return sshConfigMapName, nil
+}
+
+func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterface, podName, containerName, namespace string) (bool, error) {
+	pod, err := k8s.Pod(ctx, podName, namespace)
+	if err != nil {
+		return false, err
+	}
+	cStats := pod.Status.EphemeralContainerStatuses
+	for i := range cStats {
+		if cStats[i].Name == containerName {
+			if cStats[i].State.Running != nil {
+				return true, nil
+			} else if cStats[i].State.Terminated != nil {
+				return false, fmt.Errorf("ephemeral container %s is terminated, code: %d",
+					containerName, cStats[i].State.Terminated.ExitCode)
+			}
+		}
+	}
+	return false, nil
 }
 
 func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, resourceName, namespace string) ([]coreV1.Pod, error) {

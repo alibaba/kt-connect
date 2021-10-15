@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"os"
 	"strconv"
 	"strings"
@@ -69,7 +70,7 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		CleanupWorkspace(cli, options)
+		clean.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	<-ch

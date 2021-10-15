@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"os"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -41,7 +42,7 @@ func main() {
 	err := app.Run(os.Args)
 	if err != nil {
 		log.Error().Msgf("End with error: %s", err.Error())
-		command.CleanupWorkspace(context, options)
+		clean.CleanupWorkspace(context, options)
 		os.Exit(-1)
 	}
 }

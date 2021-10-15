@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"math/rand"
 	"strconv"
@@ -30,9 +31,9 @@ func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Ch
 		return
 	}
 
-	if len(s.Options.RuntimeOptions.PodName) > 0 {
-		err = exchangeWithPod(ssh, exposePorts, localSSHPort)
-		if err !=nil{
+	if s.Options.ExchangeOptions != nil && s.Options.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
+		err = exchangeWithEphemeralContainer(ssh, exposePorts, localSSHPort)
+		if err != nil {
 			return err
 		}
 	} else {
@@ -56,7 +57,7 @@ func remoteRedirectPort(exposePorts string, listenedPorts map[string]struct{}) (
 	return redirectPort, nil
 }
 
-func exchangeWithPod(ssh sshchannel.Channel, exposePorts string, localSSHPort int) error {
+func exchangeWithEphemeralContainer(ssh sshchannel.Channel, exposePorts string, localSSHPort int) error {
 	// Get all listened ports on remote host
 	listenedPorts, err := getListenedPorts(ssh, localSSHPort)
 	if err != nil {
