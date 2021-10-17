@@ -17,6 +17,7 @@
 * 参数`--labels`更名为`--withLabel`
 * 增加`--withAnnotation`参数为shadow pod增加额外标注
 * `connect`命令增加`--disablePodIp`参数支持禁用Pod IP路由
+* shadow pod增加`kt-user`标注用于记录本地用户名
 
 ### 0.1.2
 

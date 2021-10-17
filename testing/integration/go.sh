@@ -94,7 +94,8 @@ existPid=`ps aux | grep "ktctl" | grep -v "grep" | awk '{print $2}' | sort -n | 
 if [ "${existPid}" != "" ]; then fail "ktctl already running before test start (pid: ${existPid})"; fi
 
 rm -f /tmp/kt-it-*.log
-ktctl -n ${NS} clean >/dev/null 2>&1
+ktctl -n ${NS} clean >/tmp/kt-it-clean.log 2>&1
+if [ ${?} -ne 0 ]; then fail "clean up failed (kubernetes cluster unreachable ?)"; fi
 
 # Prepare test resources
 kubectl create namespace ${NS}
