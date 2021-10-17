@@ -3,6 +3,28 @@
 
 KtConnect的不兼容版本升级参考
 
+# 0.1.x → 0.2.x
+
+#### ① Kubernetes最低兼容版本提高到`1.16`
+
+不再支持`1.15`以及之前版本的Kubernetes集群
+
+#### ② Windows版本`ktctl connect`命令的`socks`模式默认不再自动设置全局代理
+
+可使用`--setupGlobalProxy`参数手工开启自动设置全局代理功能，此参数对`socks5`模式也适用
+
+#### ③ `ktctl connect`命令使用`--withLabel`参数替代`--label`参数
+
+`--withLabel`参数作用和值格式与原`--label`参数相同，同时增加`--withAnnotation`参数用于为shadow pod指定额外标注
+
+#### ④ 移除`ktctl connect`命令命令的`--global`参数
+
+KtConnect现在能够自动根据用户是否具有全局权限，自动适配查询的Namespace范围，不再需要手工设定
+
+#### ⑤ 移除`ktctl check`命令
+
+KtConnect现在会在执行相关命令时自动检测并尝试安装缺失的组件，不再需要手工执行检查
+
 # 0.0.x → 0.1.x
 
 #### ① Windows版本`ktctl connect`新增`socks`模式
