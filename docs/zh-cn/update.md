@@ -9,21 +9,27 @@ KtConnect的不兼容版本升级参考
 
 不再支持`1.15`以及之前版本的Kubernetes集群
 
-#### ② Windows版本`ktctl connect`命令的`socks`模式默认不再自动设置全局代理
+#### ② 使用shadow pod代替shadow deployment
 
-可使用`--setupGlobalProxy`参数手工开启自动设置全局代理功能，此参数对`socks5`模式也适用
+相比使用shadow deployment间接创建的shadow pod，直接创建的shadow pod更加轻量，同时对用户业务的资源视图干扰也更少。
 
-#### ③ `ktctl connect`命令使用`--withLabel`参数替代`--label`参数
+注意：新版本的`ktctl clean`命令只会清理集群中的shadow pod，如需清理旧版本在集群中遗留的shadow deployment，请降级至v0.1.x版本。
 
-`--withLabel`参数作用和值格式与原`--label`参数相同，同时增加`--withAnnotation`参数用于为shadow pod指定额外标注
+#### ③ Windows版本`ktctl connect`命令的`socks`模式默认不再自动设置全局代理
 
-#### ④ 移除`ktctl connect`命令命令的`--global`参数
+可使用`--setupGlobalProxy`参数手工开启自动设置全局代理功能，此参数对`socks5`模式也适用。
 
-KtConnect现在能够自动根据用户是否具有全局权限，自动适配查询的Namespace范围，不再需要手工设定
+#### ④ `ktctl connect`命令使用`--withLabel`参数替代`--label`参数
 
-#### ⑤ 移除`ktctl check`命令
+`--withLabel`参数作用和值格式与原`--label`参数相同，同时增加`--withAnnotation`参数用于为shadow pod指定额外标注。
 
-KtConnect现在会在执行相关命令时自动检测并尝试安装缺失的组件，不再需要手工执行检查
+#### ⑤ 移除`ktctl connect`命令命令的`--global`参数
+
+KtConnect现在能够自动根据用户是否具有全局权限，自动适配查询的Namespace范围，不再需要手工设定。
+
+#### ⑥ 移除`ktctl check`命令
+
+KtConnect现在会在执行相关命令时自动检测并尝试安装缺失的组件，不再需要手工执行检查。
 
 # 0.0.x → 0.1.x
 
