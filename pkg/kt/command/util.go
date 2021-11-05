@@ -85,7 +85,6 @@ func combineKubeOpts(options *options.DaemonOptions) error {
 		return err
 	}
 
-	var configured, namespaced bool
 	for _, opt := range options.KubeOptions {
 		strs := strings.Fields(opt)
 		if len(strs) == 1 {
@@ -93,41 +92,39 @@ func combineKubeOpts(options *options.DaemonOptions) error {
 		}
 		switch strs[0] {
 		case "-n", "--namespace":
-			options.Namespace = strs[1]
-			namespaced = true
-		case "--kubeconfig":
-			options.KubeConfig = strs[1]
-			configured = true
+			options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", strs[1]))
+		case "-c", "--kubeconfig":
+			options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--kubeconfig=%s", strs[1]))
+		case "--context":
+			options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--context=%s", strs[1]))
 		}
 	}
 
-	if !configured {
-		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--kubeconfig=%s", options.KubeConfig))
+	config, err := clientcmd.LoadFromFile(options.KubeConfig)
+	if err != nil {
+		return err
 	}
-
-	if !namespaced {
-		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", options.Namespace))
+	if len(options.KubeContext) > 0 {
+		config.CurrentContext = options.KubeContext
 	}
-
-	kubeconfigGetter := func(configFile string) clientcmd.KubeconfigGetter {
+	if len(options.Namespace) == 0 {
+		options.Namespace = config.Contexts[config.CurrentContext].Namespace
+	}
+	kubeconfigGetter := func() clientcmd.KubeconfigGetter {
 		return func() (*clientcmdapi.Config, error) {
-			config, err := clientcmd.LoadFromFile(configFile)
-			if err != nil {
-				return nil, err
-			}
 			return config, nil
 		}
 	}
-	config, err := clientcmd.BuildConfigFromKubeconfigGetter("", kubeconfigGetter(options.KubeConfig))
+	restConfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", kubeconfigGetter())
 	if err != nil {
 		return err
 	}
-	clientset, err := kubernetes.NewForConfig(config)
+	clientSet, err := kubernetes.NewForConfig(restConfig)
 	if err != nil {
 		return err
 	}
-	options.RuntimeOptions.Clientset = clientset
-	options.RuntimeOptions.RestConfig = config
+	options.RuntimeOptions.Clientset = clientSet
+	options.RuntimeOptions.RestConfig = restConfig
 
 	return nil
 }

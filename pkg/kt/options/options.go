@@ -111,6 +111,7 @@ type DaemonOptions struct {
 	WaitTime          int
 	ForceUpdateShadow bool
 	UseKubectl        bool
+	KubeContext       string
 }
 
 // NewDaemonOptions return new cli default options

@@ -12,8 +12,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
-			Usage:       "Specify target namespace",
-			Value:       "default",
+			Usage:       "Specify target namespace (otherwise follow kubeconfig current context)",
 			Destination: &options.Namespace,
 		},
 		cli.StringFlag{
@@ -55,9 +54,14 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Usage:       "Extra annotation on proxy pod e.g. 'annotation1=val1,annotation2=val2'",
 			Destination: &options.WithAnnotations,
 		},
+		cli.BoolFlag{
+			Name:        "useKubectl",
+			Usage:       "use kubectl for port-forward",
+			Destination: &options.UseKubectl,
+		},
 		cli.StringSliceFlag{
 			Name:  "e",
-			Usage: "support kubectl options e.g. -e '-n default' -e '--context=kubernetes-admin' -e '--kubeconfig=/path/to/kube/config'",
+			Usage: "extra kubectl options (must use with '--useKubectl') e.g. -e '--cluster=name' -e '--insecure-skip-tls-verify=true'",
 			Value: &options.KubeOptions,
 		},
 		cli.IntFlag{
@@ -71,10 +75,10 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Usage:       "always update shadow image",
 			Destination: &options.ForceUpdateShadow,
 		},
-		cli.BoolFlag{
-			Name:        "useKubectl",
-			Usage:       "use kubectl for port-forward",
-			Destination: &options.UseKubectl,
+		cli.StringFlag{
+			Name:        "context",
+			Usage:       "Specify current context of kubeconfig",
+			Destination: &options.KubeContext,
 		},
 	}
 }
