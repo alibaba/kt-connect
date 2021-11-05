@@ -105,6 +105,16 @@ func combineKubeOpts(options *options.DaemonOptions) error {
 		return err
 	}
 	if len(options.KubeContext) > 0 {
+		found := false
+		for name, _ := range config.Contexts {
+			if name == options.KubeContext {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("context \"%s\" not exist, check your kubeconfig file please", options.KubeContext)
+		}
 		config.CurrentContext = options.KubeContext
 	}
 	if len(options.Namespace) == 0 {
