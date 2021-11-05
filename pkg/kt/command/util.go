@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"os"
 	"os/signal"
 	"runtime"
@@ -108,7 +109,16 @@ func combineKubeOpts(options *options.DaemonOptions) error {
 		options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", options.Namespace))
 	}
 
-	config, err := clientcmd.BuildConfigFromFlags("", options.KubeConfig)
+	kubeconfigGetter := func(configFile string) clientcmd.KubeconfigGetter {
+		return func() (*clientcmdapi.Config, error) {
+			config, err := clientcmd.LoadFromFile(configFile)
+			if err != nil {
+				return nil, err
+			}
+			return config, nil
+		}
+	}
+	config, err := clientcmd.BuildConfigFromKubeconfigGetter("", kubeconfigGetter(options.KubeConfig))
 	if err != nil {
 		return err
 	}
