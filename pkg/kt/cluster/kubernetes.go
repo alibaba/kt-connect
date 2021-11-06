@@ -174,6 +174,9 @@ func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options
 
 	component := labels[common.KTComponent]
 	identifier := strings.ToLower(util.RandomString(4))
+	if options.ConnectOptions.ShareShadow {
+		identifier = "shared"
+	}
 	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, identifier)
 	privateKeyPath := util.PrivateKeyPath(component, identifier)
 
