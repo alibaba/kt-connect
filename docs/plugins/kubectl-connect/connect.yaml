@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   name: connect
 spec:
-  version: "v0.2.0"
+  version: "v0.2.1"
   homepage: https://github.com/alibaba/kt-connect
   # 'shortDescription' explains what the plugin does in only a few words
   shortDescription: "Connect to remote cluster with ssh based vpn"

@@ -1,6 +1,14 @@
 更新日志
 ---
 
+### 0.2.1
+
+> 发布时间：2021-11-07
+
+* 默认使用kubeconfig当前上下文的namespace（issue #102）
+* 修复`connect`使用共享shadow pod时的错误（issue #260）
+* 新增`--context`全局参数，支持切换kubeconfig内的上下文（issue #261）
+
 ### 0.2.0
 
 > 发布时间：2021-10-17
