@@ -78,7 +78,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 			action.cleanResource(ctx, resourceToClean, kubernetes, options.Namespace)
 		}
 	} else {
-		log.Info().Msg("No unavailing shadow deployment found (^.^)YYa!!")
+		log.Info().Msg("No unavailing shadow pod found (^.^)YYa!!")
 	}
 	if !options.CleanOptions.DryRun {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
@@ -172,7 +172,7 @@ func (action *Action) toPid(pidFileName string) int {
 }
 
 func (action *Action) printResourceToClean(r ResourceToClean) {
-	log.Info().Msgf("Found %d unavailing shadow deployments:", r.NamesOfPodToDelete.Len())
+	log.Info().Msgf("Found %d unavailing shadow pods:", r.NamesOfPodToDelete.Len())
 	for name := r.NamesOfPodToDelete.Front(); name != nil; name = name.Next() {
 		log.Info().Msgf(" * %s", name.Value.(string))
 	}

@@ -130,7 +130,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 	configMap, err2 := k.createConfigMap(ctx, map[string]string{}, sshcm, options.Namespace, generator)
 
 	if err2 != nil {
-		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment " + pod.Name)
+		err = errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
 		return
 	}
 
@@ -255,7 +255,7 @@ func (k *Kubernetes) GetAllExistingShadowPods(ctx context.Context, namespace str
 		}.MatchLabels).String(),
 	})
 	if list == nil {
-		return nil, common.CommandExecError{Reason: "get nil list when querying shadow deployments"}
+		return nil, common.CommandExecError{Reason: "get nil list when querying shadow pods"}
 	}
 	return list.Items, err
 }
@@ -269,7 +269,7 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(ctx context.Context, resour
 	configMap, configMapError := cli.Get(ctx, sshKeyMeta.SshConfigMapName, metav1.GetOptions{})
 
 	if configMapError != nil {
-		err = errors.New("Found shadow deployment but no configMap. Please delete the deployment " + resourceMeta.Name)
+		err = errors.New("Found shadow pod but no configMap. Please delete the pod " + resourceMeta.Name)
 		return
 	}
 
@@ -297,11 +297,8 @@ func (k *Kubernetes) getShadowPod(ctx context.Context, resourceMeta *ResourceMet
 			return
 		}
 		return &(podList.Items[0]), generator, nil
-	}
-	if len(podList.Items) > 1 {
+	} else if len(podList.Items) > 1 {
 		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
-	} else {
-		err = errors.New("no Shadow pod found while shadow deployment present. You may need to clean up the deployment by yourself")
 	}
 	return
 }

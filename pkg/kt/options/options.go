@@ -66,7 +66,7 @@ type RuntimeOptions struct {
 	AppHome string
 	// Component current sub-command
 	Component string
-	// Shadow deployment name
+	// Shadow pod name
 	Shadow string
 	// SSHCM ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
 	SSHCM string
