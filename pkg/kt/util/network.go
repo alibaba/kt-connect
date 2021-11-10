@@ -16,7 +16,9 @@ func GetRandomSSHPort() int {
 		port := rand.Intn(65535-1024) + 1024
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err == nil {
+			log.Debug().Msgf("port %d not available", port)
 			_ = conn.Close()
+		} else {
 			return port
 		}
 	}
