@@ -27,12 +27,14 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs []string) (cidrs []string, err error) {
-	cidrs = []string{}
+func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs []string) ([]string, error) {
+	var cidrs []string
 
 	if len(podCIDRs) > 0 {
-		cidrs = append(cidrs, podCIDRs...)
-		return
+		for _, cidr := range podCIDRs {
+			cidrs = append(cidrs, cidr)
+		}
+		return cidrs, nil
 	}
 
 	nodeList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
@@ -51,15 +53,14 @@ func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs [
 	if len(cidrs) == 0 {
 		samples, err2 := getPodCidrByInstance(ctx, clientset)
 		if err2 != nil {
-			err = err2
-			return
+			return nil, err2
 		}
 		for _, sample := range samples.ToSlice() {
 			cidrs = append(cidrs, fmt.Sprint(sample))
 		}
 	}
 
-	return
+	return cidrs, nil
 }
 
 func getPodCidrByInstance(ctx context.Context, clientset kubernetes.Interface) (samples mapset.Set, err error) {

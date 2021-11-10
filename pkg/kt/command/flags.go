@@ -102,20 +102,20 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Disable access to pod IP address",
 			Destination: &options.ConnectOptions.DisablePodIp,
 		},
-		cli.StringSliceFlag{
-			Name:  "excludeIps",
-			Usage: "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
-			Value: &options.ConnectOptions.ExcludeIps,
+		cli.StringFlag{
+			Name:        "excludeIps",
+			Usage:       "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
+			Destination: &options.ConnectOptions.ExcludeIps,
 		},
-		cli.StringSliceFlag{
-			Name:  "cidr",
-			Usage: "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
-			Value: &options.ConnectOptions.CIDRs,
+		cli.StringFlag{
+			Name:        "cidr",
+			Usage:       "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
+			Destination: &options.ConnectOptions.CIDRs,
 		},
-		cli.StringSliceFlag{
-			Name:  "dump2hosts",
-			Usage: "Specify namespaces to dump service into local hosts file, use ',' separated",
-			Value: &options.ConnectOptions.Dump2HostsNamespaces,
+		cli.StringFlag{
+			Name:        "dump2hosts",
+			Usage:       "Specify namespaces to dump service into local hosts file, use ',' separated",
+			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",

@@ -24,10 +24,10 @@ type ConnectOptions struct {
 	SSHPort              int
 	SocksPort            int
 	SocksAddr            string
-	CIDRs                cli.StringSlice
-	ExcludeIps           cli.StringSlice
+	CIDRs                string
+	ExcludeIps           string
 	Method               string
-	Dump2HostsNamespaces cli.StringSlice
+	Dump2HostsNamespaces string
 	ShareShadow          bool
 	TunName              string
 	TunCidr              string

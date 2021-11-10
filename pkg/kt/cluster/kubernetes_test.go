@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	testclient "k8s.io/client-go/kubernetes/fake"
+	"strings"
 
 	"reflect"
 	"testing"
@@ -128,7 +129,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 			ops := &options.ConnectOptions{
-				CIDRs: tt.args.podCIDR,
+				CIDRs: strings.Join(tt.args.podCIDR, ","),
 			}
 			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default", ops)
 			if (err != nil) != tt.wantErr {

@@ -2,9 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -13,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
+	"os"
 )
 
 var (
@@ -142,9 +140,9 @@ func (o *ConnectOptions) transport() *options.DaemonOptions {
 		DisableDNS:           o.DisableDNS,
 		Method:               o.Method,
 		SocksPort:            o.Proxy,
-		CIDRs:                strings.Split(o.Cidr, ","),
+		CIDRs:                o.Cidr,
 		SSHPort:              o.Port,
-		Dump2HostsNamespaces: strings.Split(o.Dump2hosts, ","),
+		Dump2HostsNamespaces: o.Dump2hosts,
 		TunName:              o.TunName,
 		TunCidr:              o.TunCidr,
 	}
