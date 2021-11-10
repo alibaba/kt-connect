@@ -42,6 +42,7 @@ type ConnectOptions struct {
 type ExchangeOptions struct {
 	Method string
 	Expose string
+	RecoverWaitTime int
 }
 
 // MeshOptions ...
@@ -109,7 +110,7 @@ type DaemonOptions struct {
 	CleanOptions      *CleanOptions
 	DashboardOptions  *dashboardOptions
 	WaitTime          int
-	ForceUpdateShadow bool
+	AlwaysUpdateShadow bool
 	UseKubectl        bool
 	KubeContext       string
 }

@@ -66,14 +66,14 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 		},
 		cli.IntFlag{
 			Name:        "waitTime",
-			Usage:       "custom wait time for kubectl port-forward to support slow network environment",
+			Usage:       "seconds to wait before kubectl port-forward connect timeout",
 			Destination: &options.WaitTime,
 			Value:       10,
 		},
 		cli.BoolFlag{
 			Name:        "forceUpdate,f",
 			Usage:       "always update shadow image",
-			Destination: &options.ForceUpdateShadow,
+			Destination: &options.AlwaysUpdateShadow,
 		},
 		cli.StringFlag{
 			Name:        "context",

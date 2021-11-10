@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"os"
 	"strings"
+	"time"
 )
 
 // CleanupWorkspace clean workspace
@@ -61,16 +62,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		return
 	}
 	ctx := context.Background()
-	if len(options.RuntimeOptions.Origin) > 0 {
-		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
-		err := k8s.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
-		if err != nil {
-			log.Error().
-				Str("namespace", options.Namespace).
-				Msgf("Scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
-		}
-	}
-
+	recoverExchangedTarget(ctx, options, k8s)
 	cleanShadowPodAndConfigMap(ctx, options, k8s)
 	cleanService(ctx, options, k8s)
 }
@@ -90,6 +82,37 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 		log.Info().Msg("Removing .jvmrc")
 		if err := os.Remove(jvmrcFilePath); err != nil {
 			log.Error().Err(err).Msg("Delete .jvmrc failed")
+		}
+	}
+}
+
+func recoverExchangedTarget(ctx context.Context, options *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+	if len(options.RuntimeOptions.Origin) > 0 {
+		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
+		err := k8s.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
+		if err != nil {
+			log.Error().
+				Str("namespace", options.Namespace).
+				Msgf("Scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
+		}
+		// wait for scale complete
+		ok := false
+		counts := options.ExchangeOptions.RecoverWaitTime / 5
+		for i := 0; i < counts; i++ {
+			deployment, err := k8s.GetDeployment(ctx, options.RuntimeOptions.Origin, options.Namespace)
+			if err != nil {
+				log.Error().Msgf("Cannot fetch original deployment \"%s\"", options.RuntimeOptions.Origin)
+				break
+			} else if deployment.Status.ReadyReplicas == options.RuntimeOptions.Replicas {
+				ok = true
+				break
+			} else {
+				log.Info().Msgf("Wait for deployment %s recover ...", options.RuntimeOptions.Origin)
+				time.Sleep(5 * time.Second)
+			}
+		}
+		if !ok {
+			log.Warn().Msgf("Deployment %s recover timeout", options.RuntimeOptions.Origin)
 		}
 	}
 }

@@ -162,7 +162,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 	}
 	hosts := map[string]string{}
 	for _, namespace := range namespaceToDump {
-		log.Debug().Msgf("Search service in %s namespace...", namespace)
+		log.Debug().Msgf("Search service in %s namespace ...", namespace)
 		singleHosts := kubernetes.ServiceHosts(context.TODO(), namespace)
 		for svc, ip := range singleHosts {
 			if ip == "" || ip == "None" {

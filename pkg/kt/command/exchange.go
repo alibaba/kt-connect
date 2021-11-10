@@ -33,11 +33,17 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 				Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
 				Destination: &options.ExchangeOptions.Expose,
 			},
+			urfave.IntFlag{
+				Name:        "recoverWaitTime",
+				Usage:       "seconds to wait for original deployment recover before turn off the shadow pod",
+				Destination: &options.ExchangeOptions.RecoverWaitTime,
+				Value:       120,
+			},
 			urfave.StringFlag{
 				Name:        "method",
-				Value:       "scale",
 				Usage:       "Exchange method 'scale' or 'ephemeral'(experimental)",
 				Destination: &options.ExchangeOptions.Method,
+				Value:       "scale",
 			},
 		},
 		Action: func(c *urfave.Context) error {
