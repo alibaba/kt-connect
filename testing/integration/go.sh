@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NS="kt-integration-test"
-IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
+IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.1"
 MODE="vpn"
 DOCKER_HOST="ubuntu@192.168.64.2"
 
@@ -81,7 +81,7 @@ function verify() {
       return
     fi
     log "retry times: ${c}"
-    sleep 2
+    sleep 3
   done
   fail "failed to access ${target}, got: ${res}"
 }
@@ -142,7 +142,7 @@ function prepare_local() {
   else
     fail "failed to start local tomcat container"
   fi
-  sleep 1
+  sleep 3
 
   exist=`docker ps -a | grep ' tomcat$' | grep -i ' Up '`
   if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; fi

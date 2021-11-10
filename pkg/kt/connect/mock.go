@@ -36,17 +36,17 @@ func (m *MockShadowInterface) EXPECT() *MockShadowInterfaceMockRecorder {
 }
 
 // Inbound mocks base method.
-func (m *MockShadowInterface) Inbound(exposePort, podName, remoteIP string) error {
+func (m *MockShadowInterface) Inbound(exposePort, podName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Inbound", exposePort, podName, remoteIP)
+	ret := m.ctrl.Call(m, "Inbound", exposePort, podName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Inbound indicates an expected call of Inbound.
-func (mr *MockShadowInterfaceMockRecorder) Inbound(exposePort, podName, remoteIP interface{}) *gomock.Call {
+func (mr *MockShadowInterfaceMockRecorder) Inbound(exposePort, podName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inbound", reflect.TypeOf((*MockShadowInterface)(nil).Inbound), exposePort, podName, remoteIP)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inbound", reflect.TypeOf((*MockShadowInterface)(nil).Inbound), exposePort, podName)
 }
 
 // Outbound mocks base method.
