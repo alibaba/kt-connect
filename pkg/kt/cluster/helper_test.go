@@ -45,7 +45,7 @@ func Test_getPodCidrs(t *testing.T) {
 
 			client := testclient.NewSimpleClientset(tt.objs...)
 
-			gotCidrs, err := getPodCidrs(context.TODO(), client, []string{})
+			gotCidrs, err := getPodCidrs(context.TODO(), client, "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPodCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return

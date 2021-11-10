@@ -386,7 +386,7 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 	}
 
 	if !opt.DisablePodIp {
-		cidrs, err = getPodCidrs(ctx, k.Clientset, strings.Split(opt.CIDRs, ","))
+		cidrs, err = getPodCidrs(ctx, k.Clientset, opt.CIDRs)
 		if err != nil {
 			return
 		}
