@@ -115,6 +115,11 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.DisablePodIp,
 		},
 		cli.StringSliceFlag{
+			Name:  "excludeIps",
+			Usage: "Do not route specified IPs to cluster, e.g. '192.168.64.2', use ',' separated",
+			Value: &options.ConnectOptions.ExcludeIps,
+		},
+		cli.StringSliceFlag{
 			Name:  "cidr",
 			Usage: "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
 			Value: &options.ConnectOptions.CIDRs,

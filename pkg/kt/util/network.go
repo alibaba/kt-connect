@@ -37,34 +37,6 @@ func GetOutboundIP() (address string) {
 	return
 }
 
-// GetLocalIps Get all local ip addresses
-func GetLocalIps() (ips []string) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return
-	}
-	for _, iface := range ifaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue // interface down
-		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue // loopback interface
-		}
-		addrs, err := iface.Addrs()
-		if err != nil {
-			continue
-		}
-		for _, addr := range addrs {
-			if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-				if ipnet.IP.To4() != nil {
-					ips = append(ips, ipnet.IP.To4().String())
-				}
-			}
-		}
-	}
-	return
-}
-
 // ExtractNetMaskFromCidr extract net mask length (e.g. 16) from cidr (e.g. 1.2.3.4/16)
 func ExtractNetMaskFromCidr(cidr string) string {
 	return cidr[strings.Index(cidr, "/")+1:]

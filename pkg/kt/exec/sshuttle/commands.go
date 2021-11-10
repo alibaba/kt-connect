@@ -3,7 +3,6 @@ package sshuttle
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"io"
 	"os"
 	"os/exec"
@@ -38,7 +37,7 @@ func (s *Cli) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", req.RemoteSSHPKPath)
 	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, opt.SSHPort)
 	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", req.RemoteSSHHost)
-	for _, ip := range util.GetLocalIps() {
+	for _, ip := range opt.ExcludeIps {
 		args = append(args, "--exclude", ip)
 	}
 	args = append(args, req.CustomCIDR...)

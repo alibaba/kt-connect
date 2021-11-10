@@ -24,6 +24,7 @@ type ConnectOptions struct {
 	SSHPort              int
 	SocksPort            int
 	CIDRs                cli.StringSlice
+	ExcludeIps           cli.StringSlice
 	Method               string
 	Dump2HostsNamespaces cli.StringSlice
 	ShareShadow          bool
