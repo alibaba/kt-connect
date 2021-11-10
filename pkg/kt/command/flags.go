@@ -92,18 +92,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       methodDefaultUsage(),
 			Destination: &options.ConnectOptions.Method,
 		},
-		cli.IntFlag{
-			Name:        "proxyPort",
-			Value:       2223,
-			Usage:       "When should method socks5, you can choice which port to proxy",
-			Destination: &options.ConnectOptions.SocksPort,
-		},
-		cli.IntFlag{
-			Name:        "sshPort",
-			Value:       2222,
-			Usage:       "Local SSH Proxy port",
-			Destination: &options.ConnectOptions.SSHPort,
-		},
 		cli.BoolFlag{
 			Name:        "disableDNS",
 			Usage:       "Disable Cluster DNS",
@@ -131,7 +119,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
-			Usage:       "Multi clients try to use existing shadow (Beta)",
+			Usage:       "Use shared shadow pod with other clients (Beta)",
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
 		cli.StringFlag{
@@ -151,6 +139,24 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "The cluster domain provided to kubernetes api-server",
 			Value:       "cluster.local",
 			Destination: &options.ConnectOptions.ClusterDomain,
+		},
+		cli.IntFlag{
+			Name:        "sshPort",
+			Value:       2222,
+			Usage:       "Specify the local port used for SSH port-forward to shadow pod",
+			Destination: &options.ConnectOptions.SSHPort,
+		},
+		cli.StringFlag{
+			Name:        "proxyAddr",
+			Value:       "127.0.0.1",
+			Usage:       "(socks5 method only) Specify the address which socks5 proxy should listen to",
+			Destination: &options.ConnectOptions.SocksAddr,
+		},
+		cli.IntFlag{
+			Name:        "proxyPort",
+			Value:       2223,
+			Usage:       "(socks5 method only) Specify the local port which socks5 proxy should use",
+			Destination: &options.ConnectOptions.SocksPort,
 		},
 		cli.StringFlag{
 			Name:        "jvmrc",

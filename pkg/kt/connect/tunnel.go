@@ -70,7 +70,7 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 			Password: "root",
 		},
 		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
-		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SocksPort),
+		fmt.Sprintf("%s:%d", options.ConnectOptions.SocksAddr, options.ConnectOptions.SocksPort),
 	)
 }
 

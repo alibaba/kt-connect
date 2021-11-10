@@ -23,6 +23,7 @@ type ConnectOptions struct {
 	DisablePodIp         bool
 	SSHPort              int
 	SocksPort            int
+	SocksAddr            string
 	CIDRs                cli.StringSlice
 	ExcludeIps           cli.StringSlice
 	Method               string

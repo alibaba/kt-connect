@@ -110,9 +110,9 @@ func connection(username string, password string, address string) (*ssh.Client, 
 	config := &ssh.ClientConfig{
 		User:            username,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-	config.Auth = []ssh.AuthMethod{
-		ssh.Password(password),
+		Auth: []ssh.AuthMethod{
+			ssh.Password(password),
+		},
 	}
 
 	conn, err := ssh.Dial("tcp", address, config)
