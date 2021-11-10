@@ -15,17 +15,18 @@ import (
 )
 
 // Inbound mapping local port from cluster
-func (s *Shadow) Inbound(exposePorts, podName, remoteIP string) (err error) {
-	log.Info().Msgf("Remote %s forward to local %s", remoteIP, exposePorts)
-	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
-	if err != nil {
-		return
+func (s *Shadow) Inbound(exposePorts, podName string) error {
+	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
+	localSSHPort := util.GetRandomSSHPort()
+	if localSSHPort < 0 {
+		return fmt.Errorf("failed to find any available local port")
 	}
 
+	// port forward pod 22 -> local <random port>
 	cli := exec.Cli{}
-	_, _, err = forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
+	_, _, err := forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
 	if err != nil {
-		return
+		return err
 	}
 
 	if s.Options.ExchangeOptions != nil && s.Options.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
@@ -34,6 +35,7 @@ func (s *Shadow) Inbound(exposePorts, podName, remoteIP string) (err error) {
 			return err
 		}
 	} else {
+		// remote forward pod -> local via ssh
 		exposeLocalPorts(exposePorts, localSSHPort)
 	}
 	return nil

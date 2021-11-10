@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"math/rand"
 	"net"
 	"strings"
 	"time"
@@ -10,19 +11,16 @@ import (
 )
 
 // GetRandomSSHPort get pod random ssh port
-func GetRandomSSHPort(podIP string) string {
-	parts := strings.Split(podIP, ".")
-	rdm := parts[len(parts)-1]
-
-	if len(rdm) == 1 {
-		rdm = fmt.Sprintf("0%s", rdm)
+func GetRandomSSHPort() int {
+	for i := 0; i < 10; i++ {
+		port := rand.Intn(65535-1024) + 1024
+		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
+		if err == nil {
+			_ = conn.Close()
+			return port
+		}
 	}
-
-	if len(rdm) > 2 {
-		rdm = rdm[len(rdm)-2:]
-	}
-
-	return fmt.Sprintf("22%s", rdm)
+	return -1
 }
 
 // GetOutboundIP Get preferred outbound ip of this machine

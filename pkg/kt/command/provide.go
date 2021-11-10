@@ -104,11 +104,11 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
-	podIP, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
+	_, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("Create shadow pod %s ip %s", podName, podIP)
+	log.Info().Msgf("Created shadow pod %s", podName)
 
 	log.Info().Msgf("Expose deployment %s to service %s:%v", shadowPodName, serviceName, options.ProvideOptions.Expose)
 	_, err = kubernetes.CreateService(ctx, serviceName, options.Namespace, options.ProvideOptions.External, options.ProvideOptions.Expose, labels)
@@ -120,11 +120,11 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options.RuntimeOptions.Shadow = shadowPodName
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
-	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName, podIP)
+	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName)
 	if err != nil {
 		return err
 	}
 
-	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podIP, options.ProvideOptions.Expose, options.ProvideOptions.Expose)
+	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podName, options.ProvideOptions.Expose, options.ProvideOptions.Expose)
 	return nil
 }
