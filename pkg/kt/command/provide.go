@@ -104,7 +104,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
-	podIP, podName, sshConfigMapName, credential, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
+	podIP, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options.RuntimeOptions.Shadow = shadowPodName
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
-	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName, podIP, credential)
+	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName, podIP)
 	if err != nil {
 		return err
 	}

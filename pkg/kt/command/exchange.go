@@ -117,7 +117,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	shadowPodName := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	podIP, podName, sshConfigMapName, credential, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options,
+	podIP, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options,
 		getExchangeLabels(options, shadowPodName, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
 
@@ -135,7 +135,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	}
 
 	shadow := connect.Create(options)
-	if err = shadow.Inbound(options.ExchangeOptions.Expose, podName, podIP, credential); err != nil {
+	if err = shadow.Inbound(options.ExchangeOptions.Expose, podName, podIP); err != nil {
 		return err
 	}
 
@@ -167,7 +167,7 @@ func exchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, opti
 		options.RuntimeOptions.SSHCM = util.Append(options.RuntimeOptions.SSHCM, sshConfigMapName)
 
 		shadow := connect.Create(options)
-		if err = shadow.Inbound(options.ExchangeOptions.Expose, pod.Name, pod.Status.PodIP, nil); err != nil {
+		if err = shadow.Inbound(options.ExchangeOptions.Expose, pod.Name, pod.Status.PodIP); err != nil {
 			return err
 		}
 	}

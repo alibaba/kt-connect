@@ -10,11 +10,7 @@ import (
 )
 
 // Outbound start vpn connection
-func (s *Shadow) Outbound(name, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
-	return outbound(s, name, podIP, credential, cidrs, cli)
-}
-
-func outbound(s *Shadow, podName, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
+func (s *Shadow) Outbound(podName, podIP string, credential *util.SSHCredential, cidrs []string, cli exec.CliInterface) (err error) {
 	var stop chan struct{}
 	var rootCtx context.Context
 	switch s.Options.ConnectOptions.Method {

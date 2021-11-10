@@ -98,20 +98,6 @@ func (mr *MockKubernetesInterfaceMockRecorder) DecreaseRef(ctx, namespace, deplo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DecreaseRef", reflect.TypeOf((*MockKubernetesInterface)(nil).DecreaseRef), ctx, namespace, deployment)
 }
 
-// DeletePod mocks base method.
-func (m *MockKubernetesInterface) DeletePod(ctx context.Context, podName, namespace string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeletePod", ctx, podName, namespace)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeletePod indicates an expected call of DeletePod.
-func (mr *MockKubernetesInterfaceMockRecorder) DeletePod(ctx, podName, namespace interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePod", reflect.TypeOf((*MockKubernetesInterface)(nil).DeletePod), ctx, podName, namespace)
-}
-
 // Deployment mocks base method.
 func (m *MockKubernetesInterface) Deployment(ctx context.Context, name, namespace string) (*v1.Deployment, error) {
 	m.ctrl.T.Helper()
@@ -206,18 +192,18 @@ func (mr *MockKubernetesInterfaceMockRecorder) Pod(ctx, name, namespace interfac
 }
 
 // Pods mocks base method.
-func (m *MockKubernetesInterface) Pods(ctx context.Context, label, namespace string) (*v10.PodList, error) {
+func (m *MockKubernetesInterface) Pods(ctx context.Context, labels map[string]string, namespace string) (*v10.PodList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Pods", ctx, label, namespace)
+	ret := m.ctrl.Call(m, "Pods", ctx, labels, namespace)
 	ret0, _ := ret[0].(*v10.PodList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Pods indicates an expected call of Pods.
-func (mr *MockKubernetesInterfaceMockRecorder) Pods(ctx, label, namespace interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) Pods(ctx, labels, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pods", reflect.TypeOf((*MockKubernetesInterface)(nil).Pods), ctx, label, namespace)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Pods", reflect.TypeOf((*MockKubernetesInterface)(nil).Pods), ctx, labels, namespace)
 }
 
 // RemoveConfigMap mocks base method.
@@ -232,6 +218,20 @@ func (m *MockKubernetesInterface) RemoveConfigMap(ctx context.Context, name, nam
 func (mr *MockKubernetesInterfaceMockRecorder) RemoveConfigMap(ctx, name, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveConfigMap", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveConfigMap), ctx, name, namespace)
+}
+
+// RemoveEphemeralContainer mocks base method.
+func (m *MockKubernetesInterface) RemoveEphemeralContainer(ctx context.Context, containerName, podName, namespace string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveEphemeralContainer", ctx, containerName, podName, namespace)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveEphemeralContainer indicates an expected call of RemoveEphemeralContainer.
+func (mr *MockKubernetesInterfaceMockRecorder) RemoveEphemeralContainer(ctx, containerName, podName, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveEphemeralContainer", reflect.TypeOf((*MockKubernetesInterface)(nil).RemoveEphemeralContainer), ctx, containerName, podName, namespace)
 }
 
 // RemovePod mocks base method.
@@ -288,6 +288,21 @@ func (m *MockKubernetesInterface) ScaleTo(ctx context.Context, deployment, names
 func (mr *MockKubernetesInterfaceMockRecorder) ScaleTo(ctx, deployment, namespace, replicas interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ScaleTo", reflect.TypeOf((*MockKubernetesInterface)(nil).ScaleTo), ctx, deployment, namespace, replicas)
+}
+
+// Service mocks base method.
+func (m *MockKubernetesInterface) Service(ctx context.Context, name, namespace string) (*v10.Service, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Service", ctx, name, namespace)
+	ret0, _ := ret[0].(*v10.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Service indicates an expected call of Service.
+func (mr *MockKubernetesInterfaceMockRecorder) Service(ctx, name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Service", reflect.TypeOf((*MockKubernetesInterface)(nil).Service), ctx, name, namespace)
 }
 
 // ServiceHosts mocks base method.

@@ -117,7 +117,7 @@ func createShadowAndInbound(ctx context.Context, shadowPodName string, labels ma
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
-	podIP, podName, sshConfigMapName, credential, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
+	podIP, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func createShadowAndInbound(ctx context.Context, shadowPodName string, labels ma
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	shadow := connect.Create(options)
-	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP, credential)
+	err = shadow.Inbound(options.MeshOptions.Expose, podName, podIP)
 
 	if err != nil {
 		return err

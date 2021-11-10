@@ -78,17 +78,17 @@ func (mr *MockActionInterfaceMockRecorder) Connect(cli, options interface{}) *go
 }
 
 // Exchange mocks base method.
-func (m *MockActionInterface) Exchange(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exchange", deploymentName, cli, options)
+	ret := m.ctrl.Call(m, "Exchange", resourceName, cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Exchange indicates an expected call of Exchange.
-func (mr *MockActionInterfaceMockRecorder) Exchange(deploymentName, cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Exchange(resourceName, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exchange", reflect.TypeOf((*MockActionInterface)(nil).Exchange), deploymentName, cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exchange", reflect.TypeOf((*MockActionInterface)(nil).Exchange), resourceName, cli, options)
 }
 
 // Mesh mocks base method.

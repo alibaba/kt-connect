@@ -95,7 +95,7 @@ func Test_shouldExposeLocalServiceToCluster(t *testing.T) {
 	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 		Return(args.shadowResponse.podIP, args.shadowResponse.podName, args.shadowResponse.sshcm, args.shadowResponse.credential, args.shadowResponse.err)
 	kubernetes.EXPECT().CreateService(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(args.serviceResponse.service, args.serviceResponse.err)
-	shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(args.inboundResponse.err)
+	shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).Return(args.inboundResponse.err)
 
 	if err := provide(context.TODO(), args.service, fakeKtCli, args.options); err != nil {
 		t.Errorf("expect no error, actual is %v", err)
@@ -129,7 +129,7 @@ func Test_shouldExposeLocalServiceFailWhenShadowCreateFail(t *testing.T) {
 	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 		Return(args.shadowResponse.podIP, args.shadowResponse.podName, args.shadowResponse.sshcm, args.shadowResponse.credential, args.shadowResponse.err)
 	kubernetes.EXPECT().CreateService(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0).Return(args.serviceResponse.service, args.serviceResponse.err)
-	shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Times(0).Return(args.inboundResponse.err)
+	shadow.EXPECT().Inbound(gomock.Any(), gomock.Any(), gomock.Any()).Times(0).Return(args.inboundResponse.err)
 
 	if err := provide(context.TODO(), args.service, fakeKtCli, args.options); err == nil {
 		t.Errorf("expect error = %v, actual is nil", err)

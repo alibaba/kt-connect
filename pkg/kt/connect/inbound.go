@@ -15,29 +15,26 @@ import (
 )
 
 // Inbound mapping local port from cluster
-func (s *Shadow) Inbound(exposePorts, podName, remoteIP string, _ *util.SSHCredential) (err error) {
-	return inbound(s, exposePorts, podName, remoteIP, &sshchannel.SSHChannel{}, &exec.Cli{})
-}
-
-func inbound(s *Shadow, exposePorts, podName, remoteIP string, ssh sshchannel.Channel, cli exec.CliInterface) (err error) {
+func (s *Shadow) Inbound(exposePorts, podName, remoteIP string) (err error) {
 	log.Info().Msgf("Remote %s forward to local %s", remoteIP, exposePorts)
 	localSSHPort, err := strconv.Atoi(util.GetRandomSSHPort(remoteIP))
 	if err != nil {
 		return
 	}
 
+	cli := exec.Cli{}
 	_, _, err = forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
 	if err != nil {
 		return
 	}
 
 	if s.Options.ExchangeOptions != nil && s.Options.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
-		err = exchangeWithEphemeralContainer(ssh, exposePorts, localSSHPort)
+		err = exchangeWithEphemeralContainer(exposePorts, localSSHPort)
 		if err != nil {
 			return err
 		}
 	} else {
-		exposeLocalPorts(ssh, exposePorts, localSSHPort)
+		exposeLocalPorts(exposePorts, localSSHPort)
 	}
 	return nil
 }
@@ -57,9 +54,10 @@ func remoteRedirectPort(exposePorts string, listenedPorts map[string]struct{}) (
 	return redirectPort, nil
 }
 
-func exchangeWithEphemeralContainer(ssh sshchannel.Channel, exposePorts string, localSSHPort int) error {
+func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error {
+	ssh := sshchannel.SSHChannel{}
 	// Get all listened ports on remote host
-	listenedPorts, err := getListenedPorts(ssh, localSSHPort)
+	listenedPorts, err := getListenedPorts(&ssh, localSSHPort)
 	if err != nil {
 		return err
 	}
@@ -73,7 +71,7 @@ func exchangeWithEphemeralContainer(ssh sshchannel.Channel, exposePorts string, 
 		redirectPortStr += fmt.Sprintf("%s:%s,", k, v)
 	}
 	redirectPortStr = redirectPortStr[:len(redirectPortStr)-1]
-	err = setupIptables(ssh, redirectPortStr, localSSHPort)
+	err = setupIptables(&ssh, redirectPortStr, localSSHPort)
 	if err != nil {
 		return err
 	}
@@ -81,7 +79,7 @@ func exchangeWithEphemeralContainer(ssh sshchannel.Channel, exposePorts string, 
 	for _, exposePort := range portPairs {
 		localPort, remotePort := getPortMapping(exposePort)
 		var wg sync.WaitGroup
-		exposeLocalPort(&wg, ssh, localPort, redirectPorts[remotePort], localSSHPort)
+		exposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort)
 		wg.Done()
 	}
 
@@ -143,13 +141,14 @@ func getListenedPorts(ssh sshchannel.Channel, localSSHPort int) (map[string]stru
 	return listenedPorts, nil
 }
 
-func exposeLocalPorts(ssh sshchannel.Channel, exposePorts string, localSSHPort int) {
+func exposeLocalPorts(exposePorts string, localSSHPort int) {
 	var wg sync.WaitGroup
+	ssh := sshchannel.SSHChannel{}
 	// supports multi port pairs
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
 		localPort, remotePort := getPortMapping(exposePort)
-		exposeLocalPort(&wg, ssh, localPort, remotePort, localSSHPort)
+		exposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort)
 	}
 	wg.Wait()
 }

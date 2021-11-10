@@ -16,11 +16,11 @@ import (
 
 func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 
-	execCli, _, kubectl, sshChannel, portForward := getHandlers(t)
+	execCli, _, kubectlCli, sshChannel, portForward := getHandlers(t)
 
 	sshChannel.EXPECT().StartSocks5Proxy(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 	portForward.EXPECT().ForwardPodPortToLocal(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes().Return(make(chan struct{}), nil, nil)
-	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectl)
+	execCli.EXPECT().Kubectl().AnyTimes().Return(kubectlCli)
 	execCli.EXPECT().SshChannel().AnyTimes().Return(sshChannel)
 	execCli.EXPECT().PortForward().AnyTimes().Return(portForward)
 
@@ -42,7 +42,7 @@ func Test_shouldConnectToClusterWithSocks5Methods(t *testing.T) {
 	s := &Shadow{
 		Options: socksOptions,
 	}
-	if err := outbound(s, args.name, args.podIP, args.credential, args.cidrs, execCli); err != nil {
+	if err := s.Outbound(args.name, args.podIP, args.credential, args.cidrs, execCli); err != nil {
 		t.Errorf("expect no error, actual is %v", err)
 	}
 }
@@ -75,7 +75,7 @@ func Test_shouldConnectToClusterWithVpnMethods(t *testing.T) {
 	s := &Shadow{
 		Options: vpnOptions,
 	}
-	if err := outbound(s, args.name, args.podIP, args.credential, args.cidrs, execCli); err != nil {
+	if err := s.Outbound(args.name, args.podIP, args.credential, args.cidrs, execCli); err != nil {
 		t.Errorf("expect no error, actual is %v", err)
 	}
 }
