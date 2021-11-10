@@ -1,6 +1,6 @@
 ## Command: ktctl provide
 
-将本地服务暴露到Kubernetes集群
+将本地服务添加到Kubernetes集群
 
 ### 示例
 
@@ -12,7 +12,7 @@ ktctl provide localservice --expose 8080
 
 ```
 --expose value  指定本地服务监听的端口
---external      创建一个可暴露到集群外的服务地址
+--external      创建`LoadBalancer`类型的Service（生成可暴露到集群外的服务地址）
 ```
 
 ### 从父命令集成的参数
