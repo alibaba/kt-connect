@@ -116,7 +116,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringSliceFlag{
 			Name:  "excludeIps",
-			Usage: "Do not route specified IPs to cluster, e.g. '192.168.64.2', use ',' separated",
+			Usage: "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
 			Value: &options.ConnectOptions.ExcludeIps,
 		},
 		cli.StringSliceFlag{

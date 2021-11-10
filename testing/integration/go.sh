@@ -20,6 +20,7 @@ function cleanup() {
   if [ "${DOCKER_HOST}" != "" ]; then
     PID=`ps aux | grep 'CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
     if [ "${PID}" != "" ]; then
+      log "disconnect from docker host ${DOCKER_HOST}"
       kill -15 ${PID}
     fi
   fi
@@ -85,78 +86,102 @@ function verify() {
   fail "failed to access ${target}, got: ${res}"
 }
 
-# Require for root access
-sudo true
-if [ ${?} -ne 0 ]; then fail "failed to require root access"; fi
+function prepare_cluster() {
+  # Require for root access
+  sudo true
+  if [ ${?} -ne 0 ]; then fail "failed to require root access"; fi
 
-# Check environment is clean
-existPid=`ps aux | grep "ktctl" | grep -v "grep" | awk '{print $2}' | sort -n | head -1`
-if [ "${existPid}" != "" ]; then fail "ktctl already running before test start (pid: ${existPid})"; fi
+  # Check environment is clean
+  existPid=`ps aux | grep "ktctl" | grep -v "grep" | awk '{print $2}' | sort -n | head -1`
+  if [ "${existPid}" != "" ]; then fail "ktctl already running before test start (pid: ${existPid})"; fi
 
-rm -f /tmp/kt-it-*.log
-ktctl -n ${NS} clean >/tmp/kt-it-clean.log 2>&1
-if [ ${?} -ne 0 ]; then fail "clean up failed (kubernetes cluster unreachable ?)"; fi
+  rm -f /tmp/kt-it-*.log
+  ktctl -n ${NS} clean >/tmp/kt-it-clean.log 2>&1
+  if [ ${?} -ne 0 ]; then fail "clean up failed (kubernetes cluster unreachable ?)"; fi
 
-# Prepare test resources
-kubectl create namespace ${NS}
+  # Prepare test resources
+  kubectl create namespace ${NS}
 
-kubectl -n ${NS} create deployment tomcat --image=tomcat:9 --port=8080
-kubectl -n ${NS} expose deployment tomcat --port=8080 --target-port=8080
-wait_for_pod tomcat 1
-kubectl -n ${NS} exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir -p webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
+  kubectl -n ${NS} create deployment tomcat --image=tomcat:9 --port=8080
+  kubectl -n ${NS} expose deployment tomcat --port=8080 --target-port=8080
+  wait_for_pod tomcat 1
+  kubectl -n ${NS} exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir -p webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 
-podIp=`kubectl -n ${NS} get pod --selector app=tomcat -o jsonpath='{.items[0].status.podIP}'`
-log "tomcat pod-ip: ${podIp}"
-if [ "${podIp}" = "" ]; then fail "failed to setup test deployment"; fi
-clusterIP=`kubectl -n ${NS} get service tomcat -o jsonpath='{.spec.clusterIP}'`
-log "tomcat cluster-ip: ${clusterIP}"
-if [ "${clusterIP}" = "" ]; then fail "failed to setup test service"; fi
+  podIp=`kubectl -n ${NS} get pod --selector app=tomcat -o jsonpath='{.items[0].status.podIP}'`
+  log "tomcat pod-ip: ${podIp}"
+  if [ "${podIp}" = "" ]; then fail "failed to setup test deployment"; fi
+  clusterIP=`kubectl -n ${NS} get service tomcat -o jsonpath='{.spec.clusterIP}'`
+  log "tomcat cluster-ip: ${clusterIP}"
+  if [ "${clusterIP}" = "" ]; then fail "failed to setup test service"; fi
+}
 
-# Test connect
-sudo ktctl -n ${NS} -i ${IMAGE} -f connect --method ${MODE} >/tmp/kt-it-connect.log 2>&1 &
-wait_for_pod kt-connect 1
-check_job connect
-check_pid_file connect
+function test_ktctl_connect() {
+  # Test connect
+  if [ "${DOCKER_HOST}" == "" ]; then
+    sudo ktctl -d -n ${NS} -i ${IMAGE} -f connect --method ${MODE} >/tmp/kt-it-connect.log 2>&1 &
+  else
+    sudo ktctl -d -n ${NS} -i ${IMAGE} -f connect --method ${MODE} --excludeIps ${DOCKER_HOST#*@} >/tmp/kt-it-connect.log 2>&1 &
+  fi
+  wait_for_pod kt-connect 1
+  check_job connect
+  check_pid_file connect
 
-verify "pod-ip" "http://${podIp}:8080" "kt-connect demo v1"
-verify "cluster-ip" "http://${clusterIP}:8080" "kt-connect demo v1"
-verify "service-domain-full-qualified" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect demo v1"
-verify "service-domain-with-namespace" "http://tomcat.${NS}:8080" "kt-connect demo v1"
-verify "service-domain" "http://tomcat:8080" "kt-connect demo v1"
-success "ktctl connect test passed"
+  verify "pod-ip" "http://${podIp}:8080" "kt-connect demo v1"
+  verify "cluster-ip" "http://${clusterIP}:8080" "kt-connect demo v1"
+  verify "service-domain-full-qualified" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect demo v1"
+  verify "service-domain-with-namespace" "http://tomcat.${NS}:8080" "kt-connect demo v1"
+  verify "service-domain" "http://tomcat:8080" "kt-connect demo v1"
+  success "ktctl connect test passed"
+}
 
-# Prepare local service
-docker run -d --name tomcat -p 8080:8080 tomcat:9
-sleep 1
+function prepare_local() {
+  # Prepare local service
+  docker run -d --name tomcat -p 8080:8080 tomcat:9
+  if [ $? -eq 0 ]; then
+    log "local tomcat container started"
+  else
+    fail "failed to start local tomcat container"
+  fi
+  sleep 1
 
-exist=`docker ps -a | grep ' tomcat$' | grep -i ' Up '`
-if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; fi
-docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
+  exist=`docker ps -a | grep ' tomcat$' | grep -i ' Up '`
+  if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; fi
+  docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
+  if [ $? -ne 0 ]; then fail "failed to update tomcat index page content"; fi
 
-if [ "${DOCKER_HOST}" != "" ]; then
-  ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -CfNgL 8080:localhost:8080 ${DOCKER_HOST}
-fi
+  if [ "${DOCKER_HOST}" != "" ]; then
+    ssh -o "UserKnownHostsFile=/dev/null" -o "StrictHostKeyChecking=no" -CfNgL 8080:localhost:8080 ${DOCKER_HOST}
+  fi
 
-verify "local-service" "http://127.0.0.1:8080" "kt-connect local v2"
+  verify "local-service" "http://127.0.0.1:8080" "kt-connect local v2"
+}
 
-# Test exchange
-ktctl -n ${NS} -i ${IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
-wait_for_pod tomcat-kt 1
-check_job exchange
-check_pid_file exchange
+function test_ktctl_exchange() {
+  # Test exchange
+  ktctl -d -n ${NS} -i ${IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
+  wait_for_pod tomcat-kt 1
+  check_job exchange
+  check_pid_file exchange
 
-verify "service-domain" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
-success "ktctl exchange test passed"
+  verify "service-domain" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
+  success "ktctl exchange test passed"
+}
 
-# Test provide
-ktctl -n ${NS} -i ${IMAGE} -f provide tomcat-preview --expose 8080 >/tmp/kt-it-provide.log 2>&1 &
-wait_for_pod tomcat-preview-kt 1
-check_job provide
-check_pid_file provide
+function test_ktctl_provide() {
+  # Test provide
+  ktctl -d -n ${NS} -i ${IMAGE} -f provide tomcat-preview --expose 8080 >/tmp/kt-it-provide.log 2>&1 &
+  wait_for_pod tomcat-preview-kt 1
+  check_job provide
+  check_pid_file provide
 
-verify "service-domain" "http://tomcat-preview.${NS}.svc.cluster.local:8080" "kt-connect local v2"
-success "ktctl provide test passed"
+  verify "service-domain" "http://tomcat-preview.${NS}.svc.cluster.local:8080" "kt-connect local v2"
+  success "ktctl provide test passed"
+}
 
-# Clean up
+prepare_cluster
+test_ktctl_connect
+prepare_local
+test_ktctl_exchange
+test_ktctl_provide
 cleanup
 success "all tests done"
