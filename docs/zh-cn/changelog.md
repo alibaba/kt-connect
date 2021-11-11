@@ -1,6 +1,17 @@
 更新日志
 ---
 
+### 0.2.2
+
+> 发布时间：2021-11-12
+
+* `exchange`命令等待原服务完全恢复后，再退出shadow pod（issue-257）
+* `connect`命令新增`--excludeIps`参数，用于排除指定的非集群IP段
+* `connect`命令新增`--proxyAddr`参数，用于指定Socks5代理监听的IP地址
+* `exchange`/`mesh`/`provide`命令增加本地端口是否有服务监听的检查
+* 修复`connect`命令`--cidr`参数指定多个IP段出错的问题
+* 修复当本地服务重启或响应超时以后，`exchange`的连接会自动断开的问题
+
 ### 0.2.1
 
 > 发布时间：2021-11-07

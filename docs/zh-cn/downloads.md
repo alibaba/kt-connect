@@ -9,13 +9,13 @@
 
 软件包:
 
-* [Darwin amd64](https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_darwin_amd64.zip)
+* [Darwin amd64](https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_darwin_amd64.zip)
 
 下载并安装KT
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_darwin_amd64.zip
-$ unzip ktctl_0.2.1_darwin_amd64.zip
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_darwin_amd64.zip
+$ unzip ktctl_0.2.2_darwin_amd64.zip
 $ mv ktctl /usr/local/bin/ktctl
 $ ktctl -h
 ```
@@ -24,14 +24,14 @@ $ ktctl -h
 
 软件包:
 
-* [Linux Amd64](https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_linux_amd64.zip)
-* [Linux 386](https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_linux_386.zip)
+* [Linux Amd64](https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_linux_amd64.zip)
+* [Linux 386](https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_linux_386.zip)
 
 下载并安装KT
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_linux_amd64.zip
-$ unzip ktctl_0.2.1_linux_amd64.zip
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_linux_amd64.zip
+$ unzip ktctl_0.2.2_linux_amd64.zip
 $ mv ktctl /usr/local/bin/ktctl
 $ ktctl -h
 ```
@@ -40,8 +40,8 @@ $ ktctl -h
 
 软件包:
 
-* [Windws amd64](https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_windows_amd64.zip)
-* [Windows 386](https://github.com/alibaba/kt-connect/releases/download/v0.2.1/ktctl_0.2.1_windows_386.zip)
+* [Windws amd64](https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_windows_amd64.zip)
+* [Windows 386](https://github.com/alibaba/kt-connect/releases/download/v0.2.2/ktctl_0.2.2_windows_386.zip)
 
 下载并解压，将可执行文件ktctl放到`PATH`环境变量指定的任意位置。
 
