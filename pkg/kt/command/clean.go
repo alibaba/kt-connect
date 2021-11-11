@@ -33,19 +33,7 @@ func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 	return urfave.Command{
 		Name:  "clean",
 		Usage: "delete unavailing shadow pods from kubernetes cluster",
-		Flags: []urfave.Flag{
-			urfave.BoolFlag{
-				Name:        "dryRun",
-				Usage:       "Only print name of deployments to be deleted",
-				Destination: &options.CleanOptions.DryRun,
-			},
-			urfave.Int64Flag{
-				Name:        "thresholdInMinus",
-				Usage:       "Length of allowed disconnection time before a unavailing shadow pod be deleted",
-				Destination: &options.CleanOptions.ThresholdInMinus,
-				Value:       util.ResourceHeartBeatIntervalMinus * 3,
-			},
-		},
+		Flags: CleanActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)

@@ -25,24 +25,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 	return urfave.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",
-		Flags: []urfave.Flag{
-			urfave.StringFlag{
-				Name:        "expose",
-				Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
-				Destination: &options.MeshOptions.Expose,
-			},
-			urfave.StringFlag{
-				Name:        "version-label",
-				Usage:       "specify the version of mesh service, e.g. '0.0.1'",
-				Destination: &options.MeshOptions.Version,
-			},
-			urfave.StringFlag{
-				Name:        "method",
-				Value:       "manual",
-				Usage:       "Mesh method 'manual' or 'auto'(coming soon)",
-				Destination: &options.MeshOptions.Method,
-			},
-		},
+		Flags: MeshActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)

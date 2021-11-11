@@ -25,18 +25,7 @@ func newProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 	return urfave.Command{
 		Name:  "provide",
 		Usage: "create a shadow service to redirect request to user local",
-		Flags: []urfave.Flag{
-			urfave.IntFlag{
-				Name:        "expose",
-				Usage:       "The port that exposes",
-				Destination: &options.ProvideOptions.Expose,
-			},
-			urfave.BoolFlag{
-				Name:        "external",
-				Usage:       "If specified, a public, external service is created",
-				Destination: &options.ProvideOptions.External,
-			},
-		},
+		Flags: ProvideActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)

@@ -171,6 +171,80 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
+func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
+	return []cli.Flag{
+		cli.StringFlag{
+			Name:        "expose",
+			Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Destination: &options.ExchangeOptions.Expose,
+		},
+		cli.IntFlag{
+			Name:        "recoverWaitTime",
+			Usage:       "seconds to wait for original deployment recover before turn off the shadow pod",
+			Destination: &options.ExchangeOptions.RecoverWaitTime,
+			Value:       120,
+		},
+		cli.StringFlag{
+			Name:        "method",
+			Usage:       "Exchange method 'scale' or 'ephemeral'(experimental)",
+			Destination: &options.ExchangeOptions.Method,
+			Value:       "scale",
+		},
+	}
+}
+
+func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
+	return []cli.Flag{
+		cli.StringFlag{
+			Name:        "expose",
+			Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Destination: &options.MeshOptions.Expose,
+		},
+		cli.StringFlag{
+			Name:        "version-label",
+			Usage:       "specify the version of mesh service, e.g. '0.0.1'",
+			Destination: &options.MeshOptions.Version,
+		},
+		cli.StringFlag{
+			Name:        "method",
+			Value:       "manual",
+			Usage:       "Mesh method 'manual' or 'auto'(coming soon)",
+			Destination: &options.MeshOptions.Method,
+		},
+	}
+}
+
+func ProvideActionFlag(options *options.DaemonOptions) []cli.Flag {
+	return []cli.Flag{
+		cli.IntFlag{
+			Name:        "expose",
+			Usage:       "The port that exposes",
+			Destination: &options.ProvideOptions.Expose,
+		},
+		cli.BoolFlag{
+			Name:        "external",
+			Usage:       "If specified, a public, external service is created",
+			Destination: &options.ProvideOptions.External,
+		},
+	}
+}
+
+func CleanActionFlag(options *options.DaemonOptions) []cli.Flag {
+	return []cli.Flag{
+		cli.BoolFlag{
+			Name:        "dryRun",
+			Usage:       "Only print name of deployments to be deleted",
+			Destination: &options.CleanOptions.DryRun,
+		},
+		cli.Int64Flag{
+			Name:        "thresholdInMinus",
+			Usage:       "Length of allowed disconnection time before a unavailing shadow pod be deleted",
+			Destination: &options.CleanOptions.ThresholdInMinus,
+			Value:       util.ResourceHeartBeatIntervalMinus * 3,
+		},
+	}
+}
+
 func methodDefaultValue() string {
 	if util.IsWindows() {
 		return common.ConnectMethodSocks
