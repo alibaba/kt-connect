@@ -52,6 +52,10 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 		return err
 	}
 
+	if port := util.FindBrokenPort(strconv.Itoa(options.ProvideOptions.Expose)); port != "" {
+		return fmt.Errorf("no application is running on port %s", port)
+	}
+
 	if err := provide(context.TODO(), serviceName, cli, options); err != nil {
 		return err
 	}

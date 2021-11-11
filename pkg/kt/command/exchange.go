@@ -57,6 +57,10 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 		return err
 	}
 
+	if port := util.FindBrokenPort(options.ExchangeOptions.Expose); port != "" {
+		return fmt.Errorf("no application is running on port %s", port)
+	}
+
 	method := options.ExchangeOptions.Method
 	if method == common.ExchangeMethodScale {
 		err = exchangeByScale(resourceName, cli, options)

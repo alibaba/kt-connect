@@ -83,10 +83,10 @@ func (k *Kubernetes) Scale(ctx context.Context, deployment *appv1.Deployment, re
 
 	d, err := client.Update(ctx, deployment, metav1.UpdateOptions{})
 	if err != nil {
-		log.Error().Msgf("Fails scale deployment %s to %d: %s", deployment.GetObjectMeta().GetName(), *replicas, err.Error())
+		log.Error().Msgf("Fails to scale deployment %s: %s", deployment.GetObjectMeta().GetName(), err.Error())
 		return
 	}
-	log.Info().Msgf(" * %s (%d replicas) success", d.Name, *d.Spec.Replicas)
+	log.Info().Msgf("Deployment %s successfully scaled to %d replicas", d.Name, *d.Spec.Replicas)
 	return
 }
 

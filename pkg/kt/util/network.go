@@ -60,3 +60,19 @@ func WaitPortBeReady(waitTime, port int) bool {
 	}
 	return false
 }
+
+// FindBrokenPort Check if all ports has process listening to
+// Return empty string if all ports are listened, otherwise return the first broken port
+func FindBrokenPort(exposePorts string) string {
+	portPairs := strings.Split(exposePorts, ",")
+	for _, exposePort := range portPairs {
+		localPort := strings.Split(exposePort, ":")[0]
+		conn, err := net.Dial("tcp", fmt.Sprintf(":%s", localPort))
+		if err == nil {
+			_ = conn.Close()
+		} else {
+			return localPort
+		}
+	}
+	return ""
+}

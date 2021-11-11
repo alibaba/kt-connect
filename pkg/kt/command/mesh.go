@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"os"
 	"strings"
@@ -54,6 +55,10 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	ch, err := setupProcess(cli, options, common.ComponentMesh)
 	if err != nil {
 		return err
+	}
+
+	if port := util.FindBrokenPort(options.MeshOptions.Expose); port != "" {
+		return fmt.Errorf("no application is running on port %s", port)
 	}
 
 	kubernetes, err := cli.Kubernetes()
