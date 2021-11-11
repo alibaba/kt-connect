@@ -91,18 +91,18 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 	for {
 		client, err := listener.Accept()
 		if err != nil {
-			log.Error().Msgf("Error: %s", err)
+			log.Error().Msgf("Failed to accept remote request: %s", err)
 			return err
 		}
 
 		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
-			log.Error().Msgf("Dial into local service error: %s", err)
-			return err
+			_ = client.Close()
+			log.Error().Msgf("Local service error: %s", err)
+		} else {
+			go handleClient(client, local)
 		}
-
-		go handleClient(client, local)
 	}
 }
 

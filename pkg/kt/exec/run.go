@@ -24,9 +24,7 @@ func RunAndWait(cmd *exec.Cmd, name string) (err error) {
 		Cmd:  cmd,
 		Name: name,
 	}
-	err = runCmd(ctx)
-
-	if err != nil {
+	if err = runCmd(ctx); err != nil {
 		return
 	}
 	err = cmd.Wait()
