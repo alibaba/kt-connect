@@ -175,7 +175,7 @@ func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "expose",
-			Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.ExchangeOptions.Expose,
 		},
 		cli.IntFlag{
@@ -197,7 +197,7 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "expose",
-			Usage:       "ports to expose separate by comma, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.MeshOptions.Expose,
 		},
 		cli.StringFlag{
