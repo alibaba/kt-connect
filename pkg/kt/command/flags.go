@@ -112,11 +112,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
 			Destination: &options.ConnectOptions.CIDRs,
 		},
-		cli.StringFlag{
-			Name:        "dump2hosts",
-			Usage:       "Specify namespaces to dump service into local hosts file, use ',' separated",
-			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
-		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
 			Usage:       "Use shared shadow pod with other clients (Beta)",
@@ -157,6 +152,11 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Value:       2223,
 			Usage:       "(socks5 method only) Specify the local port which socks5 proxy should use",
 			Destination: &options.ConnectOptions.SocksPort,
+		},
+		cli.StringFlag{
+			Name:        "dump2hosts",
+			Usage:       "(socks/socks5 method only) Specify namespaces to dump service into local hosts file, use ',' separated",
+			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
 		},
 		cli.StringFlag{
 			Name:        "jvmrc",

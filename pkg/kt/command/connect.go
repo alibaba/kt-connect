@@ -90,7 +90,8 @@ func connectToCluster(ctx context.Context, cli kt.CliInterface, options *options
 		return
 	}
 
-	if util.IsWindows() || options.ConnectOptions.Dump2HostsNamespaces != "" {
+	if options.ConnectOptions.Method == common.ConnectMethodSocks ||
+		options.ConnectOptions.Method == common.ConnectMethodSocks5 {
 		setupDump2Host(options, kubernetes)
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodVpn {
@@ -156,12 +157,14 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 }
 
 func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
-	var namespaceToDump = strings.Split(options.ConnectOptions.Dump2HostsNamespaces, ",")
-	if len(namespaceToDump) == 0 {
-		namespaceToDump = append(namespaceToDump, options.Namespace)
+	namespacesToDump := []string{options.Namespace}
+	if options.ConnectOptions.Dump2HostsNamespaces != "" {
+		for _, ns := range strings.Split(options.ConnectOptions.Dump2HostsNamespaces, ",") {
+			namespacesToDump = append(namespacesToDump, ns)
+		}
 	}
 	hosts := map[string]string{}
-	for _, namespace := range namespaceToDump {
+	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
 		singleHosts := kubernetes.ServiceHosts(context.TODO(), namespace)
 		for svc, ip := range singleHosts {
