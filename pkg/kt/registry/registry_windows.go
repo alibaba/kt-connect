@@ -60,7 +60,9 @@ func SetGlobalProxy(port int, config *ProxyConfig) error {
 
 func CleanGlobalProxy(config *ProxyConfig) {
 	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, InternetSettings, registry.ALL_ACCESS)
-	if err == nil {
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to reset global proxy configuration")
+	} else {
 		defer internetSettings.Close()
 		internetSettings.SetDWordValue(RegKeyProxyEnable, config.ProxyEnable)
 		if config.ProxyServer != notExist {
@@ -73,8 +75,6 @@ func CleanGlobalProxy(config *ProxyConfig) {
 		} else {
 			internetSettings.DeleteValue(RegKeyProxyOverride)
 		}
-	} else {
-		log.Error().Msgf("Failed to reset global proxy configuration: %s", err)
 	}
 }
 
@@ -102,7 +102,9 @@ func SetHttpProxyEnvironmentVariable(protocol string, port int, config *ProxyCon
 
 func CleanHttpProxyEnvironmentVariable(config *ProxyConfig) {
 	internetSettings, err := registry.OpenKey(registry.CURRENT_USER, EnvironmentSettings, registry.ALL_ACCESS)
-	if err == nil {
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to reset global proxy environment variable")
+	} else {
 		defer internetSettings.Close()
 		if config.HttpProxyVar != notExist {
 			internetSettings.SetStringValue(RegKeyHttpProxy, config.HttpProxyVar)
@@ -110,8 +112,6 @@ func CleanHttpProxyEnvironmentVariable(config *ProxyConfig) {
 			internetSettings.DeleteValue(RegKeyHttpProxy)
 		}
 		refreshEnvironmentVariable()
-	} else {
-		log.Error().Msgf("Failed to reset global proxy environment variable: %s", err)
 	}
 }
 

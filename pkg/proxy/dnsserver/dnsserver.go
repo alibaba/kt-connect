@@ -25,7 +25,7 @@ func Start() {
 	srv := NewDNSServerDefault()
 	err := srv.ListenAndServe()
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msgf("Failed to serve")
 		panic(err.Error())
 	}
 }
@@ -64,7 +64,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 // Simulate kubernetes-like dns look up logic
 func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 	if len(req.Question) <= 0 {
-		log.Error().Msgf("Error: no dns Msg question available")
+		log.Error().Msgf("No dns Msg question available")
 		return
 	}
 
@@ -178,7 +178,7 @@ func (s *server) getResolveServer() (address string, err error) {
 func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
 	address, err := s.getResolveServer()
 	if err != nil {
-		log.Error().Msgf("Error: fail to fetch upstream dns: %s", err.Error())
+		log.Error().Err(err).Msgf("Fail to fetch upstream dns")
 		return
 	}
 	log.Info().Msgf("Resolving domain %s via upstream %s", domain, address)
@@ -191,9 +191,9 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 
 	if res == nil {
 		if err != nil {
-			log.Error().Msgf("Error: fail to resolve: %s", err.Error())
+			log.Error().Err(err).Msgf("Fail to resolve")
 		} else {
-			log.Error().Msgf("Error: fail to resolve")
+			log.Error().Msgf("Fail to resolve")
 		}
 		return
 	}
@@ -202,7 +202,7 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 		err = DomainNotExistError{domain}
 		return
 	} else if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf("Error: failed to answer name %s after %d query for %s", name, qtype, domain)
+		log.Error().Msgf("Failed to answer name %s after %d query for %s", name, qtype, domain)
 		return
 	}
 

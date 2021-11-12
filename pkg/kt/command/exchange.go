@@ -76,7 +76,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
+		log.Error().Msgf("Command interrupted", <-process.Interrupt())
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

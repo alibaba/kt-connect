@@ -40,7 +40,7 @@ func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs s
 	nodeList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 
 	if err != nil {
-		log.Error().Msgf("Fails to get node info of cluster")
+		log.Error().Err(err).Msgf("Fails to get node info of cluster")
 		return nil, err
 	}
 
@@ -67,7 +67,7 @@ func getPodCidrByInstance(ctx context.Context, clientset kubernetes.Interface) (
 	log.Info().Msgf("Fail to get pod cidr from node.Spec.PODCIDR, try to get with pod sample")
 	podList, err := clientset.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {
-		log.Error().Msg("Fails to get service info of cluster")
+		log.Error().Err(err).Msgf("Fails to get service info of cluster")
 		return
 	}
 

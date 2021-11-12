@@ -24,7 +24,7 @@ func (c *IstioController) VirtualServices(context *gin.Context) {
 
 	ic, err := versionedclient.NewForConfig(c.Context.Cluster.Config)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create istio client")
+		log.Error().Err(err).Msgf("Failed to create istio client")
 		context.JSON(http.StatusInternalServerError, gin.H{
 			"message": "fail init istioClient",
 		})
@@ -33,7 +33,7 @@ func (c *IstioController) VirtualServices(context *gin.Context) {
 
 	vsList, err := ic.NetworkingV1alpha3().VirtualServices(namespace).List(context2.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to get VirtualService in %s namespace", namespace)
+		log.Error().Err(err).Msgf("Failed to get VirtualService in namespace \"%s\"", namespace)
 	}
 
 	if err != nil {

@@ -23,7 +23,7 @@ func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name str
 			log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, formattedTime())
 			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
-				log.Error().Msg(err.Error())
+				log.Error().Err(err).Msgf("Failed to update pod heart beat")
 				return
 			}
 		}
@@ -38,7 +38,7 @@ func SetupServiceHeartBeat(ctx context.Context, client coreV1.ServiceInterface, 
 			log.Debug().Msgf("Heartbeat service %s ticked at %s", name, formattedTime())
 			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
-				log.Error().Msg(err.Error())
+				log.Error().Err(err).Msgf("Failed to update service heart beat")
 				return
 			}
 		}
@@ -53,7 +53,7 @@ func SetupConfigMapHeartBeat(ctx context.Context, client coreV1.ConfigMapInterfa
 			log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
 			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
-				log.Error().Msg(err.Error())
+				log.Error().Err(err).Msgf("Failed to update config map heart beat")
 				return
 			}
 		}
@@ -70,7 +70,7 @@ func SetupPortForwardHeartBeat(port int) {
 				log.Debug().Msgf("Heartbeat port forward %d ticked at %s", port, formattedTime())
 				_ = conn.Close()
 			} else {
-				log.Debug().Msgf("Heartbeat port forward %d ticked failed %s", port, err)
+				log.Debug().Msgf("Heartbeat port forward %d ticked failed: %s", port, err)
 			}
 		}
 	}()

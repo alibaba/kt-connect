@@ -11,6 +11,6 @@ func Start() {
 	svc := &socks4.Server{}
 	err := svc.ListenAndServe("tcp", fmt.Sprintf(":%d", common.Socks4Port))
 	if err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Msgf("Failed to serve")
 	}
 }

@@ -45,14 +45,14 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		log.Debug().Msg("Removing tun device ...")
 		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
 		if err != nil {
-			log.Error().Msgf("Fails to delete tun device")
+			log.Error().Err(err).Msgf("Fails to delete tun device")
 			return
 		}
 
 		if !options.ConnectOptions.DisableDNS {
 			err = util.RestoreConfig()
 			if err != nil {
-				log.Error().Msgf("Restore resolv.conf failed, error: %s", err)
+				log.Error().Err(err).Msgf("Restore resolv.conf failed")
 				return
 			}
 		}
@@ -60,7 +60,7 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 
 	k8s, err := cli.Kubernetes()
 	if err != nil {
-		log.Error().Msgf("Fails create kubernetes client when clean up workspace")
+		log.Error().Err(err).Msgf("Fails create kubernetes client when clean up workspace")
 		return
 	}
 	ctx := context.Background()
@@ -74,8 +74,7 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	if _, err := os.Stat(pidFile); err == nil {
 		log.Info().Msgf("Removing pid %s", pidFile)
 		if err = os.Remove(pidFile); err != nil {
-			log.Error().Err(err).
-				Msgf("Stop process:%s failed", pidFile)
+			log.Error().Err(err).Msgf("Stop process %s failed", pidFile)
 		}
 	}
 
@@ -83,7 +82,7 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	if jvmrcFilePath != "" {
 		log.Info().Msg("Removing .jvmrc")
 		if err := os.Remove(jvmrcFilePath); err != nil {
-			log.Error().Err(err).Msg("Delete .jvmrc failed")
+			log.Error().Err(err).Msgf("Delete .jvmrc failed")
 		}
 	}
 }
@@ -93,35 +92,38 @@ func recoverExchangedTarget(ctx context.Context, options *options.DaemonOptions,
 		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
 		err := k8s.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
 		if err != nil {
-			log.Error().
-				Str("namespace", options.Namespace).
-				Msgf("Scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
+			log.Error().Err(err).Msgf("Scale deployment %s to %d failed",
+				options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
 		}
 		// wait for scale complete
 		ch := make(chan os.Signal)
 		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 		go func() {
-			ok := false
-			counts := options.ExchangeOptions.RecoverWaitTime / 5
-			for i := 0; i < counts; i++ {
-				deployment, err := k8s.GetDeployment(ctx, options.RuntimeOptions.Origin, options.Namespace)
-				if err != nil {
-					log.Error().Msgf("Cannot fetch original deployment \"%s\"", options.RuntimeOptions.Origin)
-					break
-				} else if deployment.Status.ReadyReplicas == options.RuntimeOptions.Replicas {
-					ok = true
-					break
-				} else {
-					log.Info().Msgf("Wait for deployment %s recover ...", options.RuntimeOptions.Origin)
-					time.Sleep(5 * time.Second)
-				}
-			}
-			if !ok {
-				log.Warn().Msgf("Deployment %s recover timeout", options.RuntimeOptions.Origin)
-			}
+			waitDeploymentRecoverComplete(ctx, options, k8s)
 			ch <- syscall.SIGSTOP
 		}()
 		_ = <-ch
+	}
+}
+
+func waitDeploymentRecoverComplete(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+	ok := false
+	counts := opts.ExchangeOptions.RecoverWaitTime / 5
+	for i := 0; i < counts; i++ {
+		deployment, err := k8s.GetDeployment(ctx, opts.RuntimeOptions.Origin, opts.Namespace)
+		if err != nil {
+			log.Error().Err(err).Msgf("Cannot fetch original deployment %s", opts.RuntimeOptions.Origin)
+			break
+		} else if deployment.Status.ReadyReplicas == opts.RuntimeOptions.Replicas {
+			ok = true
+			break
+		} else {
+			log.Info().Msgf("Wait for deployment %s recover ...", opts.RuntimeOptions.Origin)
+			time.Sleep(5 * time.Second)
+		}
+	}
+	if !ok {
+		log.Warn().Msgf("Deployment %s recover timeout", opts.RuntimeOptions.Origin)
 	}
 }
 
@@ -191,7 +193,7 @@ func removePrivateKey(options *options.DaemonOptions) {
 		component, version := splits[1], splits[len(splits)-1]
 		file := util.PrivateKeyPath(component, version)
 		if err := os.Remove(file); os.IsNotExist(err) {
-			log.Error().Err(err).Msgf("Can't delete %s", file)
+			log.Error().Msgf("Key file %s not exist", file)
 		}
 	}
 }

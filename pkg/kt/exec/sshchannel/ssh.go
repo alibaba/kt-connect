@@ -36,7 +36,7 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 
 	// Process will hang at here
 	if err = serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
-		log.Error().Msgf("Failed to create socks5 server: %s", err)
+		log.Error().Err(err).Msgf("Failed to create socks5 server")
 	}
 	return
 }
@@ -45,14 +45,14 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script string) (result string, err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	if err != nil {
-		log.Error().Msgf("Fail to create ssh tunnel: %s", err)
+		log.Error().Err(err).Msgf("Fail to create ssh tunnel")
 		return "", err
 	}
 	defer conn.Close()
 
 	session, err := conn.NewSession()
 	if err != nil {
-		log.Error().Msgf("Fail to create ssh session: %s", err)
+		log.Error().Err(err).Msgf("Fail to create ssh session")
 		return "", err
 	}
 	defer session.Close()
@@ -61,7 +61,7 @@ func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script stri
 	session.Stdout = &stdoutBuf
 	err = session.Run(script)
 	if err != nil {
-		log.Error().Msgf("Failed to run ssh script: %s", err)
+		log.Error().Err(err).Msgf("Failed to run ssh script")
 		return "", err
 	}
 	output := stdoutBuf.String()
@@ -72,7 +72,7 @@ func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script stri
 func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	if err != nil {
-		log.Error().Msgf("Fail to create ssh tunnel: %s", err)
+		log.Error().Err(err).Msgf("Fail to create ssh tunnel")
 		return err
 	}
 	defer conn.Close()
@@ -80,7 +80,7 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 	// Listen on remote server port, process will hang at here
 	listener, err := conn.Listen("tcp", remoteEndpoint)
 	if err != nil {
-		log.Error().Msgf("Fail to listen remote endpoint: %s", err)
+		log.Error().Err(err).Msgf("Fail to listen remote endpoint")
 		return err
 	}
 	defer listener.Close()
@@ -91,7 +91,7 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 	for {
 		client, err := listener.Accept()
 		if err != nil {
-			log.Error().Msgf("Failed to accept remote request: %s", err)
+			log.Error().Err(err).Msgf("Failed to accept remote request")
 			return err
 		}
 
@@ -99,7 +99,7 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
 			_ = client.Close()
-			log.Error().Msgf("Local service error: %s", err)
+			log.Error().Err(err).Msgf("Local service error")
 		} else {
 			go handleClient(client, local)
 		}
@@ -117,7 +117,7 @@ func connection(username string, password string, address string) (*ssh.Client, 
 
 	conn, err := ssh.Dial("tcp", address, config)
 	if err != nil {
-		log.Error().Msgf("Fail create ssh connection: %s", err)
+		log.Error().Err(err).Msgf("Fail create ssh connection")
 	}
 	return conn, err
 }
@@ -130,7 +130,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(client, remote)
 		if err != nil {
-			log.Error().Msgf("Error while copy remote->local: %s", err)
+			log.Error().Err(err).Msgf("Error while copy remote->local")
 		}
 		wg.Done()
 	}()
@@ -139,7 +139,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 	go func() {
 		_, err := io.Copy(remote, client)
 		if err != nil {
-			log.Error().Msgf("Error while copy local->remote: %s", err)
+			log.Error().Err(err).Msgf("Error while copy local->remote")
 		}
 		wg.Done()
 	}()
@@ -147,10 +147,10 @@ func handleClient(client net.Conn, remote net.Conn) {
 	wg.Wait()
 	err := remote.Close()
 	if err != nil {
-		log.Error().Msgf("close connection failed, error: %s", err)
+		log.Error().Err(err).Msgf("Close connection failed")
 	}
 	err = client.Close()
 	if err != nil {
-		log.Error().Msgf("close connection failed, error: %s", err)
+		log.Error().Err(err).Msgf("Close connection failed")
 	}
 }

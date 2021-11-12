@@ -108,7 +108,7 @@ func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort in
 		fmt.Sprintf("/setup_iptables.sh %s", redirectPorts))
 
 	if err != nil {
-		log.Error().Msgf("Setup iptables failed, error: %s", err)
+		log.Error().Err(err).Msgf("Setup iptables failed, error")
 	}
 
 	log.Debug().Msgf("Run setup iptables result: %s", res)
@@ -169,7 +169,7 @@ func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remo
 			fmt.Sprintf("127.0.0.1:%s", localPort),
 		)
 		if err != nil {
-			log.Error().Msgf("Error happen when forward remote request to local %s", err)
+			log.Error().Err(err).Msgf("Error happen when forward remote request to local %s")
 		}
 		wg.Done()
 	}(wg)

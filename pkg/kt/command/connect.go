@@ -62,7 +62,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
+		log.Error().Msgf("Command interrupted", <-process.Interrupt())
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
@@ -117,7 +117,7 @@ func checkSshuttleInstalled(cli sshuttle.CliInterface) {
 	if !exec.CanRun(cli.Version()) {
 		err := exec.RunAndWait(cli.Install(), "install_sshuttle")
 		if err != nil {
-			log.Error().Msgf("Failed find or install sshuttle: %s", err)
+			log.Error().Err(err).Msgf("Failed find or install sshuttle")
 		}
 	}
 }
@@ -127,12 +127,12 @@ func setupGlobalProxy(options *options.DaemonOptions) {
 	if options.ConnectOptions.Method == common.ConnectMethodSocks {
 		err = registry.SetGlobalProxy(options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 		if err != nil {
-			log.Error().Msgf("Failed to setup global connect proxy: %s", err.Error())
+			log.Error().Err(err).Msgf("Failed to setup global connect proxy")
 		}
 	}
 	err = registry.SetHttpProxyEnvironmentVariable(options.ConnectOptions.Method, options.ConnectOptions.SocksPort, &options.RuntimeOptions.ProxyConfig)
 	if err != nil {
-		log.Error().Msgf("Failed to setup global http proxy: %s", err.Error())
+		log.Error().Err(err).Msgf("Failed to setup global http proxy")
 	}
 }
 

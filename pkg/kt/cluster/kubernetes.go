@@ -83,7 +83,7 @@ func (k *Kubernetes) Scale(ctx context.Context, deployment *appv1.Deployment, re
 
 	d, err := client.Update(ctx, deployment, metav1.UpdateOptions{})
 	if err != nil {
-		log.Error().Msgf("Fails to scale deployment %s: %s", deployment.GetObjectMeta().GetName(), err.Error())
+		log.Error().Err(err).Msgf("Fails to scale deployment %s", deployment.GetObjectMeta().GetName())
 		return
 	}
 	log.Info().Msgf("Deployment %s successfully scaled to %d replicas", d.Name, *d.Spec.Replicas)
@@ -311,8 +311,8 @@ func increaseRefCount(ctx context.Context, name string, clientSet kubernetes.Int
 	annotations := pod.ObjectMeta.Annotations
 	count, err := strconv.Atoi(annotations[common.KTRefCount])
 	if err != nil {
-		log.Error().Msgf("Failed to parse annotations[%s] of pod %s with value %s",
-			common.KTRefCount, name, annotations[common.KTRefCount])
+		log.Error().Err(err).Msgf("Failed to parse annotations[%s] of pod %s with value %s",
+			common.KTRefCount, name, annotations[common.KTRefCount], err)
 		return err
 	}
 

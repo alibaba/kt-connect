@@ -59,13 +59,13 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 	}
 	privateKeyBytes := encodePrivateKeyToPEM(privateKey)
 
-	ssh := &SSHGenerator{
+	sshKey := &SSHGenerator{
 		PrivateKey:     privateKeyBytes,
 		PrivateKeyPath: privateKeyPath,
 		PublicKey:      publicKeyBytes,
 	}
-	err = WritePrivateKey(ssh.PrivateKeyPath, ssh.PrivateKey)
-	return ssh, err
+	err = WritePrivateKey(sshKey.PrivateKeyPath, sshKey.PrivateKey)
+	return sshKey, err
 }
 
 // PrivateKeyPath ...
@@ -144,12 +144,12 @@ func WritePrivateKey(privateKeyPath string, data []byte) error {
 	dir := filepath.Dir(privateKeyPath)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		if err = os.MkdirAll(dir, 0700); err != nil {
-			log.Error().Err(err).Str("dir", dir).Msg("Can't create dir")
+			log.Error().Err(err).Msgf("Can't create dir %s", dir)
 			return err
 		}
 	}
 	if err := ioutil.WriteFile(privateKeyPath, data, 0400); err != nil {
-		log.Error().Err(err).Str("file", privateKeyPath).Msg("Write ssh private key failed")
+		log.Error().Err(err).Msgf("Write ssh private key to %s failed", privateKeyPath)
 		return err
 	}
 	return nil

@@ -28,7 +28,7 @@ func main() {
 		case actionRemove:
 			remove(os.Args[2:])
 		default:
-			log.Error().Msgf("invalid action action: %s", os.Args[1])
+			log.Error().Msgf("Invalid action action", os.Args[1])
 			usage()
 		}
 	}
@@ -54,12 +54,12 @@ func setup(args []string) {
 	}
 	err := router.WriteKtConf(&ktConf)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msgf("Write kt config failed")
 		return
 	}
 	err = router.WriteAndReloadRouteConf(&ktConf)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msgf("Write and load route config failed")
 		return
 	}
 	log.Info().Msgf("Route setup completed.")
@@ -68,7 +68,7 @@ func setup(args []string) {
 func add(args []string) {
 	err := updateRoute(args[0], actionAdd)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msgf("Update route with add failed")
 		return
 	}
 	log.Info().Msgf("Route updated.")
@@ -77,7 +77,7 @@ func add(args []string) {
 func remove(args []string) {
 	err := updateRoute(args[0], actionRemove)
 	if err != nil {
-		log.Error().Msg(err.Error())
+		log.Error().Err(err).Msgf("Update route with remove failed" )
 		return
 	}
 	log.Info().Msgf("Route updated.")

@@ -15,19 +15,18 @@ const ktHostsEscapeEnd = "# Kt Hosts End"
 func DropHosts() {
 	lines, err := loadHostsFile()
 	if err != nil {
-		log.Error().Msgf("Failed to load hosts file: %s", err.Error())
+		log.Error().Err(err).Msgf("Failed to load hosts file")
 		return
 	}
 	linesAfterDrop, err := dropHosts(lines)
 	if err != nil {
-		log.Error().Msgf("Failed to parse hosts file: %s", err.Error())
+		log.Error().Err(err).Msgf("Failed to parse hosts file")
 		return
 	}
 	if len(linesAfterDrop) < len(lines) {
 		err = updateHostsFile(linesAfterDrop)
 		if err != nil {
-			log.Error().Msgf("Failed to update hosts file, you may require %s permission: %s",
-				getAdminUserName(), err.Error())
+			log.Error().Err(err).Msgf("Failed to update hosts file, you may require %s permission", getAdminUserName())
 			return
 		}
 		log.Info().Msgf("Drop hosts successful")
@@ -38,12 +37,12 @@ func DropHosts() {
 func DumpHosts(hostsMap map[string]string) {
 	lines, err := loadHostsFile()
 	if err != nil {
-		log.Error().Msgf("Failed to load hosts file: %s", err.Error())
+		log.Error().Err(err).Msgf("Failed to load hosts file")
 		return
 	}
 	linesBeforeDump, err := dropHosts(lines)
 	if err != nil {
-		log.Error().Msgf("Failed to parse hosts file: %s", err.Error())
+		log.Error().Err(err).Msgf("Failed to parse hosts file")
 		return
 	}
 	err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap)))

@@ -30,7 +30,7 @@ func GetOutboundIP() (address string) {
 	address = "127.0.0.1"
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		log.Error().Err(err).Send()
+		log.Error().Err(err).Msgf("Failed to get outbound IP")
 		return
 	}
 	defer conn.Close()

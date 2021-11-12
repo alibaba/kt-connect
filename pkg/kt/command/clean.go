@@ -86,8 +86,7 @@ func (action *Action) cleanPidFiles() {
 		if strings.HasSuffix(f.Name(), ".pid") && !util.IsProcessExist(action.toPid(f.Name())) {
 			log.Info().Msgf("Removing pid file %s", f.Name())
 			if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
-				log.Error().Err(err).
-					Msgf("Delete pid file %s failed", f.Name())
+				log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
 			}
 		}
 	}
@@ -123,25 +122,25 @@ func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, kube
 	for name := r.NamesOfPodToDelete.Front(); name != nil; name = name.Next() {
 		err := kubernetes.RemovePod(ctx, name.Value.(string), namespace)
 		if err != nil {
-			log.Error().Msgf("Fail to delete pods %s", name.Value.(string))
+			log.Error().Err(err).Msgf("Fail to delete pods %s", name.Value.(string))
 		}
 	}
 	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
 		err := kubernetes.RemoveService(ctx, name.Value.(string), namespace)
 		if err != nil {
-			log.Error().Msgf("Fail to delete service %s", name.Value.(string))
+			log.Error().Err(err).Msgf("Fail to delete service %s", name.Value.(string))
 		}
 	}
 	for name := r.NamesOfConfigMapToDelete.Front(); name != nil; name = name.Next() {
 		err := kubernetes.RemoveConfigMap(ctx, name.Value.(string), namespace)
 		if err != nil {
-			log.Error().Msgf("Fail to delete config map %s", name.Value.(string))
+			log.Error().Err(err).Msgf("Fail to delete config map %s", name.Value.(string))
 		}
 	}
 	for name, replica := range r.DeploymentsToScale {
 		err := kubernetes.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
-			log.Error().Msgf("Fail to scale deployment %s to %d", name, replica)
+			log.Error().Err(err).Msgf("Fail to scale deployment %s to %d", name, replica)
 		}
 	}
 	log.Info().Msg("Done")
