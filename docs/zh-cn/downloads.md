@@ -1,8 +1,6 @@
 下载和安装
 ---
 
-> 你可以从这里下载最新构建的软件包[Github Releases](https://github.com/alibaba/kt-connect/releases)
-
 <!-- tabs:start -->
 
 #### ** Mac **
@@ -46,3 +44,5 @@ $ ktctl -h
 下载并解压，将可执行文件ktctl放到`PATH`环境变量指定的任意位置。
 
 <!-- tabs:end -->
+
+> 你也可以从这里下载最新构建的软件包[Github Releases](https://github.com/alibaba/kt-connect/releases)
