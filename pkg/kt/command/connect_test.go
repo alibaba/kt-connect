@@ -48,7 +48,7 @@ func Test_newConnectCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := newConnectCommand(fakeKtCli, opts, mockAction)
+		command := NewConnectCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

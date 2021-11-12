@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"os"
 	"strings"
 
@@ -21,17 +21,17 @@ import (
 	"k8s.io/api/apps/v1"
 )
 
-// newMeshCommand return new mesh command
-func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// NewMeshCommand return new mesh command
+func NewMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "mesh",
 		Usage: "mesh kubernetes deployment to local",
-		Flags: MeshActionFlag(options),
+		Flags: general.MeshActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := combineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
 			deploymentToMesh := c.Args().First()
@@ -52,7 +52,7 @@ func newMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch, err := setupProcess(cli, options, common.ComponentMesh)
+	ch, err := general.SetupProcess(cli, options, common.ComponentMesh)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		clean.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 

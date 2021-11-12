@@ -2,16 +2,20 @@ package command
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/skratchdot/open-golang/open"
 	"github.com/urfave/cli"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-// newDashboardCommand dashboard command
-func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
+// NewDashboardCommand dashboard command
+func NewDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "dashboard",
 		Usage: "kt-connect dashboard",
@@ -23,7 +27,7 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					if err := combineKubeOpts(options); err != nil {
+					if err := general.CombineKubeOpts(options); err != nil {
 						return err
 					}
 					return action.ApplyDashboard(ktCli, options)
@@ -44,7 +48,7 @@ func newDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 					if options.Debug {
 						zerolog.SetGlobalLevel(zerolog.DebugLevel)
 					}
-					if err := combineKubeOpts(options); err != nil {
+					if err := general.CombineKubeOpts(options); err != nil {
 						return err
 					}
 					return action.OpenDashboard(ktCli, options)
@@ -68,7 +72,8 @@ func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.Daemo
 
 // OpenDashboard ...
 func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.DaemonOptions) (err error) {
-	ch := setupWaitingChannel()
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 	command := ktCli.Exec().Kubectl().PortForwardDashboardToLocal(options.DashboardOptions.Port)
 	err = exec.BackgroundRun(command, "forward dashboard to localhost")
 	if err != nil {

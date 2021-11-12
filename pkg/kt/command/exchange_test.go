@@ -42,7 +42,7 @@ func Test_exchangeCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := newExchangeCommand(fakeKtCli, opts, mockAction)
+		command := NewExchangeCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

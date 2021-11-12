@@ -1,4 +1,4 @@
-package command
+package general
 
 import (
 	"github.com/alibaba/kt-connect/pkg/common"

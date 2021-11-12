@@ -40,7 +40,7 @@ func Test_cleanCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := newCleanCommand(fakeKtCli, opts, mockAction)
+		command := NewCleanCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

@@ -40,7 +40,7 @@ func Test_newDashboardCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := newDashboardCommand(fakeKtCli, opts, mockAction)
+		command := NewDashboardCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

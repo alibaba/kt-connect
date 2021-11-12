@@ -1,13 +1,11 @@
-package command
+package general
 
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	"github.com/urfave/cli"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
@@ -18,27 +16,15 @@ import (
 	"syscall"
 )
 
-// NewCommands return new Connect Action
-func NewCommands(kt kt.CliInterface, action ActionInterface, options *options.DaemonOptions) []cli.Command {
-	return []cli.Command{
-		newConnectCommand(kt, options, action),
-		newExchangeCommand(kt, options, action),
-		newMeshCommand(kt, options, action),
-		newProvideCommand(kt, options, action),
-		newCleanCommand(kt, options, action),
-		newDashboardCommand(kt, options, action),
-	}
-}
-
-// setupProcess write pid file and print setup message
-func setupProcess(cli kt.CliInterface, options *options.DaemonOptions, componentName string) (chan os.Signal, error) {
+// SetupProcess write pid file and print setup message
+func SetupProcess(cli kt.CliInterface, options *options.DaemonOptions, componentName string) (chan os.Signal, error) {
 	options.RuntimeOptions.Component = componentName
 	err := util.WritePidFile(componentName)
 	if err != nil {
 		return nil, err
 	}
 	log.Info().Msgf("KtConnect %s start at %d (%s)", options.Version, os.Getpid(), runtime.GOOS)
-	ch := SetupCloseHandler(cli, options)
+	ch := setupCloseHandler(cli, options)
 	return ch, nil
 }
 
@@ -51,11 +37,11 @@ func setupWaitingChannel() (ch chan os.Signal) {
 }
 
 // SetupCloseHandler registry close handler
-func SetupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
+func setupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
 	ch = setupWaitingChannel()
 	go func() {
 		<-ch
-		clean.CleanupWorkspace(cli, options)
+		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	return
@@ -77,8 +63,8 @@ func validateKubeOpts(opts []string) error {
 	return nil
 }
 
-// combineKubeOpts set default options of kubectl if not assign
-func combineKubeOpts(options *options.DaemonOptions) error {
+// CombineKubeOpts set default options of kubectl if not assign
+func CombineKubeOpts(options *options.DaemonOptions) error {
 	if err := validateKubeOpts(options.KubeOptions); err != nil {
 		return err
 	}

@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -22,17 +22,17 @@ import (
 	"time"
 )
 
-// newExchangeCommand return new exchange command
-func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// NewExchangeCommand return new exchange command
+func NewExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "exchange",
 		Usage: "exchange kubernetes deployment to local",
-		Flags: ExchangeActionFlag(options),
+		Flags: general.ExchangeActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := combineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
 			resourceToExchange := c.Args().First()
@@ -52,7 +52,7 @@ func newExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch, err := setupProcess(cli, options, common.ComponentExchange)
+	ch, err := general.SetupProcess(cli, options, common.ComponentExchange)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		clean.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	s := <-ch

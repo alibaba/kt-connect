@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -28,17 +29,17 @@ type ResourceToClean struct {
 	DeploymentsToScale       map[string]int32
 }
 
-// newConnectCommand return new connect command
-func newCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// NewCleanCommand return new connect command
+func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "clean",
 		Usage: "delete unavailing shadow pods from kubernetes cluster",
-		Flags: CleanActionFlag(options),
+		Flags: general.CleanActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := combineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
 			return action.Clean(cli, options)

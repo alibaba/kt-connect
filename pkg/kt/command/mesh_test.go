@@ -42,7 +42,7 @@ func Test_meshCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := newMeshCommand(fakeKtCli, opts, mockAction)
+		command := NewMeshCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

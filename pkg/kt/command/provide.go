@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"os"
 	"strconv"
 	"strings"
@@ -20,17 +20,17 @@ import (
 	urfave "github.com/urfave/cli"
 )
 
-// newProvideCommand return new provide command
-func newProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// NewProvideCommand return new provide command
+func NewProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "provide",
 		Usage: "create a shadow service to redirect request to user local",
-		Flags: ProvideActionFlag(options),
+		Flags: general.ProvideActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := combineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
 			port := options.ProvideOptions.Expose
@@ -47,7 +47,7 @@ func newProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // Provide create a new service in cluster
 func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch, err := setupProcess(cli, options, common.ComponentProvide)
+	ch, err := general.SetupProcess(cli, options, common.ComponentProvide)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		clean.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	<-ch

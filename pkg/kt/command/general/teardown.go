@@ -1,4 +1,4 @@
-package clean
+package general
 
 import (
 	"context"

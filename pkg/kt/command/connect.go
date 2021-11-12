@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"net"
@@ -24,12 +24,12 @@ import (
 	urfave "github.com/urfave/cli"
 )
 
-// newConnectCommand return new connect command
-func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// NewConnectCommand return new connect command
+func NewConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "connect",
 		Usage: "connection to kubernetes cluster",
-		Flags: ConnectActionFlag(options),
+		Flags: general.ConnectActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -37,7 +37,7 @@ func newConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 			if err := completeOptions(options); err != nil {
 				return err
 			}
-			if err := combineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
 			return action.Connect(cli, options)
@@ -51,7 +51,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
-	ch, err := setupProcess(cli, options, common.ComponentConnect)
+	ch, err := general.SetupProcess(cli, options, common.ComponentConnect)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted: %s", <-process.Interrupt())
-		clean.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
 	s := <-ch

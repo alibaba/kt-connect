@@ -48,7 +48,7 @@ func Test_runCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := newProvideCommand(fakeKtCli, opts, mockAction)
+		command := NewProvideCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

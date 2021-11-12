@@ -1,4 +1,4 @@
-package command
+package general
 
 import (
 	"github.com/urfave/cli"
