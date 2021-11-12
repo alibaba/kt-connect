@@ -34,10 +34,10 @@ func NewMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
-			deploymentToMesh := c.Args().First()
+			resourceToMesh := c.Args().First()
 			expose := options.MeshOptions.Expose
 
-			if len(deploymentToMesh) == 0 {
+			if len(resourceToMesh) == 0 {
 				return errors.New("name of deployment to mesh is required")
 			}
 
@@ -45,13 +45,13 @@ func NewMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 				return errors.New("--expose is required")
 			}
 
-			return action.Mesh(deploymentToMesh, cli, options)
+			return action.Mesh(resourceToMesh, cli, options)
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	ch, err := general.SetupProcess(cli, options, common.ComponentMesh)
 	if err != nil {
 		return err
@@ -67,24 +67,16 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	}
 
 	ctx := context.Background()
-	app, err := kubernetes.Deployment(ctx, deploymentName, options.Namespace)
+	if options.MeshOptions.Method == common.MeshMethodManual {
+		err = manualMesh(ctx, resourceName, kubernetes, options)
+	} else if options.MeshOptions.Method == common.MeshMethodAuto {
+		err = autoMesh(ctx, resourceName, kubernetes, options)
+	} else {
+		err = fmt.Errorf("invalid mesh method \"%s\"", options.MeshOptions.Method)
+	}
 	if err != nil {
 		return err
 	}
-
-	meshVersion := getVersion(options)
-
-	shadowPodName := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
-	labels := getMeshLabels(shadowPodName, meshVersion, app, options)
-
-	err = createShadowAndInbound(ctx, shadowPodName, labels, options, kubernetes)
-	if err != nil {
-		return err
-	}
-
-	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule       ", meshVersion)
-	log.Info().Msg("---------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
@@ -100,6 +92,32 @@ func (action *Action) Mesh(deploymentName string, cli kt.CliInterface, options *
 	return nil
 }
 
+func manualMesh(ctx context.Context, deploymentName string, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) error {
+	app, err := kubernetes.Deployment(ctx, deploymentName, options.Namespace)
+	if err != nil {
+		return err
+	}
+
+	meshVersion := getVersion(options)
+
+	shadowPodName := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
+	labels := getMeshLabels(shadowPodName, meshVersion, app, options)
+
+	if err = createShadowAndInbound(ctx, shadowPodName, labels, options, kubernetes); err != nil {
+		return err
+	}
+
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule       ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
+	return nil
+}
+
+func autoMesh(ctx context.Context, deploymentName string, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) error {
+
+	return nil
+}
+
 func createShadowAndInbound(ctx context.Context, shadowPodName string, labels map[string]string, options *options.DaemonOptions,
 	kubernetes cluster.KubernetesInterface) error {
 
@@ -109,6 +127,7 @@ func createShadowAndInbound(ctx context.Context, shadowPodName string, labels ma
 	if err != nil {
 		return err
 	}
+
 	// record context data
 	options.RuntimeOptions.Shadow = shadowPodName
 	options.RuntimeOptions.SSHCM = sshConfigMapName
