@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
@@ -39,22 +38,21 @@ func setupProcess(cli kt.CliInterface, options *options.DaemonOptions, component
 		return nil, err
 	}
 	log.Info().Msgf("KtConnect %s start at %d (%s)", options.Version, os.Getpid(), runtime.GOOS)
-	ch := SetupCloseHandler(cli, options, common.ComponentProvide)
+	ch := SetupCloseHandler(cli, options)
 	return ch, nil
 }
 
 // setupWaitingChannel registry waiting channel
 func setupWaitingChannel() (ch chan os.Signal) {
 	ch = make(chan os.Signal)
+	// see https://en.wikipedia.org/wiki/Signal_(IPC)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	return
 }
 
 // SetupCloseHandler registry close handler
-func SetupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions, action string) (ch chan os.Signal) {
-	ch = make(chan os.Signal)
-	// see https://en.wikipedia.org/wiki/Signal_(IPC)
-	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
+func SetupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
+	ch = setupWaitingChannel()
 	go func() {
 		<-ch
 		clean.CleanupWorkspace(cli, options)

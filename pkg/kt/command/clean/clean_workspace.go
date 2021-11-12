@@ -12,7 +12,9 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -96,24 +98,30 @@ func recoverExchangedTarget(ctx context.Context, options *options.DaemonOptions,
 				Msgf("Scale deployment:%s to %d failed", options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
 		}
 		// wait for scale complete
-		ok := false
-		counts := options.ExchangeOptions.RecoverWaitTime / 5
-		for i := 0; i < counts; i++ {
-			deployment, err := k8s.GetDeployment(ctx, options.RuntimeOptions.Origin, options.Namespace)
-			if err != nil {
-				log.Error().Msgf("Cannot fetch original deployment \"%s\"", options.RuntimeOptions.Origin)
-				break
-			} else if deployment.Status.ReadyReplicas == options.RuntimeOptions.Replicas {
-				ok = true
-				break
-			} else {
-				log.Info().Msgf("Wait for deployment %s recover ...", options.RuntimeOptions.Origin)
-				time.Sleep(5 * time.Second)
+		ch := make(chan os.Signal)
+		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
+		go func() {
+			ok := false
+			counts := options.ExchangeOptions.RecoverWaitTime / 5
+			for i := 0; i < counts; i++ {
+				deployment, err := k8s.GetDeployment(ctx, options.RuntimeOptions.Origin, options.Namespace)
+				if err != nil {
+					log.Error().Msgf("Cannot fetch original deployment \"%s\"", options.RuntimeOptions.Origin)
+					break
+				} else if deployment.Status.ReadyReplicas == options.RuntimeOptions.Replicas {
+					ok = true
+					break
+				} else {
+					log.Info().Msgf("Wait for deployment %s recover ...", options.RuntimeOptions.Origin)
+					time.Sleep(5 * time.Second)
+				}
 			}
-		}
-		if !ok {
-			log.Warn().Msgf("Deployment %s recover timeout", options.RuntimeOptions.Origin)
-		}
+			if !ok {
+				log.Warn().Msgf("Deployment %s recover timeout", options.RuntimeOptions.Origin)
+			}
+			ch <- syscall.SIGSTOP
+		}()
+		_ = <-ch
 	}
 }
 
