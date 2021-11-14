@@ -16,7 +16,6 @@ import (
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
-	"k8s.io/client-go/kubernetes"
 	"strconv"
 	"strings"
 )
@@ -68,7 +67,7 @@ func (k *Kubernetes) RemoveConfigMap(ctx context.Context, name, namespace string
 
 // ScaleTo scale deployment to
 func (k *Kubernetes) ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error) {
-	obj, err := k.Deployment(ctx, deployment, namespace)
+	obj, err := k.GetDeployment(ctx, deployment, namespace)
 	if err != nil {
 		return
 	}
@@ -90,23 +89,28 @@ func (k *Kubernetes) Scale(ctx context.Context, deployment *appv1.Deployment, re
 	return
 }
 
-// Deployment get deployment
-func (k *Kubernetes) Deployment(ctx context.Context, name, namespace string) (*appv1.Deployment, error) {
-	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-// Service get service
-func (k *Kubernetes) Service(ctx context.Context, name, namespace string) (*coreV1.Service, error) {
+// GetService get service
+func (k *Kubernetes) GetService(ctx context.Context, name, namespace string) (*coreV1.Service, error) {
 	return k.Clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-// Pod get pod
-func (k *Kubernetes) Pod(ctx context.Context, name, namespace string) (*coreV1.Pod, error) {
+// GetConfigMap get configmap
+func (k *Kubernetes) GetConfigMap(ctx context.Context, name, namespace string) (*coreV1.ConfigMap, error) {
+	return k.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+// GetDeployment ...
+func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace string) (*appv1.Deployment, error) {
+	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+// GetPod ...
+func (k *Kubernetes) GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error) {
 	return k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-// Pods get pods
-func (k *Kubernetes) Pods(ctx context.Context, labels map[string]string, namespace string) (*coreV1.PodList, error) {
+// GetPods get pods by label
+func (k *Kubernetes) GetPods(ctx context.Context, labels map[string]string, namespace string) (*coreV1.PodList, error) {
 	return k.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
 	})
@@ -115,7 +119,7 @@ func (k *Kubernetes) Pods(ctx context.Context, labels map[string]string, namespa
 // AddEphemeralContainer add ephemeral container to specified pod
 func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, podName string,
 	options *options.DaemonOptions, envs map[string]string) (sshcm string, err error) {
-	pod, err := k.Pod(ctx, podName, options.Namespace)
+	pod, err := k.GetPod(ctx, podName, options.Namespace)
 	if err != nil {
 		return "", err
 	}
@@ -127,7 +131,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 	if err != nil {
 		return
 	}
-	configMap, err2 := k.createConfigMap(ctx, map[string]string{}, sshcm, options.Namespace, generator)
+	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, map[string]string{}, sshcm, options.Namespace, generator)
 
 	if err2 != nil {
 		err = errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
@@ -168,188 +172,8 @@ func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, containerName
 	return k.RemovePod(ctx, podName, namespace)
 }
 
-// GetOrCreateShadow create shadow
-func (k *Kubernetes) GetOrCreateShadow(ctx context.Context, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
-	podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
-
-	component := labels[common.KTComponent]
-	identifier := strings.ToLower(util.RandomString(4))
-	if options.ConnectOptions.ShareShadow {
-		identifier = "shared"
-	}
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, identifier)
-	privateKeyPath := util.PrivateKeyPath(component, identifier)
-
-	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(options.WithLabels) {
-		labels[k] = v
-	}
-	for k, v := range util.String2Map(options.WithAnnotations) {
-		annotations[k] = v
-	}
-	annotations[common.KtUser] = util.GetLocalUserName()
-
-	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(ctx, &ResourceMeta{
-			Name:        name,
-			Namespace:   options.Namespace,
-			Labels:      labels,
-			Annotations: annotations,
-		}, &SSHkeyMeta{
-			SshConfigMapName: sshcm,
-			PrivateKeyPath:   privateKeyPath,
-		})
-		if err2 != nil {
-			err = err2
-			return
-		}
-		if pod != nil && generator != nil {
-			podIP, podName, credential = shadowResult(pod, generator)
-			return
-		}
-	}
-
-	podIP, podName, credential, err = k.createShadow(ctx, &PodMetaAndSpec{
-		&ResourceMeta{
-			Name:        name,
-			Namespace:   options.Namespace,
-			Labels:      labels,
-			Annotations: annotations,
-		}, options.Image, envs,
-	}, &SSHkeyMeta{
-		SshConfigMapName: sshcm,
-		PrivateKeyPath:   privateKeyPath,
-	}, options)
-	return
-}
-
-func (k *Kubernetes) createShadow(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta, options *options.DaemonOptions) (
-	podIP string, podName string, credential *util.SSHCredential, err error) {
-
-	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
-	if err != nil {
-		return
-	}
-	configMap, err2 := k.createConfigMap(ctx, metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
-
-	if err2 != nil {
-		err = err2
-		return
-	}
-	log.Info().Msgf("Successful create config map %v", configMap.ObjectMeta.Name)
-
-	pod, err2 := k.createAndGetPod(ctx, metaAndSpec, sshKeyMeta.SshConfigMapName, options)
-	if err2 != nil {
-		err = err2
-		return
-	}
-	podIP, podName, credential = shadowResult(pod, generator)
-	return
-}
-
-// GetAllExistingShadowPods fetch all shadow pods
-func (k *Kubernetes) GetAllExistingShadowPods(ctx context.Context, namespace string) ([]coreV1.Pod, error) {
-	list, err := k.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: k8sLabels.Set(metav1.LabelSelector{
-			MatchLabels: map[string]string{common.ControlBy: common.KubernetesTool},
-		}.MatchLabels).String(),
-	})
-	if list == nil {
-		return nil, common.CommandExecError{Reason: "get nil list when querying shadow pods"}
-	}
-	return list.Items, err
-}
-
-func (k *Kubernetes) tryGetExistingShadowRelatedObjs(ctx context.Context, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *coreV1.Pod, generator *util.SSHGenerator, err error) {
-	_, shadowError := k.GetPod(ctx, resourceMeta.Name, resourceMeta.Namespace)
-	if shadowError != nil {
-		return
-	}
-	cli := k.Clientset.CoreV1().ConfigMaps(resourceMeta.Namespace)
-	configMap, configMapError := cli.Get(ctx, sshKeyMeta.SshConfigMapName, metav1.GetOptions{})
-
-	if configMapError != nil {
-		err = errors.New("Found shadow pod but no configMap. Please delete the pod " + resourceMeta.Name)
-		return
-	}
-
-	generator = util.NewSSHGenerator(configMap.Data[common.SSHAuthPrivateKey], configMap.Data[common.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
-
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SSHAuthPrivateKey]))
-	if err != nil {
-		return
-	}
-
-	return k.getShadowPod(ctx, resourceMeta, generator)
-}
-
-func (k *Kubernetes) getShadowPod(ctx context.Context, resourceMeta *ResourceMeta, generator *util.SSHGenerator) (pod *coreV1.Pod, sshGenerator *util.SSHGenerator, err error) {
-	podList, err := k.Clientset.CoreV1().Pods(resourceMeta.Namespace).List(ctx, metav1.ListOptions{
-		LabelSelector: k8sLabels.Set(metav1.LabelSelector{MatchLabels: resourceMeta.Labels}.MatchLabels).String(),
-	})
-	if err != nil {
-		return
-	}
-	if len(podList.Items) == 1 {
-		log.Info().Msgf("Found shared shadow, reuse it")
-		err = increaseRefCount(ctx, resourceMeta.Name, k.Clientset, resourceMeta.Namespace)
-		if err != nil {
-			return
-		}
-		return &(podList.Items[0]), generator, nil
-	} else if len(podList.Items) > 1 {
-		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
-	}
-	return
-}
-
-func increaseRefCount(ctx context.Context, name string, clientSet kubernetes.Interface, namespace string) error {
-	pod, err := clientSet.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-	annotations := pod.ObjectMeta.Annotations
-	count, err := strconv.Atoi(annotations[common.KTRefCount])
-	if err != nil {
-		log.Error().Err(err).Msgf("Failed to parse annotations[%s] of pod %s with value %s",
-			common.KTRefCount, name, annotations[common.KTRefCount], err)
-		return err
-	}
-
-	pod.ObjectMeta.Annotations[common.KTRefCount] = strconv.Itoa(count + 1)
-
-	_, err = clientSet.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
-	return err
-}
-
-func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, *util.SSHCredential) {
-	podIP := pod.Status.PodIP
-	podName := pod.GetObjectMeta().GetName()
-	credential := util.NewDefaultSSHCredential()
-	credential.PrivateKeyPath = generator.PrivateKeyPath
-	return podIP, podName, credential
-}
-
-func (k *Kubernetes) createAndGetPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (*coreV1.Pod, error) {
-	localIPAddress := util.GetOutboundIP()
-	log.Debug().Msgf("Client address %s", localIPAddress)
-	resourceMeta := metaAndSpec.Meta
-	resourceMeta.Labels[common.KTRemoteAddress] = localIPAddress
-	resourceMeta.Labels[common.KTName] = resourceMeta.Name
-	cli := k.Clientset.CoreV1().Pods(resourceMeta.Namespace)
-	util.SetupPodHeartBeat(ctx, cli, resourceMeta.Name)
-
-	pod := createPod(metaAndSpec, sshcm, options)
-	result, err := cli.Create(ctx, pod, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-	log.Info().Msgf("Deploy shadow pod %s in namespace %s", result.GetObjectMeta().GetName(), resourceMeta.Namespace)
-
-	return waitPodReadyUsingInformer(resourceMeta.Namespace, resourceMeta.Name, k.Clientset)
-}
-
-func (k *Kubernetes) createConfigMap(ctx context.Context, labels map[string]string, sshcm string, namespace string, generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
+func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,
+	generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
 
 	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
 	labels[common.KTName] = sshcm
@@ -368,6 +192,18 @@ func (k *Kubernetes) createConfigMap(ctx context.Context, labels map[string]stri
 			common.SSHAuthPrivateKey: string(generator.PrivateKey),
 		},
 	}, metav1.CreateOptions{})
+}
+
+// CreateShadowPod create shadow pod
+func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error {
+	cli := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace)
+	util.SetupPodHeartBeat(ctx, cli, metaAndSpec.Meta.Name)
+	pod := createPod(metaAndSpec, sshcm, options)
+	_, err := cli.Create(ctx, pod, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // CreateService create kubernetes service
@@ -410,8 +246,8 @@ func fetchServiceList(ctx context.Context, k *Kubernetes, namespace string) (*co
 	return serviceList, err
 }
 
-// ServiceHosts get service dns map
-func (k *Kubernetes) ServiceHosts(ctx context.Context, namespace string) (hosts map[string]string) {
+// GetServiceHosts get service dns map
+func (k *Kubernetes) GetServiceHosts(ctx context.Context, namespace string) (hosts map[string]string) {
 	services, err := k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return
@@ -423,10 +259,10 @@ func (k *Kubernetes) ServiceHosts(ctx context.Context, namespace string) (hosts 
 	return
 }
 
-func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Interface) (pod *coreV1.Pod, err error) {
+func (k *Kubernetes) WaitPodReadyUsingInformer(namespace, name string) (pod *coreV1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)
-	podListener, err := clusterWatcher.PodListenerWithNamespace(clientset, namespace, stopSignal)
+	podListener, err := clusterWatcher.PodListenerWithNamespace(k.Clientset, namespace, stopSignal)
 	if err != nil {
 		return
 	}
@@ -456,7 +292,7 @@ func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Inte
 			if p != nil {
 				if p.Status.Phase == "Running" {
 					pod = p
-					log.Info().Msgf("Shadow pod %s is ready", pod.Name)
+					log.Info().Msgf("Pod %s is ready", pod.Name)
 					break
 				}
 				podName = p.Name
@@ -471,32 +307,37 @@ func waitPodReadyUsingInformer(namespace, name string, clientset kubernetes.Inte
 	return pod, nil
 }
 
-// GetDeployment ...
-func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace string) (*appv1.Deployment, error) {
-	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
-// GoPod ...
-func (k *Kubernetes) GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error) {
-	return k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
-}
-
 // UpdatePod ...
 func (k *Kubernetes) UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error) {
 	return k.Clientset.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
 }
 
-// DecreaseRef ...
-func (k *Kubernetes) DecreaseRef(ctx context.Context, namespace string, app string) (cleanup bool, err error) {
-	pod, err := k.GetPod(ctx, app, namespace)
+// IncreaseRef increase pod ref count by 1
+func (k *Kubernetes) IncreaseRef(ctx context.Context, name string, namespace string) error {
+	pod, err := k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	annotations := pod.ObjectMeta.Annotations
+	count, err := strconv.Atoi(annotations[common.KTRefCount])
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to parse annotations[%s] of pod %s with value %s",
+			common.KTRefCount, name, annotations[common.KTRefCount])
+		return err
+	}
+
+	pod.ObjectMeta.Annotations[common.KTRefCount] = strconv.Itoa(count + 1)
+
+	_, err = k.Clientset.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
+	return err
+}
+
+// DecreaseRef decrease pod ref count by 1
+func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace string) (cleanup bool, err error) {
+	pod, err := k.GetPod(ctx, name, namespace)
 	if err != nil {
 		return
 	}
-	cleanup, err = decreaseOrRemove(ctx, k, pod)
-	return
-}
-
-func decreaseOrRemove(ctx context.Context, k *Kubernetes, pod *coreV1.Pod) (cleanup bool, err error) {
 	refCount := pod.ObjectMeta.Annotations[common.KTRefCount]
 	if refCount == "1" {
 		cleanup = true
@@ -506,7 +347,7 @@ func decreaseOrRemove(ctx context.Context, k *Kubernetes, pod *coreV1.Pod) (clea
 			return
 		}
 	} else {
-		err2 := decreasePodRef(ctx, refCount, k, pod)
+		err2 := k.decreasePodRef(ctx, refCount, pod)
 		if err2 != nil {
 			err = err2
 			return
@@ -515,7 +356,7 @@ func decreaseOrRemove(ctx context.Context, k *Kubernetes, pod *coreV1.Pod) (clea
 	return
 }
 
-func decreasePodRef(ctx context.Context, refCount string, k *Kubernetes, pod *coreV1.Pod) (err error) {
+func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *coreV1.Pod) (err error) {
 	log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
 	count, err := decreaseRef(refCount)
 	if err != nil {

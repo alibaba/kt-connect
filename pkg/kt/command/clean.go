@@ -184,7 +184,7 @@ func (action *Action) getShadowPods(ctx context.Context, cli kt.CliInterface, op
 	if err != nil {
 		return nil, nil, err
 	}
-	pods, err := kubernetes.GetAllExistingShadowPods(ctx, options.Namespace)
+	pods, err := cluster.GetAllExistingShadowPods(ctx, kubernetes, options.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}

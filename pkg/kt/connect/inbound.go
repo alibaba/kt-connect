@@ -169,7 +169,7 @@ func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remo
 			fmt.Sprintf("127.0.0.1:%s", localPort),
 		)
 		if err != nil {
-			log.Error().Err(err).Msgf("Error happen when forward remote request to local %s")
+			log.Error().Err(err).Msgf("Error happen when forward remote request to local")
 		}
 		wg.Done()
 	}(wg)

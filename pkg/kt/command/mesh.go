@@ -81,7 +81,7 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted", <-process.Interrupt())
+		log.Error().Msgf("Command interrupted")
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
@@ -93,7 +93,7 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 }
 
 func manualMesh(ctx context.Context, deploymentName string, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) error {
-	app, err := kubernetes.Deployment(ctx, deploymentName, options.Namespace)
+	app, err := kubernetes.GetDeployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func createShadowAndInbound(ctx context.Context, shadowPodName string, labels ma
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
+	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}

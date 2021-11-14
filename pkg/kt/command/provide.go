@@ -62,7 +62,7 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted", <-process.Interrupt())
+		log.Error().Msgf("Command interrupted")
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
@@ -97,7 +97,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options, labels, annotations, envs)
+	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}

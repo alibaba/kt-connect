@@ -62,7 +62,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted", <-process.Interrupt())
+		log.Error().Msgf("Command interrupted")
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
@@ -143,7 +143,7 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 	}
 	annotations := make(map[string]string)
 
-	endPointIP, podName, sshConfigMapName, credential, err := kubernetes.GetOrCreateShadow(context.TODO(),
+	endPointIP, podName, sshConfigMapName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
 		shadowPodName, options, getLabels(shadowPodName, options), annotations, getEnvs(options))
 	if err != nil {
 		return "", "", nil, err
@@ -166,7 +166,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 	hosts := map[string]string{}
 	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
-		singleHosts := kubernetes.ServiceHosts(context.TODO(), namespace)
+		singleHosts := kubernetes.GetServiceHosts(context.TODO(), namespace)
 		for svc, ip := range singleHosts {
 			if ip == "" || ip == "None" {
 				continue

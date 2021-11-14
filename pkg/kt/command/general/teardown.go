@@ -180,7 +180,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context, options *options.DaemonOpti
 
 // decreaseRefOrRemoveTheShadow
 func decreaseRefOrRemoveTheShadow(ctx context.Context, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (bool, error) {
-	return kubernetes.DecreaseRef(ctx, options.Namespace, options.RuntimeOptions.Shadow)
+	return kubernetes.DecreaseRef(ctx, options.RuntimeOptions.Shadow, options.Namespace)
 }
 
 // removePrivateKey remove the private key of ssh

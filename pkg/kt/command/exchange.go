@@ -76,7 +76,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted", <-process.Interrupt())
+		log.Error().Msgf("Command interrupted")
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
@@ -91,7 +91,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 		return err
 	}
 	ctx := context.Background()
-	app, err := kubernetes.Deployment(ctx, deploymentName, options.Namespace)
+	app, err := kubernetes.GetDeployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	shadowPodName := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := kubernetes.GetOrCreateShadow(ctx, shadowPodName, options,
+	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
 		getExchangeLabels(options, shadowPodName, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
 
@@ -183,7 +183,7 @@ func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterfa
 }
 
 func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterface, podName, containerName, namespace string) (bool, error) {
-	pod, err := k8s.Pod(ctx, podName, namespace)
+	pod, err := k8s.GetPod(ctx, podName, namespace)
 	if err != nil {
 		return false, err
 	}
@@ -216,7 +216,7 @@ func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, res
 
 	switch resourceType {
 	case "pod":
-		pod, err := k8s.Pod(ctx, name, namespace)
+		pod, err := k8s.GetPod(ctx, name, namespace)
 		if err != nil {
 			return nil, err
 		} else {
@@ -230,11 +230,11 @@ func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, res
 }
 
 func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serviceName, namespace string) ([]coreV1.Pod, error) {
-	svc, err := k8s.Service(ctx, serviceName, namespace)
+	svc, err := k8s.GetService(ctx, serviceName, namespace)
 	if err != nil {
 		return nil, err
 	}
-	pods, err := k8s.Pods(ctx, svc.Spec.Selector, namespace)
+	pods, err := k8s.GetPods(ctx, svc.Spec.Selector, namespace)
 	if err != nil {
 		return nil, err
 	}

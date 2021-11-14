@@ -1,17 +1,9 @@
 package command
 
 import (
-	"context"
-	"errors"
 	"flag"
 	"io/ioutil"
 	"testing"
-
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
-
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
 
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/golang/mock/gomock"
@@ -60,76 +52,6 @@ func Test_newConnectCommand(t *testing.T) {
 		}
 
 	}
-}
-
-func Test_shouldConnectToCluster(t *testing.T) {
-
-	ctl := gomock.NewController(t)
-
-	ktctl := kt.NewMockCliInterface(ctl)
-
-	kubernetes := cluster.NewMockKubernetesInterface(ctl)
-	exec := exec.NewMockCliInterface(ctl)
-	shadow := connect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-		"172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
-	kubernetes.EXPECT().ClusterCidrs(context.TODO(), gomock.Any(), gomock.Any()).Return([]string{"10.10.10.0/24"}, nil)
-
-	shadow.EXPECT().Outbound("shadowName", "172.168.0.2", gomock.Any(), []string{"10.10.10.0/24"}, gomock.Any()).Return(nil)
-	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
-	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
-	ktctl.EXPECT().Exec().AnyTimes().Return(exec)
-
-	opts := options.NewDaemonOptions("test")
-	opts.WithLabels = "a:b"
-
-	if err := connectToCluster(context.TODO(), ktctl, opts); err != nil {
-		t.Errorf("connectToCluster() error = %v, wantErr %v", err, false)
-	}
-
-}
-
-func Test_shouldConnectClusterFailWhenFailCreateShadow(t *testing.T) {
-
-	ctl := gomock.NewController(t)
-	ktctl := kt.NewMockCliInterface(ctl)
-
-	kubernetes := cluster.NewMockKubernetesInterface(ctl)
-	shadow := connect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-		"", "", "", nil, errors.New("")).AnyTimes()
-
-	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
-	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
-
-	if err := connectToCluster(context.TODO(), ktctl, options.NewDaemonOptions("test")); err == nil {
-		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
-	}
-
-}
-
-func Test_shouldConnectClusterFailWhenFailGetCidrs(t *testing.T) {
-
-	ctl := gomock.NewController(t)
-
-	ktctl := kt.NewMockCliInterface(ctl)
-
-	kubernetes := cluster.NewMockKubernetesInterface(ctl)
-	shadow := connect.NewMockShadowInterface(ctl)
-	kubernetes.EXPECT().GetOrCreateShadow(context.TODO(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(
-		"172.168.0.2", "shadowName", "sshcm", nil, nil).AnyTimes()
-	kubernetes.EXPECT().ClusterCidrs(context.TODO(), gomock.Any(), gomock.Any()).Return([]string{}, errors.New("fail to get cidr"))
-
-	ktctl.EXPECT().Shadow().AnyTimes().Return(shadow)
-	ktctl.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
-
-	opts := options.NewDaemonOptions("test")
-	opts.WithLabels = "a:b"
-
-	if err := connectToCluster(context.TODO(), ktctl, opts); err == nil {
-		t.Errorf("connectToCluster() error = %v, wantErr %v", err, true)
-	}
-
 }
 
 func TestAllocateIP(t *testing.T) {

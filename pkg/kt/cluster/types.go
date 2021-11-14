@@ -18,30 +18,36 @@ func CreateFromClientSet(clientSet kubernetes.Interface) (kubernetes KubernetesI
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
-	RemovePod(ctx context.Context, name, namespace string) (err error)
-	RemoveConfigMap(ctx context.Context, name, namespace string) (err error)
-	RemoveService(ctx context.Context, name, namespace string) (err error)
-	Deployment(ctx context.Context, name, namespace string) (deployment *appV1.Deployment, err error)
-	Service(ctx context.Context, name, namespace string) (*coreV1.Service, error)
-	Pod(ctx context.Context, name, namespace string) (pod *coreV1.Pod, err error)
-	Pods(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
-	Scale(ctx context.Context, deployment *appV1.Deployment, replicas *int32) (err error)
-	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
-	ServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
-	ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error)
-	GetOrCreateShadow(ctx context.Context, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (podIP, podName, sshcm string, credential *util.SSHCredential, err error)
-	GetAllExistingShadowPods(ctx context.Context, namespace string) (list []coreV1.Pod, err error)
-	CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error)
-	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
+	CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
+	GetPods(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
 	UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error)
-	DecreaseRef(ctx context.Context, namespace string, deployment string) (cleanup bool, err error)
+	WaitPodReadyUsingInformer(namespace, name string) (pod *coreV1.Pod, err error)
+	IncreaseRef(ctx context.Context, name string, namespace string) error
+	DecreaseRef(ctx context.Context, namespace string, pod string) (cleanup bool, err error)
 	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
 	RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error)
+	RemovePod(ctx context.Context, name, namespace string) (err error)
+
+	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
+	Scale(ctx context.Context, deployment *appV1.Deployment, replicas *int32) (err error)
+	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
+
+	CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error)
+	GetService(ctx context.Context, name, namespace string) (*coreV1.Service, error)
+	GetServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
+	RemoveService(ctx context.Context, name, namespace string) (err error)
+
+	CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,
+		generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error)
+	GetConfigMap(ctx context.Context, name, namespace string) (*coreV1.ConfigMap, error)
+	RemoveConfigMap(ctx context.Context, name, namespace string) (err error)
+
+	ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error)
 }
 
 // Kubernetes implements KubernetesInterface
 type Kubernetes struct {
 	KubeConfig string
-	Clientset  kubernetes.Interface
+	Clientset kubernetes.Interface
 }
