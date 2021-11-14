@@ -29,7 +29,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "image,i",
-			Usage:       "Custom proxy image",
+			Usage:       "Customize proxy image",
 			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + version,
 			Destination: &options.Image,
 		},
@@ -210,6 +210,12 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Value:       "manual",
 			Usage:       "Mesh method 'manual' or 'auto'(coming soon)",
 			Destination: &options.MeshOptions.Method,
+		},
+		cli.StringFlag{
+			Name:        "routerImage",
+			Usage:       "(auto method only) Customize proxy image",
+			Destination: &options.MeshOptions.RouterImage,
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + options.Version,
 		},
 	}
 }

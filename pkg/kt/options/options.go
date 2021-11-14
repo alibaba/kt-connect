@@ -52,6 +52,7 @@ type MeshOptions struct {
 	Method  string
 	Expose  string
 	Version string
+	RouterImage string
 }
 
 // CleanOptions ...

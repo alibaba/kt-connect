@@ -68,9 +68,9 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 
 	ctx := context.Background()
 	if options.MeshOptions.Method == common.MeshMethodManual {
-		err = manualMesh(ctx, resourceName, kubernetes, options)
+		err = manualMesh(ctx, kubernetes, resourceName, options)
 	} else if options.MeshOptions.Method == common.MeshMethodAuto {
-		err = autoMesh(ctx, resourceName, kubernetes, options)
+		err = autoMesh(ctx, kubernetes, resourceName, options)
 	} else {
 		err = fmt.Errorf("invalid mesh method \"%s\"", options.MeshOptions.Method)
 	}
@@ -92,18 +92,17 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 	return nil
 }
 
-func manualMesh(ctx context.Context, deploymentName string, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) error {
-	app, err := kubernetes.GetDeployment(ctx, deploymentName, options.Namespace)
+func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, options *options.DaemonOptions) error {
+	app, err := k.GetDeployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
 
 	meshVersion := getVersion(options)
+	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
+	labels := getMeshLabels(shadowPodName, meshVersion, app)
 
-	shadowPodName := app.GetObjectMeta().GetName() + "-kt-" + meshVersion
-	labels := getMeshLabels(shadowPodName, meshVersion, app, options)
-
-	if err = createShadowAndInbound(ctx, shadowPodName, labels, options, kubernetes); err != nil {
+	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
 		return err
 	}
 
@@ -113,17 +112,21 @@ func manualMesh(ctx context.Context, deploymentName string, kubernetes cluster.K
 	return nil
 }
 
-func autoMesh(ctx context.Context, deploymentName string, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) error {
-
+func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string,  options *options.DaemonOptions) error {
+	routerPodName := deploymentName + "-kt-router"
+	if err := cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options); err != nil {
+		log.Error().Err(err).Msgf("Failed to create router pod")
+		return err
+	}
 	return nil
 }
 
-func createShadowAndInbound(ctx context.Context, shadowPodName string, labels map[string]string, options *options.DaemonOptions,
-	kubernetes cluster.KubernetesInterface) error {
+func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
+	labels map[string]string, options *options.DaemonOptions) error {
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options, labels, annotations, envs)
+	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -141,7 +144,7 @@ func createShadowAndInbound(ctx context.Context, shadowPodName string, labels ma
 	return nil
 }
 
-func getMeshLabels(workload string, meshVersion string, app *v1.Deployment, options *options.DaemonOptions) map[string]string {
+func getMeshLabels(workload string, meshVersion string, app *v1.Deployment) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentMesh,

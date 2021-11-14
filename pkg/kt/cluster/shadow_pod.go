@@ -41,17 +41,19 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 		annotations[k] = v
 	}
 	annotations[common.KtUser] = util.GetLocalUserName()
+	resourceMeta := ResourceMeta{
+		Name:        name,
+		Namespace:   options.Namespace,
+		Labels:      labels,
+		Annotations: annotations,
+	}
+	sshKeyMeta := SSHkeyMeta{
+		SshConfigMapName: sshcm,
+		PrivateKeyPath:   privateKeyPath,
+	}
 
 	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, k, &ResourceMeta{
-			Name:        name,
-			Namespace:   options.Namespace,
-			Labels:      labels,
-			Annotations: annotations,
-		}, &SSHkeyMeta{
-			SshConfigMapName: sshcm,
-			PrivateKeyPath:   privateKeyPath,
-		})
+		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, k, &resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			err = err2
 			return
@@ -62,17 +64,8 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 		}
 	}
 
-	podIP, podName, credential, err = createShadow(ctx, k, &PodMetaAndSpec{
-		&ResourceMeta{
-			Name:        name,
-			Namespace:   options.Namespace,
-			Labels:      labels,
-			Annotations: annotations,
-		}, options.Image, envs,
-	}, &SSHkeyMeta{
-		SshConfigMapName: sshcm,
-		PrivateKeyPath:   privateKeyPath,
-	}, options)
+	podIP, podName, credential, err = createShadow(ctx, k, &PodMetaAndSpec{&resourceMeta, options.Image, envs},
+		&sshKeyMeta, options)
 	return
 }
 

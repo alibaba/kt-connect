@@ -168,12 +168,6 @@ func createContainer(image string, args []string, envs map[string]string, option
 		ImagePullPolicy: pullPolicy,
 		Args:            args,
 		Env:             envVar,
-		VolumeMounts: []coreV1.VolumeMount{
-			{
-				Name:      "ssh-public-key",
-				MountPath: fmt.Sprintf("/root/%s", common.SSHAuthKey),
-			},
-		},
 		SecurityContext: &coreV1.SecurityContext{
 			Capabilities: &coreV1.Capabilities{
 				Add: []coreV1.Capability{
@@ -184,7 +178,7 @@ func createContainer(image string, args []string, envs map[string]string, option
 	}
 }
 
-func createPod(metaAndSpec *PodMetaAndSpec, volume string, options *options.DaemonOptions) *coreV1.Pod {
+func createPod(metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) *coreV1.Pod {
 	var args []string
 	namespace := metaAndSpec.Meta.Namespace
 	name := metaAndSpec.Meta.Name
@@ -194,6 +188,7 @@ func createPod(metaAndSpec *PodMetaAndSpec, volume string, options *options.Daem
 	annotations[common.KTLastHeartBeat] = util.GetTimestamp()
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
+
 	pod := &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        name,
@@ -206,15 +201,9 @@ func createPod(metaAndSpec *PodMetaAndSpec, volume string, options *options.Daem
 			Containers: []coreV1.Container{
 				createContainer(image, args, envs, options),
 			},
-			Volumes: []coreV1.Volume{
-				getSSHVolume(volume),
-			},
 		},
 	}
 
-	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
-		addTunHostPath(pod)
-	}
 	if options.ImagePullSecret != "" {
 		addImagePullSecret(pod, options.ImagePullSecret)
 	}

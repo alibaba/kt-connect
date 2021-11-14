@@ -169,6 +169,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 
 // RemoveEphemeralContainer remove ephemeral container from specified pod
 func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error) {
+	// TODO: implement container removal
 	return k.RemovePod(ctx, podName, namespace)
 }
 
@@ -198,9 +199,31 @@ func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[s
 func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error {
 	cli := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace)
 	util.SetupPodHeartBeat(ctx, cli, metaAndSpec.Meta.Name)
-	pod := createPod(metaAndSpec, sshcm, options)
-	_, err := cli.Create(ctx, pod, metav1.CreateOptions{})
-	if err != nil {
+	pod := createPod(metaAndSpec, options)
+	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
+		{
+			Name:      "ssh-public-key",
+			MountPath: fmt.Sprintf("/root/%s", common.SSHAuthKey),
+		},
+	}
+	pod.Spec.Volumes = []coreV1.Volume{
+		getSSHVolume(sshcm),
+	}
+	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
+		addTunHostPath(pod)
+	}
+	if _, err := cli.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// CreatePod create pod
+func (k *Kubernetes) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error {
+	cli := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace)
+	util.SetupPodHeartBeat(ctx, cli, metaAndSpec.Meta.Name)
+	pod := createPod(metaAndSpec, options)
+	if _, err := cli.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 	return nil

@@ -18,6 +18,7 @@ func CreateFromClientSet(clientSet kubernetes.Interface) (kubernetes KubernetesI
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
+	CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error
 	CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
 	GetPods(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
