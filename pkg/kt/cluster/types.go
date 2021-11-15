@@ -23,7 +23,7 @@ type KubernetesInterface interface {
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
 	GetPods(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
 	UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error)
-	WaitPodReadyUsingInformer(namespace, name string) (pod *coreV1.Pod, err error)
+	WaitPodReady(namespace, name string) (pod *coreV1.Pod, err error)
 	IncreaseRef(ctx context.Context, name string, namespace string) error
 	DecreaseRef(ctx context.Context, namespace string, pod string) (cleanup bool, err error)
 	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)

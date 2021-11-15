@@ -83,6 +83,20 @@ func (mr *MockKubernetesInterfaceMockRecorder) CreateConfigMapWithSshKey(ctx, la
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConfigMapWithSshKey", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateConfigMapWithSshKey), ctx, labels, sshcm, namespace, generator)
 }
 
+// CreatePod mocks base method.
+func (m *MockKubernetesInterface) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePod", ctx, metaAndSpec, options)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreatePod indicates an expected call of CreatePod.
+func (mr *MockKubernetesInterfaceMockRecorder) CreatePod(ctx, metaAndSpec, options interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePod", reflect.TypeOf((*MockKubernetesInterface)(nil).CreatePod), ctx, metaAndSpec, options)
+}
+
 // CreateService mocks base method.
 func (m *MockKubernetesInterface) CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*v10.Service, error) {
 	m.ctrl.T.Helper()
@@ -329,17 +343,17 @@ func (mr *MockKubernetesInterfaceMockRecorder) UpdatePod(ctx, namespace, pod int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePod", reflect.TypeOf((*MockKubernetesInterface)(nil).UpdatePod), ctx, namespace, pod)
 }
 
-// WaitPodReadyUsingInformer mocks base method.
-func (m *MockKubernetesInterface) WaitPodReadyUsingInformer(namespace, name string) (*v10.Pod, error) {
+// WaitPodReady mocks base method.
+func (m *MockKubernetesInterface) WaitPodReady(namespace, name string) (*v10.Pod, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WaitPodReadyUsingInformer", namespace, name)
+	ret := m.ctrl.Call(m, "WaitPodReady", namespace, name)
 	ret0, _ := ret[0].(*v10.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// WaitPodReadyUsingInformer indicates an expected call of WaitPodReadyUsingInformer.
-func (mr *MockKubernetesInterfaceMockRecorder) WaitPodReadyUsingInformer(namespace, name interface{}) *gomock.Call {
+// WaitPodReady indicates an expected call of WaitPodReady.
+func (mr *MockKubernetesInterfaceMockRecorder) WaitPodReady(namespace, name interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitPodReadyUsingInformer", reflect.TypeOf((*MockKubernetesInterface)(nil).WaitPodReadyUsingInformer), namespace, name)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitPodReady", reflect.TypeOf((*MockKubernetesInterface)(nil).WaitPodReady), namespace, name)
 }

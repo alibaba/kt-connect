@@ -98,13 +98,13 @@ func getCidrFromSample(sample string) string {
 	return strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
 }
 
-func getTargetPod(name string, labelsKeys []string, podList []*coreV1.Pod) *coreV1.Pod {
+func getTargetPod(labelsKey string, name string, podList []*coreV1.Pod) *coreV1.Pod {
 	for _, p := range podList {
 		if len(p.Labels) <= 0 {
 			// almost impossible
 			continue
 		}
-		item, containKey := p.Labels[labelsKeys[0]]
+		item, containKey := p.Labels[labelsKey]
 		if !containKey || item != name {
 			continue
 		}

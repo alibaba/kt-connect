@@ -104,7 +104,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 
 	envs := make(map[string]string)
 	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
-		getExchangeLabels(options, shadowPodName, app), getExchangeAnnotation(options), envs)
+		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
 
 	if err != nil {
@@ -248,7 +248,7 @@ func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
 	}
 }
 
-func getExchangeLabels(options *options.DaemonOptions, workload string, origin *appV1.Deployment) map[string]string {
+func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentExchange,

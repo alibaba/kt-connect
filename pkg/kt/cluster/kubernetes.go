@@ -282,7 +282,7 @@ func (k *Kubernetes) GetServiceHosts(ctx context.Context, namespace string) (hos
 	return
 }
 
-func (k *Kubernetes) WaitPodReadyUsingInformer(namespace, name string) (pod *coreV1.Pod, err error) {
+func (k *Kubernetes) WaitPodReady(namespace, name string) (pod *coreV1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)
 	podListener, err := clusterWatcher.PodListenerWithNamespace(k.Clientset, namespace, stopSignal)
@@ -291,10 +291,7 @@ func (k *Kubernetes) WaitPodReadyUsingInformer(namespace, name string) (pod *cor
 	}
 	pod = &coreV1.Pod{}
 	podLabels := k8sLabels.NewSelector()
-	labelKeys := []string{
-		common.KTName,
-	}
-	requirement, err := k8sLabels.NewRequirement(labelKeys[0], selection.Equals, []string{name})
+	requirement, err := k8sLabels.NewRequirement(common.KTName, selection.Equals, []string{name})
 	if err != nil {
 		return
 	}
@@ -311,7 +308,7 @@ func (k *Kubernetes) WaitPodReadyUsingInformer(namespace, name string) (pod *cor
 		if hasRunningPod {
 			// podLister do not support FieldSelector
 			// https://github.com/kubernetes/client-go/issues/604
-			p := getTargetPod(name, labelKeys, pods)
+			p := getTargetPod(common.KTName, name, pods)
 			if p != nil {
 				if p.Status.Phase == "Running" {
 					pod = p

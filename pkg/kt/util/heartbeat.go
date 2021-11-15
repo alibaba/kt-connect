@@ -20,7 +20,7 @@ func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name str
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus)
 	go func() {
 		for range ticker.C {
-			log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, formattedTime())
+			log.Debug().Msgf("Heartbeat pod %s ticked at %s", name, formattedTime())
 			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to update pod heart beat")

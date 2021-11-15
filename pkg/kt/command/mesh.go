@@ -113,8 +113,15 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 }
 
 func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string,  options *options.DaemonOptions) error {
+	app, err := k.GetDeployment(ctx, deploymentName, options.Namespace)
+	if err != nil {
+		return err
+	}
+
 	routerPodName := deploymentName + "-kt-router"
-	if err := cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options); err != nil {
+	labels := getMeshLabels(routerPodName, "ROUTER", app)
+
+	if err := cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options, labels); err != nil {
 		log.Error().Err(err).Msgf("Failed to create router pod")
 		return err
 	}
