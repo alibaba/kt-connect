@@ -201,7 +201,7 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.MeshOptions.Expose,
 		},
 		cli.StringFlag{
-			Name:        "version-label",
+			Name:        "versionMark",
 			Usage:       "specify the version of mesh service, e.g. '0.0.1'",
 			Destination: &options.MeshOptions.Version,
 		},
