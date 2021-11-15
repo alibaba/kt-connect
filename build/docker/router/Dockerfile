@@ -1,4 +1,4 @@
-FROM nginx:1.21.1-alpine
+FROM nginx:1.21.4-alpine
 
 COPY build/docker/router/nginx.conf /etc/nginx/nginx.conf
 RUN rm -f /etc/nginx/conf.d/*.conf
