@@ -22,16 +22,16 @@ type KubernetesInterface interface {
 	CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
 	GetPods(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
-	UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error)
-	WaitPodReady(namespace, name string) (pod *coreV1.Pod, err error)
-	IncreaseRef(ctx context.Context, name string, namespace string) error
-	DecreaseRef(ctx context.Context, namespace string, pod string) (cleanup bool, err error)
+	UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Pod, error)
+	WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error)
+	IncreaseRef(ctx context.Context, name ,namespace string) error
+	DecreaseRef(ctx context.Context, name, namespace string) (cleanup bool, err error)
 	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
 	RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error)
 	RemovePod(ctx context.Context, name, namespace string) (err error)
 
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
-	Scale(ctx context.Context, deployment *appV1.Deployment, replicas *int32) (err error)
+	UpdateDeployment(ctx context.Context, deployment *appV1.Deployment) (*appV1.Deployment, error)
 	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
 
 	CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error)

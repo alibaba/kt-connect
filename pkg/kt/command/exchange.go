@@ -97,10 +97,10 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	}
 
 	// record context inorder to remove after command exit
-	options.RuntimeOptions.Origin = app.GetName()
+	options.RuntimeOptions.Origin = deploymentName
 	options.RuntimeOptions.Replicas = *app.Spec.Replicas
 
-	shadowPodName := app.GetName() + "-kt-" + strings.ToLower(util.RandomString(5))
+	shadowPodName := deploymentName + "-kt-" + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
 	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
@@ -116,7 +116,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	down := int32(0)
-	if err = kubernetes.Scale(ctx, app, &down); err != nil {
+	if err = kubernetes.ScaleTo(ctx, deploymentName, options.Namespace, &down); err != nil {
 		return err
 	}
 

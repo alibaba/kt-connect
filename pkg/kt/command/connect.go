@@ -179,8 +179,7 @@ func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.Kubernete
 			hosts[svc+"."+namespace+"."+options.ConnectOptions.ClusterDomain] = ip
 		}
 	}
-	util.DumpHosts(hosts)
-	options.RuntimeOptions.Dump2Host = true
+	options.RuntimeOptions.Dump2Host = util.DumpHosts(hosts)
 }
 
 func getEnvs(options *options.DaemonOptions) map[string]string {

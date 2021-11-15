@@ -19,16 +19,54 @@ import (
 )
 
 // CleanupWorkspace clean workspace
-func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
+func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 	if !util.IsPidFileExist() {
 		log.Info().Msgf("Workspace already cleaned")
 		return
 	}
 
 	log.Info().Msgf("Cleaning workspace")
-	cleanLocalFiles(options)
-	removePrivateKey(options)
+	cleanLocalFiles(opts)
+	removePrivateKey(opts)
+	if opts.RuntimeOptions.Component == common.ComponentConnect {
+		recoverGlobalHostsAndProxy(opts)
+		removeTunDevice(cli, opts)
+	}
 
+	ctx := context.Background()
+	k8s, err := cli.Kubernetes()
+	if err != nil {
+		log.Error().Err(err).Msgf("Fails create kubernetes client when clean up workspace")
+		return
+	}
+	if opts.RuntimeOptions.Component == common.ComponentExchange {
+		recoverExchangedTarget(ctx, opts, k8s)
+	} else if opts.RuntimeOptions.Component == common.ComponentMesh {
+		recoverAutoMeshRoute(ctx, opts, k8s)
+	} else if opts.RuntimeOptions.Component == common.ComponentProvide {
+		cleanService(ctx, opts, k8s)
+	}
+	cleanShadowPodAndConfigMap(ctx, opts, k8s)
+}
+
+func removeTunDevice(cli kt.CliInterface, options *options.DaemonOptions) {
+	if options.ConnectOptions.Method == common.ConnectMethodTun {
+		log.Debug().Msg("Removing tun device ...")
+		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
+		if err != nil {
+			log.Error().Err(err).Msgf("Fails to delete tun device")
+		}
+
+		if !options.ConnectOptions.DisableDNS {
+			err = util.RestoreConfig()
+			if err != nil {
+				log.Error().Err(err).Msgf("Restore resolv.conf failed")
+			}
+		}
+	}
+}
+
+func recoverGlobalHostsAndProxy(options *options.DaemonOptions) {
 	if options.RuntimeOptions.Dump2Host {
 		log.Debug().Msg("Dropping hosts records ...")
 		util.DropHosts()
@@ -40,33 +78,6 @@ func CleanupWorkspace(cli kt.CliInterface, options *options.DaemonOptions) {
 		}
 		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
 	}
-
-	if options.ConnectOptions.Method == common.ConnectMethodTun {
-		log.Debug().Msg("Removing tun device ...")
-		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
-		if err != nil {
-			log.Error().Err(err).Msgf("Fails to delete tun device")
-			return
-		}
-
-		if !options.ConnectOptions.DisableDNS {
-			err = util.RestoreConfig()
-			if err != nil {
-				log.Error().Err(err).Msgf("Restore resolv.conf failed")
-				return
-			}
-		}
-	}
-
-	k8s, err := cli.Kubernetes()
-	if err != nil {
-		log.Error().Err(err).Msgf("Fails create kubernetes client when clean up workspace")
-		return
-	}
-	ctx := context.Background()
-	recoverExchangedTarget(ctx, options, k8s)
-	cleanShadowPodAndConfigMap(ctx, options, k8s)
-	cleanService(ctx, options, k8s)
 }
 
 func cleanLocalFiles(options *options.DaemonOptions) {
@@ -87,23 +98,27 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	}
 }
 
-func recoverExchangedTarget(ctx context.Context, options *options.DaemonOptions, k8s cluster.KubernetesInterface) {
-	if len(options.RuntimeOptions.Origin) > 0 {
-		log.Info().Msgf("Recovering origin deployment %s", options.RuntimeOptions.Origin)
-		err := k8s.ScaleTo(ctx, options.RuntimeOptions.Origin, options.Namespace, &options.RuntimeOptions.Replicas)
+func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+	if opts.ExchangeOptions.Method == common.ExchangeMethodScale && len(opts.RuntimeOptions.Origin) > 0 {
+		log.Info().Msgf("Recovering origin deployment %s", opts.RuntimeOptions.Origin)
+		err := k8s.ScaleTo(ctx, opts.RuntimeOptions.Origin, opts.Namespace, &opts.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().Err(err).Msgf("Scale deployment %s to %d failed",
-				options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas)
+				opts.RuntimeOptions.Origin, opts.RuntimeOptions.Replicas)
 		}
 		// wait for scale complete
 		ch := make(chan os.Signal)
 		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 		go func() {
-			waitDeploymentRecoverComplete(ctx, options, k8s)
+			waitDeploymentRecoverComplete(ctx, opts, k8s)
 			ch <- syscall.SIGSTOP
 		}()
 		_ = <-ch
 	}
+}
+
+func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+
 }
 
 func waitDeploymentRecoverComplete(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {

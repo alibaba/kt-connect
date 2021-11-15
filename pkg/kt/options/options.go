@@ -64,11 +64,13 @@ type CleanOptions struct {
 // RuntimeOptions ...
 type RuntimeOptions struct {
 	Clientset kubernetes.Interface
+	// Version ktctl version
+	Version string
 	// UserHome path of user home, same as ${HOME}
 	UserHome string
 	// AppHome path of kt config folder, default to ${UserHome}/.ktctl
 	AppHome string
-	// Component current sub-command
+	// Component current sub-command (connect, exchange, mesh or provide)
 	Component string
 	// Shadow pod name
 	Shadow string
@@ -95,7 +97,13 @@ type dashboardOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	Version           string
+	RuntimeOptions    *RuntimeOptions
+	ProvideOptions    *ProvideOptions
+	ConnectOptions    *ConnectOptions
+	ExchangeOptions   *ExchangeOptions
+	MeshOptions       *MeshOptions
+	CleanOptions      *CleanOptions
+	DashboardOptions  *dashboardOptions
 	KubeConfig        string
 	Namespace         string
 	ServiceAccount    string
@@ -105,13 +113,6 @@ type DaemonOptions struct {
 	WithLabels        string
 	WithAnnotations   string
 	KubeOptions       cli.StringSlice
-	RuntimeOptions    *RuntimeOptions
-	ProvideOptions    *ProvideOptions
-	ConnectOptions    *ConnectOptions
-	ExchangeOptions   *ExchangeOptions
-	MeshOptions       *MeshOptions
-	CleanOptions      *CleanOptions
-	DashboardOptions  *dashboardOptions
 	WaitTime          int
 	AlwaysUpdateShadow bool
 	UseKubectl        bool
@@ -124,8 +125,8 @@ func NewDaemonOptions(version string) *DaemonOptions {
 		Namespace:  common.DefNamespace,
 		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
-		Version:    version,
 		RuntimeOptions: &RuntimeOptions{
+			Version:  version,
 			UserHome: util.UserHome,
 			AppHome:  util.KtHome,
 		},

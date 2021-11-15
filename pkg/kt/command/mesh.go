@@ -118,13 +118,16 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
+	options.RuntimeOptions.Origin = deploymentName
 	routerPodName := deploymentName + "-kt-router"
-	labels := getMeshLabels(routerPodName, "ROUTER", app)
+	originalLabel := getMeshLabels(routerPodName, "", app)
 
-	if err := cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options, labels); err != nil {
+	if err = cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options, originalLabel); err != nil {
 		log.Error().Err(err).Msgf("Failed to create router pod")
 		return err
 	}
+
+	log.Info().Msgf("Auto mesh completed")
 	return nil
 }
 
@@ -156,7 +159,9 @@ func getMeshLabels(workload string, meshVersion string, app *v1.Deployment) map[
 		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentMesh,
 		common.KTName:      workload,
-		common.KTVersion:   meshVersion,
+	}
+	if meshVersion != "" {
+		labels[common.KTVersion] = meshVersion
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {

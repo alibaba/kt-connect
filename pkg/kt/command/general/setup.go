@@ -23,7 +23,7 @@ func SetupProcess(cli kt.CliInterface, options *options.DaemonOptions, component
 	if err != nil {
 		return nil, err
 	}
-	log.Info().Msgf("KtConnect %s start at %d (%s)", options.Version, os.Getpid(), runtime.GOOS)
+	log.Info().Msgf("KtConnect %s start at %d (%s)", options.RuntimeOptions.Version, os.Getpid(), runtime.GOOS)
 	ch := setupCloseHandler(cli, options)
 	return ch, nil
 }

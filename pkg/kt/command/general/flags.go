@@ -215,7 +215,7 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Name:        "routerImage",
 			Usage:       "(auto method only) Customize proxy image",
 			Destination: &options.MeshOptions.RouterImage,
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + options.Version,
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + options.RuntimeOptions.Version,
 		},
 	}
 }

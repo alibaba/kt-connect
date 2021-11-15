@@ -10,7 +10,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	appv1 "k8s.io/api/apps/v1"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
@@ -66,26 +66,20 @@ func (k *Kubernetes) RemoveConfigMap(ctx context.Context, name, namespace string
 }
 
 // ScaleTo scale deployment to
-func (k *Kubernetes) ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error) {
-	obj, err := k.GetDeployment(ctx, deployment, namespace)
+func (k *Kubernetes) ScaleTo(ctx context.Context, name, namespace string, replicas *int32) (err error) {
+	deployment, err := k.GetDeployment(ctx, name, namespace)
 	if err != nil {
 		return
 	}
-	return k.Scale(ctx, obj, replicas)
-}
 
-// Scale scale deployment to
-func (k *Kubernetes) Scale(ctx context.Context, deployment *appv1.Deployment, replicas *int32) (err error) {
 	log.Info().Msgf("Scaling deployment %s to %d", deployment.GetObjectMeta().GetName(), *replicas)
-	client := k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace())
 	deployment.Spec.Replicas = replicas
 
-	d, err := client.Update(ctx, deployment, metav1.UpdateOptions{})
-	if err != nil {
+	if _, err = k.UpdateDeployment(ctx, deployment); err != nil {
 		log.Error().Err(err).Msgf("Fails to scale deployment %s", deployment.GetObjectMeta().GetName())
 		return
 	}
-	log.Info().Msgf("Deployment %s successfully scaled to %d replicas", d.Name, *d.Spec.Replicas)
+	log.Info().Msgf("Deployment %s successfully scaled to %d replicas", name, *replicas)
 	return
 }
 
@@ -94,13 +88,20 @@ func (k *Kubernetes) GetService(ctx context.Context, name, namespace string) (*c
 	return k.Clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
+// GetServices get pods by label
+func (k *Kubernetes) GetServices(ctx context.Context, matchLabels map[string]string, namespace string) (*coreV1.ServiceList, error) {
+	return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{
+		FieldSelector: labelApi.SelectorFromSet(matchLabels).String(),
+	})
+}
+
 // GetConfigMap get configmap
 func (k *Kubernetes) GetConfigMap(ctx context.Context, name, namespace string) (*coreV1.ConfigMap, error) {
 	return k.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 // GetDeployment ...
-func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace string) (*appv1.Deployment, error) {
+func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
@@ -282,7 +283,7 @@ func (k *Kubernetes) GetServiceHosts(ctx context.Context, namespace string) (hos
 	return
 }
 
-func (k *Kubernetes) WaitPodReady(namespace, name string) (pod *coreV1.Pod, err error) {
+func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)
 	podListener, err := clusterWatcher.PodListenerWithNamespace(k.Clientset, namespace, stopSignal)
@@ -328,8 +329,12 @@ func (k *Kubernetes) WaitPodReady(namespace, name string) (pod *coreV1.Pod, err 
 }
 
 // UpdatePod ...
-func (k *Kubernetes) UpdatePod(ctx context.Context, namespace string, pod *coreV1.Pod) (*coreV1.Pod, error) {
-	return k.Clientset.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
+func (k *Kubernetes) UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Pod, error) {
+	return k.Clientset.CoreV1().Pods(pod.GetObjectMeta().GetNamespace()).Update(ctx, pod, metav1.UpdateOptions{})
+}
+
+func (k *Kubernetes) UpdateDeployment(ctx context.Context, deployment *appV1.Deployment) (*appV1.Deployment, error) {
+	return k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace()).Update(ctx, deployment, metav1.UpdateOptions{})
 }
 
 // IncreaseRef increase pod ref count by 1
@@ -383,7 +388,7 @@ func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *c
 		return
 	}
 	pod.ObjectMeta.Annotations[common.KTRefCount] = count
-	_, err = k.UpdatePod(ctx, pod.GetObjectMeta().GetNamespace(), pod)
+	_, err = k.UpdatePod(ctx, pod)
 	return
 }
 

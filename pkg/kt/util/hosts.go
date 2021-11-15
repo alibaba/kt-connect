@@ -34,23 +34,25 @@ func DropHosts() {
 }
 
 // DumpHosts DumpToHosts
-func DumpHosts(hostsMap map[string]string) {
+func DumpHosts(hostsMap map[string]string) bool {
 	lines, err := loadHostsFile()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to load hosts file")
-		return
+		return false
 	}
 	linesBeforeDump, err := dropHosts(lines)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to parse hosts file")
-		return
+		return false
 	}
 	err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap)))
 	if err != nil {
 		log.Warn().Msgf("Unable to update hosts file, you may need %s permission.", getAdminUserName())
 		log.Debug().Msg(err.Error())
+		return false
 	} else {
 		log.Info().Msg("Dump hosts successful")
+		return true
 	}
 }
 
