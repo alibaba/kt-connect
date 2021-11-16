@@ -16,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"strconv"
@@ -118,12 +119,68 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	svcList, err := k.GetServices(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
+	svc, err := getServiceByDeployment(ctx, k, app, options)
 	if err != nil {
 		return err
+	}
+
+	meshVersion := getVersion(options)
+	targetPorts := make([]string, 0)
+	ports := make(map[int]int)
+	for _, p := range svc.Spec.Ports {
+		targetPorts = append(targetPorts, strconv.Itoa(p.TargetPort.IntValue()))
+		ports[int(p.Port)] = p.TargetPort.IntValue()
+	}
+
+	routerPodName := deploymentName + "-kt-router"
+	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, meshVersion, options); err != nil {
+		return err
+	}
+
+	if err = createOriginService(ctx, k, svc.Name, ports, app.Spec.Selector.MatchLabels, options); err != nil {
+		return err
+	}
+
+	shadowSvcName := svc.Name + "-kt-" + meshVersion
+	if err = createShadowService(ctx, k, shadowSvcName, ports, app.Spec.Selector.MatchLabels, options); err != nil {
+		return err
+	}
+
+	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
+	labels := map[string]string{common.ControlBy: common.KubernetesTool}
+	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
+		return err
+	}
+	return nil
+}
+
+func createShadowService(ctx context.Context, k cluster.KubernetesInterface, shadowSvcName string, ports map[int]int,
+	selectors map[string]string, options *options.DaemonOptions) error {
+	if _, err := k.CreateService(ctx, &cluster.SvcMetaAndSpec{
+		Meta: &cluster.ResourceMeta{
+			Name:        shadowSvcName,
+			Namespace:   options.Namespace,
+			Labels:      map[string]string{common.ControlBy: common.KubernetesTool},
+			Annotations: map[string]string{},
+		},
+		External:  false,
+		Ports:     ports,
+		Selectors: selectors,
+	}); err != nil {
+		return err
+	}
+	log.Info().Msgf("Service %s created", shadowSvcName)
+	return nil
+}
+
+func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, app *v1.Deployment,
+	options *options.DaemonOptions) (coreV1.Service, error) {
+	svcList, err := k.GetServices(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
+	if err != nil {
+		return coreV1.Service{}, err
 	} else if len(svcList) == 0 {
-		return fmt.Errorf("failed to find service for deployment \"%s\", with labels \"%v\"",
-			deploymentName, app.Spec.Selector.MatchLabels)
+		return coreV1.Service{}, fmt.Errorf("failed to find service for deployment \"%s\", with labels \"%v\"",
+			app.Name, app.Spec.Selector.MatchLabels)
 	} else if len(svcList) > 1 {
 		svcNames := svcList[0].Name
 		for i, svc := range svcList {
@@ -132,35 +189,29 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 			}
 		}
 		log.Warn().Msgf("Found %d services match deployment \"%s\": %s. First one will be used.",
-			len(svcList), deploymentName, svcNames)
+			len(svcList), app.Name, svcNames)
 	}
-
 	svc := svcList[0]
-	ports := make(map[int]int)
-	targetPorts := make([]string, 0)
-	for _, p := range svc.Spec.Ports {
-		ports[int(p.Port)] = p.TargetPort.IntValue()
-		targetPorts = append(targetPorts, strconv.Itoa(p.TargetPort.IntValue()))
-	}
+	return svc, nil
+}
 
-	meshVersion := getVersion(options)
-
-	routerPodName := deploymentName + "-kt-router"
+func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,
+	targetPorts []string, meshVersion string, options *options.DaemonOptions) error {
 	routerPod, err := k.GetPod(ctx, routerPodName, options.Namespace)
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		originalLabel := getMeshLabels(routerPodName, "", app)
+		labels := map[string]string{common.ControlBy: common.KubernetesTool}
 		annotations := map[string]string{common.KTRefCount: "1"}
-		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, originalLabel, annotations); err != nil {
+		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, labels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}
 		log.Info().Msgf("Router pod is ready")
 
 		if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
-			"/usr/sbin/router", "setup", svc.Name, strings.Join(targetPorts, ","), meshVersion); err != nil {
+			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion); err != nil {
 			return err
 		}
 	} else {
@@ -179,51 +230,33 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")
+	return nil
+}
 
-	originSvcName := svc.Name + "-kt-origin"
-	_, err = k.GetService(ctx, originSvcName, options.Namespace)
+func createOriginService(ctx context.Context, k cluster.KubernetesInterface, svcName string,
+	ports map[int]int, selectors map[string]string, options *options.DaemonOptions) error {
+	originSvcName := svcName + "-kt-origin"
+	_, err := k.GetService(ctx, originSvcName, options.Namespace)
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
 		if _, err = k.CreateService(ctx, &cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
-				Name: originSvcName,
-				Namespace: options.Namespace,
-				Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+				Name:        originSvcName,
+				Namespace:   options.Namespace,
+				Labels:      map[string]string{common.ControlBy: common.KubernetesTool},
 				Annotations: map[string]string{},
 			},
-			External: false,
-			Ports: ports,
-			Selectors: app.Spec.Selector.MatchLabels,
+			External:  false,
+			Ports:     ports,
+			Selectors: selectors,
 		}); err != nil {
 			return err
 		}
 		log.Info().Msgf("Service %s created", originSvcName)
 	} else {
 		log.Info().Msgf("Origin service already exists")
-	}
-
-	shadowSvcName := svc.Name + "-kt-" + meshVersion
-	if _, err = k.CreateService(ctx, &cluster.SvcMetaAndSpec{
-		Meta: &cluster.ResourceMeta{
-			Name: shadowSvcName,
-			Namespace: options.Namespace,
-			Labels: map[string]string{common.ControlBy: common.KubernetesTool},
-			Annotations: map[string]string{},
-		},
-		External: false,
-		Ports: ports,
-		Selectors: app.Spec.Selector.MatchLabels,
-	}); err != nil {
-		return err
-	}
-	log.Info().Msgf("Service %s created", shadowSvcName)
-
-	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
-	labels := map[string]string{common.ControlBy: common.KubernetesTool}
-	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
-		return err
 	}
 	return nil
 }
