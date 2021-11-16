@@ -33,6 +33,8 @@ const (
 	KTRemoteAddress = "kt-remote-address"
 	// KTName label used for wait shadow pod ready
 	KTName = "kt-name"
+	// KTRole label used for auto mesh roles
+	KTRole = "kt-role"
 	// KTConfig annotation used for clean up context
 	KTConfig = "kt-config"
 	// KtUser annotation used for record independent username

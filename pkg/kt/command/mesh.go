@@ -133,22 +133,28 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	}
 
 	routerPodName := deploymentName + "-kt-router"
-	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, meshVersion, options); err != nil {
+	routerLabels := map[string]string{common.KTRole: "router", common.KTName: routerPodName}
+	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, options); err != nil {
 		return err
 	}
 
-	if err = createOriginService(ctx, k, svc.Name, ports, app.Spec.Selector.MatchLabels, options); err != nil {
-		return err
-	}
-
-	shadowSvcName := svc.Name + "-kt-" + meshVersion
-	if err = createShadowService(ctx, k, shadowSvcName, ports, app.Spec.Selector.MatchLabels, options); err != nil {
+	if err = createOriginService(ctx, k, svc.Name, ports, svc.Spec.Selector, options); err != nil {
 		return err
 	}
 
 	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
-	labels := map[string]string{common.ControlBy: common.KubernetesTool}
-	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
+	shadowSvcName := svc.Name + "-kt-" + meshVersion
+	shadowLabels := map[string]string{common.KTRole: "shadow", common.KTName: shadowPodName}
+	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, options); err != nil {
+		return err
+	}
+
+	svc.Spec.Selector = routerLabels
+	if _, err = k.UpdateService(ctx, &svc); err != nil {
+		return err
+	}
+
+	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, options); err != nil {
 		return err
 	}
 	return nil
@@ -160,7 +166,7 @@ func createShadowService(ctx context.Context, k cluster.KubernetesInterface, sha
 		Meta: &cluster.ResourceMeta{
 			Name:        shadowSvcName,
 			Namespace:   options.Namespace,
-			Labels:      map[string]string{common.ControlBy: common.KubernetesTool},
+			Labels:      map[string]string{},
 			Annotations: map[string]string{},
 		},
 		External:  false,
@@ -196,15 +202,15 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 }
 
 func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,
-	targetPorts []string, meshVersion string, options *options.DaemonOptions) error {
+	targetPorts []string, routerLabels map[string]string, meshVersion string, options *options.DaemonOptions) error {
 	routerPod, err := k.GetPod(ctx, routerPodName, options.Namespace)
+	routerLabels[common.ControlBy] = common.KubernetesTool
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		labels := map[string]string{common.ControlBy: common.KubernetesTool}
 		annotations := map[string]string{common.KTRefCount: "1"}
-		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, labels, annotations); err != nil {
+		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}
@@ -245,7 +251,7 @@ func createOriginService(ctx context.Context, k cluster.KubernetesInterface, svc
 			Meta: &cluster.ResourceMeta{
 				Name:        originSvcName,
 				Namespace:   options.Namespace,
-				Labels:      map[string]string{common.ControlBy: common.KubernetesTool},
+				Labels:      map[string]string{},
 				Annotations: map[string]string{},
 			},
 			External:  false,
@@ -264,6 +270,7 @@ func createOriginService(ctx context.Context, k cluster.KubernetesInterface, svc
 func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
 	labels map[string]string, options *options.DaemonOptions) error {
 
+	labels[common.ControlBy] = common.KubernetesTool
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
 	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, labels, annotations, envs)
@@ -284,12 +291,9 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 
 func getMeshLabels(workload string, meshVersion string, app *v1.Deployment) map[string]string {
 	labels := map[string]string{
-		common.ControlBy:   common.KubernetesTool,
 		common.KTComponent: common.ComponentMesh,
 		common.KTName:      workload,
-	}
-	if meshVersion != "" {
-		labels[common.KTVersion] = meshVersion
+		common.KTVersion:   meshVersion,
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {

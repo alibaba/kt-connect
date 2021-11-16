@@ -373,8 +373,14 @@ func (k *Kubernetes) UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Po
 	return k.Clientset.CoreV1().Pods(pod.GetObjectMeta().GetNamespace()).Update(ctx, pod, metav1.UpdateOptions{})
 }
 
+// UpdateDeployment ...
 func (k *Kubernetes) UpdateDeployment(ctx context.Context, deployment *appV1.Deployment) (*appV1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace()).Update(ctx, deployment, metav1.UpdateOptions{})
+}
+
+// UpdateService ...
+func (k *Kubernetes) UpdateService(ctx context.Context, svc *coreV1.Service) (*coreV1.Service, error) {
+	return k.Clientset.CoreV1().Services(svc.GetObjectMeta().GetNamespace()).Update(ctx, svc, metav1.UpdateOptions{})
 }
 
 // IncreaseRef increase pod ref count by 1

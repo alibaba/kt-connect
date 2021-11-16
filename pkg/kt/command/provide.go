@@ -109,7 +109,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 		Meta: &cluster.ResourceMeta{
 			Name: serviceName,
 			Namespace: options.Namespace,
-			Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+			Labels: map[string]string{},
 			Annotations: map[string]string{},
 		},
 		External: options.ProvideOptions.External,

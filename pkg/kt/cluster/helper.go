@@ -119,15 +119,16 @@ func getTargetPod(labelsKey string, name string, podList []*coreV1.Pod) *coreV1.
 func wait(podName string) {
 	time.Sleep(3 * time.Second)
 	if len(podName) > 0 {
-		log.Info().Msgf("Waiting for shadow pod %s ...", podName)
+		log.Info().Msgf("Waiting for pod %s ...", podName)
 	} else {
-		log.Info().Msg("Waiting for shadow pod ...")
+		log.Info().Msg("Waiting for pod ...")
 	}
 }
 
 func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
 	metaAndSpec.Meta.Annotations[common.KTLastHeartBeat] = util.GetTimestamp()
+	metaAndSpec.Meta.Labels[common.ControlBy] = common.KubernetesTool
 
 	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{

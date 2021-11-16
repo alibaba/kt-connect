@@ -36,6 +36,7 @@ type KubernetesInterface interface {
 	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
 
 	CreateService(ctx context.Context, metaAndSpec *SvcMetaAndSpec) (*coreV1.Service, error)
+	UpdateService(ctx context.Context, svc *coreV1.Service) (*coreV1.Service, error)
 	GetService(ctx context.Context, name, namespace string) (*coreV1.Service, error)
 	GetServices(ctx context.Context, matchLabels map[string]string, namespace string) ([]coreV1.Service, error)
 	GetServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
