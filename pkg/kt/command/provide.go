@@ -105,8 +105,17 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 
 	log.Info().Msgf("Expose deployment %s to service %s:%v", shadowPodName, serviceName, options.ProvideOptions.Expose)
 	ports := map[int]int {options.ProvideOptions.Expose: options.ProvideOptions.Expose}
-	_, err = kubernetes.CreateService(ctx, serviceName, options.Namespace, options.ProvideOptions.External, ports, labels, map[string]string{})
-	if err != nil {
+	if _, err = kubernetes.CreateService(ctx, &cluster.SvcMetaAndSpec{
+		Meta: &cluster.ResourceMeta{
+			Name: serviceName,
+			Namespace: options.Namespace,
+			Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+			Annotations: map[string]string{},
+		},
+		External: options.ProvideOptions.External,
+		Ports: ports,
+		Selectors: labels,
+	}); err != nil {
 		return err
 	}
 	options.RuntimeOptions.Service = serviceName

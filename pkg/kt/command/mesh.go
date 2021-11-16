@@ -144,7 +144,6 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 
 	meshVersion := getVersion(options)
 
-	routerPodRefCount := 0
 	routerPodName := deploymentName + "-kt-router"
 	routerPod, err := k.GetPod(ctx, routerPodName, options.Namespace)
 	if err != nil {
@@ -164,11 +163,12 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 			return err
 		}
 	} else {
-		if refCount, err2 := strconv.Atoi(routerPod.Annotations[common.KTRefCount]); err2 != nil {
+		if _, err = strconv.Atoi(routerPod.Annotations[common.KTRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err
-		} else {
-			routerPodRefCount = refCount
+		} else if err = k.IncreaseRef(ctx, routerPodName, options.Namespace); err != nil {
+			log.Error().Msgf("Failed to increase router pod ref count")
+			return err
 		}
 		log.Info().Msgf("Router pod already exists")
 
@@ -179,34 +179,42 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	}
 	log.Info().Msgf("Router pod configuration done")
 
-	originServiceRefCount := 0
 	originSvcName := svc.Name + "-kt-origin"
-	originSvc, err := k.GetService(ctx, originSvcName, options.Namespace)
+	_, err = k.GetService(ctx, originSvcName, options.Namespace)
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		annotations := map[string]string{common.KTRefCount: "1"}
-		if _, err = k.CreateService(ctx, originSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels, annotations); err != nil {
+		if _, err = k.CreateService(ctx, &cluster.SvcMetaAndSpec{
+			Meta: &cluster.ResourceMeta{
+				Name: originSvcName,
+				Namespace: options.Namespace,
+				Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+				Annotations: map[string]string{},
+			},
+			External: false,
+			Ports: ports,
+			Selectors: app.Spec.Selector.MatchLabels,
+		}); err != nil {
 			return err
 		}
 		log.Info().Msgf("Service %s created", originSvcName)
 	} else {
-		if refCount, err2 := strconv.Atoi(originSvc.Annotations[common.KTRefCount]); err2 != nil {
-			log.Error().Msgf("Origin service exists, but do not have ref count")
-			return err
-		} else {
-			originServiceRefCount = refCount
-		}
 		log.Info().Msgf("Origin service already exists")
 	}
 
-	if routerPodRefCount != originServiceRefCount {
-		log.Warn().Msgf("Mesh ref count not identical, with %d router pods and %d origin services", routerPodRefCount, originServiceRefCount)
-	}
-
 	shadowSvcName := svc.Name + "-kt-" + meshVersion
-	if _, err = k.CreateService(ctx, shadowSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels, map[string]string{}); err != nil {
+	if _, err = k.CreateService(ctx, &cluster.SvcMetaAndSpec{
+		Meta: &cluster.ResourceMeta{
+			Name: shadowSvcName,
+			Namespace: options.Namespace,
+			Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+			Annotations: map[string]string{},
+		},
+		External: false,
+		Ports: ports,
+		Selectors: app.Spec.Selector.MatchLabels,
+	}); err != nil {
 		return err
 	}
 	log.Info().Msgf("Service %s created", shadowSvcName)

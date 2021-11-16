@@ -98,18 +98,18 @@ func (mr *MockKubernetesInterfaceMockRecorder) CreatePod(ctx, metaAndSpec, optio
 }
 
 // CreateService mocks base method.
-func (m *MockKubernetesInterface) CreateService(ctx context.Context, name, namespace string, external bool, port map[int]int, labels, annotations map[string]string) (*v10.Service, error) {
+func (m *MockKubernetesInterface) CreateService(ctx context.Context, metaAndSpec *SvcMetaAndSpec) (*v10.Service, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateService", ctx, name, namespace, external, port, labels, annotations)
+	ret := m.ctrl.Call(m, "CreateService", ctx, metaAndSpec)
 	ret0, _ := ret[0].(*v10.Service)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateService indicates an expected call of CreateService.
-func (mr *MockKubernetesInterfaceMockRecorder) CreateService(ctx, name, namespace, external, port, labels, annotations interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) CreateService(ctx, metaAndSpec interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateService", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateService), ctx, name, namespace, external, port, labels, annotations)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateService", reflect.TypeOf((*MockKubernetesInterface)(nil).CreateService), ctx, metaAndSpec)
 }
 
 // CreateShadowPod mocks base method.

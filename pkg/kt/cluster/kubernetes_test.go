@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	appv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,8 +97,17 @@ func TestKubernetes_CreateService(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(),
 			}
-			_, err := k.CreateService(context.TODO(), tt.args.name, tt.args.namespace, false, tt.args.port,
-				tt.args.labels, tt.args.annotations)
+			_, err := k.CreateService(context.TODO(), &SvcMetaAndSpec{
+				Meta: &ResourceMeta{
+					Name: tt.args.name,
+					Namespace: tt.args.namespace,
+					Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+					Annotations: tt.args.annotations,
+				},
+				External: false,
+				Ports: tt.args.port,
+				Selectors: tt.args.labels,
+			})
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.CreateService() error = %v, wantErr %v", err, tt.wantErr)
 				return

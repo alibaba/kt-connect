@@ -125,13 +125,13 @@ func wait(podName string) {
 	}
 }
 
-func createService(name, namespace string, labels, annotations map[string]string, external bool, ports map[int]int) *coreV1.Service {
+func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
-	annotations[common.KTLastHeartBeat] = util.GetTimestamp()
+	metaAndSpec.Meta.Annotations[common.KTLastHeartBeat] = util.GetTimestamp()
 
-	for srcPort, targetPort := range ports {
+	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{
-			Name:       fmt.Sprintf("%s-%d", name, srcPort),
+			Name:       fmt.Sprintf("%s-%d", metaAndSpec.Meta.Name, srcPort),
 			Port:       int32(srcPort),
 			TargetPort: intstr.FromInt(targetPort),
 		})
@@ -139,18 +139,18 @@ func createService(name, namespace string, labels, annotations map[string]string
 
 	service := &coreV1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Labels:      labels,
-			Annotations: annotations,
+			Name:        metaAndSpec.Meta.Name,
+			Namespace:   metaAndSpec.Meta.Namespace,
+			Labels:      metaAndSpec.Meta.Labels,
+			Annotations: metaAndSpec.Meta.Annotations,
 		},
 		Spec: coreV1.ServiceSpec{
-			Selector: labels,
+			Selector: metaAndSpec.Selectors,
 			Type:     coreV1.ServiceTypeClusterIP,
 			Ports:    servicePorts,
 		},
 	}
-	if external {
+	if metaAndSpec.External {
 		service.Spec.Type = coreV1.ServiceTypeLoadBalancer
 	}
 	return service

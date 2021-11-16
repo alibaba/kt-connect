@@ -29,6 +29,14 @@ type PodMetaAndSpec struct {
 	Envs  map[string]string
 }
 
+// SvcMetaAndSpec ...
+type SvcMetaAndSpec struct {
+	Meta      *ResourceMeta
+	External  bool
+	Ports     map[int]int
+	Selectors map[string]string
+}
+
 // ResourceMeta ...
 type ResourceMeta struct {
 	Name        string
@@ -263,11 +271,10 @@ func (k *Kubernetes) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec,
 }
 
 // CreateService create kubernetes service
-func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, ports map[int]int,
-	labels, annotations map[string]string) (*coreV1.Service, error) {
-	cli := k.Clientset.CoreV1().Services(namespace)
-	util.SetupServiceHeartBeat(ctx, cli, name)
-	svc := createService(name, namespace, labels, annotations, external, ports)
+func (k *Kubernetes) CreateService(ctx context.Context, metaAndSpec *SvcMetaAndSpec) (*coreV1.Service, error) {
+	cli := k.Clientset.CoreV1().Services(metaAndSpec.Meta.Namespace)
+	util.SetupServiceHeartBeat(ctx, cli, metaAndSpec.Meta.Name)
+	svc := createService(metaAndSpec)
 	return cli.Create(ctx, svc, metav1.CreateOptions{})
 }
 
