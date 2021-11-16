@@ -5,7 +5,6 @@ const (
 	ClientTunIP             = "CLIENT_TUN_IP"
 	ServerTunIP             = "SERVER_TUN_IP"
 	TunMaskLength           = "TUN_MASK_LEN"
-	ControlBy               = "control-by"
 	KubernetesTool          = "kt"
 	ComponentConnect        = "connect"
 	ComponentExchange       = "exchange"
@@ -24,6 +23,8 @@ const (
 	SshPort                 = 22
 	Socks4Port              = 1080
 
+	// ControlBy label used for mark shadow pod
+	ControlBy = "control-by"
 	// KTVersion label used for fetch shadow mark in UI
 	KTVersion = "kt-version"
 	// KTComponent label used for distinguish shadow type

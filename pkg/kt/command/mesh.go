@@ -16,7 +16,6 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"k8s.io/api/apps/v1"
-	appV1 "k8s.io/api/apps/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"strconv"
@@ -105,7 +104,9 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule     ", meshVersion)
 	log.Info().Msg("---------------------------------------------------------")
 
-	if err = createShadowAndInbound(ctx, k, deploymentName, meshVersion, app, options); err != nil {
+	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
+	labels := getMeshLabels(shadowPodName, meshVersion, app)
+	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
 		return err
 	}
 	return nil
@@ -219,17 +220,16 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	}
 	log.Info().Msgf("Service %s created", shadowSvcName)
 
-	if err = createShadowAndInbound(ctx, k, deploymentName, meshVersion, app, options); err != nil {
+	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
+	labels := map[string]string{common.ControlBy: common.KubernetesTool}
+	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
 		return err
 	}
 	return nil
 }
 
-func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, deploymentName, meshVersion string,
-	app *appV1.Deployment, options *options.DaemonOptions) (error) {
-
-	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
-	labels := getMeshLabels(shadowPodName, meshVersion, app)
+func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
+	labels map[string]string, options *options.DaemonOptions) error {
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
