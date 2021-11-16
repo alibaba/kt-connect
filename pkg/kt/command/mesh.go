@@ -17,6 +17,7 @@ import (
 	urfave "github.com/urfave/cli"
 	"k8s.io/api/apps/v1"
 	appV1 "k8s.io/api/apps/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"os"
 	"strconv"
 	"strings"
@@ -141,33 +142,74 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		targetPorts = append(targetPorts, strconv.Itoa(p.TargetPort.IntValue()))
 	}
 
-	originSvcName := svc.Name + "-origin"
-	if _, err = k.CreateService(ctx, originSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels); err != nil {
-		return err
-	}
-	log.Info().Msgf("Service %s created", originSvcName)
-
 	meshVersion := getVersion(options)
 
-	shadowSvcName := svc.Name + "-" + meshVersion
-	if _, err = k.CreateService(ctx, shadowSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels); err != nil {
+	routerPodRefCount := 0
+	routerPodName := deploymentName + "-kt-router"
+	routerPod, err := k.GetPod(ctx, routerPodName, options.Namespace)
+	if err != nil {
+		if !k8sErrors.IsNotFound(err) {
+			return err
+		}
+		originalLabel := getMeshLabels(routerPodName, "", app)
+		annotations := map[string]string{common.KTRefCount: "1"}
+		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, originalLabel, annotations); err != nil {
+			log.Error().Err(err).Msgf("Failed to create router pod")
+			return err
+		}
+		log.Info().Msgf("Router pod is ready")
+
+		if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+			"/usr/sbin/router", "setup", svc.Name, strings.Join(targetPorts, ","), meshVersion); err != nil {
+			return err
+		}
+	} else {
+		if refCount, err2 := strconv.Atoi(routerPod.Annotations[common.KTRefCount]); err2 != nil {
+			log.Error().Msgf("Router pod exists, but do not have ref count")
+			return err
+		} else {
+			routerPodRefCount = refCount
+		}
+		log.Info().Msgf("Router pod already exists")
+
+		if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+			"/usr/sbin/router", "add", meshVersion); err != nil {
+			return err
+		}
+	}
+	log.Info().Msgf("Router pod configuration done")
+
+	originServiceRefCount := 0
+	originSvcName := svc.Name + "-kt-origin"
+	originSvc, err := k.GetService(ctx, originSvcName, options.Namespace)
+	if err != nil {
+		if !k8sErrors.IsNotFound(err) {
+			return err
+		}
+		annotations := map[string]string{common.KTRefCount: "1"}
+		if _, err = k.CreateService(ctx, originSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels, annotations); err != nil {
+			return err
+		}
+		log.Info().Msgf("Service %s created", originSvcName)
+	} else {
+		if refCount, err2 := strconv.Atoi(originSvc.Annotations[common.KTRefCount]); err2 != nil {
+			log.Error().Msgf("Origin service exists, but do not have ref count")
+			return err
+		} else {
+			originServiceRefCount = refCount
+		}
+		log.Info().Msgf("Origin service already exists")
+	}
+
+	if routerPodRefCount != originServiceRefCount {
+		log.Warn().Msgf("Mesh ref count not identical, with %d router pods and %d origin services", routerPodRefCount, originServiceRefCount)
+	}
+
+	shadowSvcName := svc.Name + "-kt-" + meshVersion
+	if _, err = k.CreateService(ctx, shadowSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels, map[string]string{}); err != nil {
 		return err
 	}
 	log.Info().Msgf("Service %s created", shadowSvcName)
-
-	routerPodName := deploymentName + "-kt-router"
-	originalLabel := getMeshLabels(routerPodName, "", app)
-	if err = cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options, originalLabel); err != nil {
-		log.Error().Err(err).Msgf("Failed to create router pod")
-		return err
-	}
-	log.Info().Msgf("Router pod %s created", routerPodName)
-
-	if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
-		"/usr/sbin/router", "setup", svc.Name, strings.Join(targetPorts, ","), meshVersion); err != nil {
-		return err
-	}
-	log.Info().Msgf("Router pod configuration done")
 
 	if err = createShadowAndInbound(ctx, k, deploymentName, meshVersion, app, options); err != nil {
 		return err

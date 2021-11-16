@@ -263,10 +263,11 @@ func (k *Kubernetes) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec,
 }
 
 // CreateService create kubernetes service
-func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, ports map[int]int, labels map[string]string) (*coreV1.Service, error) {
+func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, ports map[int]int,
+	labels, annotations map[string]string) (*coreV1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
 	util.SetupServiceHeartBeat(ctx, cli, name)
-	svc := createService(name, namespace, labels, external, ports)
+	svc := createService(name, namespace, labels, annotations, external, ports)
 	return cli.Create(ctx, svc, metav1.CreateOptions{})
 }
 

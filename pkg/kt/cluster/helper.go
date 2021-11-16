@@ -125,9 +125,9 @@ func wait(podName string) {
 	}
 }
 
-func createService(name, namespace string, labels map[string]string, external bool, ports map[int]int) *coreV1.Service {
+func createService(name, namespace string, labels, annotations map[string]string, external bool, ports map[int]int) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
-	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
+	annotations[common.KTLastHeartBeat] = util.GetTimestamp()
 
 	for srcPort, targetPort := range ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{

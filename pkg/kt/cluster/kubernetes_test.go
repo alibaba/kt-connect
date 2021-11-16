@@ -68,8 +68,9 @@ func TestKubernetes_CreateService(t *testing.T) {
 	type args struct {
 		name      string
 		namespace string
-		port      int
+		port      map[int]int
 		labels    map[string]string
+		annotations map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -81,10 +82,11 @@ func TestKubernetes_CreateService(t *testing.T) {
 			args: args{
 				name:      "svc-name",
 				namespace: "default",
-				port:      8080,
+				port: map[int]int{8080:8080},
 				labels: map[string]string{
 					"label": "value",
 				},
+				annotations: map[string]string{},
 			},
 			wantErr: false,
 		},
@@ -94,7 +96,8 @@ func TestKubernetes_CreateService(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(),
 			}
-			_, err := k.CreateService(context.TODO(), tt.args.name, tt.args.namespace, false, tt.args.port, tt.args.labels)
+			_, err := k.CreateService(context.TODO(), tt.args.name, tt.args.namespace, false, tt.args.port,
+				tt.args.labels, tt.args.annotations)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.CreateService() error = %v, wantErr %v", err, tt.wantErr)
 				return

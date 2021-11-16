@@ -36,12 +36,10 @@ const (
 	KTConfig = "kt-config"
 	// KtUser annotation used for record independent username
 	KtUser = "kt-user"
-	// KTRefCount the count of shared
+	// KTRefCount annotation used for count of shared pod / service
 	KTRefCount = "kt-ref-count"
-	// KTLastHeartBeat timestamp of last heart beat
+	// KTLastHeartBeat annotation used for timestamp of last heart beat
 	KTLastHeartBeat = "kt-last-heart-beat"
-	// KtExchangeContainer name of exchange ephemeral container
-	KtExchangeContainer = "kt-exchange"
 
 	// SSHPrivateKeyName ssh private key name
 	SSHPrivateKeyName = "kt_%s" + PostfixRsaKey
@@ -53,6 +51,8 @@ const (
 	SSHAuthPrivateKey = "privateKey"
 	// DefaultNamespace default namespace
 	DefaultNamespace = "default"
+	// KtExchangeContainer name of exchange ephemeral container
+	KtExchangeContainer = "kt-exchange"
 	// DefaultContainer default container name
 	DefaultContainer = "standalone"
 )

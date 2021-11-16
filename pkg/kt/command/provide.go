@@ -105,7 +105,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 
 	log.Info().Msgf("Expose deployment %s to service %s:%v", shadowPodName, serviceName, options.ProvideOptions.Expose)
 	ports := map[int]int {options.ProvideOptions.Expose: options.ProvideOptions.Expose}
-	_, err = kubernetes.CreateService(ctx, serviceName, options.Namespace, options.ProvideOptions.External, ports, labels)
+	_, err = kubernetes.CreateService(ctx, serviceName, options.Namespace, options.ProvideOptions.External, ports, labels, map[string]string{})
 	if err != nil {
 		return err
 	}
