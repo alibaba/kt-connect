@@ -1,4 +1,4 @@
-FROM nginx:1.21.4-alpine
+FROM nginx:1.21.4
 
 COPY build/docker/router/nginx.conf /etc/nginx/nginx.conf
 COPY artifacts/router/router-linux-amd64 /usr/sbin/router
