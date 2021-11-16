@@ -15,5 +15,8 @@ func GetOrCreateRouterPod(ctx context.Context, k KubernetesInterface, name strin
 	if err := k.CreatePod(ctx, &metaAndSpec, options); err != nil {
 		return err
 	}
+	if _, err := k.WaitPodReady(name, options.Namespace); err != nil {
+		return err
+	}
 	return nil
 }
