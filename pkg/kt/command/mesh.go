@@ -4,13 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"os"
-	"strings"
-
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -19,6 +16,9 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"k8s.io/api/apps/v1"
+	appV1 "k8s.io/api/apps/v1"
+	"os"
+	"strings"
 )
 
 // NewMeshCommand return new mesh command
@@ -99,40 +99,78 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	}
 
 	meshVersion := getVersion(options)
-	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
-	labels := getMeshLabels(shadowPodName, meshVersion, app)
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule     ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
 
-	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
+	if err = createShadowAndInbound(ctx, k, deploymentName, meshVersion, app, options); err != nil {
 		return err
 	}
-
-	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule       ", meshVersion)
-	log.Info().Msg("---------------------------------------------------------")
 	return nil
 }
 
-func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string,  options *options.DaemonOptions) error {
+func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, options *options.DaemonOptions) error {
 	app, err := k.GetDeployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
 
-	options.RuntimeOptions.Origin = deploymentName
+	svcList, err := k.GetServices(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
+	if err != nil {
+		return err
+	} else if len(svcList) == 0 {
+		return fmt.Errorf("failed to find service for deployment \"%s\", with labels \"%v\"",
+			deploymentName, app.Spec.Selector.MatchLabels)
+	} else if len(svcList) > 1 {
+		svcNames := svcList[0].Name
+		for i, svc := range svcList {
+			if i > 0 {
+				svcNames = svcNames + ", " + svc.Name
+			}
+		}
+		log.Warn().Msgf("Found %d services match deployment \"%s\": %s. First one will be used.",
+			len(svcList), deploymentName, svcNames)
+	}
+
+	svc := svcList[0]
+	ports := make(map[int]int)
+	for _, p := range svc.Spec.Ports {
+		ports[int(p.Port)] = p.TargetPort.IntValue()
+	}
+
+	originSvcName := svc.Name + "-origin"
+	if _, err = k.CreateService(ctx, originSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels); err != nil {
+		return err
+	}
+	log.Info().Msgf("Service %s created", originSvcName)
+
+	meshVersion := getVersion(options)
+
+	shadowSvcName := svc.Name + "-" + meshVersion
+	if _, err = k.CreateService(ctx, shadowSvcName, options.Namespace, false, ports, app.Spec.Selector.MatchLabels); err != nil {
+		return err
+	}
+	log.Info().Msgf("Service %s created", shadowSvcName)
+
 	routerPodName := deploymentName + "-kt-router"
 	originalLabel := getMeshLabels(routerPodName, "", app)
-
 	if err = cluster.GetOrCreateRouterPod(ctx, k, routerPodName, options, originalLabel); err != nil {
 		log.Error().Err(err).Msgf("Failed to create router pod")
 		return err
 	}
+	log.Info().Msgf("Router pod %s created", routerPodName)
 
-	log.Info().Msgf("Auto mesh completed")
+	if err = createShadowAndInbound(ctx, k, deploymentName, meshVersion, app, options); err != nil {
+		return err
+	}
 	return nil
 }
 
-func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
-	labels map[string]string, options *options.DaemonOptions) error {
+func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, deploymentName, meshVersion string,
+	app *appV1.Deployment, options *options.DaemonOptions) (error) {
+
+	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
+	labels := getMeshLabels(shadowPodName, meshVersion, app)
 
 	envs := make(map[string]string)
 	annotations := make(map[string]string)
@@ -146,9 +184,7 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	shadow := connect.Create(options)
-	err = shadow.Inbound(options.MeshOptions.Expose, podName)
-
-	if err != nil {
+	if err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
 		return err
 	}
 	return nil

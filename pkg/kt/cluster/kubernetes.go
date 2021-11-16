@@ -89,10 +89,18 @@ func (k *Kubernetes) GetService(ctx context.Context, name, namespace string) (*c
 }
 
 // GetServices get pods by label
-func (k *Kubernetes) GetServices(ctx context.Context, matchLabels map[string]string, namespace string) (*coreV1.ServiceList, error) {
-	return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{
-		FieldSelector: labelApi.SelectorFromSet(matchLabels).String(),
-	})
+func (k *Kubernetes) GetServices(ctx context.Context, matchLabels map[string]string, namespace string) ([]coreV1.Service, error) {
+	var matchedSvcs []coreV1.Service
+	svcList, err := k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, svc := range svcList.Items {
+		if util.MapContains(svc.Spec.Selector, matchLabels) {
+			matchedSvcs = append(matchedSvcs, svc)
+		}
+	}
+	return matchedSvcs, nil
 }
 
 // GetConfigMap get configmap
@@ -231,10 +239,10 @@ func (k *Kubernetes) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec,
 }
 
 // CreateService create kubernetes service
-func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, port int, labels map[string]string) (*coreV1.Service, error) {
+func (k *Kubernetes) CreateService(ctx context.Context, name, namespace string, external bool, ports map[int]int, labels map[string]string) (*coreV1.Service, error) {
 	cli := k.Clientset.CoreV1().Services(namespace)
 	util.SetupServiceHeartBeat(ctx, cli, name)
-	svc := createService(name, namespace, labels, external, port)
+	svc := createService(name, namespace, labels, external, ports)
 	return cli.Create(ctx, svc, metav1.CreateOptions{})
 }
 

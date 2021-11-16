@@ -19,3 +19,19 @@ func Contains(obj interface{}, target interface{}) bool {
 	}
 	return false
 }
+
+func MapContains(subset, fullset map[string]string) bool {
+	for sk, sv := range subset {
+		find := false
+		for fk, fv := range fullset {
+			if sk == fk && sv == fv {
+				find = true
+				break
+			}
+		}
+		if !find {
+			return false
+		}
+	}
+	return true
+}

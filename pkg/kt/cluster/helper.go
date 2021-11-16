@@ -122,15 +122,17 @@ func wait(podName string) {
 	}
 }
 
-func createService(name, namespace string, labels map[string]string, external bool, port int) *coreV1.Service {
-	var ports []coreV1.ServicePort
+func createService(name, namespace string, labels map[string]string, external bool, ports map[int]int) *coreV1.Service {
+	var servicePorts []coreV1.ServicePort
 	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
 
-	ports = append(ports, coreV1.ServicePort{
-		Name:       name,
-		Port:       int32(port),
-		TargetPort: intstr.FromInt(port),
-	})
+	for srcPort, targetPort := range ports {
+		servicePorts = append(servicePorts, coreV1.ServicePort{
+			Name:       fmt.Sprintf("%s-%d", name, srcPort),
+			Port:       int32(srcPort),
+			TargetPort: intstr.FromInt(targetPort),
+		})
+	}
 
 	service := &coreV1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -142,7 +144,7 @@ func createService(name, namespace string, labels map[string]string, external bo
 		Spec: coreV1.ServiceSpec{
 			Selector: labels,
 			Type:     coreV1.ServiceTypeClusterIP,
-			Ports:    ports,
+			Ports:    servicePorts,
 		},
 	}
 	if external {
