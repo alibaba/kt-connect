@@ -18,6 +18,7 @@ import (
 	"k8s.io/api/apps/v1"
 	appV1 "k8s.io/api/apps/v1"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -134,8 +135,10 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 
 	svc := svcList[0]
 	ports := make(map[int]int)
+	targetPorts := make([]string, len(svc.Spec.Ports))
 	for _, p := range svc.Spec.Ports {
 		ports[int(p.Port)] = p.TargetPort.IntValue()
+		targetPorts = append(targetPorts, strconv.Itoa(p.TargetPort.IntValue()))
 	}
 
 	originSvcName := svc.Name + "-origin"
@@ -159,6 +162,12 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 	log.Info().Msgf("Router pod %s created", routerPodName)
+
+	if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+		"router", "setup", svc.Name, strings.Join(targetPorts, ","), meshVersion); err != nil {
+		return err
+	}
+	log.Info().Msgf("Router pod configuration done")
 
 	if err = createShadowAndInbound(ctx, k, deploymentName, meshVersion, app, options); err != nil {
 		return err

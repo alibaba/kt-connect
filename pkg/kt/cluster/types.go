@@ -28,6 +28,7 @@ type KubernetesInterface interface {
 	DecreaseRef(ctx context.Context, name, namespace string) (cleanup bool, err error)
 	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
 	RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error)
+	ExecInPod(containerName, podName, namespace string, opts options.RuntimeOptions, cmd ...string) (string, string, error)
 	RemovePod(ctx context.Context, name, namespace string) (err error)
 
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)

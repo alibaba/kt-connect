@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
+	"k8s.io/client-go/kubernetes/scheme"
 	"strconv"
 	"strings"
 )
@@ -180,6 +182,28 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error) {
 	// TODO: implement container removal
 	return k.RemovePod(ctx, podName, namespace)
+}
+
+func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, opts options.RuntimeOptions, cmd ...string) (string, string, error) {
+	req := k.Clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(namespace).
+		SubResource("exec").
+		Param("container", containerName)
+	req.VersionedParams(&coreV1.PodExecOptions{
+		Container: containerName,
+		Command:   cmd,
+		Stdin:     false,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+	}, scheme.ParameterCodec)
+
+	var stdout, stderr bytes.Buffer
+	log.Debug().Msgf("Execute command %v in %s:%s", cmd, podName, containerName)
+	err := execute("POST", req.URL(), opts.RestConfig, nil, &stdout, &stderr, false)
+	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
 func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,

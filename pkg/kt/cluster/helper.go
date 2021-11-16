@@ -3,19 +3,22 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"strings"
-	"time"
-
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
+	"io"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/remotecommand"
+	"net/url"
+	"strings"
+	"time"
 )
 
 func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
@@ -165,7 +168,7 @@ func createContainer(image string, args []string, envs map[string]string, option
 		pullPolicy = "IfNotPresent"
 	}
 	return coreV1.Container{
-		Name:            "standalone",
+		Name:            common.DefaultContainer,
 		Image:           image,
 		ImagePullPolicy: pullPolicy,
 		Args:            args,
@@ -245,7 +248,7 @@ func addTunHostPath(pod *coreV1.Pod) {
 
 	for i := range pod.Spec.Containers {
 		c := &pod.Spec.Containers[i]
-		if c.Name != "standalone" {
+		if c.Name != common.DefaultContainer {
 			continue
 		} else {
 			c.VolumeMounts = append(c.VolumeMounts, coreV1.VolumeMount{
@@ -264,4 +267,17 @@ func addImagePullSecret(pod *coreV1.Pod, imagePullSecret string) {
 			Name: imagePullSecret,
 		},
 	}
+}
+
+func execute(method string, url *url.URL, config *restclient.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
+	exec, err := remotecommand.NewSPDYExecutor(config, method, url)
+	if err != nil {
+		return err
+	}
+	return exec.Stream(remotecommand.StreamOptions{
+		Stdin:  stdin,
+		Stdout: stdout,
+		Stderr: stderr,
+		Tty:    tty,
+	})
 }

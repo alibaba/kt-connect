@@ -122,7 +122,7 @@ type DaemonOptions struct {
 // NewDaemonOptions return new cli default options
 func NewDaemonOptions(version string) *DaemonOptions {
 	return &DaemonOptions{
-		Namespace:  common.DefNamespace,
+		Namespace:  common.DefaultNamespace,
 		KubeConfig: util.KubeConfig(),
 		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{

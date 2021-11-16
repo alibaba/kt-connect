@@ -51,8 +51,10 @@ const (
 	SSHAuthKey = "authorized"
 	// SSHAuthPrivateKey ssh private key
 	SSHAuthPrivateKey = "privateKey"
-	// DefNamespace default namespace
-	DefNamespace = "default"
+	// DefaultNamespace default namespace
+	DefaultNamespace = "default"
+	// DefaultContainer default container name
+	DefaultContainer = "standalone"
 )
 
 var (
