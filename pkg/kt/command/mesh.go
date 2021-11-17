@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
@@ -132,13 +133,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		ports[int(p.Port)] = p.TargetPort.IntValue()
 	}
 
-	routerPodName := deploymentName + "-kt-router"
-	routerLabels := map[string]string{common.KTRole: "router", common.KTName: routerPodName}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, options); err != nil {
-		return err
-	}
-
-	if err = createOriginService(ctx, k, svc.Name, ports, svc.Spec.Selector, options); err != nil {
+	if err = createOriginService(ctx, k, svc.Name, ports, app.Spec.Selector.MatchLabels, options); err != nil {
 		return err
 	}
 
@@ -149,11 +144,28 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	svc.Spec.Selector = routerLabels
-	if _, err = k.UpdateService(ctx, &svc); err != nil {
+	routerPodName := deploymentName + "-kt-router"
+	routerLabels := map[string]string{common.KTRole: "router", common.KTName: routerPodName}
+	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, options); err != nil {
 		return err
 	}
 
+	if _, ok := svc.Annotations[common.KtSelector]; !ok {
+		if marshaledSelector, err2 := json.Marshal(svc.Spec.Selector); err2 != nil {
+			log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
+			return err2
+		} else {
+			svc.Annotations[common.KtSelector] = string(marshaledSelector)
+		}
+	}
+	svc.Spec.Selector = routerLabels
+	if _, err = k.UpdateService(ctx, svc); err != nil {
+		return err
+	}
+
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf(" Access your service with header 'KT-VERSION: %s' ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
 	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, options); err != nil {
 		return err
 	}
@@ -180,12 +192,12 @@ func createShadowService(ctx context.Context, k cluster.KubernetesInterface, sha
 }
 
 func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, app *v1.Deployment,
-	options *options.DaemonOptions) (coreV1.Service, error) {
+	options *options.DaemonOptions) (*coreV1.Service, error) {
 	svcList, err := k.GetServices(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
 	if err != nil {
-		return coreV1.Service{}, err
+		return nil, err
 	} else if len(svcList) == 0 {
-		return coreV1.Service{}, fmt.Errorf("failed to find service for deployment \"%s\", with labels \"%v\"",
+		return nil, fmt.Errorf("failed to find service for deployment \"%s\", with labels \"%v\"",
 			app.Name, app.Spec.Selector.MatchLabels)
 	} else if len(svcList) > 1 {
 		svcNames := svcList[0].Name
@@ -198,7 +210,10 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 			len(svcList), app.Name, svcNames)
 	}
 	svc := svcList[0]
-	return svc, nil
+	if strings.HasSuffix(svc.Name, "-kt-origin") {
+		return k.GetService(ctx, strings.TrimSuffix(svc.Name, "-kt-origin"), options.Namespace)
+	}
+	return &svc, nil
 }
 
 func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,

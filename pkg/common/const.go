@@ -39,6 +39,8 @@ const (
 	KTConfig = "kt-config"
 	// KtUser annotation used for record independent username
 	KtUser = "kt-user"
+	// KtSelector label used for record service origin selector
+	KtSelector = "kt-selector"
 	// KTRefCount annotation used for count of shared pod / service
 	KTRefCount = "kt-ref-count"
 	// KTLastHeartBeat annotation used for timestamp of last heart beat
