@@ -102,15 +102,14 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	}
 
 	meshVersion := getVersion(options)
-	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf("    Mesh Version '%s' You can update Istio rule     ", meshVersion)
-	log.Info().Msg("---------------------------------------------------------")
-
 	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
 	labels := getMeshLabels(shadowPodName, meshVersion, app)
 	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
 		return err
 	}
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf(" Now you can update Istio rule by label '%s=%s' ", common.KTVersion, meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
 	return nil
 }
 
@@ -163,12 +162,12 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf(" Access your service with header 'KT-VERSION: %s' ", meshVersion)
-	log.Info().Msg("---------------------------------------------------------")
 	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, options); err != nil {
 		return err
 	}
+	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msgf(" Now you can access local service with header 'KT-VERSION: %s' ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------")
 	return nil
 }
 

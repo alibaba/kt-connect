@@ -165,7 +165,7 @@ func exposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remo
 				Password: "root",
 			},
 			fmt.Sprintf("127.0.0.1:%d", localSSHPort),
-			fmt.Sprintf("0.0.0.0:%s", fmt.Sprintf("%s", remotePort)),
+			fmt.Sprintf("0.0.0.0:%s", remotePort),
 			fmt.Sprintf("127.0.0.1:%s", localPort),
 		)
 		if err != nil {

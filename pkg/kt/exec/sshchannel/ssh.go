@@ -75,32 +75,36 @@ func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, 
 		log.Error().Err(err).Msgf("Fail to create ssh tunnel")
 		return err
 	}
-	defer conn.Close()
 
-	// Listen on remote server port, process will hang at here
+	// Listen on remote server port of shadow pod, via ssh connection
 	listener, err := conn.Listen("tcp", remoteEndpoint)
 	if err != nil {
 		log.Error().Err(err).Msgf("Fail to listen remote endpoint")
 		return err
 	}
-	defer listener.Close()
 
-	log.Info().Msgf("Forward %s to localEndpoint %s", remoteEndpoint, localEndpoint)
+	log.Info().Msgf("Forward %s to local endpoint %s", remoteEndpoint, localEndpoint)
 
-	// handle incoming connections on reverse forwarded tunnel
+	// Handle incoming connections on reverse forwarded tunnel
+	go handleRequest(listener, localEndpoint)
+	return
+}
+
+func handleRequest(listener net.Listener, localEndpoint string) {
 	for {
+		// Wait requests from remote endpoint
 		client, err := listener.Accept()
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to accept remote request")
-			return err
 		}
 
-		// Open a (local) connection to localEndpoint whose content will be forwarded so serverEndpoint
+		// Open a (local) connection to localEndpoint whose content will be forwarded to remoteEndpoint
 		local, err := net.Dial("tcp", localEndpoint)
 		if err != nil {
 			_ = client.Close()
 			log.Error().Err(err).Msgf("Local service error")
 		} else {
+			// Handle request in individual coroutine, current coroutine continue to accept more requests
 			go handleClient(client, local)
 		}
 	}
