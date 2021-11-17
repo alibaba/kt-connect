@@ -48,7 +48,7 @@ func NewDefaultSSHCredential() *SSHCredential {
 
 // Generate generate SSHGenerator
 func Generate(privateKeyPath string) (*SSHGenerator, error) {
-	privateKey, err := generatePrivateKey(common.SSHBitSize)
+	privateKey, err := generatePrivateKey(common.SshBitSize)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(component, identifier string) string {
-	return fmt.Sprintf("%s/%s/"+common.SSHPrivateKeyName, KtHome, component, identifier)
+	return fmt.Sprintf("%s/%s/"+common.SshPrivateKeyName, KtHome, component, identifier)
 }
 
 // CleanRsaKeys ...

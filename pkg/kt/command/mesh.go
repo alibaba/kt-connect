@@ -102,13 +102,13 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	}
 
 	meshVersion := getVersion(options)
-	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
+	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshVersion, app)
 	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf(" Now you can update Istio rule by label '%s=%s' ", common.KTVersion, meshVersion)
+	log.Info().Msgf(" Now you can update Istio rule by label '%s=%s' ", common.KtVersion, meshVersion)
 	log.Info().Msg("---------------------------------------------------------")
 	return nil
 }
@@ -137,15 +137,15 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	shadowPodName := deploymentName + "-kt-mesh-" + meshVersion
-	shadowSvcName := svc.Name + "-kt-" + meshVersion
-	shadowLabels := map[string]string{common.KTRole: "shadow", common.KTName: shadowPodName}
+	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
+	shadowSvcName := svc.Name + common.KtMeshInfix + meshVersion
+	shadowLabels := map[string]string{common.KtRole: "shadow", common.KtName: shadowPodName}
 	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, options); err != nil {
 		return err
 	}
 
-	routerPodName := deploymentName + "-kt-router"
-	routerLabels := map[string]string{common.KTRole: "router", common.KTName: routerPodName}
+	routerPodName := deploymentName + common.RouterPodSuffix
+	routerLabels := map[string]string{common.KtRole: "router", common.KtName: routerPodName}
 	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, options); err != nil {
 		return err
 	}
@@ -226,7 +226,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		annotations := map[string]string{common.KTRefCount: "1", common.KTConfig: fmt.Sprintf("service=%s", svcName)}
+		annotations := map[string]string{common.KtRefCount: "1", common.KtConfig: fmt.Sprintf("service=%s", svcName)}
 		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
@@ -241,7 +241,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 			log.Debug().Msgf("Stderr: %s", stderr)
 		}
 	} else {
-		if _, err = strconv.Atoi(routerPod.Annotations[common.KTRefCount]); err != nil {
+		if _, err = strconv.Atoi(routerPod.Annotations[common.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err
 		} else if err = k.IncreaseRef(ctx, routerPodName, options.Namespace); err != nil {
@@ -314,9 +314,9 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 
 func getMeshLabels(workload string, meshVersion string, app *v1.Deployment) map[string]string {
 	labels := map[string]string{
-		common.KTComponent: common.ComponentMesh,
-		common.KTName:      workload,
-		common.KTVersion:   meshVersion,
+		common.KtComponent: common.ComponentMesh,
+		common.KtName:      workload,
+		common.KtVersion:   meshVersion,
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {

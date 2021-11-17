@@ -25,35 +25,35 @@ const (
 
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
-	// KTVersion label used for fetch shadow mark in UI
-	KTVersion = "kt-version"
-	// KTComponent label used for distinguish shadow type
-	KTComponent = "kt-component"
-	// KTRemoteAddress label used for fetch pod IP in UI
-	KTRemoteAddress = "kt-remote-address"
-	// KTName label used for wait shadow pod ready
-	KTName = "kt-name"
-	// KTRole label used for auto mesh roles
-	KTRole = "kt-role"
-	// KTConfig annotation used for clean up context
-	KTConfig = "kt-config"
+	// KtVersion label used for fetch shadow mark in UI
+	KtVersion = "kt-version"
+	// KtComponent label used for distinguish shadow type
+	KtComponent = "kt-component"
+	// KtRemoteAddress label used for fetch pod IP in UI
+	KtRemoteAddress = "kt-remote-address"
+	// KtName label used for wait shadow pod ready
+	KtName = "kt-name"
+	// KtRole label used for auto mesh roles
+	KtRole = "kt-role"
+	// KtConfig annotation used for clean up context
+	KtConfig = "kt-config"
 	// KtUser annotation used for record independent username
 	KtUser = "kt-user"
 	// KtSelector label used for record service origin selector
 	KtSelector = "kt-selector"
-	// KTRefCount annotation used for count of shared pod / service
-	KTRefCount = "kt-ref-count"
-	// KTLastHeartBeat annotation used for timestamp of last heart beat
-	KTLastHeartBeat = "kt-last-heart-beat"
+	// KtRefCount annotation used for count of shared pod / service
+	KtRefCount = "kt-ref-count"
+	// KtLastHeartBeat annotation used for timestamp of last heart beat
+	KtLastHeartBeat = "kt-last-heart-beat"
 
-	// SSHPrivateKeyName ssh private key name
-	SSHPrivateKeyName = "kt_%s" + PostfixRsaKey
-	// SSHBitSize ssh bit size
-	SSHBitSize = 2048
-	// SSHAuthKey auth key name
-	SSHAuthKey = "authorized"
-	// SSHAuthPrivateKey ssh private key
-	SSHAuthPrivateKey = "privateKey"
+	// SshPrivateKeyName ssh private key name
+	SshPrivateKeyName = "kt_%s" + PostfixRsaKey
+	// SshBitSize ssh bit size
+	SshBitSize = 2048
+	// SshAuthKey auth key name
+	SshAuthKey = "authorized"
+	// SshAuthPrivateKey ssh private key
+	SshAuthPrivateKey = "privateKey"
 	// DefaultNamespace default namespace
 	DefaultNamespace = "default"
 	// KtExchangeContainer name of exchange ephemeral container
@@ -62,6 +62,10 @@ const (
 	DefaultContainer = "standalone"
 	// OriginServiceSuffix suffix of origin service name
 	OriginServiceSuffix = "-kt-origin"
+	// RouterPodSuffix suffix of router pod name
+	RouterPodSuffix = "-kt-router"
+	// KtMeshInfix of mesh pod and mesh service name
+	KtMeshInfix = "-kt-mesh-"
 )
 
 var (

@@ -93,24 +93,24 @@ func (action *Action) cleanPidFiles() {
 }
 
 func (action *Action) analysisShadowPod(pod coreV1.Pod, options *options.DaemonOptions, resourceToClean ResourceToClean) {
-	lastHeartBeat, err := strconv.ParseInt(pod.ObjectMeta.Annotations[common.KTLastHeartBeat], 10, 64)
+	lastHeartBeat, err := strconv.ParseInt(pod.ObjectMeta.Annotations[common.KtLastHeartBeat], 10, 64)
 	if err == nil && action.isExpired(lastHeartBeat, options) {
 		resourceToClean.NamesOfPodToDelete.PushBack(pod.Name)
-		config := util.String2Map(pod.ObjectMeta.Annotations[common.KTConfig])
-		if pod.ObjectMeta.Labels[common.KTComponent] == common.ComponentExchange {
+		config := util.String2Map(pod.ObjectMeta.Annotations[common.KtConfig])
+		if pod.ObjectMeta.Labels[common.KtComponent] == common.ComponentExchange {
 			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 			app := config["app"]
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.ObjectMeta.Labels[common.KTComponent] == common.ComponentProvide {
+		} else if pod.ObjectMeta.Labels[common.KtComponent] == common.ComponentProvide {
 			service := config["service"]
 			if service != "" {
 				resourceToClean.NamesOfServiceToDelete.PushBack(service)
 			}
 		}
 		for _, v := range pod.Spec.Volumes {
-			if v.ConfigMap != nil && len(v.ConfigMap.Items) == 1 && v.ConfigMap.Items[0].Key == common.SSHAuthKey {
+			if v.ConfigMap != nil && len(v.ConfigMap.Items) == 1 && v.ConfigMap.Items[0].Key == common.SshAuthKey {
 				resourceToClean.NamesOfConfigMapToDelete.PushBack(v.ConfigMap.Name)
 			}
 		}

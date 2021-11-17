@@ -127,7 +127,7 @@ func wait(podName string) {
 
 func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
-	metaAndSpec.Meta.Annotations[common.KTLastHeartBeat] = util.GetTimestamp()
+	metaAndSpec.Meta.Annotations[common.KtLastHeartBeat] = util.GetTimestamp()
 	metaAndSpec.Meta.Labels[common.ControlBy] = common.KubernetesTool
 
 	for srcPort, targetPort := range metaAndSpec.Ports {
@@ -190,8 +190,8 @@ func createPod(metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) *cor
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
 	annotations := metaAndSpec.Meta.Annotations
-	annotations[common.KTRefCount] = "1"
-	annotations[common.KTLastHeartBeat] = util.GetTimestamp()
+	annotations[common.KtRefCount] = "1"
+	annotations[common.KtLastHeartBeat] = util.GetTimestamp()
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
 
@@ -227,7 +227,7 @@ func getSSHVolume(volume string) coreV1.Volume {
 				},
 				Items: []coreV1.KeyToPath{
 					{
-						Key:  common.SSHAuthKey,
+						Key:  common.SshAuthKey,
 						Path: "authorized_keys",
 					},
 				},

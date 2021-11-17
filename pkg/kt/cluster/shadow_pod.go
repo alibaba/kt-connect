@@ -25,7 +25,7 @@ func GetAllExistingShadowPods(ctx context.Context, k KubernetesInterface, namesp
 func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
 	podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
 
-	component := labels[common.KTComponent]
+	component := labels[common.KtComponent]
 	identifier := strings.ToLower(util.RandomString(4))
 	if options.ConnectOptions.ShareShadow {
 		identifier = "shared"
@@ -96,8 +96,8 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (*coreV1.Pod, error) {
 	localIPAddress := util.GetOutboundIP()
 	log.Debug().Msgf("Client address %s", localIPAddress)
-	metaAndSpec.Meta.Labels[common.KTRemoteAddress] = localIPAddress
-	metaAndSpec.Meta.Labels[common.KTName] = metaAndSpec.Meta.Name
+	metaAndSpec.Meta.Labels[common.KtRemoteAddress] = localIPAddress
+	metaAndSpec.Meta.Labels[common.KtName] = metaAndSpec.Meta.Name
 
 	err := k.CreateShadowPod(ctx, metaAndSpec, sshcm, options)
 	if err != nil {
@@ -121,9 +121,9 @@ func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface,
 		return
 	}
 
-	generator = util.NewSSHGenerator(configMap.Data[common.SSHAuthPrivateKey], configMap.Data[common.SSHAuthKey], sshKeyMeta.PrivateKeyPath)
+	generator = util.NewSSHGenerator(configMap.Data[common.SshAuthPrivateKey], configMap.Data[common.SshAuthKey], sshKeyMeta.PrivateKeyPath)
 
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SSHAuthPrivateKey]))
+	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey]))
 	if err != nil {
 		return
 	}

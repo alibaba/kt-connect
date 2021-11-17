@@ -134,7 +134,7 @@ func removeRouterAndRecoverService(ctx context.Context, k cluster.KubernetesInte
 		return
 	}
 
-	config := util.String2Map(routerPod.Annotations[common.KTConfig])
+	config := util.String2Map(routerPod.Annotations[common.KtConfig])
 	svcName := config["service"]
 	recoverOriginalService(ctx, k, svcName, opts.Namespace)
 

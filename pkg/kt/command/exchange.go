@@ -243,7 +243,7 @@ func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serv
 
 func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
 	return map[string]string{
-		common.KTConfig: fmt.Sprintf("app=%s,replicas=%d",
+		common.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
 			options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas),
 	}
 }
@@ -251,8 +251,8 @@ func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
 func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
-		common.KTComponent: common.ComponentExchange,
-		common.KTName:      workload,
+		common.KtComponent: common.ComponentExchange,
+		common.KtName:      workload,
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {
@@ -260,6 +260,6 @@ func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]str
 		}
 	}
 	splits := strings.Split(workload, "-")
-	labels[common.KTVersion] = splits[len(splits)-1]
+	labels[common.KtVersion] = splits[len(splits)-1]
 	return labels
 }

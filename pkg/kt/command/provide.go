@@ -81,12 +81,12 @@ func provide(ctx context.Context, serviceName string, cli kt.CliInterface, optio
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
-		common.KTComponent: common.ComponentProvide,
-		common.KTName:      shadowPodName,
-		common.KTVersion:   version,
+		common.KtComponent: common.ComponentProvide,
+		common.KtName:      shadowPodName,
+		common.KtVersion:   version,
 	}
 	annotations := map[string]string{
-		common.KTConfig: fmt.Sprintf("service=%s", serviceName),
+		common.KtConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
 	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, options, kubernetes, cli)

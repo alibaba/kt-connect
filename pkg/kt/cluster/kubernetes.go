@@ -157,18 +157,18 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 		return
 	}
 
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SSHAuthPrivateKey]))
+	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey]))
 
-	authKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SSHAuthKey]))
-	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SSHAuthPrivateKey]))
+	authKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SshAuthKey]))
+	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SshAuthPrivateKey]))
 
 	ec := coreV1.EphemeralContainer{
 		EphemeralContainerCommon: coreV1.EphemeralContainerCommon{
 			Name:  containerName,
 			Image: options.Image,
 			Env: []coreV1.EnvVar{
-				{Name: common.SSHAuthKey, Value: authKey},
-				{Name: common.SSHAuthPrivateKey, Value: privateKey},
+				{Name: common.SshAuthKey, Value: authKey},
+				{Name: common.SshAuthPrivateKey, Value: privateKey},
 			},
 			SecurityContext: &coreV1.SecurityContext{
 				Capabilities: &coreV1.Capabilities{Add: []coreV1.Capability{"NET_ADMIN"}},
@@ -217,8 +217,8 @@ func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, opts op
 func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,
 	generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
 
-	annotations := map[string]string{common.KTLastHeartBeat: util.GetTimestamp()}
-	labels[common.KTName] = sshcm
+	annotations := map[string]string{common.KtLastHeartBeat: util.GetTimestamp()}
+	labels[common.KtName] = sshcm
 	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
 	util.SetupConfigMapHeartBeat(ctx, cli, sshcm)
 
@@ -230,8 +230,8 @@ func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[s
 			Annotations: annotations,
 		},
 		Data: map[string]string{
-			common.SSHAuthKey:        string(generator.PublicKey),
-			common.SSHAuthPrivateKey: string(generator.PrivateKey),
+			common.SshAuthKey:        string(generator.PublicKey),
+			common.SshAuthPrivateKey: string(generator.PrivateKey),
 		},
 	}, metav1.CreateOptions{})
 }
@@ -244,7 +244,7 @@ func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAn
 	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
 		{
 			Name:      "ssh-public-key",
-			MountPath: fmt.Sprintf("/root/%s", common.SSHAuthKey),
+			MountPath: fmt.Sprintf("/root/%s", common.SshAuthKey),
 		},
 	}
 	pod.Spec.Volumes = []coreV1.Volume{
@@ -332,7 +332,7 @@ func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err 
 	}
 	pod = &coreV1.Pod{}
 	podLabels := k8sLabels.NewSelector()
-	requirement, err := k8sLabels.NewRequirement(common.KTName, selection.Equals, []string{name})
+	requirement, err := k8sLabels.NewRequirement(common.KtName, selection.Equals, []string{name})
 	if err != nil {
 		return
 	}
@@ -349,7 +349,7 @@ func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err 
 		if hasRunningPod {
 			// podLister do not support FieldSelector
 			// https://github.com/kubernetes/client-go/issues/604
-			p := getTargetPod(common.KTName, name, pods)
+			p := getTargetPod(common.KtName, name, pods)
 			if p != nil {
 				if p.Status.Phase == "Running" {
 					pod = p
@@ -390,14 +390,14 @@ func (k *Kubernetes) IncreaseRef(ctx context.Context, name string, namespace str
 		return err
 	}
 	annotations := pod.ObjectMeta.Annotations
-	count, err := strconv.Atoi(annotations[common.KTRefCount])
+	count, err := strconv.Atoi(annotations[common.KtRefCount])
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to parse annotations[%s] of pod %s with value %s",
-			common.KTRefCount, name, annotations[common.KTRefCount])
+			common.KtRefCount, name, annotations[common.KtRefCount])
 		return err
 	}
 
-	pod.ObjectMeta.Annotations[common.KTRefCount] = strconv.Itoa(count + 1)
+	pod.ObjectMeta.Annotations[common.KtRefCount] = strconv.Itoa(count + 1)
 
 	_, err = k.Clientset.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
 	return err
@@ -409,7 +409,7 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 	if err != nil {
 		return
 	}
-	refCount := pod.ObjectMeta.Annotations[common.KTRefCount]
+	refCount := pod.ObjectMeta.Annotations[common.KtRefCount]
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Shared shadow has only one ref, delete it")
@@ -433,7 +433,7 @@ func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *c
 	if err != nil {
 		return
 	}
-	pod.ObjectMeta.Annotations[common.KTRefCount] = count
+	pod.ObjectMeta.Annotations[common.KtRefCount] = count
 	_, err = k.UpdatePod(ctx, pod)
 	return
 }

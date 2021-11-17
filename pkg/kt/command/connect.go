@@ -200,11 +200,11 @@ func getEnvs(options *options.DaemonOptions) map[string]string {
 func getLabels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
 		common.ControlBy:   common.KubernetesTool,
-		common.KTComponent: common.ComponentConnect,
-		common.KTName:      workload,
+		common.KtComponent: common.ComponentConnect,
+		common.KtName:      workload,
 	}
 	splits := strings.Split(workload, "-")
-	labels[common.KTVersion] = splits[len(splits)-1]
+	labels[common.KtVersion] = splits[len(splits)-1]
 	return labels
 }
 
