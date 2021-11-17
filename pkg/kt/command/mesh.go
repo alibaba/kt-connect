@@ -216,9 +216,12 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		}
 		log.Info().Msgf("Router pod is ready")
 
-		if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
-			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion); err != nil {
-			return err
+		if stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion); err2 != nil {
+			return err2
+		} else {
+			log.Debug().Msgf("Stdout: %s", stdout)
+			log.Debug().Msgf("Stderr: %s", stderr)
 		}
 	} else {
 		if _, err = strconv.Atoi(routerPod.Annotations[common.KTRefCount]); err != nil {
@@ -230,9 +233,12 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		}
 		log.Info().Msgf("Router pod already exists")
 
-		if _, _, err = k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
-			"/usr/sbin/router", "add", meshVersion); err != nil {
-			return err
+		if stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+			"/usr/sbin/router", "add", meshVersion); err2 != nil {
+			return err2
+		} else {
+			log.Debug().Msgf("Stdout: %s", stdout)
+			log.Debug().Msgf("Stderr: %s", stderr)
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")
