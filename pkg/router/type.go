@@ -2,6 +2,6 @@ package router
 
 type KtConf struct {
 	Service  string
-	Port     string
+	Ports    []string
 	Versions []string
 }

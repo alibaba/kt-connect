@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
+	"strings"
 )
 
 func init() {
@@ -49,7 +50,7 @@ func setup(args []string) {
 	}
 	ktConf := router.KtConf{
 		Service:  args[0],
-		Port:     args[1],
+		Ports:    strings.Split(args[1], ","),
 		Versions: []string{args[2]},
 	}
 	err := router.WriteKtConf(&ktConf)
