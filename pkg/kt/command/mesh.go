@@ -132,7 +132,8 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		ports[int(p.Port)] = p.TargetPort.IntValue()
 	}
 
-	if err = createOriginService(ctx, k, svc.Name, ports, app.Spec.Selector.MatchLabels, options); err != nil {
+	originSvcName := svc.Name + common.OriginServiceSuffix
+	if err = createOriginService(ctx, k, originSvcName, ports, app.Spec.Selector.MatchLabels, options); err != nil {
 		return err
 	}
 
@@ -186,6 +187,8 @@ func createShadowService(ctx context.Context, k cluster.KubernetesInterface, sha
 	}); err != nil {
 		return err
 	}
+
+	options.RuntimeOptions.Service = shadowSvcName
 	log.Info().Msgf("Service %s created", shadowSvcName)
 	return nil
 }
@@ -209,8 +212,8 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 			len(svcList), app.Name, svcNames)
 	}
 	svc := svcList[0]
-	if strings.HasSuffix(svc.Name, "-kt-origin") {
-		return k.GetService(ctx, strings.TrimSuffix(svc.Name, "-kt-origin"), options.Namespace)
+	if strings.HasSuffix(svc.Name, common.OriginServiceSuffix) {
+		return k.GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), options.Namespace)
 	}
 	return &svc, nil
 }
@@ -223,7 +226,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		annotations := map[string]string{common.KTRefCount: "1"}
+		annotations := map[string]string{common.KTRefCount: "1", common.KTConfig: fmt.Sprintf("service=%s", svcName)}
 		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
@@ -259,9 +262,9 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 	return nil
 }
 
-func createOriginService(ctx context.Context, k cluster.KubernetesInterface, svcName string,
+func createOriginService(ctx context.Context, k cluster.KubernetesInterface, originSvcName string,
 	ports map[int]int, selectors map[string]string, options *options.DaemonOptions) error {
-	originSvcName := svcName + "-kt-origin"
+
 	_, err := k.GetService(ctx, originSvcName, options.Namespace)
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {

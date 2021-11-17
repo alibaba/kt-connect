@@ -2,6 +2,7 @@ package general
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -43,21 +44,20 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 		recoverExchangedTarget(ctx, opts, k8s)
 	} else if opts.RuntimeOptions.Component == common.ComponentMesh {
 		recoverAutoMeshRoute(ctx, opts, k8s)
-	} else if opts.RuntimeOptions.Component == common.ComponentProvide {
-		cleanService(ctx, opts, k8s)
 	}
+	cleanService(ctx, opts, k8s)
 	cleanShadowPodAndConfigMap(ctx, opts, k8s)
 }
 
-func removeTunDevice(cli kt.CliInterface, options *options.DaemonOptions) {
-	if options.ConnectOptions.Method == common.ConnectMethodTun {
+func removeTunDevice(cli kt.CliInterface, opts *options.DaemonOptions) {
+	if opts.ConnectOptions.Method == common.ConnectMethodTun {
 		log.Debug().Msg("Removing tun device ...")
 		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
 		if err != nil {
 			log.Error().Err(err).Msgf("Fails to delete tun device")
 		}
 
-		if !options.ConnectOptions.DisableDNS {
+		if !opts.ConnectOptions.DisableDNS {
 			err = util.RestoreConfig()
 			if err != nil {
 				log.Error().Err(err).Msgf("Restore resolv.conf failed")
@@ -66,22 +66,22 @@ func removeTunDevice(cli kt.CliInterface, options *options.DaemonOptions) {
 	}
 }
 
-func recoverGlobalHostsAndProxy(options *options.DaemonOptions) {
-	if options.RuntimeOptions.Dump2Host {
+func recoverGlobalHostsAndProxy(opts *options.DaemonOptions) {
+	if opts.RuntimeOptions.Dump2Host {
 		log.Debug().Msg("Dropping hosts records ...")
 		util.DropHosts()
 	}
-	if options.ConnectOptions.UseGlobalProxy {
+	if opts.ConnectOptions.UseGlobalProxy {
 		log.Debug().Msg("Cleaning up global proxy and environment variable ...")
-		if options.ConnectOptions.Method == common.ConnectMethodSocks {
-			registry.CleanGlobalProxy(&options.RuntimeOptions.ProxyConfig)
+		if opts.ConnectOptions.Method == common.ConnectMethodSocks {
+			registry.CleanGlobalProxy(&opts.RuntimeOptions.ProxyConfig)
 		}
-		registry.CleanHttpProxyEnvironmentVariable(&options.RuntimeOptions.ProxyConfig)
+		registry.CleanHttpProxyEnvironmentVariable(&opts.RuntimeOptions.ProxyConfig)
 	}
 }
 
-func cleanLocalFiles(options *options.DaemonOptions) {
-	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, options.RuntimeOptions.Component, os.Getpid())
+func cleanLocalFiles(opts *options.DaemonOptions) {
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, opts.RuntimeOptions.Component, os.Getpid())
 	if _, err := os.Stat(pidFile); err == nil {
 		log.Info().Msgf("Removing pid %s", pidFile)
 		if err = os.Remove(pidFile); err != nil {
@@ -89,7 +89,7 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 		}
 	}
 
-	jvmrcFilePath := util.GetJvmrcFilePath(options.ConnectOptions.JvmrcDir)
+	jvmrcFilePath := util.GetJvmrcFilePath(opts.ConnectOptions.JvmrcDir)
 	if jvmrcFilePath != "" {
 		log.Info().Msg("Removing .jvmrc")
 		if err := os.Remove(jvmrcFilePath); err != nil {
@@ -98,10 +98,10 @@ func cleanLocalFiles(options *options.DaemonOptions) {
 	}
 }
 
-func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
 	if opts.ExchangeOptions.Method == common.ExchangeMethodScale && len(opts.RuntimeOptions.Origin) > 0 {
 		log.Info().Msgf("Recovering origin deployment %s", opts.RuntimeOptions.Origin)
-		err := k8s.ScaleTo(ctx, opts.RuntimeOptions.Origin, opts.Namespace, &opts.RuntimeOptions.Replicas)
+		err := k.ScaleTo(ctx, opts.RuntimeOptions.Origin, opts.Namespace, &opts.RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().Err(err).Msgf("Scale deployment %s to %d failed",
 				opts.RuntimeOptions.Origin, opts.RuntimeOptions.Replicas)
@@ -110,22 +110,67 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k8
 		ch := make(chan os.Signal)
 		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 		go func() {
-			waitDeploymentRecoverComplete(ctx, opts, k8s)
+			waitDeploymentRecoverComplete(ctx, opts, k)
 			ch <- syscall.SIGSTOP
 		}()
 		_ = <-ch
 	}
 }
 
-func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {
-
+func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
+	if opts.RuntimeOptions.Router != "" {
+		if shouldDelRouter, err := k.DecreaseRef(ctx, opts.RuntimeOptions.Router, opts.Namespace); err != nil {
+			log.Error().Err(err).Msgf("Decrease router pod %s reference failed", opts.RuntimeOptions.Shadow)
+		} else if shouldDelRouter {
+			removeRouterAndRecoverService(ctx, k, opts)
+		}
+	}
 }
 
-func waitDeploymentRecoverComplete(ctx context.Context, opts *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+func removeRouterAndRecoverService(ctx context.Context, k cluster.KubernetesInterface, opts *options.DaemonOptions) {
+	routerPod, err := k.GetPod(ctx, opts.RuntimeOptions.Router, opts.Namespace)
+	if err != nil {
+		log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
+		return
+	}
+
+	config := util.String2Map(routerPod.Annotations[common.KTConfig])
+	svcName := config["service"]
+	recoverOriginalService(ctx, k, svcName, opts.Namespace)
+
+	originSvcName := svcName + common.OriginServiceSuffix
+	if err = k.RemoveService(ctx, originSvcName, opts.Namespace); err != nil {
+		log.Error().Err(err).Msgf("Failed to remove origin service %d", originSvcName)
+	}
+
+	if err = k.RemovePod(ctx, opts.RuntimeOptions.Router, opts.Namespace); err != nil {
+		log.Error().Err(err).Msgf("Failed to remove router pod %d", opts.RuntimeOptions.Router)
+	}
+}
+
+func recoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string) {
+	if svc, err := k.GetService(ctx, svcName, namespace); err != nil {
+		log.Error().Err(err).Msgf("Original service %s not found", svcName)
+		return
+	} else {
+		var selector map[string]string
+		err = json.Unmarshal([]byte(svc.Annotations[common.KtSelector]), &selector)
+		if err != nil {
+			log.Error().Err(err).Msgf("Failed to unmarshal original selector of service %s", svcName)
+			return
+		}
+		svc.Spec.Selector = selector
+		if _, err = k.UpdateService(ctx, svc); err != nil {
+			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
+		}
+	}
+}
+
+func waitDeploymentRecoverComplete(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
 	ok := false
 	counts := opts.ExchangeOptions.RecoverWaitTime / 5
 	for i := 0; i < counts; i++ {
-		deployment, err := k8s.GetDeployment(ctx, opts.RuntimeOptions.Origin, opts.Namespace)
+		deployment, err := k.GetDeployment(ctx, opts.RuntimeOptions.Origin, opts.Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Cannot fetch original deployment %s", opts.RuntimeOptions.Origin)
 			break
@@ -142,38 +187,38 @@ func waitDeploymentRecoverComplete(ctx context.Context, opts *options.DaemonOpti
 	}
 }
 
-func cleanService(ctx context.Context, options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
-	if options.RuntimeOptions.Service != "" {
-		log.Info().Msgf("Cleaning service %s", options.RuntimeOptions.Service)
-		err := kubernetes.RemoveService(ctx, options.RuntimeOptions.Service, options.Namespace)
+func cleanService(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
+	if opts.RuntimeOptions.Service != "" {
+		log.Info().Msgf("Cleaning service %s", opts.RuntimeOptions.Service)
+		err := k.RemoveService(ctx, opts.RuntimeOptions.Service, opts.Namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Delete service %s failed", options.RuntimeOptions.Service)
+			log.Error().Err(err).Msgf("Delete service %s failed", opts.RuntimeOptions.Service)
 		}
 	}
 }
 
-func cleanShadowPodAndConfigMap(ctx context.Context, options *options.DaemonOptions, k8s cluster.KubernetesInterface) {
+func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
 	shouldDelWithShared := false
 	var err error
-	if options.RuntimeOptions.Shadow != "" {
-		if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
-			shouldDelWithShared, err = decreaseRefOrRemoveTheShadow(ctx, k8s, options)
+	if opts.RuntimeOptions.Shadow != "" {
+		if opts.ConnectOptions != nil && opts.ConnectOptions.ShareShadow {
+			shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
 			if err != nil {
-				log.Error().Err(err).Msgf("Delete shared shadow pod %s failed", options.RuntimeOptions.Shadow)
+				log.Error().Err(err).Msgf("Decrease shared shadow pod %s reference failed", opts.RuntimeOptions.Shadow)
 			}
 		} else {
-			if options.ExchangeOptions != nil && options.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
-				for _, shadow := range strings.Split(options.RuntimeOptions.Shadow, ",") {
+			if opts.ExchangeOptions != nil && opts.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
+				for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
 					log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
-					err = k8s.RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, options.Namespace)
+					err = k.RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opts.Namespace)
 					if err != nil {
 						log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
 					}
 				}
 			} else {
-				for _, shadow := range strings.Split(options.RuntimeOptions.Shadow, ",") {
+				for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
 					log.Info().Msgf("Cleaning shadow pod %s", shadow)
-					err = k8s.RemovePod(ctx, shadow, options.Namespace)
+					err = k.RemovePod(ctx, shadow, opts.Namespace)
 					if err != nil {
 						log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
 					}
@@ -182,10 +227,10 @@ func cleanShadowPodAndConfigMap(ctx context.Context, options *options.DaemonOpti
 		}
 	}
 
-	if options.RuntimeOptions.SSHCM != "" && options.ConnectOptions != nil && (shouldDelWithShared || !options.ConnectOptions.ShareShadow) {
-		for _, sshcm := range strings.Split(options.RuntimeOptions.SSHCM, ",") {
+	if opts.RuntimeOptions.SSHCM != "" && opts.ConnectOptions != nil && (shouldDelWithShared || !opts.ConnectOptions.ShareShadow) {
+		for _, sshcm := range strings.Split(opts.RuntimeOptions.SSHCM, ",") {
 			log.Info().Msgf("Cleaning configmap %s", sshcm)
-			err = k8s.RemoveConfigMap(ctx, sshcm, options.Namespace)
+			err = k.RemoveConfigMap(ctx, sshcm, opts.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
 			}
@@ -193,17 +238,12 @@ func cleanShadowPodAndConfigMap(ctx context.Context, options *options.DaemonOpti
 	}
 }
 
-// decreaseRefOrRemoveTheShadow
-func decreaseRefOrRemoveTheShadow(ctx context.Context, kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (bool, error) {
-	return kubernetes.DecreaseRef(ctx, options.RuntimeOptions.Shadow, options.Namespace)
-}
-
 // removePrivateKey remove the private key of ssh
-func removePrivateKey(options *options.DaemonOptions) {
-	if options.RuntimeOptions.SSHCM == "" {
+func removePrivateKey(opts *options.DaemonOptions) {
+	if opts.RuntimeOptions.SSHCM == "" {
 		return
 	}
-	for _, sshcm := range strings.Split(options.RuntimeOptions.SSHCM, ",") {
+	for _, sshcm := range strings.Split(opts.RuntimeOptions.SSHCM, ",") {
 		splits := strings.Split(sshcm, "-")
 		component, version := splits[1], splits[len(splits)-1]
 		file := util.PrivateKeyPath(component, version)

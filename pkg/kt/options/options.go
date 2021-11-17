@@ -74,6 +74,8 @@ type RuntimeOptions struct {
 	Component string
 	// Shadow pod name
 	Shadow string
+	// Router pod name
+	Router string
 	// SSHCM ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
 	SSHCM string
 	// Origin the origin app name

@@ -60,6 +60,8 @@ const (
 	KtExchangeContainer = "kt-exchange"
 	// DefaultContainer default container name
 	DefaultContainer = "standalone"
+	// OriginServiceSuffix suffix of origin service name
+	OriginServiceSuffix = "-kt-origin"
 )
 
 var (
