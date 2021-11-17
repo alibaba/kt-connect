@@ -113,18 +113,20 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	return nil
 }
 
-func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, options *options.DaemonOptions) error {
-	app, err := k.GetDeployment(ctx, deploymentName, options.Namespace)
+func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, opts *options.DaemonOptions) error {
+	app, err := k.GetDeployment(ctx, deploymentName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	svc, err := getServiceByDeployment(ctx, k, app, options)
+	svc, err := getServiceByDeployment(ctx, k, app, opts)
 	if err != nil {
 		return err
 	}
 
-	meshVersion := getVersion(options)
+	meshVersion := getVersion(opts)
+	opts.RuntimeOptions.Mesh = meshVersion
+
 	targetPorts := make([]string, 0)
 	ports := make(map[int]int)
 	for _, p := range svc.Spec.Ports {
@@ -133,20 +135,20 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	}
 
 	originSvcName := svc.Name + common.OriginServiceSuffix
-	if err = createOriginService(ctx, k, originSvcName, ports, app.Spec.Selector.MatchLabels, options); err != nil {
+	if err = createOriginService(ctx, k, originSvcName, ports, app.Spec.Selector.MatchLabels, opts); err != nil {
 		return err
 	}
 
 	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
 	shadowSvcName := svc.Name + common.KtMeshInfix + meshVersion
 	shadowLabels := map[string]string{common.KtRole: "shadow", common.KtName: shadowPodName}
-	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, options); err != nil {
+	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, opts); err != nil {
 		return err
 	}
 
 	routerPodName := deploymentName + common.RouterPodSuffix
 	routerLabels := map[string]string{common.KtRole: "router", common.KtName: routerPodName}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, options); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, opts); err != nil {
 		return err
 	}
 
@@ -163,7 +165,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, options); err != nil {
+	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
@@ -233,12 +235,12 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		}
 		log.Info().Msgf("Router pod is ready")
 
-		if stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
-			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion); err2 != nil {
+		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion)
+		log.Debug().Msgf("Stdout: %s", stdout)
+		log.Debug().Msgf("Stderr: %s", stderr)
+		if err2 != nil {
 			return err2
-		} else {
-			log.Debug().Msgf("Stdout: %s", stdout)
-			log.Debug().Msgf("Stderr: %s", stderr)
 		}
 	} else {
 		if _, err = strconv.Atoi(routerPod.Annotations[common.KtRefCount]); err != nil {
@@ -250,12 +252,12 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		}
 		log.Info().Msgf("Router pod already exists")
 
-		if stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
-			"/usr/sbin/router", "add", meshVersion); err2 != nil {
+		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+			"/usr/sbin/router", "add", meshVersion)
+		log.Debug().Msgf("Stdout: %s", stdout)
+		log.Debug().Msgf("Stderr: %s", stderr)
+		if err2 != nil {
 			return err2
-		} else {
-			log.Debug().Msgf("Stdout: %s", stdout)
-			log.Debug().Msgf("Stderr: %s", stderr)
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")

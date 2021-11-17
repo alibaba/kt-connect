@@ -123,6 +123,14 @@ func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k cl
 			log.Error().Err(err).Msgf("Decrease router pod %s reference failed", opts.RuntimeOptions.Shadow)
 		} else if shouldDelRouter {
 			removeRouterAndRecoverService(ctx, k, opts)
+		} else {
+			stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, opts.RuntimeOptions.Router, opts.Namespace,
+				*opts.RuntimeOptions, "/usr/sbin/router", "remove", opts.RuntimeOptions.Mesh)
+			log.Debug().Msgf("Stdout: %s", stdout)
+			log.Debug().Msgf("Stderr: %s", stderr)
+			if err2 != nil {
+				log.Error().Err(err2).Msgf("Failed to remove version %s from router pod", opts.RuntimeOptions.Mesh)
+			}
 		}
 	}
 }
