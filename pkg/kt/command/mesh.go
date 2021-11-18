@@ -221,21 +221,21 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 }
 
 func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,
-	targetPorts []string, routerLabels map[string]string, meshVersion string, options *options.DaemonOptions) error {
-	routerPod, err := k.GetPod(ctx, routerPodName, options.Namespace)
+	targetPorts []string, routerLabels map[string]string, meshVersion string, opts *options.DaemonOptions) error {
+	routerPod, err := k.GetPod(ctx, routerPodName, opts.Namespace)
 	routerLabels[common.ControlBy] = common.KubernetesTool
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
 		annotations := map[string]string{common.KtRefCount: "1", common.KtConfig: fmt.Sprintf("service=%s", svcName)}
-		if err = cluster.CreateRouterPod(ctx, k, routerPodName, options, routerLabels, annotations); err != nil {
+		if err = cluster.CreateRouterPod(ctx, k, routerPodName, opts, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}
 		log.Info().Msgf("Router pod is ready")
 
-		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
 			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
@@ -246,13 +246,13 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		if _, err = strconv.Atoi(routerPod.Annotations[common.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err
-		} else if err = k.IncreaseRef(ctx, routerPodName, options.Namespace); err != nil {
+		} else if err = k.IncreaseRef(ctx, routerPodName, opts.Namespace); err != nil {
 			log.Error().Msgf("Failed to increase router pod ref count")
 			return err
 		}
 		log.Info().Msgf("Router pod already exists")
 
-		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, options.Namespace, *options.RuntimeOptions,
+		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
 			"/usr/sbin/router", "add", meshVersion)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
@@ -261,6 +261,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")
+	opts.RuntimeOptions.Router = routerPodName
 	return nil
 }
 

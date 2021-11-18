@@ -118,42 +118,38 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 }
 
 func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
-	if opts.RuntimeOptions.Router != "" {
-		if shouldDelRouter, err := k.DecreaseRef(ctx, opts.RuntimeOptions.Router, opts.Namespace); err != nil {
-			log.Error().Err(err).Msgf("Decrease router pod %s reference failed", opts.RuntimeOptions.Shadow)
-		} else if shouldDelRouter {
-			removeRouterAndRecoverService(ctx, k, opts)
-		} else {
-			stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, opts.RuntimeOptions.Router, opts.Namespace,
-				*opts.RuntimeOptions, "/usr/sbin/router", "remove", opts.RuntimeOptions.Mesh)
-			log.Debug().Msgf("Stdout: %s", stdout)
-			log.Debug().Msgf("Stderr: %s", stderr)
-			if err2 != nil {
-				log.Error().Err(err2).Msgf("Failed to remove version %s from router pod", opts.RuntimeOptions.Mesh)
-			}
-		}
-	}
-}
-
-func removeRouterAndRecoverService(ctx context.Context, k cluster.KubernetesInterface, opts *options.DaemonOptions) {
 	routerPod, err := k.GetPod(ctx, opts.RuntimeOptions.Router, opts.Namespace)
 	if err != nil {
 		log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
 		return
 	}
+	if opts.RuntimeOptions.Router != "" {
+		if shouldDelRouter, err2 := k.DecreaseRef(ctx, opts.RuntimeOptions.Router, opts.Namespace); err2 != nil {
+			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opts.RuntimeOptions.Shadow)
+		} else if shouldDelRouter {
+			recoverService(ctx, k, routerPod.Annotations[common.KtConfig], opts)
+		} else {
+			stdout, stderr, err3 := k.ExecInPod(common.DefaultContainer, opts.RuntimeOptions.Router, opts.Namespace,
+				*opts.RuntimeOptions, "/usr/sbin/router", "remove", opts.RuntimeOptions.Mesh)
+			log.Debug().Msgf("Stdout: %s", stdout)
+			log.Debug().Msgf("Stderr: %s", stderr)
+			if err3 != nil {
+				log.Error().Err(err3).Msgf("Failed to remove version %s from router pod", opts.RuntimeOptions.Mesh)
+			}
+		}
+	}
+}
 
-	config := util.String2Map(routerPod.Annotations[common.KtConfig])
+func recoverService(ctx context.Context, k cluster.KubernetesInterface, routerConfig string, opts *options.DaemonOptions) {
+	config := util.String2Map(routerConfig)
 	svcName := config["service"]
 	recoverOriginalService(ctx, k, svcName, opts.Namespace)
 
 	originSvcName := svcName + common.OriginServiceSuffix
-	if err = k.RemoveService(ctx, originSvcName, opts.Namespace); err != nil {
+	if err := k.RemoveService(ctx, originSvcName, opts.Namespace); err != nil {
 		log.Error().Err(err).Msgf("Failed to remove origin service %d", originSvcName)
 	}
-
-	if err = k.RemovePod(ctx, opts.RuntimeOptions.Router, opts.Namespace); err != nil {
-		log.Error().Err(err).Msgf("Failed to remove router pod %d", opts.RuntimeOptions.Router)
-	}
+	log.Info().Msgf("Substitution service %s removed", originSvcName)
 }
 
 func recoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string) {
@@ -172,6 +168,7 @@ func recoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, 
 			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
 		}
 	}
+	log.Info().Msgf("Original service %s recovered", svcName)
 }
 
 func waitDeploymentRecoverComplete(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {

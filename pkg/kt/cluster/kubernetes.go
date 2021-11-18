@@ -412,17 +412,18 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 	refCount := pod.ObjectMeta.Annotations[common.KtRefCount]
 	if refCount == "1" {
 		cleanup = true
-		log.Info().Msgf("Shared shadow has only one ref, delete it")
-		err = k.RemovePod(ctx, pod.GetObjectMeta().GetName(), pod.GetObjectMeta().GetNamespace())
+		err = k.RemovePod(ctx, pod.Name, pod.Namespace)
 		if err != nil {
 			return
 		}
+		log.Info().Msgf("Pod %s has only one ref, removed", name)
 	} else {
 		err2 := k.decreasePodRef(ctx, refCount, pod)
 		if err2 != nil {
 			err = err2
 			return
 		}
+		log.Info().Msgf("Decreased %s ref by one", name)
 	}
 	return
 }
