@@ -22,6 +22,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // NewMeshCommand return new mesh command
@@ -114,10 +115,11 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 }
 
 func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, opts *options.DaemonOptions) error {
-	app, err := k.GetDeployment(ctx, deploymentName, opts.Namespace)
+	app, err := lockAndFetchDeployment(ctx, k, deploymentName, opts.Namespace, 0)
 	if err != nil {
 		return err
 	}
+	defer unlockDeployment(ctx, k, deploymentName, opts.Namespace)
 
 	svc, err := getServiceByDeployment(ctx, k, app, opts)
 	if err != nil {
@@ -172,6 +174,43 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	log.Info().Msgf(" Now you can access your service by header 'KT-VERSION: %s' ", meshVersion)
 	log.Info().Msg("---------------------------------------------------------------")
 	return nil
+}
+
+func lockAndFetchDeployment(ctx context.Context, k cluster.KubernetesInterface, deploymentName, namespace string, times int) (*v1.Deployment, error) {
+	if times > 10 {
+		log.Warn().Msgf("Unable to obtain auto mesh lock, please try again later.")
+		return nil, fmt.Errorf("failed to obtain auto meth lock of deployment %s", deploymentName)
+	}
+	app, err := k.GetDeployment(ctx, deploymentName, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	if lock, ok := app.Annotations[common.KtLock]; ok {
+		log.Info().Msgf("Another user (%s) is meshing deployment %s, waiting for lock ...", lock, deploymentName)
+		time.Sleep(3 * time.Second)
+		return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
+	} else {
+		app.Annotations[common.KtLock] = util.GetLocalUserName()
+		if app, err = k.UpdateDeployment(ctx, app); err != nil {
+			log.Warn().Err(err).Msgf("Failed to lock deployment %s", deploymentName)
+			return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
+		}
+	}
+	log.Info().Msgf("Deployment %s locked for auto mesh", deploymentName)
+	return app, nil
+}
+
+func unlockDeployment(ctx context.Context, k cluster.KubernetesInterface, deploymentName, namespace string) {
+	app, err := k.GetDeployment(ctx, deploymentName, namespace)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to get deployment %d for unlock", app.Name)
+		return
+	}
+	delete(app.Annotations, common.KtLock)
+	if _, err := k.UpdateDeployment(ctx, app); err != nil {
+		log.Warn().Err(err).Msgf("Failed to unlock deployment %d", app.Name)
+	}
 }
 
 func createShadowService(ctx context.Context, k cluster.KubernetesInterface, shadowSvcName string, ports map[int]int,

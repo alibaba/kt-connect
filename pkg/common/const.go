@@ -45,6 +45,8 @@ const (
 	KtRefCount = "kt-ref-count"
 	// KtLastHeartBeat annotation used for timestamp of last heart beat
 	KtLastHeartBeat = "kt-last-heart-beat"
+	// KtLock annotation used for avoid auto mesh conflict
+	KtLock = "kt-lock"
 
 	// SshPrivateKeyName ssh private key name
 	SshPrivateKeyName = "kt_%s" + PostfixRsaKey

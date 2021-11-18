@@ -118,12 +118,12 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 }
 
 func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
-	routerPod, err := k.GetPod(ctx, opts.RuntimeOptions.Router, opts.Namespace)
-	if err != nil {
-		log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
-		return
-	}
 	if opts.RuntimeOptions.Router != "" {
+		routerPod, err := k.GetPod(ctx, opts.RuntimeOptions.Router, opts.Namespace)
+		if err != nil {
+			log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
+			return
+		}
 		if shouldDelRouter, err2 := k.DecreaseRef(ctx, opts.RuntimeOptions.Router, opts.Namespace); err2 != nil {
 			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opts.RuntimeOptions.Shadow)
 		} else if shouldDelRouter {
