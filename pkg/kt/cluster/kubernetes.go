@@ -82,11 +82,11 @@ func (k *Kubernetes) ScaleTo(ctx context.Context, name, namespace string, replic
 		return
 	}
 
-	log.Info().Msgf("Scaling deployment %s to %d", deployment.GetObjectMeta().GetName(), *replicas)
+	log.Info().Msgf("Scaling deployment %s to %d", deployment.Name, *replicas)
 	deployment.Spec.Replicas = replicas
 
 	if _, err = k.UpdateDeployment(ctx, deployment); err != nil {
-		log.Error().Err(err).Msgf("Fails to scale deployment %s", deployment.GetObjectMeta().GetName())
+		log.Error().Err(err).Msgf("Fails to scale deployment %s", deployment.Name)
 		return
 	}
 	log.Info().Msgf("Deployment %s successfully scaled to %d replicas", name, *replicas)
@@ -370,17 +370,17 @@ func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err 
 
 // UpdatePod ...
 func (k *Kubernetes) UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Pod, error) {
-	return k.Clientset.CoreV1().Pods(pod.GetObjectMeta().GetNamespace()).Update(ctx, pod, metav1.UpdateOptions{})
+	return k.Clientset.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
 }
 
 // UpdateDeployment ...
 func (k *Kubernetes) UpdateDeployment(ctx context.Context, deployment *appV1.Deployment) (*appV1.Deployment, error) {
-	return k.Clientset.AppsV1().Deployments(deployment.GetObjectMeta().GetNamespace()).Update(ctx, deployment, metav1.UpdateOptions{})
+	return k.Clientset.AppsV1().Deployments(deployment.Namespace).Update(ctx, deployment, metav1.UpdateOptions{})
 }
 
 // UpdateService ...
 func (k *Kubernetes) UpdateService(ctx context.Context, svc *coreV1.Service) (*coreV1.Service, error) {
-	return k.Clientset.CoreV1().Services(svc.GetObjectMeta().GetNamespace()).Update(ctx, svc, metav1.UpdateOptions{})
+	return k.Clientset.CoreV1().Services(svc.Namespace).Update(ctx, svc, metav1.UpdateOptions{})
 }
 
 // IncreaseRef increase pod ref count by 1

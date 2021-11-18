@@ -150,7 +150,7 @@ func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *Reso
 
 func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, *util.SSHCredential) {
 	podIP := pod.Status.PodIP
-	podName := pod.GetObjectMeta().GetName()
+	podName := pod.Name
 	credential := util.NewDefaultSSHCredential()
 	credential.PrivateKeyPath = generator.PrivateKeyPath
 	return podIP, podName, credential
