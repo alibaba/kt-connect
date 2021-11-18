@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"math/rand"
 	"strconv"
 	"strings"
 	"sync"
@@ -90,7 +89,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error 
 
 func randPort(listenedPorts map[string]struct{}) string {
 	for i := 0; i < 100; i++ {
-		port := strconv.Itoa(rand.Intn(65535-1024) + 1024)
+		port := strconv.Itoa(util.RandomPort())
 		if _, exists := listenedPorts[port]; !exists {
 			return port
 		}

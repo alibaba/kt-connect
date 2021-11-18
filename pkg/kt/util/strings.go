@@ -13,13 +13,23 @@ func init() {
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-// RandomString Generate RandomString
+// RandomString Generate random string
 func RandomString(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b)
+}
+
+// RandomDuration Generate random duration number
+func RandomDuration(n int) time.Duration {
+	return time.Duration(rand.Int63n(int64(n)))
+}
+
+// RandomPort Generate random number [1024, 65535)
+func RandomPort() int {
+	return rand.Intn(65535-1024) + 1024
 }
 
 // String2Map Convert parameter string to real map "k1=v1,k2=v2" -> {"k1":"v1","k2","v2"}

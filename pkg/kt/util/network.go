@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"math/rand"
 	"net"
 	"strings"
 	"time"
@@ -13,7 +12,7 @@ import (
 // GetRandomSSHPort get pod random ssh port
 func GetRandomSSHPort() int {
 	for i := 0; i < 10; i++ {
-		port := rand.Intn(65535-1024) + 1024
+		port := RandomPort()
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err == nil {
 			log.Debug().Msgf("port %d not available", port)

@@ -168,9 +168,9 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, opts); err != nil {
 		return err
 	}
-	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf(" Now you can access local service with header 'KT-VERSION: %s' ", meshVersion)
-	log.Info().Msg("---------------------------------------------------------")
+	log.Info().Msg("---------------------------------------------------------------")
+	log.Info().Msgf(" Now you can access your service by header 'KT-VERSION: %s' ", meshVersion)
+	log.Info().Msg("---------------------------------------------------------------")
 	return nil
 }
 
