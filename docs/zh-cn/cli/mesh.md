@@ -12,7 +12,7 @@ ktctl --debug --namespace=default mesh tomcat --expose 8080
 
 ```
 --expose value         指定要暴露的一个或多个端口，逗号分隔，格式为`port`或`local:remote`，例如：7001,8080:80
---version-label value  指定Mesh版本服务的版本标签值
+--versionMark value    指定Mesh版本服务的版本标签值
 ```
 
 ### 从父命令集成的参数
