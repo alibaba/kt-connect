@@ -186,12 +186,12 @@ func lockAndFetchDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 		return nil, err
 	}
 
-	if lock, ok := app.Annotations[common.KtLock]; ok {
-		log.Info().Msgf("Another user (%s) is meshing deployment %s, waiting for lock ...", lock, deploymentName)
+	if _, ok := app.Annotations[common.KtLock]; ok {
+		log.Info().Msgf("Another user is meshing deployment %s, waiting for lock ...", deploymentName)
 		time.Sleep(3 * time.Second)
 		return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
 	} else {
-		app.Annotations[common.KtLock] = util.GetLocalUserName()
+		app.Annotations[common.KtLock] = util.GetTimestamp()
 		if app, err = k.UpdateDeployment(ctx, app); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock deployment %s", deploymentName)
 			return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
