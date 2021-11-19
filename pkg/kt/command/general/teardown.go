@@ -143,7 +143,7 @@ func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k cl
 func recoverService(ctx context.Context, k cluster.KubernetesInterface, routerConfig string, opts *options.DaemonOptions) {
 	config := util.String2Map(routerConfig)
 	svcName := config["service"]
-	recoverOriginalService(ctx, k, svcName, opts.Namespace)
+	RecoverOriginalService(ctx, k, svcName, opts.Namespace)
 
 	originSvcName := svcName + common.OriginServiceSuffix
 	if err := k.RemoveService(ctx, originSvcName, opts.Namespace); err != nil {
@@ -152,7 +152,7 @@ func recoverService(ctx context.Context, k cluster.KubernetesInterface, routerCo
 	log.Info().Msgf("Substitution service %s removed", originSvcName)
 }
 
-func recoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string) {
+func RecoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string) {
 	if svc, err := k.GetService(ctx, svcName, namespace); err != nil {
 		log.Error().Err(err).Msgf("Original service %s not found", svcName)
 		return

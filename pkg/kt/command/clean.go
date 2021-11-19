@@ -1,7 +1,6 @@
 package command
 
 import (
-	"container/list"
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
@@ -23,10 +22,11 @@ import (
 )
 
 type ResourceToClean struct {
-	NamesOfPodToDelete       *list.List
-	NamesOfServiceToDelete   *list.List
-	NamesOfConfigMapToDelete *list.List
-	DeploymentsToScale       map[string]int32
+	PodsToDelete       []string
+	ServicesToDelete   []string
+	ConfigMapsToDelete []string
+	DeploymentsToScale map[string]int32
+	ServicesToRecover  []string
 }
 
 // NewCleanCommand return new connect command
@@ -51,24 +51,28 @@ func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
 	action.cleanPidFiles()
 	ctx := context.Background()
-	kubernetes, pods, err := action.getShadowPods(ctx, cli, options)
+
+	kubernetes, pods, err := action.getShadowAndRouterPods(ctx, cli, options)
 	if err != nil {
 		return err
 	}
-	log.Debug().Msgf("Found %d shadow pods", len(pods))
-	resourceToClean := ResourceToClean{list.New(), list.New(), list.New(), make(map[string]int32)}
+	log.Debug().Msgf("Found %d kt pods", len(pods))
+	resourceToClean := ResourceToClean{make([]string, 0), make([]string, 0), make([]string, 0), make(map[string]int32), make([]string, 0)}
 	for _, pod := range pods {
-		action.analysisShadowPod(pod, options, resourceToClean)
+		action.analysisExpiredPods(pod, options, resourceToClean)
 	}
-	if resourceToClean.NamesOfPodToDelete.Len() > 0 {
+	if len(resourceToClean.PodsToDelete) > 0 {
 		if options.CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
 		} else {
 			action.cleanResource(ctx, resourceToClean, kubernetes, options.Namespace)
 		}
 	} else {
-		log.Info().Msg("No unavailing shadow pod found (^.^)YYa!!")
+		log.Info().Msg("No unavailing kt pod found (^.^)YYa!!")
 	}
+
+	// TODO: unlock mesh deployments
+
 	if !options.CleanOptions.DryRun {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
 		util.CleanRsaKeys()
@@ -92,56 +96,68 @@ func (action *Action) cleanPidFiles() {
 	}
 }
 
-func (action *Action) analysisShadowPod(pod coreV1.Pod, options *options.DaemonOptions, resourceToClean ResourceToClean) {
-	lastHeartBeat, err := strconv.ParseInt(pod.ObjectMeta.Annotations[common.KtLastHeartBeat], 10, 64)
+func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.DaemonOptions, resourceToClean ResourceToClean) {
+	lastHeartBeat, err := strconv.ParseInt(pod.Annotations[common.KtLastHeartBeat], 10, 64)
 	if err == nil && action.isExpired(lastHeartBeat, options) {
-		resourceToClean.NamesOfPodToDelete.PushBack(pod.Name)
-		config := util.String2Map(pod.ObjectMeta.Annotations[common.KtConfig])
-		if pod.ObjectMeta.Labels[common.KtComponent] == common.ComponentExchange {
+		resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
+		config := util.String2Map(pod.Annotations[common.KtConfig])
+		if pod.Labels[common.KtComponent] == common.ComponentExchange {
 			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 			app := config["app"]
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.ObjectMeta.Labels[common.KtComponent] == common.ComponentProvide {
-			service := config["service"]
-			if service != "" {
-				resourceToClean.NamesOfServiceToDelete.PushBack(service)
+		} else if pod.Labels[common.KtComponent] == common.ComponentProvide {
+			if service, ok := config["service"]; ok {
+				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
+			}
+		} else if pod.Labels[common.KtComponent] == common.ComponentMesh {
+			if service, ok := config["service"]; ok {
+				switch pod.Labels[common.KtRole] {
+				case common.RoleShadow:
+					resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
+				case common.RoleRouter:
+					resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
+					resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service + common.OriginServiceSuffix)
+				}
 			}
 		}
 		for _, v := range pod.Spec.Volumes {
 			if v.ConfigMap != nil && len(v.ConfigMap.Items) == 1 && v.ConfigMap.Items[0].Key == common.SshAuthKey {
-				resourceToClean.NamesOfConfigMapToDelete.PushBack(v.ConfigMap.Name)
+				resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, v.ConfigMap.Name)
 			}
 		}
 	}
 }
 
-func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, kubernetes cluster.KubernetesInterface, namespace string) {
-	log.Info().Msgf("Deleting %d unavailing shadow pods", r.NamesOfPodToDelete.Len())
-	for name := r.NamesOfPodToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemovePod(ctx, name.Value.(string), namespace)
+func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cluster.KubernetesInterface, namespace string) {
+	log.Info().Msgf("Deleting %d unavailing shadow pods", len(r.PodsToDelete))
+	for _, name := range r.PodsToDelete {
+		err := k.RemovePod(ctx, name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to delete pods %s", name.Value.(string))
+			log.Error().Err(err).Msgf("Fail to delete pods %s", name)
 		}
 	}
-	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveService(ctx, name.Value.(string), namespace)
+	for _, name := range r.ServicesToDelete {
+		err := k.RemoveService(ctx, name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to delete service %s", name.Value.(string))
+			log.Error().Err(err).Msgf("Fail to delete service %s", name)
 		}
 	}
-	for name := r.NamesOfConfigMapToDelete.Front(); name != nil; name = name.Next() {
-		err := kubernetes.RemoveConfigMap(ctx, name.Value.(string), namespace)
+	for _, name := range r.ConfigMapsToDelete {
+		err := k.RemoveConfigMap(ctx, name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to delete config map %s", name.Value.(string))
+			log.Error().Err(err).Msgf("Fail to delete config map %s", name)
 		}
 	}
 	for name, replica := range r.DeploymentsToScale {
-		err := kubernetes.ScaleTo(ctx, name, namespace, &replica)
+		err := k.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
 			log.Error().Err(err).Msgf("Fail to scale deployment %s to %d", name, replica)
 		}
+	}
+	for _, name := range r.ServicesToRecover {
+		general.RecoverOriginalService(ctx, k, name, namespace)
 	}
 	log.Info().Msg("Done")
 }
@@ -160,17 +176,21 @@ func (action *Action) toPid(pidFileName string) int {
 }
 
 func (action *Action) printResourceToClean(r ResourceToClean) {
-	log.Info().Msgf("Found %d unavailing shadow pods:", r.NamesOfPodToDelete.Len())
-	for name := r.NamesOfPodToDelete.Front(); name != nil; name = name.Next() {
-		log.Info().Msgf(" * %s", name.Value.(string))
+	log.Info().Msgf("Found %d unavailing pods:", len(r.PodsToDelete))
+	for _, name := range r.PodsToDelete {
+		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Found %d unavailing shadow service:", r.NamesOfServiceToDelete.Len())
-	for name := r.NamesOfServiceToDelete.Front(); name != nil; name = name.Next() {
-		log.Info().Msgf(" * %s", name.Value.(string))
+	log.Info().Msgf("Found %d unavailing service:", len(r.ServicesToDelete))
+	for _, name := range r.ServicesToDelete {
+		log.Info().Msgf(" * %s", name)
 	}
 	log.Info().Msgf("Found %d exchanged deployments to recover:", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		log.Info().Msgf(" * %s -> %d", name, replica)
+	}
+	log.Info().Msgf("Found %d meshed service to recover:", len(r.ServicesToRecover))
+	for _, name := range r.ServicesToRecover {
+		log.Info().Msgf(" * %s", name)
 	}
 }
 
@@ -178,13 +198,13 @@ func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOpti
 	return time.Now().Unix()-lastHeartBeat > options.CleanOptions.ThresholdInMinus*60
 }
 
-func (action *Action) getShadowPods(ctx context.Context, cli kt.CliInterface, options *options.DaemonOptions) (
+func (action *Action) getShadowAndRouterPods(ctx context.Context, cli kt.CliInterface, options *options.DaemonOptions) (
 	cluster.KubernetesInterface, []coreV1.Pod, error) {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return nil, nil, err
 	}
-	pods, err := cluster.GetAllExistingShadowPods(ctx, kubernetes, options.Namespace)
+	pods, err := cluster.GetKtPods(ctx, kubernetes, options.Namespace)
 	if err != nil {
 		return nil, nil, err
 	}

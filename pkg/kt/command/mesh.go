@@ -105,7 +105,8 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	meshVersion := getVersion(options)
 	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshVersion, app)
-	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, options); err != nil {
+	annotations := make(map[string]string)
+	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, annotations, options); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
@@ -143,13 +144,13 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 
 	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
 	shadowSvcName := svc.Name + common.KtMeshInfix + meshVersion
-	shadowLabels := map[string]string{common.KtRole: "shadow", common.KtName: shadowPodName}
+	shadowLabels := map[string]string{common.KtRole: common.RoleShadow, common.KtName: shadowPodName}
 	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, opts); err != nil {
 		return err
 	}
 
 	routerPodName := deploymentName + common.RouterPodSuffix
-	routerLabels := map[string]string{common.KtRole: "router", common.KtName: routerPodName}
+	routerLabels := map[string]string{common.KtRole: common.RoleRouter, common.KtName: routerPodName}
 	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, opts); err != nil {
 		return err
 	}
@@ -167,7 +168,8 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, opts); err != nil {
+	annotations := map[string]string{common.KtConfig: fmt.Sprintf("service=%s", shadowSvcName)}
+	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, annotations, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")
@@ -333,11 +335,10 @@ func createOriginService(ctx context.Context, k cluster.KubernetesInterface, ori
 }
 
 func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
-	labels map[string]string, options *options.DaemonOptions) error {
+	labels, annotations map[string]string, options *options.DaemonOptions) error {
 
 	labels[common.ControlBy] = common.KubernetesTool
 	envs := make(map[string]string)
-	annotations := make(map[string]string)
 	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err

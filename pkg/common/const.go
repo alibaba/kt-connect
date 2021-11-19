@@ -68,6 +68,10 @@ const (
 	RouterPodSuffix = "-kt-router"
 	// KtMeshInfix of mesh pod and mesh service name
 	KtMeshInfix = "-kt-mesh-"
+	// RoleShadow shadow role
+	RoleShadow = "shadow"
+	// RoleRouter router role
+	RoleRouter = "router"
 )
 
 var (

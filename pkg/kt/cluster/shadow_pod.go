@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// GetAllExistingShadowPods fetch all shadow pods
-func GetAllExistingShadowPods(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, error) {
+// GetKtPods fetch all shadow and router pods
+func GetKtPods(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, error) {
 	if pods, err := k.GetPods(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace); err != nil {
 		return nil, err
 	} else {
@@ -82,7 +82,7 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 		err = err2
 		return
 	}
-	log.Info().Msgf("Successful create config map %v", configMap.ObjectMeta.Name)
+	log.Info().Msgf("Successful create config map %v", configMap.Name)
 
 	pod, err2 := createAndGetPod(ctx, k, metaAndSpec, sshKeyMeta.SshConfigMapName, options)
 	if err2 != nil {

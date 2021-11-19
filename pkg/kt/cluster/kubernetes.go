@@ -318,7 +318,7 @@ func (k *Kubernetes) GetServiceHosts(ctx context.Context, namespace string) (hos
 	}
 	hosts = map[string]string{}
 	for _, service := range services.Items {
-		hosts[service.ObjectMeta.Name] = service.Spec.ClusterIP
+		hosts[service.Name] = service.Spec.ClusterIP
 	}
 	return
 }
@@ -397,7 +397,7 @@ func (k *Kubernetes) IncreaseRef(ctx context.Context, name string, namespace str
 		return err
 	}
 
-	pod.ObjectMeta.Annotations[common.KtRefCount] = strconv.Itoa(count + 1)
+	pod.Annotations[common.KtRefCount] = strconv.Itoa(count + 1)
 
 	_, err = k.Clientset.CoreV1().Pods(namespace).Update(ctx, pod, metav1.UpdateOptions{})
 	return err
@@ -409,7 +409,7 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 	if err != nil {
 		return
 	}
-	refCount := pod.ObjectMeta.Annotations[common.KtRefCount]
+	refCount := pod.Annotations[common.KtRefCount]
 	if refCount == "1" {
 		cleanup = true
 		err = k.RemovePod(ctx, pod.Name, pod.Namespace)
@@ -434,7 +434,7 @@ func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *c
 	if err != nil {
 		return
 	}
-	pod.ObjectMeta.Annotations[common.KtRefCount] = count
+	pod.Annotations[common.KtRefCount] = count
 	_, err = k.UpdatePod(ctx, pod)
 	return
 }
