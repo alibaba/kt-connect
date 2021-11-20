@@ -209,7 +209,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions
 		if opts.ConnectOptions != nil && opts.ConnectOptions.ShareShadow {
 			shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
 			if err != nil {
-				log.Error().Err(err).Msgf("Decrease shared shadow pod %s reference failed", opts.RuntimeOptions.Shadow)
+				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opts.RuntimeOptions.Shadow)
 			}
 		} else {
 			if opts.ExchangeOptions != nil && opts.ExchangeOptions.Method == common.ExchangeMethodEphemeral {

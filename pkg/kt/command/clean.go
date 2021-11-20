@@ -59,7 +59,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	log.Debug().Msgf("Found %d kt pods", len(pods))
 	resourceToClean := ResourceToClean{make([]string, 0), make([]string, 0), make([]string, 0), make(map[string]int32), make([]string, 0)}
 	for _, pod := range pods {
-		action.analysisExpiredPods(pod, options, resourceToClean)
+		action.analysisExpiredPods(pod, options, &resourceToClean)
 	}
 	if len(resourceToClean.PodsToDelete) > 0 {
 		if options.CleanOptions.DryRun {
@@ -96,10 +96,12 @@ func (action *Action) cleanPidFiles() {
 	}
 }
 
-func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.DaemonOptions, resourceToClean ResourceToClean) {
+func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.DaemonOptions, resourceToClean *ResourceToClean) {
 	lastHeartBeat, err := strconv.ParseInt(pod.Annotations[common.KtLastHeartBeat], 10, 64)
 	if err == nil && action.isExpired(lastHeartBeat, options) {
+		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
 		resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
+		log.Debug().Msgf("   component %s, config: %s", pod.Labels[common.KtComponent], pod.Annotations[common.KtConfig])
 		config := util.String2Map(pod.Annotations[common.KtConfig])
 		if pod.Labels[common.KtComponent] == common.ComponentExchange {
 			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
@@ -127,29 +129,34 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 				resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, v.ConfigMap.Name)
 			}
 		}
+	} else {
+		log.Debug().Msgf("Pod %s does no have heart beat annotation")
 	}
 }
 
 func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cluster.KubernetesInterface, namespace string) {
-	log.Info().Msgf("Deleting %d unavailing shadow pods", len(r.PodsToDelete))
+	log.Info().Msgf("Deleting %d unavailing kt pods", len(r.PodsToDelete))
 	for _, name := range r.PodsToDelete {
 		err := k.RemovePod(ctx, name, namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Fail to delete pods %s", name)
 		}
 	}
+	log.Info().Msgf("Deleting %d unavailing servicse", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
 		err := k.RemoveService(ctx, name, namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Fail to delete service %s", name)
 		}
 	}
+	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
 		err := k.RemoveConfigMap(ctx, name, namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Fail to delete config map %s", name)
 		}
 	}
+	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		err := k.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {

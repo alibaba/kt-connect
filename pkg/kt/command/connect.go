@@ -137,9 +137,9 @@ func setupGlobalProxy(options *options.DaemonOptions) {
 }
 
 func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes cluster.KubernetesInterface) (string, string, *util.SSHCredential, error) {
-	shadowPodName := fmt.Sprintf("kt-connect-daemon-%s", strings.ToLower(util.RandomString(5)))
+	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
 	if options.ConnectOptions.ShareShadow {
-		shadowPodName = fmt.Sprintf("kt-connect-daemon-shared")
+		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 	annotations := make(map[string]string)
 

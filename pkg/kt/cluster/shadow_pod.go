@@ -137,7 +137,7 @@ func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *Reso
 		return
 	}
 	if len(podList.Items) == 1 {
-		log.Info().Msgf("Found shared shadow, reuse it")
+		log.Info().Msgf("Found shadow daemon pod, reuse it")
 		if err = k.IncreaseRef(ctx, resourceMeta.Name, resourceMeta.Namespace); err != nil {
 			return
 		}

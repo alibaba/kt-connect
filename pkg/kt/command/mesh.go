@@ -144,13 +144,21 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 
 	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
 	shadowSvcName := svc.Name + common.KtMeshInfix + meshVersion
-	shadowLabels := map[string]string{common.KtRole: common.RoleShadow, common.KtName: shadowPodName}
+	shadowLabels := map[string]string{
+		common.KtComponent: common.ComponentMesh,
+		common.KtRole: common.RoleShadow,
+		common.KtName: shadowPodName,
+	}
 	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, opts); err != nil {
 		return err
 	}
 
 	routerPodName := deploymentName + common.RouterPodSuffix
-	routerLabels := map[string]string{common.KtRole: common.RoleRouter, common.KtName: routerPodName}
+	routerLabels := map[string]string{
+		common.KtComponent: common.ComponentMesh,
+		common.KtRole: common.RoleRouter,
+		common.KtName: routerPodName,
+	}
 	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, opts); err != nil {
 		return err
 	}
@@ -168,7 +176,9 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	annotations := map[string]string{common.KtConfig: fmt.Sprintf("service=%s", shadowSvcName)}
+	annotations := map[string]string{
+		common.KtConfig: fmt.Sprintf("service=%s", shadowSvcName),
+	}
 	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, annotations, opts); err != nil {
 		return err
 	}
