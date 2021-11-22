@@ -208,7 +208,7 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 		cli.StringFlag{
 			Name:        "method",
 			Value:       "manual",
-			Usage:       "Mesh method 'manual' or 'auto'(coming soon)",
+			Usage:       "Mesh method 'manual' or 'auto'(beta)",
 			Destination: &options.MeshOptions.Method,
 		},
 		cli.StringFlag{
