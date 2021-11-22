@@ -380,6 +380,21 @@ func (mr *MockKubernetesInterfaceMockRecorder) UpdatePod(ctx, pod interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePod", reflect.TypeOf((*MockKubernetesInterface)(nil).UpdatePod), ctx, pod)
 }
 
+// UpdateService mocks base method.
+func (m *MockKubernetesInterface) UpdateService(ctx context.Context, svc *v10.Service) (*v10.Service, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateService", ctx, svc)
+	ret0, _ := ret[0].(*v10.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateService indicates an expected call of UpdateService.
+func (mr *MockKubernetesInterfaceMockRecorder) UpdateService(ctx, svc interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateService", reflect.TypeOf((*MockKubernetesInterface)(nil).UpdateService), ctx, svc)
+}
+
 // WaitPodReady mocks base method.
 func (m *MockKubernetesInterface) WaitPodReady(name, namespace string) (*v10.Pod, error) {
 	m.ctrl.T.Helper()

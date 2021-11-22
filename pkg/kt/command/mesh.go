@@ -216,12 +216,12 @@ func lockAndFetchDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 func unlockDeployment(ctx context.Context, k cluster.KubernetesInterface, deploymentName, namespace string) {
 	app, err := k.GetDeployment(ctx, deploymentName, namespace)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to get deployment %d for unlock", app.Name)
+		log.Warn().Err(err).Msgf("Failed to get deployment %s for unlock", app.Name)
 		return
 	}
 	delete(app.Annotations, common.KtLock)
 	if _, err := k.UpdateDeployment(ctx, app); err != nil {
-		log.Warn().Err(err).Msgf("Failed to unlock deployment %d", app.Name)
+		log.Warn().Err(err).Msgf("Failed to unlock deployment %s", app.Name)
 	}
 }
 

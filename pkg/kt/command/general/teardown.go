@@ -111,7 +111,7 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 		go func() {
 			waitDeploymentRecoverComplete(ctx, opts, k)
-			ch <- syscall.SIGSTOP
+			ch <- syscall.SIGINT
 		}()
 		_ = <-ch
 	}
@@ -147,7 +147,7 @@ func recoverService(ctx context.Context, k cluster.KubernetesInterface, routerCo
 
 	originSvcName := svcName + common.OriginServiceSuffix
 	if err := k.RemoveService(ctx, originSvcName, opts.Namespace); err != nil {
-		log.Error().Err(err).Msgf("Failed to remove origin service %d", originSvcName)
+		log.Error().Err(err).Msgf("Failed to remove origin service %s", originSvcName)
 	}
 	log.Info().Msgf("Substitution service %s removed", originSvcName)
 }

@@ -130,7 +130,7 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 			}
 		}
 	} else {
-		log.Debug().Msgf("Pod %s does no have heart beat annotation")
+		log.Debug().Msgf("Pod %s does no have heart beat annotation", pod.Name)
 	}
 }
 
