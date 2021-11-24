@@ -103,7 +103,7 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	}
 
 	meshVersion := getVersion(options)
-	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
+	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshVersion, app)
 	annotations := make(map[string]string)
 	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, annotations, options); err != nil {
@@ -142,8 +142,8 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	shadowPodName := deploymentName + common.KtMeshInfix + meshVersion
-	shadowSvcName := svc.Name + common.KtMeshInfix + meshVersion
+	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
+	shadowSvcName := svc.Name + common.MeshPodInfix + meshVersion
 	shadowLabels := map[string]string{
 		common.KtComponent: common.ComponentMesh,
 		common.KtRole: common.RoleShadow,

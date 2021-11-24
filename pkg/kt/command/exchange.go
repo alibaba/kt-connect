@@ -100,7 +100,7 @@ func exchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	options.RuntimeOptions.Origin = deploymentName
 	options.RuntimeOptions.Replicas = *app.Spec.Replicas
 
-	shadowPodName := deploymentName + "-kt-" + strings.ToLower(util.RandomString(5))
+	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
 	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,

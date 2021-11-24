@@ -66,8 +66,10 @@ const (
 	OriginServiceSuffix = "-kt-origin"
 	// RouterPodSuffix suffix of router pod name
 	RouterPodSuffix = "-kt-router"
-	// KtMeshInfix of mesh pod and mesh service name
-	KtMeshInfix = "-kt-mesh-"
+	// ExchangePodInfix exchange pod name
+	ExchangePodInfix = "-kt-exchange-"
+	// MeshPodInfix mesh pod and mesh service name
+	MeshPodInfix = "-kt-mesh-"
 	// RoleShadow shadow role
 	RoleShadow = "shadow"
 	// RoleRouter router role
