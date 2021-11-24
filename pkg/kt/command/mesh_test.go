@@ -56,3 +56,15 @@ func Test_meshCommand(t *testing.T) {
 	}
 
 }
+
+func Test_toPortMapParameter(t *testing.T) {
+	if toPortMapParameter(map[int]int{ }) != "" {
+		t.Errorf("port map parameter incorrect")
+	}
+	if toPortMapParameter(map[int]int{ 80:8080 }) != "80:8080" {
+		t.Errorf("port map parameter incorrect")
+	}
+	if toPortMapParameter(map[int]int{ 80:8080, 70:7000 }) != "80:8080,70:7000" {
+		t.Errorf("port map parameter incorrect")
+	}
+}

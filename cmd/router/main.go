@@ -50,7 +50,7 @@ func setup(args []string) {
 	}
 	ktConf := router.KtConf{
 		Service:  args[0],
-		Ports:    strings.Split(args[1], ","),
+		Ports:    getPorts(args[1]),
 		Versions: []string{args[2]},
 	}
 	err := router.WriteKtConf(&ktConf)
@@ -82,6 +82,14 @@ func remove(args []string) {
 		return
 	}
 	log.Info().Msgf("Route updated.")
+}
+
+func getPorts(portsParameter string) [][]string {
+	ports := make([][]string, 0)
+	for _, pp := range strings.Split(portsParameter, ",") {
+		ports = append(ports, strings.Split(pp, ":"))
+	}
+	return ports
 }
 
 func updateRoute(version string, action string) error {

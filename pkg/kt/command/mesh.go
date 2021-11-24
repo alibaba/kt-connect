@@ -130,10 +130,8 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	meshVersion := getVersion(opts)
 	opts.RuntimeOptions.Mesh = meshVersion
 
-	targetPorts := make([]string, 0)
 	ports := make(map[int]int)
 	for _, p := range svc.Spec.Ports {
-		targetPorts = append(targetPorts, strconv.Itoa(p.TargetPort.IntValue()))
 		ports[int(p.Port)] = p.TargetPort.IntValue()
 	}
 
@@ -159,7 +157,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		common.KtRole: common.RoleRouter,
 		common.KtName: routerPodName,
 	}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, targetPorts, routerLabels, meshVersion, opts); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, meshVersion, opts); err != nil {
 		return err
 	}
 
@@ -272,7 +270,7 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 }
 
 func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,
-	targetPorts []string, routerLabels map[string]string, meshVersion string, opts *options.DaemonOptions) error {
+	ports map[int]int, routerLabels map[string]string, meshVersion string, opts *options.DaemonOptions) error {
 	routerPod, err := k.GetPod(ctx, routerPodName, opts.Namespace)
 	routerLabels[common.ControlBy] = common.KubernetesTool
 	if err != nil {
@@ -287,7 +285,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		log.Info().Msgf("Router pod is ready")
 
 		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
-			"/usr/sbin/router", "setup", svcName, strings.Join(targetPorts, ","), meshVersion)
+			"/usr/sbin/router", "setup", svcName, toPortMapParameter(ports), meshVersion)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
@@ -314,6 +312,19 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 	log.Info().Msgf("Router pod configuration done")
 	opts.RuntimeOptions.Router = routerPodName
 	return nil
+}
+
+func toPortMapParameter(ports map[int]int) string {
+	// input: { 80:8080, 70:7000 }
+	// output: "80:8080,70:7000"
+	if len(ports) == 0 {
+		return ""
+	}
+	s := ""
+	for k, v := range ports {
+		s = s + "," + strconv.Itoa(k) + ":" + strconv.Itoa(v)
+	}
+	return s[1:]
 }
 
 func createOriginService(ctx context.Context, k cluster.KubernetesInterface, originSvcName string,
