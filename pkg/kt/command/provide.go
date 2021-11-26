@@ -83,7 +83,6 @@ func provide(ctx context.Context, serviceName string, cli kt.CliInterface, optio
 		common.ControlBy:   common.KubernetesTool,
 		common.KtComponent: common.ComponentProvide,
 		common.KtName:      shadowPodName,
-		common.KtVersion:   version,
 	}
 	annotations := map[string]string{
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),

@@ -41,7 +41,6 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 				image:     "shadow/shadow",
 				labels: map[string]string{
 					common.KtComponent: "shadow-component",
-					common.KtVersion:   "0.0.1",
 				},
 				debug: true,
 			},

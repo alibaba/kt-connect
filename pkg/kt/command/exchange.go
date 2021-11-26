@@ -259,7 +259,5 @@ func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]str
 			labels[k] = v
 		}
 	}
-	splits := strings.Split(workload, "-")
-	labels[common.KtVersion] = splits[len(splits)-1]
 	return labels
 }

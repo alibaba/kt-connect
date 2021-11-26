@@ -68,3 +68,18 @@ func Test_toPortMapParameter(t *testing.T) {
 		t.Errorf("port map parameter incorrect")
 	}
 }
+
+func Test_isValidKey(t *testing.T) {
+	validCases := []string{"kt", "k123", "kt-version_1123"}
+	for _, c := range validCases {
+		if !isValidKey(c) {
+			t.Errorf("\"%s\" should be valid", c)
+		}
+	}
+	invalidCases := []string{"-version_1123", "123", ""}
+	for _, c := range invalidCases {
+		if isValidKey(c) {
+			t.Errorf("\"%s\" should be invalid", c)
+		}
+	}
+}

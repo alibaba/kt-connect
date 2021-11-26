@@ -20,6 +20,7 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -102,15 +103,15 @@ func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 		return err
 	}
 
-	meshVersion := getVersion(options)
+	meshKey, meshVersion := getVersion(options)
 	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
-	labels := getMeshLabels(shadowPodName, meshVersion, app)
+	labels := getMeshLabels(shadowPodName, meshKey, meshVersion, app)
 	annotations := make(map[string]string)
 	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, annotations, options); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
-	log.Info().Msgf(" Now you can update Istio rule by label '%s=%s' ", common.KtVersion, meshVersion)
+	log.Info().Msgf(" Now you can update Istio rule by label '%s=%s' ", meshKey, meshVersion)
 	log.Info().Msg("---------------------------------------------------------")
 	return nil
 }
@@ -127,8 +128,9 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	meshVersion := getVersion(opts)
-	opts.RuntimeOptions.Mesh = meshVersion
+	meshKey, meshVersion := getVersion(opts)
+	versionMark := meshKey + ":" + meshVersion
+	opts.RuntimeOptions.Mesh = versionMark
 
 	ports := make(map[int]int)
 	for _, p := range svc.Spec.Ports {
@@ -157,7 +159,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		common.KtRole: common.RoleRouter,
 		common.KtName: routerPodName,
 	}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, meshVersion, opts); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, versionMark, opts); err != nil {
 		return err
 	}
 
@@ -181,7 +183,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")
-	log.Info().Msgf(" Now you can access your service by header 'KT-VERSION: %s' ", meshVersion)
+	log.Info().Msgf(" Now you can access your service by header '%s: %s' ", strings.ToUpper(meshKey), meshVersion)
 	log.Info().Msg("---------------------------------------------------------------")
 	return nil
 }
@@ -270,7 +272,7 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 }
 
 func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,
-	ports map[int]int, routerLabels map[string]string, meshVersion string, opts *options.DaemonOptions) error {
+	ports map[int]int, routerLabels map[string]string, versionMark string, opts *options.DaemonOptions) error {
 	routerPod, err := k.GetPod(ctx, routerPodName, opts.Namespace)
 	routerLabels[common.ControlBy] = common.KubernetesTool
 	if err != nil {
@@ -285,7 +287,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		log.Info().Msgf("Router pod is ready")
 
 		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
-			"/usr/sbin/router", "setup", svcName, toPortMapParameter(ports), meshVersion)
+			"/usr/sbin/router", "setup", svcName, toPortMapParameter(ports), versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
@@ -302,7 +304,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		log.Info().Msgf("Router pod already exists")
 
 		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
-			"/usr/sbin/router", "add", meshVersion)
+			"/usr/sbin/router", "add", versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
@@ -376,11 +378,11 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	return nil
 }
 
-func getMeshLabels(workload string, meshVersion string, app *v1.Deployment) map[string]string {
+func getMeshLabels(workload, meshKey, meshVersion string, app *v1.Deployment) map[string]string {
 	labels := map[string]string{
 		common.KtComponent: common.ComponentMesh,
 		common.KtName:      workload,
-		common.KtVersion:   meshVersion,
+		meshKey:   meshVersion,
 	}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {
@@ -390,9 +392,25 @@ func getMeshLabels(workload string, meshVersion string, app *v1.Deployment) map[
 	return labels
 }
 
-func getVersion(options *options.DaemonOptions) string {
-	if len(options.MeshOptions.Version) != 0 {
-		return options.MeshOptions.Version
+func getVersion(options *options.DaemonOptions) (string, string) {
+	versionKey := "kt-version"
+	versionVal := strings.ToLower(util.RandomString(5))
+	if len(options.MeshOptions.VersionMark) != 0 {
+		versionParts := strings.Split(options.MeshOptions.VersionMark, ":")
+		if len(versionParts) > 1 {
+			if isValidKey(versionParts[0]) {
+				versionKey = versionParts[0]
+			} else {
+				log.Warn().Msgf("mark key '%s' is invalid, using default key '%s'", versionParts[0], versionKey)
+			}
+			versionVal = versionParts[1]
+		}
+		versionVal = versionParts[0]
 	}
-	return strings.ToLower(util.RandomString(5))
+	return versionKey, versionVal
+}
+
+func isValidKey(key string) bool {
+	ok, err := regexp.MatchString("^[a-z][a-z0-9_-]*", key)
+	return err == nil && ok
 }

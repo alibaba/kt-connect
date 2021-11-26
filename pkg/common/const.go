@@ -25,8 +25,6 @@ const (
 
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
-	// KtVersion label used for fetch shadow mark in UI
-	KtVersion = "kt-version"
 	// KtComponent label used for distinguish shadow type
 	KtComponent = "kt-component"
 	// KtRemoteAddress label used for fetch pod IP in UI

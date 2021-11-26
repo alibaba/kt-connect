@@ -203,8 +203,6 @@ func getLabels(workload string, options *options.DaemonOptions) map[string]strin
 		common.KtComponent: common.ComponentConnect,
 		common.KtName:      workload,
 	}
-	splits := strings.Split(workload, "-")
-	labels[common.KtVersion] = splits[len(splits)-1]
 	return labels
 }
 

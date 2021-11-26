@@ -49,9 +49,9 @@ type ExchangeOptions struct {
 
 // MeshOptions ...
 type MeshOptions struct {
-	Method  string
-	Expose  string
-	Version string
+	Method      string
+	Expose      string
+	VersionMark string
 	RouterImage string
 }
 
