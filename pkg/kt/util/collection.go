@@ -2,7 +2,7 @@ package util
 
 import "reflect"
 
-// Contains check whether obj exist in target, the type of target can be array, slice or map
+// Contains check whether obj exist in target, the type of target can be an array, slice or map
 func Contains(obj interface{}, target interface{}) bool {
 	targetValue := reflect.ValueOf(target)
 	switch reflect.TypeOf(target).Kind() {
@@ -34,4 +34,11 @@ func MapContains(subset, fullset map[string]string) bool {
 		}
 	}
 	return true
+}
+
+func MapPut(m map[string]string, k, v string) {
+	if m == nil {
+		m = make(map[string]string)
+	}
+	m[k] = v
 }

@@ -168,7 +168,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 			log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
 			return err2
 		} else {
-			svc.Annotations[common.KtSelector] = string(marshaledSelector)
+			util.MapPut(svc.Annotations, common.KtSelector, string(marshaledSelector))
 		}
 	}
 	svc.Spec.Selector = routerLabels
@@ -203,7 +203,7 @@ func lockAndFetchDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 		time.Sleep(3 * time.Second)
 		return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
 	} else {
-		app.Annotations[common.KtLock] = util.GetTimestamp()
+		util.MapPut(app.Annotations, common.KtLock, util.GetTimestamp())
 		if app, err = k.UpdateDeployment(ctx, app); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock deployment %s", deploymentName)
 			return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)

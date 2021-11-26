@@ -434,7 +434,7 @@ func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *c
 	if err != nil {
 		return
 	}
-	pod.Annotations[common.KtRefCount] = count
+	util.MapPut(pod.Annotations, common.KtRefCount, count)
 	_, err = k.UpdatePod(ctx, pod)
 	return
 }

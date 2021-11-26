@@ -165,7 +165,8 @@ func RecoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, 
 		}
 		svc.Spec.Selector = selector
 		if _, err = k.UpdateService(ctx, svc); err != nil {
-			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
+			log.Error().Err(err).Msgf("Failed to recover selector of original service %s (%s)",
+				svcName, svc.Annotations[common.KtSelector])
 		}
 	}
 	log.Info().Msgf("Original service %s recovered", svcName)

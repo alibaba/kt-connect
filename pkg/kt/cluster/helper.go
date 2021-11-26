@@ -127,8 +127,8 @@ func wait(podName string) {
 
 func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
-	metaAndSpec.Meta.Annotations[common.KtLastHeartBeat] = util.GetTimestamp()
-	metaAndSpec.Meta.Labels[common.ControlBy] = common.KubernetesTool
+	util.MapPut(metaAndSpec.Meta.Annotations, common.KtLastHeartBeat, util.GetTimestamp())
+	util.MapPut(metaAndSpec.Meta.Labels, common.ControlBy, common.KubernetesTool)
 
 	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{
