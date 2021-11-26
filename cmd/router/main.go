@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/router"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -48,10 +49,12 @@ func setup(args []string) {
 		usage()
 		return
 	}
+	header, version := splitVersionMark(args[2])
 	ktConf := router.KtConf{
 		Service:  args[0],
 		Ports:    getPorts(args[1]),
-		Versions: []string{args[2]},
+		Header:   header,
+		Versions: []string{version},
 	}
 	err := router.WriteKtConf(&ktConf)
 	if err != nil {
@@ -67,7 +70,8 @@ func setup(args []string) {
 }
 
 func add(args []string) {
-	err := updateRoute(args[0], actionAdd)
+	header, version := splitVersionMark(args[0])
+	err := updateRoute(header, version, actionAdd)
 	if err != nil {
 		log.Error().Err(err).Msgf("Update route with add failed")
 		return
@@ -76,12 +80,18 @@ func add(args []string) {
 }
 
 func remove(args []string) {
-	err := updateRoute(args[0], actionRemove)
+	header, version := splitVersionMark(args[0])
+	err := updateRoute(header, version, actionRemove)
 	if err != nil {
 		log.Error().Err(err).Msgf("Update route with remove failed" )
 		return
 	}
 	log.Info().Msgf("Route updated.")
+}
+
+func splitVersionMark(mark string) (string, string) {
+	splits := strings.Split(mark, ":")
+	return strings.ReplaceAll(splits[0], "-", "_"), splits[1]
 }
 
 func getPorts(portsParameter string) [][]string {
@@ -92,8 +102,11 @@ func getPorts(portsParameter string) [][]string {
 	return ports
 }
 
-func updateRoute(version string, action string) error {
+func updateRoute(header, version, action string) error {
 	ktConf, err := router.ReadKtConf()
+	if ktConf.Header != header {
+		return fmt.Errorf("specfied header '%s' no match mesh pod header '%s'", header, ktConf.Header)
+	}
 	if err != nil {
 		return err
 	}
