@@ -18,7 +18,7 @@ import (
 func NewDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) cli.Command {
 	return cli.Command{
 		Name:  "dashboard",
-		Usage: "kt-connect dashboard",
+		Usage: "(deprecated) kt-connect dashboard",
 		Subcommands: []cli.Command{
 			{
 				Name:  "init",
