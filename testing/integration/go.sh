@@ -33,7 +33,7 @@ function cleanup() {
 # Exit with error
 function fail() {
   log "\e[31m${*} !!!\e[0m"
-  log "check logs for detail: \e[33m`ls -t /tmp/kt-it-*.log`\e[0m"
+  log "check logs for detail: \e[33m`ls -cr /tmp/kt-it-*.log`\e[0m"
   cleanup
   exit 1
 }
@@ -71,12 +71,22 @@ function check_pid_file() {
 
 # Verify access specified url with result
 function verify() {
-  target=${1}
-  url=${2}
-  shift 2
+  target="${1}"
+  url="${2}"
+  if [ "${url:0:4}" != "http" ]; then
+    header="${2}"
+    url="${3}"
+    shift 3
+  else
+    shift 2
+  fi
   log "accessing ${url}"
   for c in `seq 5`; do
-    res=`curl --connect-timeout 2 -s ${url}`
+    if [ "${header}" != "" ]; then
+      res=`curl -H "${header}" --connect-timeout 2 -s ${url}`
+    else
+      res=`curl --connect-timeout 2 -s ${url}`
+    fi
     if [ "$res" = "${*}" ]; then
       return
     fi
@@ -159,12 +169,24 @@ function prepare_local() {
 function test_ktctl_exchange() {
   # Test exchange
   ktctl -d -n ${NS} -i ${IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
-  wait_for_pod tomcat-kt 1
+  wait_for_pod tomcat-kt-exchange 1
   check_job exchange
   check_pid_file exchange
 
-  verify "service-domain" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
+  verify "exchanged-service" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
   success "ktctl exchange test passed"
+}
+
+function test_ktctl_mesh() {
+  # Test mesh
+  ktctl -d -n ${NS} -i ${IMAGE} -f mesh tomcat --method auto --expose 8080 --versionMark ci >/tmp/kt-it-mesh.log 2>&1 &
+  wait_for_pod tomcat-kt-mesh 1
+  check_job mesh
+  check_pid_file mesh
+
+  verify "without-header" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect demo v1"
+  verify "with-header" "KT-VERSION:ci" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
+  success "ktctl mesh test passed"
 }
 
 function test_ktctl_provide() {
@@ -181,6 +203,7 @@ function test_ktctl_provide() {
 prepare_cluster
 test_ktctl_connect
 prepare_local
+test_ktctl_mesh
 test_ktctl_exchange
 test_ktctl_provide
 cleanup
