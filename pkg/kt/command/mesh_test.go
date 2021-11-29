@@ -83,3 +83,23 @@ func Test_isValidKey(t *testing.T) {
 		}
 	}
 }
+
+func Test_getVersion(t *testing.T) {
+	var k, v string
+	k, v = getVersion("")
+	if k != "kt-version" || len(v) != 5 {
+		t.Errorf("parse empty version mark, got %s:%s", k, v)
+	}
+	k, v = getVersion("test")
+	if k != "kt-version" || v != "test" {
+		t.Errorf("parse key-only version mark, got %s:%s", k, v)
+	}
+	k, v = getVersion("mark:")
+	if k != "mark" || len(v) != 5 {
+		t.Errorf("parse value-only version mark, got %s:%s", k, v)
+	}
+	k, v = getVersion("mark:test")
+	if k != "mark" || v != "test" {
+		t.Errorf("parse key-value version mark, got %s:%s", k, v)
+	}
+}

@@ -97,17 +97,17 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 	return nil
 }
 
-func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, options *options.DaemonOptions) error {
-	app, err := k.GetDeployment(ctx, deploymentName, options.Namespace)
+func manualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, opts *options.DaemonOptions) error {
+	app, err := k.GetDeployment(ctx, deploymentName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	meshKey, meshVersion := getVersion(options)
+	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
 	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshKey, meshVersion, app)
 	annotations := make(map[string]string)
-	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, annotations, options); err != nil {
+	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, annotations, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
@@ -128,7 +128,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		return err
 	}
 
-	meshKey, meshVersion := getVersion(opts)
+	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
 	opts.RuntimeOptions.Mesh = versionMark
 
@@ -392,20 +392,23 @@ func getMeshLabels(workload, meshKey, meshVersion string, app *v1.Deployment) ma
 	return labels
 }
 
-func getVersion(options *options.DaemonOptions) (string, string) {
+func getVersion(versionMark string) (string, string) {
 	versionKey := "kt-version"
 	versionVal := strings.ToLower(util.RandomString(5))
-	if len(options.MeshOptions.VersionMark) != 0 {
-		versionParts := strings.Split(options.MeshOptions.VersionMark, ":")
+	if len(versionMark) != 0 {
+		versionParts := strings.Split(versionMark, ":")
 		if len(versionParts) > 1 {
 			if isValidKey(versionParts[0]) {
 				versionKey = versionParts[0]
 			} else {
 				log.Warn().Msgf("mark key '%s' is invalid, using default key '%s'", versionParts[0], versionKey)
 			}
-			versionVal = versionParts[1]
+			if len(versionParts[1]) > 0 {
+				versionVal = versionParts[1]
+			}
+		} else {
+			versionVal = versionParts[0]
 		}
-		versionVal = versionParts[0]
 	}
 	return versionKey, versionVal
 }
