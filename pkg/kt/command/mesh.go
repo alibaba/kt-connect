@@ -149,7 +149,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		common.KtRole: common.RoleShadow,
 		common.KtName: shadowPodName,
 	}
-	if err = createShadowService(ctx, k, shadowSvcName, ports, shadowLabels, opts); err != nil {
+	if err = createShadowService(ctx, k, shadowSvcName, ports, util.CopyMap(shadowLabels), opts); err != nil {
 		return err
 	}
 
@@ -159,7 +159,7 @@ func autoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 		common.KtRole: common.RoleRouter,
 		common.KtName: routerPodName,
 	}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, versionMark, opts); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, util.CopyMap(routerLabels), versionMark, opts); err != nil {
 		return err
 	}
 
@@ -414,6 +414,6 @@ func getVersion(versionMark string) (string, string) {
 }
 
 func isValidKey(key string) bool {
-	ok, err := regexp.MatchString("^[a-z][a-z0-9_-]*", key)
+	ok, err := regexp.MatchString("^[a-z][a-z0-9_-]*$", key)
 	return err == nil && ok
 }

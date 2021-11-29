@@ -140,7 +140,7 @@ func (o *MeshOptions) transport() *options.DaemonOptions {
 	daemonOptions := o.transportGlobalOptions()
 	daemonOptions.MeshOptions = &options.MeshOptions{
 		Expose:  o.Expose,
-		Version: o.Version,
+		VersionMark: o.Version,
 	}
 	return daemonOptions
 }

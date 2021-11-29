@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"flag"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"testing"
 
@@ -46,60 +47,42 @@ func Test_meshCommand(t *testing.T) {
 		err := command.Run(context)
 
 		if c.expectedErr != nil {
-			if err.Error() != c.expectedErr.Error() {
-				t.Errorf("expected %v but is %v", c.expectedErr, err)
-			}
-		} else if err != c.expectedErr {
-			t.Errorf("expected %v but is %v", c.expectedErr, err)
+			require.Equal(t, err.Error(), c.expectedErr.Error(), "expected %v but is %v", c.expectedErr, err)
+		} else {
+			require.Equal(t, err, c.expectedErr, "expected %v but is %v", c.expectedErr, err)
 		}
-
 	}
-
 }
 
 func Test_toPortMapParameter(t *testing.T) {
-	if toPortMapParameter(map[int]int{ }) != "" {
-		t.Errorf("port map parameter incorrect")
-	}
-	if toPortMapParameter(map[int]int{ 80:8080 }) != "80:8080" {
-		t.Errorf("port map parameter incorrect")
-	}
-	if toPortMapParameter(map[int]int{ 80:8080, 70:7000 }) != "80:8080,70:7000" {
-		t.Errorf("port map parameter incorrect")
-	}
+	require.Equal(t, toPortMapParameter(map[int]int{ }), "", "port map parameter incorrect")
+	require.Equal(t, toPortMapParameter(map[int]int{ 80:8080 }), "80:8080", "port map parameter incorrect")
+	require.Equal(t, toPortMapParameter(map[int]int{ 80:8080, 70:7000 }), "80:8080,70:7000","port map parameter incorrect")
 }
 
 func Test_isValidKey(t *testing.T) {
 	validCases := []string{"kt", "k123", "kt-version_1123"}
 	for _, c := range validCases {
-		if !isValidKey(c) {
-			t.Errorf("\"%s\" should be valid", c)
-		}
+		require.True(t, isValidKey(c), "\"%s\" should be valid", c)
 	}
-	invalidCases := []string{"-version_1123", "123", ""}
+	invalidCases := []string{"-version_1123", "123", "", "kt.ver"}
 	for _, c := range invalidCases {
-		if isValidKey(c) {
-			t.Errorf("\"%s\" should be invalid", c)
-		}
+		require.True(t, !isValidKey(c), "\"%s\" should be invalid", c)
 	}
 }
 
 func Test_getVersion(t *testing.T) {
 	var k, v string
 	k, v = getVersion("")
-	if k != "kt-version" || len(v) != 5 {
-		t.Errorf("parse empty version mark, got %s:%s", k, v)
-	}
+	require.Equal(t, k, "kt-version")
+	require.Equal(t, len(v), 5)
 	k, v = getVersion("test")
-	if k != "kt-version" || v != "test" {
-		t.Errorf("parse key-only version mark, got %s:%s", k, v)
-	}
+	require.Equal(t, k, "kt-version")
+	require.Equal(t, v, "test")
 	k, v = getVersion("mark:")
-	if k != "mark" || len(v) != 5 {
-		t.Errorf("parse value-only version mark, got %s:%s", k, v)
-	}
+	require.Equal(t, k, "mark")
+	require.Equal(t, len(v), 5)
 	k, v = getVersion("mark:test")
-	if k != "mark" || v != "test" {
-		t.Errorf("parse key-value version mark, got %s:%s", k, v)
-	}
+	require.Equal(t, k, "mark")
+	require.Equal(t, v, "test")
 }
