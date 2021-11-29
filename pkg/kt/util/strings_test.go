@@ -32,3 +32,9 @@ func TestString2Map(t *testing.T) {
 		})
 	}
 }
+
+func Test_ExtractErrorMessage(t *testing.T) {
+	require.Equal(t, "specfied header 'kt_version' no match mesh pod header 'vvvv'",
+		ExtractErrorMessage("4:00PM ERR Update route with add failed error=\"specfied header 'kt_version' no match mesh pod header 'vvvv'\""))
+	require.Empty(t, ExtractErrorMessage("4:00PM INFO Route updated."))
+}

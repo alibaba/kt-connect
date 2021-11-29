@@ -211,7 +211,13 @@ func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, opts op
 	var stdout, stderr bytes.Buffer
 	log.Debug().Msgf("Execute command %v in %s:%s", cmd, podName, containerName)
 	err := execute("POST", req.URL(), opts.RestConfig, nil, &stdout, &stderr, false)
-	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
+	stdoutMsg := util.RemoveColor(strings.TrimSpace(stdout.String()))
+	stderrMsg := util.RemoveColor(strings.TrimSpace(stderr.String()))
+	rawErrMsg := util.ExtractErrorMessage(stderrMsg)
+	if err == nil && rawErrMsg != "" {
+		err = fmt.Errorf(rawErrMsg)
+	}
+	return stdoutMsg, stderrMsg, err
 }
 
 func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,

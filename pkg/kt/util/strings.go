@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -52,4 +53,19 @@ func Append(base string, inc string) string {
 	} else {
 		return fmt.Sprintf("%s,%s", base, inc)
 	}
+}
+
+// RemoveColor remove shell color character in text
+func RemoveColor(msg string) string {
+	colorExp := regexp.MustCompile("\033\\[[0-9]+m")
+	return colorExp.ReplaceAllString(msg, "")
+}
+
+// ExtractErrorMessage extract error from log
+func ExtractErrorMessage(msg string) string {
+	errExp := regexp.MustCompile(" error=\"([^\"]+)\"")
+	if strings.Contains(msg, " ERR ") && errExp.MatchString(msg) {
+		return errExp.FindStringSubmatch(msg)[1]
+	}
+	return ""
 }
