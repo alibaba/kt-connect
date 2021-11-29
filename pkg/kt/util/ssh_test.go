@@ -2,8 +2,8 @@ package util
 
 import (
 	"crypto/rsa"
+	"github.com/stretchr/testify/require"
 	"os"
-	"reflect"
 	"testing"
 )
 
@@ -35,16 +35,9 @@ func TestGenerate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Remove(tt.args.privateKeyPath)
 			got, err := Generate(tt.args.privateKeyPath)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Generate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if len(got.PrivateKey) == 0 {
-				t.Errorf("fail generate private key")
-			}
-			if len(got.PublicKey) == 0 {
-				t.Errorf("fail generate public key")
-			}
+			require.Equal(t, err != nil, tt.wantErr, "Generate() error = %v, wantErr %v", err, tt.wantErr)
+			require.NotEmpty(t, got.PrivateKey, "fail generate private key")
+			require.NotEmpty(t, got.PublicKey,"fail generate public key")
 		})
 	}
 }
@@ -64,13 +57,10 @@ func Test_generatePrivateKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := generatePrivateKey(tt.args.bitSize)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("generatePrivateKey() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("generatePrivateKey() = %v, want %v", got, tt.want)
-			}
+			require.Equal(t, err != nil, tt.wantErr,
+				"generatePrivateKey() error = %v, wantErr %v", err, tt.wantErr)
+			require.Equal(t, got, tt.want,
+				"generatePrivateKey() = %v, want %v", got, tt.want)
 		})
 	}
 }
@@ -90,13 +80,10 @@ func Test_generatePublicKey(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := generatePublicKey(tt.args.privatekey)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("generatePublicKey() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("generatePublicKey() = %v, want %v", got, tt.want)
-			}
+			require.Equal(t, err != nil, tt.wantErr,
+				"generatePublicKey() error = %v, wantErr %v", err, tt.wantErr)
+			require.Equal(t, got, tt.want,
+				"generatePublicKey() = %v, want %v", got, tt.want)
 		})
 	}
 }

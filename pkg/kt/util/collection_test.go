@@ -1,6 +1,9 @@
 package util
 
-import "testing"
+import (
+	"github.com/stretchr/testify/require"
+	"testing"
+)
 
 func TestContains(t *testing.T) {
 	type args struct {
@@ -31,9 +34,7 @@ func TestContains(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := Contains(tt.args.obj, tt.args.target); got != tt.want {
-				t.Errorf("Contains() = %v, want %v", got, tt.want)
-			}
+			require.Equal(t, Contains(tt.args.obj, tt.args.target), tt.want)
 		})
 	}
 }
@@ -75,9 +76,7 @@ func TestMapEquals(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MapContains(tt.args.subset, tt.args.fullset); got != tt.want {
-				t.Errorf("MapEquals() = %v, want %v", got, tt.want)
-			}
+			require.Equal(t, MapContains(tt.args.subset, tt.args.fullset), tt.want)
 		})
 	}
 }

@@ -1,7 +1,7 @@
 package util
 
 import (
-	"reflect"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -27,9 +27,8 @@ func TestString2Map(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := String2Map(tt.args.str); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("String2Map() = %v, want %v", got, tt.want)
-			}
+			got := String2Map(tt.args.str)
+			require.Equal(t, got, tt.want, "String2Map() = %v, want %v", got, tt.want)
 		})
 	}
 }

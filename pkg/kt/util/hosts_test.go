@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -125,13 +126,11 @@ func TestDropHosts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			linesAfterDrop, _ := dropHosts(tt.args.linesBeforeDrop)
-			if len(tt.args.linesAfterDrop) != len(linesAfterDrop) {
-				t.Errorf("should has %d lines, but got %d", len(tt.args.linesAfterDrop), len(linesAfterDrop))
-			}
+			require.Equal(t, len(tt.args.linesAfterDrop), len(linesAfterDrop),
+				"should has %d lines, but got %d", len(tt.args.linesAfterDrop), len(linesAfterDrop))
 			for i, line := range tt.args.linesAfterDrop {
-				if line != linesAfterDrop[i] {
-					t.Errorf("hosts line %d mismatch: expect [%s] got [%s]", i, line, linesAfterDrop[i])
-				}
+				require.Equal(t, line, linesAfterDrop[i],
+					"hosts line %d mismatch: expect [%s] got [%s]", i, line, linesAfterDrop[i])
 			}
 		})
 	}
@@ -164,13 +163,10 @@ func TestDumpHosts(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			linesAfterDump := dumpHosts(tt.args.hostsToDump)
-			if len(tt.args.linesAfterDump) != len(linesAfterDump) {
-				t.Errorf("should has %d lines, but got %d", len(tt.args.linesAfterDump), len(linesAfterDump))
-			}
+			require.Equal(t, len(tt.args.linesAfterDump), len(linesAfterDump),
+				"should has %d lines, but got %d", len(tt.args.linesAfterDump), len(linesAfterDump))
 			for _, line := range tt.args.linesAfterDump {
-				if Contains(linesAfterDump, line) {
-					t.Errorf("hosts %s missing", line)
-				}
+				require.Contains(t, linesAfterDump, line, "hosts %s missing", line)
 			}
 		})
 	}
@@ -222,13 +218,11 @@ func TestMergeHost(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			linesAfterMerge := mergeLines(tt.args.linesBegin, tt.args.linesEnd)
-			if len(tt.args.linesAfterMerge) != len(linesAfterMerge) {
-				t.Errorf("should has %d lines, but got %d", len(tt.args.linesAfterMerge), len(linesAfterMerge))
-			}
+			require.Equal(t, len(tt.args.linesAfterMerge), len(linesAfterMerge),
+				"should has %d lines, but got %d", len(tt.args.linesAfterMerge), len(linesAfterMerge))
 			for i, line := range tt.args.linesAfterMerge {
-				if line != linesAfterMerge[i] {
-					t.Errorf("hosts line %d mismatch: expect [%s] got [%s]", i, line, linesAfterMerge[i])
-				}
+				require.Equal(t, line, linesAfterMerge[i],
+					"hosts line %d mismatch: expect [%s] got [%s]", i, line, linesAfterMerge[i])
 			}
 		})
 	}

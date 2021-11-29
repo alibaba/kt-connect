@@ -42,3 +42,11 @@ func MapPut(m map[string]string, k, v string) {
 	}
 	m[k] = v
 }
+
+func CopyMap(m map[string]string) map[string]string {
+	cp := make(map[string]string)
+	for key, value := range m {
+		cp[key] = value
+	}
+	return cp
+}
