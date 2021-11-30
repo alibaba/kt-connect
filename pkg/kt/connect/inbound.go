@@ -29,6 +29,7 @@ func (s *Shadow) Inbound(exposePorts, podName string) error {
 	}
 
 	if s.Options.ExchangeOptions != nil && s.Options.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
+		// TODO: exchange logic should be move outside of this module
 		err = exchangeWithEphemeralContainer(exposePorts, localSSHPort)
 		if err != nil {
 			return err
