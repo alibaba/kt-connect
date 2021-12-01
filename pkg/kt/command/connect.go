@@ -91,7 +91,8 @@ func connectToCluster(ctx context.Context, cli kt.CliInterface, options *options
 	}
 
 	if options.ConnectOptions.Method == common.ConnectMethodSocks ||
-		options.ConnectOptions.Method == common.ConnectMethodSocks5 {
+		options.ConnectOptions.Method == common.ConnectMethodSocks5 ||
+		len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
 		setupDump2Host(options, kubernetes)
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodVpn {
@@ -159,6 +160,7 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 func setupDump2Host(options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) {
 	namespacesToDump := []string{options.Namespace}
 	if options.ConnectOptions.Dump2HostsNamespaces != "" {
+		namespacesToDump = []string{}
 		for _, ns := range strings.Split(options.ConnectOptions.Dump2HostsNamespaces, ",") {
 			namespacesToDump = append(namespacesToDump, ns)
 		}

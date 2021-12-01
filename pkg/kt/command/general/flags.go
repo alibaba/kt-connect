@@ -103,6 +103,17 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.SSHPort,
 			Value:       2222,
 		},
+		cli.StringFlag{
+			Name:        "dump2hosts",
+			Usage:       "Specify namespaces to dump service into local hosts file, use ',' separated",
+			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
+		},
+		cli.StringFlag{
+			Name:        "clusterDomain",
+			Usage:       "The cluster domain provided to kubernetes api-server",
+			Destination: &options.ConnectOptions.ClusterDomain,
+			Value:       "cluster.local",
+		},
 		cli.BoolFlag{
 			Name:        "disablePodIp",
 			Usage:       "(vpn mode only) Disable access to pod IP address",
@@ -146,17 +157,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "(socks5 method only) Specify the local port which socks5 proxy should use",
 			Destination: &options.ConnectOptions.SocksPort,
 			Value:       2223,
-		},
-		cli.StringFlag{
-			Name:        "dump2hosts",
-			Usage:       "(socks / socks5 method only) Specify namespaces to dump service into local hosts file, use ',' separated",
-			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
-		},
-		cli.StringFlag{
-			Name:        "clusterDomain",
-			Usage:       "(socks / socks5 method only) The cluster domain provided to kubernetes api-server",
-			Destination: &options.ConnectOptions.ClusterDomain,
-			Value:       "cluster.local",
 		},
 		cli.StringFlag{
 			Name:        "jvmrc",
