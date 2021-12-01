@@ -122,8 +122,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options.RuntimeOptions.Shadow = shadowPodName
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
-	err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName)
-	if err != nil {
+	if _, err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName); err != nil {
 		return err
 	}
 

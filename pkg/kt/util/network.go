@@ -38,6 +38,18 @@ func GetOutboundIP() (address string) {
 	return
 }
 
+// ParsePortMapping parse <port> or <localPort>:<removePort> parameter
+func ParsePortMapping(exposePort string) (string, string) {
+	localPort := exposePort
+	remotePort := exposePort
+	ports := strings.SplitN(exposePort, ":", 2)
+	if len(ports) > 1 {
+		localPort = ports[0]
+		remotePort = ports[1]
+	}
+	return localPort, remotePort
+}
+
 // ExtractNetMaskFromCidr extract net mask length (e.g. 16) from cidr (e.g. 1.2.3.4/16)
 func ExtractNetMaskFromCidr(cidr string) string {
 	return cidr[strings.Index(cidr, "/")+1:]

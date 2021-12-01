@@ -372,7 +372,7 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	shadow := connect.Create(options)
-	if err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
+	if _, err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
 		return err
 	}
 	return nil
