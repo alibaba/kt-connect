@@ -6,6 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog/log"
+	appV1 "k8s.io/api/apps/v1"
 )
 
 func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, opts *options.DaemonOptions) error {
@@ -25,4 +26,17 @@ func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	log.Info().Msgf(" Now you can update Istio rule by label '%s=%s' ", meshKey, meshVersion)
 	log.Info().Msg("---------------------------------------------------------")
 	return nil
+}
+
+func getMeshLabels(workload, meshKey, meshVersion string, app *appV1.Deployment) map[string]string {
+	labels := map[string]string{}
+	if app != nil {
+		for k, v := range app.Spec.Selector.MatchLabels {
+			labels[k] = v
+		}
+	}
+	labels[common.KtComponent] = common.ComponentMesh
+	labels[common.KtName] = workload
+	labels[meshKey] = meshVersion
+	return labels
 }

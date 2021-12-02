@@ -1,11 +1,37 @@
 package mesh
 
 import (
+	"context"
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"regexp"
 	"strings"
 )
+
+func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
+	labels, annotations map[string]string, options *options.DaemonOptions) error {
+
+	labels[common.ControlBy] = common.KubernetesTool
+	envs := make(map[string]string)
+	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, labels, annotations, envs)
+	if err != nil {
+		return err
+	}
+
+	// record context data
+	options.RuntimeOptions.Shadow = shadowPodName
+	options.RuntimeOptions.SSHCM = sshConfigMapName
+
+	shadow := connect.Create(options)
+	if _, err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
+		return err
+	}
+	return nil
+}
 
 func getVersion(versionMark string) (string, string) {
 	versionKey := "kt-version"

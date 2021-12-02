@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -244,40 +243,6 @@ func createOriginService(ctx context.Context, k cluster.KubernetesInterface, ori
 		log.Info().Msgf("Origin service already exists")
 	}
 	return nil
-}
-
-func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
-	labels, annotations map[string]string, options *options.DaemonOptions) error {
-
-	labels[common.ControlBy] = common.KubernetesTool
-	envs := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, labels, annotations, envs)
-	if err != nil {
-		return err
-	}
-
-	// record context data
-	options.RuntimeOptions.Shadow = shadowPodName
-	options.RuntimeOptions.SSHCM = sshConfigMapName
-
-	shadow := connect.Create(options)
-	if _, err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
-		return err
-	}
-	return nil
-}
-
-func getMeshLabels(workload, meshKey, meshVersion string, app *appV1.Deployment) map[string]string {
-	labels := map[string]string{}
-	if app != nil {
-		for k, v := range app.Spec.Selector.MatchLabels {
-			labels[k] = v
-		}
-	}
-	labels[common.KtComponent] = common.ComponentMesh
-	labels[common.KtName] = workload
-	labels[meshKey] = meshVersion
-	return labels
 }
 
 func toPortMapParameter(ports map[int]int) string {
