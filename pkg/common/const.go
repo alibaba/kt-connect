@@ -46,6 +46,8 @@ const (
 	// KtLock annotation used for avoid auto mesh conflict
 	KtLock = "kt-lock"
 
+	// RouterBin path to router executable
+	RouterBin = "/usr/sbin/router"
 	// SshPrivateKeyName ssh private key name
 	SshPrivateKeyName = "kt_%s" + PostfixRsaKey
 	// SshBitSize ssh bit size

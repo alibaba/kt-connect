@@ -130,7 +130,7 @@ func recoverAutoMeshRoute(ctx context.Context, opts *options.DaemonOptions, k cl
 			recoverService(ctx, k, routerPod.Annotations[common.KtConfig], opts)
 		} else {
 			stdout, stderr, err3 := k.ExecInPod(common.DefaultContainer, opts.RuntimeOptions.Router, opts.Namespace,
-				*opts.RuntimeOptions, "/usr/sbin/router", "remove", opts.RuntimeOptions.Mesh)
+				*opts.RuntimeOptions, common.RouterBin, "remove", opts.RuntimeOptions.Mesh)
 			log.Debug().Msgf("Stdout: %s", stdout)
 			log.Debug().Msgf("Stderr: %s", stderr)
 			if err3 != nil {

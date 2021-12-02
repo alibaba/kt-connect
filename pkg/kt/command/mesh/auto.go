@@ -189,7 +189,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		log.Info().Msgf("Router pod is ready")
 
 		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
-			"/usr/sbin/router", "setup", svcName, toPortMapParameter(ports), versionMark)
+			common.RouterBin, "setup", svcName, toPortMapParameter(ports), versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
@@ -206,7 +206,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 		log.Info().Msgf("Router pod already exists")
 
 		stdout, stderr, err2 := k.ExecInPod(common.DefaultContainer, routerPodName, opts.Namespace, *opts.RuntimeOptions,
-			"/usr/sbin/router", "add", versionMark)
+			common.RouterBin, "add", versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
