@@ -268,16 +268,15 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 }
 
 func getMeshLabels(workload, meshKey, meshVersion string, app *appV1.Deployment) map[string]string {
-	labels := map[string]string{
-		common.KtComponent: common.ComponentMesh,
-		common.KtName:      workload,
-		meshKey:   meshVersion,
-	}
+	labels := map[string]string{}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {
 			labels[k] = v
 		}
 	}
+	labels[common.KtComponent] = common.ComponentMesh
+	labels[common.KtName] = workload
+	labels[meshKey] = meshVersion
 	return labels
 }
 
