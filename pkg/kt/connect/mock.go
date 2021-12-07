@@ -36,11 +36,12 @@ func (m *MockShadowInterface) EXPECT() *MockShadowInterfaceMockRecorder {
 }
 
 // Inbound mocks base method.
-func (m *MockShadowInterface) Inbound(exposePort, podName string) error {
+func (m *MockShadowInterface) Inbound(exposePort, podName string) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Inbound", exposePort, podName)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Inbound indicates an expected call of Inbound.

@@ -26,7 +26,7 @@ type KubernetesInterface interface {
 	WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error)
 	IncreaseRef(ctx context.Context, name ,namespace string) error
 	DecreaseRef(ctx context.Context, name, namespace string) (cleanup bool, err error)
-	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (sshcm string, err error)
+	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) error
 	RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error)
 	ExecInPod(containerName, podName, namespace string, opts options.RuntimeOptions, cmd ...string) (string, string, error)
 	RemovePod(ctx context.Context, name, namespace string) (err error)

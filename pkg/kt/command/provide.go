@@ -80,9 +80,9 @@ func provide(ctx context.Context, serviceName string, cli kt.CliInterface, optio
 	version := strings.ToLower(util.RandomString(5))
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
-		common.ControlBy:   common.KubernetesTool,
-		common.KtComponent: common.ComponentProvide,
-		common.KtName:      shadowPodName,
+		common.ControlBy: common.KubernetesTool,
+		common.KtRole:    common.RoleProvideShadow,
+		common.KtName:    shadowPodName,
 	}
 	annotations := map[string]string{
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),
@@ -96,7 +96,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
 
 	envs := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options, labels, annotations, envs)
+	_, podName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -118,9 +118,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 		return err
 	}
 	options.RuntimeOptions.Service = serviceName
-
 	options.RuntimeOptions.Shadow = shadowPodName
-	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	if _, err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName); err != nil {
 		return err

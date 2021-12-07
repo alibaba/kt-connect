@@ -32,7 +32,7 @@ func ExchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	_, podName, sshConfigMapName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
+	_, podName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
 		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
 
@@ -42,7 +42,6 @@ func ExchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 
 	// record data
 	options.RuntimeOptions.Shadow = shadowPodName
-	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	down := int32(0)
 	if err = kubernetes.ScaleTo(ctx, deploymentName, options.Namespace, &down); err != nil {
@@ -66,9 +65,9 @@ func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
 
 func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
-		common.ControlBy:   common.KubernetesTool,
-		common.KtComponent: common.ComponentExchange,
-		common.KtName:      workload,
+		common.ControlBy: common.KubernetesTool,
+		common.KtRole:    common.RoleExchangeShadow,
+		common.KtName:    workload,
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {

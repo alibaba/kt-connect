@@ -33,14 +33,13 @@ func ExchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, opti
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		sshConfigMapName, err2 := createEphemeralContainer(ctx, k8s, common.KtExchangeContainer, pod.Name, options)
+		err2 := createEphemeralContainer(ctx, k8s, common.KtExchangeContainer, pod.Name, options)
 		if err2 != nil {
 			return err2
 		}
 
 		// record data
 		options.RuntimeOptions.Shadow = util.Append(options.RuntimeOptions.Shadow, pod.Name)
-		options.RuntimeOptions.SSHCM = util.Append(options.RuntimeOptions.SSHCM, sshConfigMapName)
 
 		shadow := connect.Create(options)
 		localSSHPort, err2 := shadow.Inbound(options.ExchangeOptions.Expose, pod.Name)
@@ -96,26 +95,26 @@ func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serv
 	return pods.Items, nil
 }
 
-func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string, options *options.DaemonOptions) (string, error) {
+func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string, options *options.DaemonOptions) error {
 	log.Info().Msgf("Adding ephemeral container for pod %s", podName)
 
 	envs := make(map[string]string)
-	sshConfigMapName, err := k8s.AddEphemeralContainer(ctx, containerName, podName, options, envs)
+	err := k8s.AddEphemeralContainer(ctx, containerName, podName, options, envs)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	for i := 0; i < 10; i++ {
 		log.Info().Msgf("Waiting for ephemeral container %s to be ready", containerName)
 		ready, err2 := isEphemeralContainerReady(ctx, k8s, containerName, podName, options.Namespace)
 		if err2 != nil {
-			return "", err
+			return err2
 		} else if ready {
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
-	return sshConfigMapName, nil
+	return nil
 }
 
 func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterface, podName, containerName, namespace string) (bool, error) {

@@ -18,17 +18,12 @@ const (
 	ExchangeMethodEphemeral = "ephemeral"
 	MeshMethodAuto          = "auto"
 	MeshMethodManual        = "manual"
-	PostfixRsaKey           = "_id_rsa"
 	YyyyMmDdHhMmSs          = "2006-01-02 15:04:05"
 	SshPort                 = 22
 	Socks4Port              = 1080
 
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
-	// KtComponent label used for distinguish shadow type
-	KtComponent = "kt-component"
-	// KtRemoteAddress label used for fetch pod IP in UI
-	KtRemoteAddress = "kt-remote-address"
 	// KtName label used for wait shadow pod ready
 	KtName = "kt-name"
 	// KtRole label used for auto mesh roles
@@ -37,7 +32,7 @@ const (
 	KtConfig = "kt-config"
 	// KtUser annotation used for record independent username
 	KtUser = "kt-user"
-	// KtSelector label used for record service origin selector
+	// KtSelector annotation used for record service origin selector
 	KtSelector = "kt-selector"
 	// KtRefCount annotation used for count of shared pod / service
 	KtRefCount = "kt-ref-count"
@@ -46,10 +41,10 @@ const (
 	// KtLock annotation used for avoid auto mesh conflict
 	KtLock = "kt-lock"
 
+	// PostfixRsaKey postfix of local private key name
+	PostfixRsaKey = "_id_rsa"
 	// RouterBin path to router executable
 	RouterBin = "/usr/sbin/router"
-	// SshPrivateKeyName ssh private key name
-	SshPrivateKeyName = "kt_%s" + PostfixRsaKey
 	// SshBitSize ssh bit size
 	SshBitSize = 2048
 	// SshAuthKey auth key name
@@ -70,13 +65,16 @@ const (
 	ExchangePodInfix = "-kt-exchange-"
 	// MeshPodInfix mesh pod and mesh service name
 	MeshPodInfix = "-kt-mesh-"
-	// RoleShadow shadow role
-	RoleShadow = "shadow"
+	// RoleConnectShadow shadow role
+	RoleConnectShadow = "shadow-connect"
+	// RoleExchangeShadow shadow role
+	RoleExchangeShadow = "shadow-exchange"
+	// RoleMeshShadow shadow role
+	RoleMeshShadow = "shadow-mesh"
+	// RoleProvideShadow shadow role
+	RoleProvideShadow = "shadow-provide"
 	// RoleRouter router role
 	RoleRouter = "router"
 )
 
-var (
-	// AllKtComponents kt commands available
-	AllKtComponents = [4]string{"connect", "exchange", "mesh", "provide"}
-)
+

@@ -3,16 +3,12 @@ package command
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
-	"net"
-	"os"
-	"strings"
-
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
+	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -22,6 +18,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
+	"net"
+	"os"
+	"strings"
 )
 
 // NewConnectCommand return new connect command
@@ -144,7 +143,7 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 	}
 	annotations := make(map[string]string)
 
-	endPointIP, podName, sshConfigMapName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
+	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
 		shadowPodName, options, getLabels(shadowPodName, options), annotations, getEnvs(options))
 	if err != nil {
 		return "", "", nil, err
@@ -152,7 +151,6 @@ func getOrCreateShadow(options *options.DaemonOptions, err error, kubernetes clu
 
 	// record shadow name will clean up terminal
 	options.RuntimeOptions.Shadow = shadowPodName
-	options.RuntimeOptions.SSHCM = sshConfigMapName
 
 	return endPointIP, podName, credential, nil
 }
@@ -201,9 +199,9 @@ func getEnvs(options *options.DaemonOptions) map[string]string {
 
 func getLabels(workload string, options *options.DaemonOptions) map[string]string {
 	labels := map[string]string{
-		common.ControlBy:   common.KubernetesTool,
-		common.KtComponent: common.ComponentConnect,
-		common.KtName:      workload,
+		common.ControlBy: common.KubernetesTool,
+		common.KtRole:    common.RoleConnectShadow,
+		common.KtName:    workload,
 	}
 	return labels
 }

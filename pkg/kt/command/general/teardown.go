@@ -204,13 +204,24 @@ func cleanService(ctx context.Context, opts *options.DaemonOptions, k cluster.Ku
 }
 
 func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
-	shouldDelWithShared := false
 	var err error
 	if opts.RuntimeOptions.Shadow != "" {
-		if opts.ConnectOptions != nil && opts.ConnectOptions.ShareShadow {
-			shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
-			if err != nil {
-				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opts.RuntimeOptions.Shadow)
+		if opts.ConnectOptions != nil {
+			shouldDelWithShared := false
+			if opts.ConnectOptions.ShareShadow {
+				shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
+				if err != nil {
+					log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opts.RuntimeOptions.Shadow)
+				}
+			}
+			if shouldDelWithShared || !opts.ConnectOptions.ShareShadow {
+				for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
+					log.Info().Msgf("Cleaning configmap %s", sshcm)
+					err = k.RemoveConfigMap(ctx, sshcm, opts.Namespace)
+					if err != nil {
+						log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
+					}
+				}
 			}
 		} else {
 			if opts.ExchangeOptions != nil && opts.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
@@ -232,27 +243,15 @@ func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions
 			}
 		}
 	}
-
-	if opts.RuntimeOptions.SSHCM != "" && opts.ConnectOptions != nil && (shouldDelWithShared || !opts.ConnectOptions.ShareShadow) {
-		for _, sshcm := range strings.Split(opts.RuntimeOptions.SSHCM, ",") {
-			log.Info().Msgf("Cleaning configmap %s", sshcm)
-			err = k.RemoveConfigMap(ctx, sshcm, opts.Namespace)
-			if err != nil {
-				log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
-			}
-		}
-	}
 }
 
 // removePrivateKey remove the private key of ssh
 func removePrivateKey(opts *options.DaemonOptions) {
-	if opts.RuntimeOptions.SSHCM == "" {
+	if opts.RuntimeOptions.Shadow == "" {
 		return
 	}
-	for _, sshcm := range strings.Split(opts.RuntimeOptions.SSHCM, ",") {
-		splits := strings.Split(sshcm, "-")
-		component, version := splits[1], splits[len(splits)-1]
-		file := util.PrivateKeyPath(component, version)
+	for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
+		file := util.PrivateKeyPath(sshcm)
 		if err := os.Remove(file); os.IsNotExist(err) {
 			log.Error().Msgf("Key file %s not exist", file)
 		}

@@ -35,7 +35,7 @@ func getMeshLabels(workload, meshKey, meshVersion string, app *appV1.Deployment)
 			labels[k] = v
 		}
 	}
-	labels[common.KtComponent] = common.ComponentMesh
+	labels[common.KtRole] = common.RoleMeshShadow
 	labels[common.KtName] = workload
 	labels[meshKey] = meshVersion
 	return labels

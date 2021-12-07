@@ -46,8 +46,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
 	shadowSvcName := svc.Name + common.MeshPodInfix + meshVersion
 	shadowLabels := map[string]string{
-		common.KtComponent: common.ComponentMesh,
-		common.KtRole: common.RoleShadow,
+		common.KtRole: common.RoleMeshShadow,
 		common.KtName: shadowPodName,
 	}
 	if err = createShadowService(ctx, k, shadowSvcName, ports, util.CopyMap(shadowLabels), opts); err != nil {
@@ -56,8 +55,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName
 
 	routerPodName := deploymentName + common.RouterPodSuffix
 	routerLabels := map[string]string{
-		common.KtComponent: common.ComponentMesh,
-		common.KtRole: common.RoleRouter,
+		common.KtRole: common.RoleMeshShadow,
 		common.KtName: routerPodName,
 	}
 	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, util.CopyMap(routerLabels), versionMark, opts); err != nil {

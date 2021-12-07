@@ -136,25 +136,22 @@ func (k *Kubernetes) GetPods(ctx context.Context, labels map[string]string, name
 }
 
 // AddEphemeralContainer add ephemeral container to specified pod
-func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, podName string,
-	options *options.DaemonOptions, envs map[string]string) (sshcm string, err error) {
-	pod, err := k.GetPod(ctx, podName, options.Namespace)
+func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, name string,
+	options *options.DaemonOptions, envs map[string]string) error {
+	pod, err := k.GetPod(ctx, name, options.Namespace)
 	if err != nil {
-		return "", err
+		return err
 	}
-	identifier := strings.ToLower(util.RandomString(4))
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", common.ComponentExchange, identifier)
 
-	privateKeyPath := util.PrivateKeyPath("exchangepod", identifier)
+	privateKeyPath := util.PrivateKeyPath(name)
 	generator, err := util.Generate(privateKeyPath)
 	if err != nil {
-		return
+		return err
 	}
-	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, map[string]string{}, sshcm, options.Namespace, generator)
+	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, map[string]string{}, name, options.Namespace, generator)
 
 	if err2 != nil {
-		err = errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
-		return
+		return errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
 	}
 
 	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey]))
@@ -183,7 +180,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 	pod.Spec.EphemeralContainers = append(pod.Spec.EphemeralContainers, ec)
 
 	pod, err = k.Clientset.CoreV1().Pods(pod.Namespace).UpdateEphemeralContainers(ctx, pod.Name, pod, metav1.UpdateOptions{})
-	return sshcm, err
+	return err
 }
 
 // RemoveEphemeralContainer remove ephemeral container from specified pod

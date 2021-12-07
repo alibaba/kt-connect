@@ -40,7 +40,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 				namespace: "default",
 				image:     "shadow/shadow",
 				labels: map[string]string{
-					common.KtComponent: "shadow-component",
+					common.KtRole: common.RoleConnectShadow,
 				},
 				debug: true,
 			},
@@ -68,7 +68,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			annotations := make(map[string]string)
 			option := options.DaemonOptions{Namespace: tt.args.namespace, Image: tt.args.image, Debug: tt.args.debug,
 				ConnectOptions: &options.ConnectOptions{ShareShadow: false}}
-			gotPodIP, gotPodName, gotSshcm, _, err := GetOrCreateShadow(context.TODO(), k, tt.args.name, &option, tt.args.labels, annotations, envs)
+			gotPodIP, gotPodName, _, err := GetOrCreateShadow(context.TODO(), k, tt.args.name, &option, tt.args.labels, annotations, envs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -78,9 +78,6 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			}
 			if gotPodName != tt.wantPodName {
 				t.Errorf("Kubernetes.GetOrCreateShadow() gotPodName = %v, want %v", gotPodName, tt.wantPodName)
-			}
-			if gotSshcm == "" {
-				t.Errorf("Kubernetes.GetOrCreateShadow() gotSshcm = %v", gotSshcm)
 			}
 		})
 	}

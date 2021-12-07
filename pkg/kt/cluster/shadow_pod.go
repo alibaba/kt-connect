@@ -3,13 +3,11 @@ package cluster
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
-	"strings"
 )
 
 // GetKtPods fetch all shadow and router pods
@@ -23,15 +21,9 @@ func GetKtPods(ctx context.Context, k KubernetesInterface, namespace string) ([]
 
 // GetOrCreateShadow create shadow
 func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
-	podIP, podName, sshcm string, credential *util.SSHCredential, err error) {
+	string, string, *util.SSHCredential, error) {
 
-	component := labels[common.KtComponent]
-	identifier := strings.ToLower(util.RandomString(4))
-	if options.ConnectOptions.ShareShadow {
-		identifier = "shared"
-	}
-	sshcm = fmt.Sprintf("kt-%s-public-key-%s", component, identifier)
-	privateKeyPath := util.PrivateKeyPath(component, identifier)
+	privateKeyPath := util.PrivateKeyPath(name)
 
 	// extra labels must be applied after origin labels
 	for k, v := range util.String2Map(options.WithLabels) {
@@ -48,25 +40,24 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 		Annotations: annotations,
 	}
 	sshKeyMeta := SSHkeyMeta{
-		SshConfigMapName: sshcm,
+		SshConfigMapName: name,
 		PrivateKeyPath:   privateKeyPath,
 	}
 
 	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
 		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, k, &resourceMeta, &sshKeyMeta)
 		if err2 != nil {
-			err = err2
-			return
+			return "", "", nil, err2
 		}
 		if pod != nil && generator != nil {
-			podIP, podName, credential = shadowResult(pod, generator)
-			return
+			podIP, podName, credential := shadowResult(pod, generator)
+			return podIP, podName, credential, nil
 		}
 	}
 
-	podIP, podName, credential, err = createShadow(ctx, k, &PodMetaAndSpec{&resourceMeta, options.Image, envs},
+	podIP, podName, credential, err := createShadow(ctx, k, &PodMetaAndSpec{&resourceMeta, options.Image, envs},
 		&sshKeyMeta, options)
-	return
+	return podIP, podName, credential, err
 }
 
 func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta, options *options.DaemonOptions) (
@@ -96,7 +87,6 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (*coreV1.Pod, error) {
 	localIPAddress := util.GetOutboundIP()
 	log.Debug().Msgf("Client address %s", localIPAddress)
-	metaAndSpec.Meta.Labels[common.KtRemoteAddress] = localIPAddress
 	metaAndSpec.Meta.Labels[common.KtName] = metaAndSpec.Meta.Name
 
 	err := k.CreateShadowPod(ctx, metaAndSpec, sshcm, options)

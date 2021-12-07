@@ -101,27 +101,26 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 	if err == nil && action.isExpired(lastHeartBeat, options) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
 		resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
-		log.Debug().Msgf("   component %s, config: %s", pod.Labels[common.KtComponent], pod.Annotations[common.KtConfig])
+		log.Debug().Msgf("   role %s, config: %s", pod.Labels[common.KtRole], pod.Annotations[common.KtConfig])
 		config := util.String2Map(pod.Annotations[common.KtConfig])
-		if pod.Labels[common.KtComponent] == common.ComponentExchange {
+		if pod.Labels[common.KtRole] == common.RoleExchangeShadow {
 			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 			app := config["app"]
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.Labels[common.KtComponent] == common.ComponentProvide {
+		} else if pod.Labels[common.KtRole] == common.RoleProvideShadow {
 			if service, ok := config["service"]; ok {
 				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
 			}
-		} else if pod.Labels[common.KtComponent] == common.ComponentMesh {
+		} else if pod.Labels[common.KtRole] == common.RoleMeshShadow {
 			if service, ok := config["service"]; ok {
-				switch pod.Labels[common.KtRole] {
-				case common.RoleShadow:
-					resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
-				case common.RoleRouter:
-					resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
-					resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service + common.OriginServiceSuffix)
-				}
+				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
+			}
+		} else if pod.Labels[common.KtRole] == common.RoleRouter {
+			if service, ok := config["service"]; ok {
+				resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
+				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service + common.OriginServiceSuffix)
 			}
 		}
 		for _, v := range pod.Spec.Volumes {

@@ -78,8 +78,6 @@ type RuntimeOptions struct {
 	Router string
 	// Mesh version of mesh pod
 	Mesh string
-	// SSHCM ssh public key name of config map. format is kt-xxx(component)-public-key-xxx(version)
-	SSHCM string
 	// Origin the origin app name
 	Origin string
 	// Replicas the origin replicas

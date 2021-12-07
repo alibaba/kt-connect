@@ -39,12 +39,11 @@ func (m *MockKubernetesInterface) EXPECT() *MockKubernetesInterfaceMockRecorder 
 }
 
 // AddEphemeralContainer mocks base method.
-func (m *MockKubernetesInterface) AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (string, error) {
+func (m *MockKubernetesInterface) AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddEphemeralContainer", ctx, containerName, podName, options, envs)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // AddEphemeralContainer indicates an expected call of AddEphemeralContainer.

@@ -69,22 +69,20 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 }
 
 // PrivateKeyPath ...
-func PrivateKeyPath(component, identifier string) string {
-	return fmt.Sprintf("%s/%s/"+common.SshPrivateKeyName, KtHome, component, identifier)
+func PrivateKeyPath(name string) string {
+	return fmt.Sprintf("%s/pk/%s%s", KtHome, name, common.PostfixRsaKey)
 }
 
 // CleanRsaKeys ...
 func CleanRsaKeys() {
-	for _, c := range common.AllKtComponents {
-		dir := fmt.Sprintf("%s/%s/", KtHome, c)
-		files, _ := ioutil.ReadDir(dir)
-		for _, f := range files {
-			if strings.HasSuffix(f.Name(), common.PostfixRsaKey) {
-				rsaKey := fmt.Sprintf("%s/%s", dir, f.Name())
-				err := os.Remove(rsaKey)
-				if err != nil {
-					log.Debug().Msgf("Failed to remove rsa key file: %s", rsaKey)
-				}
+	dir := fmt.Sprintf("%s/pk/", KtHome)
+	files, _ := ioutil.ReadDir(dir)
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), common.PostfixRsaKey) {
+			rsaKey := fmt.Sprintf("%s/%s", dir, f.Name())
+			err := os.Remove(rsaKey)
+			if err != nil {
+				log.Debug().Msgf("Failed to remove rsa key file: %s", rsaKey)
 			}
 		}
 	}
