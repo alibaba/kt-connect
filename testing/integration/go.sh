@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NS="kt-integration-test"
-IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.3-beta2"
+IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.3"
 MODE="vpn"
 DOCKER_HOST="ubuntu@192.168.64.2"
 
