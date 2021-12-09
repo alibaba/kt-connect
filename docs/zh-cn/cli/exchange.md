@@ -11,7 +11,9 @@ ktctl --debug --namespace=default exchange tomcat --expose 8080
 ### 常用参数
 
 ```
---expose value  指定要暴露的一个或多个端口，逗号分隔，格式为`port`或`local:remote`，例如：7001,8080:80
+--method           重定向网络请求的方法，可选值为 'scale' (默认) 和 'ephemeral'
+--expose           指定要暴露的一个或多个端口，逗号分隔，格式为`port`或`local:remote`，例如：7001,8080:80
+--recoverWaitTime  （仅用于scale模式）指定退出时等待原Pod启动完成的最长秒数（默认值：120）
 ```
 
 ### 从父命令集成的参数

@@ -174,27 +174,33 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
+			Name:        "method",
+			Usage:       "Exchange method 'scale' or 'ephemeral'(experimental)",
+			Destination: &options.ExchangeOptions.Method,
+			Value:       "scale",
+		},
+		cli.StringFlag{
 			Name:        "expose",
 			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.ExchangeOptions.Expose,
 		},
 		cli.IntFlag{
 			Name:        "recoverWaitTime",
-			Usage:       "seconds to wait for original deployment recover before turn off the shadow pod",
+			Usage:       "(scale method only) seconds to wait for original deployment recover before turn off the shadow pod",
 			Destination: &options.ExchangeOptions.RecoverWaitTime,
 			Value:       120,
-		},
-		cli.StringFlag{
-			Name:        "method",
-			Usage:       "Exchange method 'scale' or 'ephemeral'(experimental)",
-			Destination: &options.ExchangeOptions.Method,
-			Value:       "scale",
 		},
 	}
 }
 
 func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
+		cli.StringFlag{
+			Name:        "method",
+			Value:       "manual",
+			Usage:       "Mesh method 'manual' or 'auto'(beta)",
+			Destination: &options.MeshOptions.Method,
+		},
 		cli.StringFlag{
 			Name:        "expose",
 			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
@@ -206,14 +212,8 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.MeshOptions.VersionMark,
 		},
 		cli.StringFlag{
-			Name:        "method",
-			Value:       "manual",
-			Usage:       "Mesh method 'manual' or 'auto'(beta)",
-			Destination: &options.MeshOptions.Method,
-		},
-		cli.StringFlag{
 			Name:        "routerImage",
-			Usage:       "(auto method only) Customize proxy image",
+			Usage:       "(auto method only) Customize router image",
 			Destination: &options.MeshOptions.RouterImage,
 			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + options.RuntimeOptions.Version,
 		},

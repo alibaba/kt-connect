@@ -165,9 +165,11 @@ kt-connect local v2
 
 ## ** Mesh **
 
-将集群里访问指定服务的部分请求拦截并转发到本地的指定端口。KtConnect不会自动创建相应的路由规则，因此默认情况下访问该服务的流量将随机访问集群服务和本地实例。
+将集群里访问指定服务的部分请求拦截并转发到本地的指定端口。
 
-您可以自行使用任何Service Mesh工具（譬如Istio）创建基于`version`标签的路由规则，将特定流量转发到本地。
+在默认的`manual`模式下，KtConnect不会自动创建相应的路由规则，Mesh命令运行后，访问该服务的流量将随机访问集群服务和本地实例。您可以自行使用任何服务网格组件（譬如Istio）创建基于`kt-version`标签的路由规则，将特定流量转发到本地。
+
+从`0.2.3`版本开始新增了`auto`模式，该模式不再需要额外的服务网格组件，能够直接实现HTTP请求的自动按需路由。
 
 ```text
 ┌──────────┐     ┌──────────┐    ┌──────────┐
@@ -179,29 +181,34 @@ kt-connect local v2
                  └──────────┘
 ```
 
-为了便于验证结果，先重置一下集群里Tomcat服务的首页内容。然后通过`ktctl mesh`命令创建代理Pod：
+以`auto`模式为例。为了便于验证结果，先重置一下集群里Tomcat服务的首页内容。然后通过`ktctl mesh`命令创建代理Pod：
 
 ```bash
 $ kubectl exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 
-$ ktctl mesh tomcat --expose 8080  
+$ ktctl mesh tomcat --expose 8080 --method auto
 00:00AM INF KtConnect start at <PID>
 ... ...
+--------------------------------------------------------------
+ Now you can access your service by header 'KT-VERSION: feo3x' 
+--------------------------------------------------------------
 ```
 
-在没有任何额外规则的情况下，访问集群里的`tomcat`服务，流量将随机被路由到本地或集群的服务实例：
+在命令日志的末尾，输出了一个特定的Header值。此时，直接访问集群里的`tomcat`服务，流量将正常进入集群的服务实例：
 
 ```bash
 $ curl http://tomcat:8080
 kt-connect local v2
+```
 
-$ curl http://tomcat:8080
+若请求包含Mesh命令输出的Header，则流量将自动被本地的服务实例接收。
+
+```bash
+$ curl -H 'KT-VERSION: feo3x' http://tomcat:8080
 kt-connect demo v1
 ```
 
-`ktctl mesh`与`ktctl exchange`命令的最大区别在于，后者会完全替换原有的应用实例，而前者在创建代理Pod后，依然会保留原服务的Pod，代理Pod会动态生成`version`标签，以便用于可以通过Mesh流量规则将特定的流量转发到本地，同时保证测试环境正常链路始终可用。
-
-> 查看更多：[Mesh最佳实践](/zh-cn/guide/mesh)
+`ktctl exchange`与`ktctl mesh`命令的最大区别在于，前者会将原应用实例流量全部替换为由本地服务接收，而后者仅将包含指定Header的流量导流到本地，同时保证测试环境正常链路始终可用。
 
 #### ** Provide **
 

@@ -11,8 +11,10 @@ ktctl --debug --namespace=default mesh tomcat --expose 8080
 ### 常用参数
 
 ```
---expose value         指定要暴露的一个或多个端口，逗号分隔，格式为`port`或`local:remote`，例如：7001,8080:80
---versionMark value    指定Mesh版本服务的版本标签值
+--method       实现Mesh的方式，可选值为 'manual' (默认) 和 'auto'
+--expose       指定要暴露的一个或多个端口，逗号分隔，格式为`port`或`local:remote`，例如：7001,8080:80
+--versionMark  指定Mesh版本服务的版本标签值，格式可以是 '标签值' 或 '标签名:标签值'
+--routerImage  （仅用于auto模式）指定使用的自动路由服务镜像地址
 ```
 
 ### 从父命令集成的参数
