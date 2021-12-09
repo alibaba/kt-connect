@@ -178,7 +178,7 @@ func (s *server) getResolveServer() (address string, err error) {
 func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
 	address, err := s.getResolveServer()
 	if err != nil {
-		log.Error().Err(err).Msgf("Fail to fetch upstream dns")
+		log.Error().Err(err).Msgf("Failed to fetch upstream dns")
 		return
 	}
 	log.Info().Msgf("Resolving domain %s via upstream %s", domain, address)
@@ -191,9 +191,9 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 
 	if res == nil {
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to resolve")
+			log.Error().Err(err).Msgf("Failed to resolve")
 		} else {
-			log.Error().Msgf("Fail to resolve")
+			log.Error().Msgf("Failed to resolve")
 		}
 		return
 	}

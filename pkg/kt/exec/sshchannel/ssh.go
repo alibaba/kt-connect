@@ -45,14 +45,14 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script string) (result string, err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	if err != nil {
-		log.Error().Err(err).Msgf("Fail to create ssh tunnel")
+		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
 		return "", err
 	}
 	defer conn.Close()
 
 	session, err := conn.NewSession()
 	if err != nil {
-		log.Error().Err(err).Msgf("Fail to create ssh session")
+		log.Error().Err(err).Msgf("Failed to create ssh session")
 		return "", err
 	}
 	defer session.Close()
@@ -72,14 +72,14 @@ func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script stri
 func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
 	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
 	if err != nil {
-		log.Error().Err(err).Msgf("Fail to create ssh tunnel")
+		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
 		return err
 	}
 
 	// Listen on remote server port of shadow pod, via ssh connection
 	listener, err := conn.Listen("tcp", remoteEndpoint)
 	if err != nil {
-		log.Error().Err(err).Msgf("Fail to listen remote endpoint")
+		log.Error().Err(err).Msgf("Failed to listen remote endpoint")
 		return err
 	}
 

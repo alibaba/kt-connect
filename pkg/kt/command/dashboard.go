@@ -64,7 +64,7 @@ func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.Daemo
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
 	err = exec.RunAndWait(command, "apply kt dashboard")
 	if err != nil {
-		log.Error().Err(err).Msgf("Fail to apply dashboard, please check the log")
+		log.Error().Err(err).Msgf("Failed to apply dashboard, please check the log")
 		return
 	}
 	return

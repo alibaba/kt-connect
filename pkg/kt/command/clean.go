@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"io/ioutil"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"os"
 	"strconv"
@@ -22,12 +23,15 @@ import (
 )
 
 type ResourceToClean struct {
-	PodsToDelete       []string
-	ServicesToDelete   []string
-	ConfigMapsToDelete []string
-	DeploymentsToScale map[string]int32
-	ServicesToRecover  []string
+	PodsToDelete        []string
+	ServicesToDelete    []string
+	ConfigMapsToDelete  []string
+	DeploymentsToScale  map[string]int32
+	DeploymentsToUnlock []string
+	ServicesToRecover   []string
 }
+
+const SecondsOf10Mins = 10 * 60
 
 // NewCleanCommand return new connect command
 func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
@@ -52,15 +56,27 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	action.cleanPidFiles()
 	ctx := context.Background()
 
-	kubernetes, pods, err := action.getShadowAndRouterPods(ctx, cli, options)
+	kubernetes, err := cli.Kubernetes()
+	if err != nil {
+		return err
+	}
+	pods, deployments, err := cluster.GetKtResources(ctx, kubernetes, options.Namespace)
 	if err != nil {
 		return err
 	}
 	log.Debug().Msgf("Found %d kt pods", len(pods))
-	resourceToClean := ResourceToClean{make([]string, 0), make([]string, 0), make([]string, 0), make(map[string]int32), make([]string, 0)}
+	resourceToClean := ResourceToClean{
+		PodsToDelete: make([]string, 0),
+		ServicesToDelete: make([]string, 0),
+		ConfigMapsToDelete: make([]string, 0),
+		DeploymentsToScale: make(map[string]int32),
+		DeploymentsToUnlock: make([]string, 0),
+		ServicesToRecover: make([]string, 0),
+	}
 	for _, pod := range pods {
 		action.analysisExpiredPods(pod, options, &resourceToClean)
 	}
+	action.analysisLockedDeployment(deployments, &resourceToClean)
 	if len(resourceToClean.PodsToDelete) > 0 {
 		if options.CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
@@ -70,8 +86,6 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	} else {
 		log.Info().Msg("No unavailing kt pod found (^.^)YYa!!")
 	}
-
-	// TODO: unlock mesh deployments
 
 	if !options.CleanOptions.DryRun {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
@@ -133,33 +147,53 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 	}
 }
 
+func (action *Action) analysisLockedDeployment(apps []appV1.Deployment, resourceToClean *ResourceToClean) {
+	for _, app := range apps {
+		if lock, ok := app.Annotations[common.KtLock]; ok {
+			lockTime, err := strconv.ParseInt(lock, 10, 64)
+			if err == nil && time.Now().Unix() - lockTime > SecondsOf10Mins {
+				resourceToClean.DeploymentsToUnlock = append(resourceToClean.DeploymentsToUnlock, app.Name)
+			}
+		}
+	}
+}
+
 func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cluster.KubernetesInterface, namespace string) {
 	log.Info().Msgf("Deleting %d unavailing kt pods", len(r.PodsToDelete))
 	for _, name := range r.PodsToDelete {
 		err := k.RemovePod(ctx, name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to delete pods %s", name)
+			log.Error().Err(err).Msgf("Failed to delete pods %s", name)
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing servicse", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
 		err := k.RemoveService(ctx, name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to delete service %s", name)
+			log.Error().Err(err).Msgf("Failed to delete service %s", name)
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
 		err := k.RemoveConfigMap(ctx, name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to delete config map %s", name)
+			log.Error().Err(err).Msgf("Failed to delete config map %s", name)
 		}
 	}
-	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
+	log.Info().Msgf("Recovering %d scaled and locked deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		err := k.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
-			log.Error().Err(err).Msgf("Fail to scale deployment %s to %d", name, replica)
+			log.Error().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
+		}
+	}
+	for _, name := range r.DeploymentsToUnlock {
+		if app, err := k.GetDeployment(ctx, name, namespace); err == nil {
+			delete(app.Annotations, common.KtLock)
+			_, err = k.UpdateDeployment(ctx, app)
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to lock deployment %s", name)
+			}
 		}
 	}
 	for _, name := range r.ServicesToRecover {
@@ -202,17 +236,4 @@ func (action *Action) printResourceToClean(r ResourceToClean) {
 
 func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOptions) bool {
 	return time.Now().Unix()-lastHeartBeat > options.CleanOptions.ThresholdInMinus*60
-}
-
-func (action *Action) getShadowAndRouterPods(ctx context.Context, cli kt.CliInterface, options *options.DaemonOptions) (
-	cluster.KubernetesInterface, []coreV1.Pod, error) {
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return nil, nil, err
-	}
-	pods, err := cluster.GetKtPods(ctx, kubernetes, options.Namespace)
-	if err != nil {
-		return nil, nil, err
-	}
-	return kubernetes, pods, nil
 }

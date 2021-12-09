@@ -191,6 +191,21 @@ func (mr *MockKubernetesInterfaceMockRecorder) GetDeployment(ctx, name, namespac
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeployment", reflect.TypeOf((*MockKubernetesInterface)(nil).GetDeployment), ctx, name, namespace)
 }
 
+// GetDeploymentsByLabel mocks base method.
+func (m *MockKubernetesInterface) GetDeploymentsByLabel(ctx context.Context, labels map[string]string, namespace string) (*v1.DeploymentList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDeploymentsByLabel", ctx, labels, namespace)
+	ret0, _ := ret[0].(*v1.DeploymentList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDeploymentsByLabel indicates an expected call of GetDeploymentsByLabel.
+func (mr *MockKubernetesInterfaceMockRecorder) GetDeploymentsByLabel(ctx, labels, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDeploymentsByLabel", reflect.TypeOf((*MockKubernetesInterface)(nil).GetDeploymentsByLabel), ctx, labels, namespace)
+}
+
 // GetPod mocks base method.
 func (m *MockKubernetesInterface) GetPod(ctx context.Context, name, namespace string) (*v10.Pod, error) {
 	m.ctrl.T.Helper()
@@ -206,19 +221,19 @@ func (mr *MockKubernetesInterfaceMockRecorder) GetPod(ctx, name, namespace inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPod", reflect.TypeOf((*MockKubernetesInterface)(nil).GetPod), ctx, name, namespace)
 }
 
-// GetPods mocks base method.
-func (m *MockKubernetesInterface) GetPods(ctx context.Context, labels map[string]string, namespace string) (*v10.PodList, error) {
+// GetPodsByLabel mocks base method.
+func (m *MockKubernetesInterface) GetPodsByLabel(ctx context.Context, labels map[string]string, namespace string) (*v10.PodList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPods", ctx, labels, namespace)
+	ret := m.ctrl.Call(m, "GetPodsByLabel", ctx, labels, namespace)
 	ret0, _ := ret[0].(*v10.PodList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// GetPods indicates an expected call of GetPods.
-func (mr *MockKubernetesInterfaceMockRecorder) GetPods(ctx, labels, namespace interface{}) *gomock.Call {
+// GetPodsByLabel indicates an expected call of GetPodsByLabel.
+func (mr *MockKubernetesInterfaceMockRecorder) GetPodsByLabel(ctx, labels, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPods", reflect.TypeOf((*MockKubernetesInterface)(nil).GetPods), ctx, labels, namespace)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsByLabel", reflect.TypeOf((*MockKubernetesInterface)(nil).GetPodsByLabel), ctx, labels, namespace)
 }
 
 // GetService mocks base method.

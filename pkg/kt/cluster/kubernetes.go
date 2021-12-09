@@ -123,13 +123,20 @@ func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace s
 	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
+// GetDeploymentsByLabel get deployments by label
+func (k *Kubernetes) GetDeploymentsByLabel(ctx context.Context, labels map[string]string, namespace string) (pods *appV1.DeploymentList, err error) {
+	return k.Clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+	})
+}
+
 // GetPod ...
 func (k *Kubernetes) GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error) {
 	return k.Clientset.CoreV1().Pods(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-// GetPods get pods by label
-func (k *Kubernetes) GetPods(ctx context.Context, labels map[string]string, namespace string) (*coreV1.PodList, error) {
+// GetPodsByLabel get pods by label
+func (k *Kubernetes) GetPodsByLabel(ctx context.Context, labels map[string]string, namespace string) (*coreV1.PodList, error) {
 	return k.Clientset.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
 	})

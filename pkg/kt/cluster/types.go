@@ -21,7 +21,7 @@ type KubernetesInterface interface {
 	CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error
 	CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
-	GetPods(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
+	GetPodsByLabel(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.PodList, err error)
 	UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Pod, error)
 	WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error)
 	IncreaseRef(ctx context.Context, name ,namespace string) error
@@ -32,6 +32,7 @@ type KubernetesInterface interface {
 	RemovePod(ctx context.Context, name, namespace string) (err error)
 
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
+	GetDeploymentsByLabel(ctx context.Context, labels map[string]string, namespace string) (pods *appV1.DeploymentList, err error)
 	UpdateDeployment(ctx context.Context, deployment *appV1.Deployment) (*appV1.Deployment, error)
 	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
 

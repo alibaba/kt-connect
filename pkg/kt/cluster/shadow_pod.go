@@ -7,16 +7,21 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 )
 
-// GetKtPods fetch all shadow and router pods
-func GetKtPods(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, error) {
-	if pods, err := k.GetPods(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace); err != nil {
-		return nil, err
-	} else {
-		return pods.Items, nil
+// GetKtResources fetch all kt pods and deployments
+func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, []appV1.Deployment, error) {
+	pods, err := k.GetPodsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	if err != nil {
+		return nil, nil, err
 	}
+	deployments, err := k.GetDeploymentsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	if err != nil {
+		return nil, nil, err
+	}
+	return pods.Items, deployments.Items, nil
 }
 
 // GetOrCreateShadow create shadow
@@ -122,7 +127,7 @@ func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface,
 }
 
 func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, generator *util.SSHGenerator) (pod *coreV1.Pod, sshGenerator *util.SSHGenerator, err error) {
-	podList, err := k.GetPods(ctx, resourceMeta.Labels, resourceMeta.Namespace)
+	podList, err := k.GetPodsByLabel(ctx, resourceMeta.Labels, resourceMeta.Namespace)
 	if err != nil {
 		return
 	}

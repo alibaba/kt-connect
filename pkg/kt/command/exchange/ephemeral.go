@@ -88,7 +88,7 @@ func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serv
 	if err != nil {
 		return nil, err
 	}
-	pods, err := k8s.GetPods(ctx, svc.Spec.Selector, namespace)
+	pods, err := k8s.GetPodsByLabel(ctx, svc.Spec.Selector, namespace)
 	if err != nil {
 		return nil, err
 	}
