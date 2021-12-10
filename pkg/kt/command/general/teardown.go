@@ -206,39 +206,36 @@ func cleanService(ctx context.Context, opts *options.DaemonOptions, k cluster.Ku
 func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
 	var err error
 	if opts.RuntimeOptions.Shadow != "" {
-		if opts.ConnectOptions != nil {
-			shouldDelWithShared := false
-			if opts.ConnectOptions.ShareShadow {
-				shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
+		shouldDelWithShared := false
+		if opts.ConnectOptions.ShareShadow {
+			shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
+			if err != nil {
+				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opts.RuntimeOptions.Shadow)
+			}
+		}
+		if shouldDelWithShared || !opts.ConnectOptions.ShareShadow {
+			for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
+				log.Info().Msgf("Cleaning configmap %s", sshcm)
+				err = k.RemoveConfigMap(ctx, sshcm, opts.Namespace)
 				if err != nil {
-					log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opts.RuntimeOptions.Shadow)
+					log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
 				}
 			}
-			if shouldDelWithShared || !opts.ConnectOptions.ShareShadow {
-				for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
-					log.Info().Msgf("Cleaning configmap %s", sshcm)
-					err = k.RemoveConfigMap(ctx, sshcm, opts.Namespace)
-					if err != nil {
-						log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
-					}
+		}
+		if opts.ExchangeOptions != nil && opts.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
+			for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
+				log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
+				err = k.RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opts.Namespace)
+				if err != nil {
+					log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
 				}
 			}
 		} else {
-			if opts.ExchangeOptions != nil && opts.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
-				for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
-					log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
-					err = k.RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opts.Namespace)
-					if err != nil {
-						log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
-					}
-				}
-			} else {
-				for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
-					log.Info().Msgf("Cleaning shadow pod %s", shadow)
-					err = k.RemovePod(ctx, shadow, opts.Namespace)
-					if err != nil {
-						log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
-					}
+			for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
+				log.Info().Msgf("Cleaning shadow pod %s", shadow)
+				err = k.RemovePod(ctx, shadow, opts.Namespace)
+				if err != nil {
+					log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
 				}
 			}
 		}
