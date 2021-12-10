@@ -198,14 +198,14 @@ $ ktctl mesh tomcat --expose 8080 --method auto
 
 ```bash
 $ curl http://tomcat:8080
-kt-connect local v2
+kt-connect demo v1
 ```
 
 若请求包含Mesh命令输出的Header，则流量将自动被本地的服务实例接收。
 
 ```bash
 $ curl -H 'KT-VERSION: feo3x' http://tomcat:8080
-kt-connect demo v1
+kt-connect local v2
 ```
 
 `ktctl exchange`与`ktctl mesh`命令的最大区别在于，前者会将原应用实例流量全部替换为由本地服务接收，而后者仅将包含指定Header的流量导流到本地，同时保证测试环境正常链路始终可用。
