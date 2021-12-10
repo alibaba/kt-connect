@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 NS="kt-integration-test"
-IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.3"
+SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.3"
+ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v0.2.3"
 MODE="vpn"
 DOCKER_HOST="ubuntu@192.168.64.2"
 
@@ -115,7 +116,8 @@ function prepare_cluster() {
   kubectl -n ${NS} create deployment tomcat --image=tomcat:9 --port=8080
   kubectl -n ${NS} expose deployment tomcat --port=8080 --target-port=8080
   wait_for_pod tomcat 1
-  kubectl -n ${NS} exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir -p webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
+  kubectl -n ${NS} exec deployment/tomcat -c tomcat -- /bin/bash \
+    -c 'mkdir -p webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 
   podIp=`kubectl -n ${NS} get pod --selector app=tomcat -o jsonpath='{.items[0].status.podIP}'`
   log "tomcat pod-ip: ${podIp}"
@@ -128,9 +130,10 @@ function prepare_cluster() {
 function test_ktctl_connect() {
   # Test connect
   if [ "${DOCKER_HOST}" == "" ]; then
-    sudo ktctl -d -n ${NS} -i ${IMAGE} -f connect --method ${MODE} >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --method ${MODE} >/tmp/kt-it-connect.log 2>&1 &
   else
-    sudo ktctl -d -n ${NS} -i ${IMAGE} -f connect --method ${MODE} --excludeIps ${DOCKER_HOST#*@} >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --method ${MODE} --excludeIps ${DOCKER_HOST#*@} \
+      >/tmp/kt-it-connect.log 2>&1 &
   fi
   wait_for_pod kt-connect 1
   check_job connect
@@ -168,7 +171,7 @@ function prepare_local() {
 
 function test_ktctl_exchange() {
   # Test exchange
-  ktctl -d -n ${NS} -i ${IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
   wait_for_pod tomcat-kt-exchange 1
   check_job exchange
   check_pid_file exchange
@@ -179,7 +182,8 @@ function test_ktctl_exchange() {
 
 function test_ktctl_mesh() {
   # Test mesh
-  ktctl -d -n ${NS} -i ${IMAGE} -f mesh tomcat --method auto --expose 8080 --versionMark ci >/tmp/kt-it-mesh.log 2>&1 &
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f mesh tomcat --method auto --expose 8080 --versionMark ci \
+    --routerImage ${ROUTER_IMAGE} >/tmp/kt-it-mesh.log 2>&1 &
   wait_for_pod tomcat-kt-mesh 1
   check_job mesh
   check_pid_file mesh
@@ -191,7 +195,7 @@ function test_ktctl_mesh() {
 
 function test_ktctl_provide() {
   # Test provide
-  ktctl -d -n ${NS} -i ${IMAGE} -f provide tomcat-preview --expose 8080 >/tmp/kt-it-provide.log 2>&1 &
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f provide tomcat-preview --expose 8080 >/tmp/kt-it-provide.log 2>&1 &
   wait_for_pod tomcat-preview-kt 1
   check_job provide
   check_pid_file provide
