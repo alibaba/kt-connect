@@ -86,7 +86,6 @@ func runCmd(cmdCtx *CMDContext) error {
 
 	err = cmd.Start()
 	if err != nil {
-		cmdCtx.Stop <- struct{}{}
 		return err
 	}
 
