@@ -118,9 +118,13 @@ func unlockDeployment(ctx context.Context, k cluster.KubernetesInterface, deploy
 		log.Warn().Err(err).Msgf("Failed to get deployment %s for unlock", app.Name)
 		return
 	}
-	delete(app.Annotations, common.KtLock)
-	if _, err := k.UpdateDeployment(ctx, app); err != nil {
-		log.Warn().Err(err).Msgf("Failed to unlock deployment %s", app.Name)
+	if _, ok := app.Annotations[common.KtLock]; ok {
+		delete(app.Annotations, common.KtLock)
+		if _, err2 := k.UpdateDeployment(ctx, app); err2 != nil {
+			log.Warn().Err(err2).Msgf("Failed to unlock deployment %s", app.Name)
+		}
+	} else {
+		log.Info().Msgf("Deployment %s doesn't have lock", app.Name)
 	}
 }
 
