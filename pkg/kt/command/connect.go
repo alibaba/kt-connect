@@ -7,7 +7,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
@@ -114,8 +113,8 @@ func connectToCluster(ctx context.Context, cli kt.CliInterface, options *options
 }
 
 func checkSshuttleInstalled(cli sshuttle.CliInterface) {
-	if !exec.CanRun(cli.Version()) {
-		err := exec.RunAndWait(cli.Install(), "install_sshuttle")
+	if !util.CanRun(cli.Version()) {
+		err := util.RunAndWait(cli.Install(), "install_sshuttle")
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed find or install sshuttle")
 		}

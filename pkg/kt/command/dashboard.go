@@ -3,8 +3,8 @@ package command
 import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/skratchdot/open-golang/open"
@@ -62,7 +62,7 @@ func NewDashboardCommand(ktCli kt.CliInterface, options *options.DaemonOptions, 
 func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) (err error) {
 	command := cli.Exec().Kubectl().ApplyDashboardToCluster()
 	log.Info().Msg("Install/Upgrade Dashboard to cluster")
-	err = exec.RunAndWait(command, "apply kt dashboard")
+	err = util.RunAndWait(command, "apply kt dashboard")
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to apply dashboard, please check the log")
 		return
@@ -75,7 +75,7 @@ func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.Daem
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 	command := ktCli.Exec().Kubectl().PortForwardDashboardToLocal(options.DashboardOptions.Port)
-	err = exec.BackgroundRun(command, "forward dashboard to localhost")
+	err = util.BackgroundRun(command, "forward dashboard to localhost")
 	if err != nil {
 		return
 	}

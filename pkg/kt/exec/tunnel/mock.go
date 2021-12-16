@@ -5,7 +5,6 @@
 package tunnel
 
 import (
-	exec "os/exec"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -35,10 +34,10 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 }
 
 // AddDevice mocks base method.
-func (m *MockCliInterface) AddDevice() *exec.Cmd {
+func (m *MockCliInterface) AddDevice() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddDevice")
-	ret0, _ := ret[0].(*exec.Cmd)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -49,10 +48,10 @@ func (mr *MockCliInterfaceMockRecorder) AddDevice() *gomock.Call {
 }
 
 // AddRoute mocks base method.
-func (m *MockCliInterface) AddRoute(cidr string) *exec.Cmd {
+func (m *MockCliInterface) AddRoute(cidr string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddRoute", cidr)
-	ret0, _ := ret[0].(*exec.Cmd)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -63,10 +62,10 @@ func (mr *MockCliInterfaceMockRecorder) AddRoute(cidr interface{}) *gomock.Call 
 }
 
 // RemoveDevice mocks base method.
-func (m *MockCliInterface) RemoveDevice() *exec.Cmd {
+func (m *MockCliInterface) RemoveDevice() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveDevice")
-	ret0, _ := ret[0].(*exec.Cmd)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -77,10 +76,10 @@ func (mr *MockCliInterfaceMockRecorder) RemoveDevice() *gomock.Call {
 }
 
 // SetDeviceIP mocks base method.
-func (m *MockCliInterface) SetDeviceIP() *exec.Cmd {
+func (m *MockCliInterface) SetDeviceIP() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetDeviceIP")
-	ret0, _ := ret[0].(*exec.Cmd)
+	ret0, _ := ret[0].(error)
 	return ret0
 }
 
@@ -88,18 +87,4 @@ func (m *MockCliInterface) SetDeviceIP() *exec.Cmd {
 func (mr *MockCliInterfaceMockRecorder) SetDeviceIP() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeviceIP", reflect.TypeOf((*MockCliInterface)(nil).SetDeviceIP))
-}
-
-// SetDeviceUp mocks base method.
-func (m *MockCliInterface) SetDeviceUp() *exec.Cmd {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetDeviceUp")
-	ret0, _ := ret[0].(*exec.Cmd)
-	return ret0
-}
-
-// SetDeviceUp indicates an expected call of SetDeviceUp.
-func (mr *MockCliInterfaceMockRecorder) SetDeviceUp() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDeviceUp", reflect.TypeOf((*MockCliInterface)(nil).SetDeviceUp))
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -52,7 +51,7 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 func removeTunDevice(cli kt.CliInterface, opts *options.DaemonOptions) {
 	if opts.ConnectOptions.Method == common.ConnectMethodTun {
 		log.Debug().Msg("Removing tun device ...")
-		err := exec.RunAndWait(cli.Exec().Tunnel().RemoveDevice(), "del_device")
+		err := cli.Exec().Tunnel().RemoveDevice()
 		if err != nil {
 			log.Error().Err(err).Msgf("Fails to delete tun device")
 		}

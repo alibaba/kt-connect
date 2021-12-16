@@ -46,7 +46,7 @@ func portForwardViaKubectl(kubectlCli kubectl.CliInterface, options *options.Dae
 		return fmt.Errorf("127.0.0.1:%d already in use", localPort)
 	}
 
-	err := exec.BackgroundRun(command, fmt.Sprintf("forward %d to localhost:%d", remotePort, localPort))
+	err := util.BackgroundRun(command, fmt.Sprintf("forward %d to localhost:%d", remotePort, localPort))
 	if err == nil {
 		if !util.WaitPortBeReady(options.WaitTime, localPort) {
 			err = errors.New("connect to port-forward failed")
@@ -93,7 +93,7 @@ func showSetupSocksMessage(protocol string, connectOptions *options.ConnectOptio
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, opt *options.ConnectOptions, req *sshuttle.SSHVPNRequest) (err error) {
-	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+	err = util.BackgroundRunWithCtx(&util.CMDContext{
 		Ctx:  rootCtx,
 		Cmd:  cli.Sshuttle().Connect(opt, req),
 		Name: "vpn(sshuttle)",
@@ -107,32 +107,21 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	options *options.DaemonOptions, podIP string, cidrs []string, stop chan struct{}) (err error) {
 
 	// 1. Create tun device.
-	err = exec.RunAndWait(cli.Tunnel().AddDevice(), "add_device")
+	err = cli.Tunnel().AddDevice()
 	if err != nil {
 		return err
-	} else {
-		log.Info().Msgf("Add tun device successful")
 	}
+	log.Info().Msgf("Add tun device successful")
 
 	// 2. Setup device ip
-	err = exec.RunAndWait(cli.Tunnel().SetDeviceIP(), "set_device_ip")
-	if err != nil {
-		// clean up
-		return err
-	} else {
-		log.Info().Msgf("Set tun device ip successful")
-	}
-
-	// 3. Set device up.
-	err = exec.RunAndWait(cli.Tunnel().SetDeviceUp(), "set_device_up")
+	err = cli.Tunnel().SetDeviceIP()
 	if err != nil {
 		return err
-	} else {
-		log.Info().Msgf("Set tun device up successful")
 	}
+	log.Info().Msgf("Set tun device ip successful")
 
-	// 4. Create ssh tunnel.
-	err = exec.BackgroundRunWithCtx(&exec.CMDContext{
+	// 3. Create ssh tunnel.
+	err = util.BackgroundRunWithCtx(&util.CMDContext{
 		Ctx:  rootCtx,
 		Cmd:  cli.SSH().TunnelToRemote(0, credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort),
 		Name: "ssh_tun",
@@ -145,15 +134,13 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 		log.Info().Msgf("Create ssh tun successful")
 	}
 
-	// 5. Add route to kubernetes cluster.
+	// 4. Add route to kubernetes cluster.
 	for i := range cidrs {
-		err = exec.RunAndWait(cli.Tunnel().AddRoute(cidrs[i]), "add_route")
+		err = cli.Tunnel().AddRoute(cidrs[i])
 		if err != nil {
-			// clean up
 			return err
-		} else {
-			log.Info().Msgf("Add route %s successful", cidrs[i])
 		}
+		log.Info().Msgf("Add route %s successful", cidrs[i])
 	}
 
 	if !options.ConnectOptions.DisableDNS {

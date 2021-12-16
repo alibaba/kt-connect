@@ -1,14 +1,11 @@
 package tunnel
 
-import "os/exec"
-
 // CliInterface ...
 type CliInterface interface {
-	AddRoute(cidr string) *exec.Cmd
-	AddDevice() *exec.Cmd
-	RemoveDevice() *exec.Cmd
-	SetDeviceIP() *exec.Cmd
-	SetDeviceUp() *exec.Cmd
+	AddDevice() error
+	AddRoute(cidr string) error
+	SetDeviceIP() error
+	RemoveDevice() error
 }
 
 // Cli ...
