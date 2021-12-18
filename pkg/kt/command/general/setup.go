@@ -2,6 +2,7 @@ package general
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -102,7 +103,11 @@ func CombineKubeOpts(options *options.DaemonOptions) error {
 		config.CurrentContext = options.KubeContext
 	}
 	if len(options.Namespace) == 0 {
-		options.Namespace = config.Contexts[config.CurrentContext].Namespace
+		if len(config.Contexts[config.CurrentContext].Namespace) > 0 {
+			options.Namespace = config.Contexts[config.CurrentContext].Namespace
+		} else {
+			options.Namespace = common.DefaultNamespace
+		}
 	}
 	kubeconfigGetter := func() clientcmd.KubeconfigGetter {
 		return func() (*clientcmdapi.Config, error) {
