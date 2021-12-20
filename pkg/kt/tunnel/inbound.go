@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"strings"
 	"sync"
 
@@ -12,8 +13,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Inbound mapping local port from cluster
-func (s *Shadow) Inbound(exposePorts, podName string) (int, error) {
+// ForwardPodToLocal mapping local port from cluster
+func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
 	localSSHPort := util.GetRandomSSHPort()
 	if localSSHPort < 0 {
@@ -22,12 +23,12 @@ func (s *Shadow) Inbound(exposePorts, podName string) (int, error) {
 
 	// port forward pod 22 -> local <random port>
 	cli := exec.Cli{}
-	_, _, err := ForwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
+	_, _, err := ForwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), opt, podName, localSSHPort)
 	if err != nil {
 		return -1, err
 	}
 
-	if s.Options.ExchangeOptions.Method != common.ExchangeMethodEphemeral {
+	if opt.ExchangeOptions.Method != common.ExchangeMethodEphemeral {
 		// remote forward pod -> local via ssh
 		var wg sync.WaitGroup
 		ssh := sshchannel.SSHChannel{}
@@ -35,14 +36,14 @@ func (s *Shadow) Inbound(exposePorts, podName string) (int, error) {
 		portPairs := strings.Split(exposePorts, ",")
 		for _, exposePort := range portPairs {
 			localPort, remotePort := util.ParsePortMapping(exposePort)
-			s.ExposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort)
+			ExposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort)
 		}
 		wg.Wait()
 	}
 	return localSSHPort, nil
 }
 
-func (s *Shadow) ExposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remotePort string, localSSHPort int) {
+func ExposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remotePort string, localSSHPort int) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Debug().Msgf("Exposing remote pod:%s to local port localhost:%s", remotePort, localPort)

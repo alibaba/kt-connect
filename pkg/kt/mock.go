@@ -9,7 +9,6 @@ import (
 
 	cluster "github.com/alibaba/kt-connect/pkg/kt/cluster"
 	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
-	tunnel "github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -63,18 +62,4 @@ func (m *MockCliInterface) Kubernetes() (cluster.KubernetesInterface, error) {
 func (mr *MockCliInterfaceMockRecorder) Kubernetes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubernetes", reflect.TypeOf((*MockCliInterface)(nil).Kubernetes))
-}
-
-// Shadow mocks base method.
-func (m *MockCliInterface) Shadow() tunnel.ShadowInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Shadow")
-	ret0, _ := ret[0].(tunnel.ShadowInterface)
-	return ret0
-}
-
-// Shadow indicates an expected call of Shadow.
-func (mr *MockCliInterfaceMockRecorder) Shadow() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shadow", reflect.TypeOf((*MockCliInterface)(nil).Shadow))
 }

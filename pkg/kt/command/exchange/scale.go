@@ -48,8 +48,7 @@ func ByScale(deploymentName string, cli kt.CliInterface, options *options.Daemon
 		return err
 	}
 
-	shadow := tunnel.Create(options)
-	if _, err = shadow.Inbound(options.ExchangeOptions.Expose, podName); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, podName, options); err != nil {
 		return err
 	}
 

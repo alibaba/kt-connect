@@ -41,12 +41,11 @@ func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *opt
 		// record data
 		options.RuntimeOptions.Shadow = util.Append(options.RuntimeOptions.Shadow, pod.Name)
 
-		shadow := tunnel.Create(options)
-		localSSHPort, err2 := shadow.Inbound(options.ExchangeOptions.Expose, pod.Name)
+		localSSHPort, err2 := tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, pod.Name, options)
 		if err2 != nil {
 			return err2
 		}
-		err = exchangeWithEphemeralContainer(shadow, options.ExchangeOptions.Expose, localSSHPort)
+		err = exchangeWithEphemeralContainer(options.ExchangeOptions.Expose, localSSHPort)
 		if err != nil {
 			return err
 		}
@@ -136,7 +135,7 @@ func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterf
 	return false, nil
 }
 
-func exchangeWithEphemeralContainer(shadow tunnel.Shadow, exposePorts string, localSSHPort int) error {
+func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error {
 	ssh := sshchannel.SSHChannel{}
 	// Get all listened ports on remote host
 	listenedPorts, err := getListenedPorts(&ssh, localSSHPort)
@@ -161,7 +160,7 @@ func exchangeWithEphemeralContainer(shadow tunnel.Shadow, exposePorts string, lo
 	for _, exposePort := range portPairs {
 		localPort, remotePort := util.ParsePortMapping(exposePort)
 		var wg sync.WaitGroup
-		shadow.ExposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort)
+		tunnel.ExposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort)
 		wg.Done()
 	}
 

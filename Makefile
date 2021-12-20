@@ -13,7 +13,6 @@ generate-mock:
 	echo "generate mocks"
 	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/kt/cluster/mock.go -package=cluster
 	mockgen -source=pkg/kt/command/types.go -destination=pkg/kt/command/mock.go -package=command
-	mockgen -source=pkg/kt/tunnel/types.go -destination=pkg/kt/connect/mock.go -package=connect
 	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=pkg/kt/exec/kubectl/mock.go -package=kubectl
 	mockgen -source=pkg/kt/exec/portforward/types.go -destination=pkg/kt/exec/portforward/mock.go -package=portforward
 	mockgen -source=pkg/kt/exec/ssh/types.go -destination=pkg/kt/exec/ssh/mock.go -package=ssh

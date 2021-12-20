@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strconv"
@@ -63,7 +64,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options.RuntimeOptions.Service = serviceName
 	options.RuntimeOptions.Shadow = shadowPodName
 
-	if _, err = cli.Shadow().Inbound(strconv.Itoa(options.ProvideOptions.Expose), podName); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(strconv.Itoa(options.ProvideOptions.Expose), podName, options); err != nil {
 		return err
 	}
 

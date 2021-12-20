@@ -25,8 +25,7 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	// record context data
 	options.RuntimeOptions.Shadow = shadowPodName
 
-	shadow := tunnel.Create(options)
-	if _, err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(options.MeshOptions.Expose, podName, options); err != nil {
 		return err
 	}
 	return nil
