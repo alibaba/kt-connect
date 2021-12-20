@@ -57,9 +57,9 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 
 	method := options.ExchangeOptions.Method
 	if method == common.ExchangeMethodScale {
-		err = exchange.ExchangeByScale(resourceName, cli, options)
+		err = exchange.ByScale(resourceName, cli, options)
 	} else if method == common.ExchangeMethodEphemeral {
-		err = exchange.ExchangeByEphemeralContainer(resourceName, cli, options)
+		err = exchange.ByEphemeralContainer(resourceName, cli, options)
 	} else {
 		err = fmt.Errorf("invalid exchange method \"%s\"", method)
 	}

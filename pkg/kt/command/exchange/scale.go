@@ -6,15 +6,15 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	"strings"
 )
 
-func ExchangeByScale(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func ByScale(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	kubernetes, err := cli.Kubernetes()
 	if err != nil {
 		return err

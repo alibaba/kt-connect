@@ -22,14 +22,22 @@ func (s *Shadow) Inbound(exposePorts, podName string) (int, error) {
 
 	// port forward pod 22 -> local <random port>
 	cli := exec.Cli{}
-	_, _, err := forwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
+	_, _, err := ForwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), s.Options, podName, localSSHPort)
 	if err != nil {
 		return -1, err
 	}
 
 	if s.Options.ExchangeOptions.Method != common.ExchangeMethodEphemeral {
 		// remote forward pod -> local via ssh
-		s.exposeLocalPorts(exposePorts, localSSHPort)
+		var wg sync.WaitGroup
+		ssh := sshchannel.SSHChannel{}
+		// supports multi port pairs
+		portPairs := strings.Split(exposePorts, ",")
+		for _, exposePort := range portPairs {
+			localPort, remotePort := util.ParsePortMapping(exposePort)
+			s.ExposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort)
+		}
+		wg.Wait()
 	}
 	return localSSHPort, nil
 }
@@ -52,16 +60,4 @@ func (s *Shadow) ExposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, loc
 		}
 		wg.Done()
 	}(wg)
-}
-
-func (s *Shadow) exposeLocalPorts(exposePorts string, localSSHPort int) {
-	var wg sync.WaitGroup
-	ssh := sshchannel.SSHChannel{}
-	// supports multi port pairs
-	portPairs := strings.Split(exposePorts, ",")
-	for _, exposePort := range portPairs {
-		localPort, remotePort := util.ParsePortMapping(exposePort)
-		s.ExposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort)
-	}
-	wg.Wait()
 }

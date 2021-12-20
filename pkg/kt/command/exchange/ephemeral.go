@@ -6,9 +6,9 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-func ExchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23, and it can NOT work with istio.")
 	k8s, err := cli.Kubernetes()
 	if err != nil {

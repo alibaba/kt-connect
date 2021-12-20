@@ -12,7 +12,7 @@ import (
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
-	tunnel "github.com/alibaba/kt-connect/pkg/kt/exec/tun"
+	tun "github.com/alibaba/kt-connect/pkg/kt/exec/tun"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -110,10 +110,10 @@ func (mr *MockCliInterfaceMockRecorder) Sshuttle() *gomock.Call {
 }
 
 // Tunnel mocks base method.
-func (m *MockCliInterface) Tunnel() tunnel.CliInterface {
+func (m *MockCliInterface) Tunnel() tun.CliInterface {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Tunnel")
-	ret0, _ := ret[0].(tunnel.CliInterface)
+	ret0, _ := ret[0].(tun.CliInterface)
 	return ret0
 }
 
