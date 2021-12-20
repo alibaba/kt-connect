@@ -6,7 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -48,7 +48,7 @@ func ExchangeByScale(deploymentName string, cli kt.CliInterface, options *option
 		return err
 	}
 
-	shadow := connect.Create(options)
+	shadow := tunnel.Create(options)
 	if _, err = shadow.Inbound(options.ExchangeOptions.Expose, podName); err != nil {
 		return err
 	}

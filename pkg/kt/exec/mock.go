@@ -12,7 +12,7 @@ import (
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
-	tunnel "github.com/alibaba/kt-connect/pkg/kt/exec/tunnel"
+	tunnel "github.com/alibaba/kt-connect/pkg/kt/exec/tun"
 	gomock "github.com/golang/mock/gomock"
 )
 

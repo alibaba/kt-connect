@@ -1,4 +1,4 @@
-package tunnel
+package tun
 
 // CliInterface ...
 type CliInterface interface {

@@ -8,7 +8,7 @@ import (
 	reflect "reflect"
 
 	cluster "github.com/alibaba/kt-connect/pkg/kt/cluster"
-	connect "github.com/alibaba/kt-connect/pkg/kt/connect"
+	connect "github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	gomock "github.com/golang/mock/gomock"
 )

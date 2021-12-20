@@ -2,16 +2,16 @@ package kt
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
 // CliInterface ...
 type CliInterface interface {
 	Kubernetes() (cluster.KubernetesInterface, error)
-	Shadow() connect.ShadowInterface
+	Shadow() tunnel.ShadowInterface
 	Exec() exec.CliInterface
 }
 
@@ -26,8 +26,8 @@ func (c *Cli) Kubernetes() (cluster.KubernetesInterface, error) {
 }
 
 // Shadow ...
-func (c *Cli) Shadow() connect.ShadowInterface {
-	return &connect.Shadow{
+func (c *Cli) Shadow() tunnel.ShadowInterface {
+	return &tunnel.Shadow{
 		Options: c.Options,
 	}
 }

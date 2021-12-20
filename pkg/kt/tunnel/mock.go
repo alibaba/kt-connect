@@ -2,7 +2,7 @@
 // Source: pkg/kt/connect/types.go
 
 // Package connect is a generated GoMock package.
-package connect
+package tunnel
 
 import (
 	reflect "reflect"

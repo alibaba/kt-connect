@@ -2,7 +2,7 @@
 // Source: pkg/kt/exec/tunnel/types.go
 
 // Package tunnel is a generated GoMock package.
-package tunnel
+package tun
 
 import (
 	reflect "reflect"

@@ -6,7 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -41,7 +41,7 @@ func ExchangeByEphemeralContainer(resourceName string, cli kt.CliInterface, opti
 		// record data
 		options.RuntimeOptions.Shadow = util.Append(options.RuntimeOptions.Shadow, pod.Name)
 
-		shadow := connect.Create(options)
+		shadow := tunnel.Create(options)
 		localSSHPort, err2 := shadow.Inbound(options.ExchangeOptions.Expose, pod.Name)
 		if err2 != nil {
 			return err2
@@ -136,7 +136,7 @@ func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterf
 	return false, nil
 }
 
-func exchangeWithEphemeralContainer(shadow connect.Shadow, exposePorts string, localSSHPort int) error {
+func exchangeWithEphemeralContainer(shadow tunnel.Shadow, exposePorts string, localSSHPort int) error {
 	ssh := sshchannel.SSHChannel{}
 	// Get all listened ports on remote host
 	listenedPorts, err := getListenedPorts(&ssh, localSSHPort)

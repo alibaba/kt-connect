@@ -3,19 +3,16 @@ package command
 import (
 	"errors"
 	"flag"
-	"io/ioutil"
-	"testing"
-
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
-
 	fakeKt "github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
+	"io/ioutil"
 	coreV1 "k8s.io/api/core/v1"
+	"testing"
 )
 
 func Test_runCommand(t *testing.T) {
@@ -67,11 +64,11 @@ func testDaemonOptions(labels string, opt *options.ProvideOptions) *options.Daem
 	return daemonOptions
 }
 
-func getHandlers(t *testing.T) (*fakeKt.MockCliInterface, *cluster.MockKubernetesInterface, *connect.MockShadowInterface) {
+func getHandlers(t *testing.T) (*fakeKt.MockCliInterface, *cluster.MockKubernetesInterface, *tunnel.MockShadowInterface) {
 	ctl := gomock.NewController(t)
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 	kubernetes := cluster.NewMockKubernetesInterface(ctl)
-	shadow := connect.NewMockShadowInterface(ctl)
+	shadow := tunnel.NewMockShadowInterface(ctl)
 
 	fakeKtCli.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
 	fakeKtCli.EXPECT().Shadow().AnyTimes().Return(shadow)

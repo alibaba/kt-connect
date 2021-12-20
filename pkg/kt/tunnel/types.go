@@ -1,4 +1,4 @@
-package connect
+package tunnel
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec"

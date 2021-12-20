@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"regexp"
@@ -25,7 +25,7 @@ func createShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	// record context data
 	options.RuntimeOptions.Shadow = shadowPodName
 
-	shadow := connect.Create(options)
+	shadow := tunnel.Create(options)
 	if _, err = shadow.Inbound(options.MeshOptions.Expose, podName); err != nil {
 		return err
 	}
