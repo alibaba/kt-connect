@@ -333,6 +333,13 @@ func (k *Kubernetes) GetServiceHosts(ctx context.Context, namespace string) (hos
 	return
 }
 
+// GetServicesByLabel get services by label
+func (k *Kubernetes) GetServicesByLabel(ctx context.Context, labels map[string]string, namespace string) (svcs *coreV1.ServiceList, err error) {
+	return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+	})
+}
+
 func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)

@@ -41,6 +41,7 @@ type KubernetesInterface interface {
 	GetService(ctx context.Context, name, namespace string) (*coreV1.Service, error)
 	GetServices(ctx context.Context, matchLabels map[string]string, namespace string) ([]coreV1.Service, error)
 	GetServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
+	GetServicesByLabel(ctx context.Context, labels map[string]string, namespace string) (svcs *coreV1.ServiceList, err error)
 	RemoveService(ctx context.Context, name, namespace string) (err error)
 
 	CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,

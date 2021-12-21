@@ -29,6 +29,7 @@ type ResourceToClean struct {
 	DeploymentsToScale  map[string]int32
 	DeploymentsToUnlock []string
 	ServicesToRecover   []string
+	ServicesToUnlock   []string
 }
 
 const SecondsOf10Mins = 10 * 60
@@ -60,7 +61,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	if err != nil {
 		return err
 	}
-	pods, deployments, err := cluster.GetKtResources(ctx, kubernetes, options.Namespace)
+	pods, deployments, svcs, err := cluster.GetKtResources(ctx, kubernetes, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -72,11 +73,12 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		DeploymentsToScale: make(map[string]int32),
 		DeploymentsToUnlock: make([]string, 0),
 		ServicesToRecover: make([]string, 0),
+		ServicesToUnlock: make([]string, 0),
 	}
 	for _, pod := range pods {
 		action.analysisExpiredPods(pod, options, &resourceToClean)
 	}
-	action.analysisLockedDeployment(deployments, &resourceToClean)
+	action.analysisLocked(deployments, svcs, &resourceToClean)
 	if len(resourceToClean.PodsToDelete) > 0 {
 		if options.CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
@@ -147,12 +149,20 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 	}
 }
 
-func (action *Action) analysisLockedDeployment(apps []appV1.Deployment, resourceToClean *ResourceToClean) {
+func (action *Action) analysisLocked(apps []appV1.Deployment, svcs []coreV1.Service, resourceToClean *ResourceToClean) {
 	for _, app := range apps {
 		if lock, ok := app.Annotations[common.KtLock]; ok {
 			lockTime, err := strconv.ParseInt(lock, 10, 64)
 			if err == nil && time.Now().Unix() - lockTime > SecondsOf10Mins {
 				resourceToClean.DeploymentsToUnlock = append(resourceToClean.DeploymentsToUnlock, app.Name)
+			}
+		}
+	}
+	for _, svc := range svcs {
+		if lock, ok := svc.Annotations[common.KtLock]; ok {
+			lockTime, err := strconv.ParseInt(lock, 10, 64)
+			if err == nil && time.Now().Unix() - lockTime > SecondsOf10Mins {
+				resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 			}
 		}
 	}
@@ -166,13 +176,6 @@ func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cl
 			log.Error().Err(err).Msgf("Failed to delete pods %s", name)
 		}
 	}
-	log.Info().Msgf("Deleting %d unavailing servicse", len(r.ServicesToDelete))
-	for _, name := range r.ServicesToDelete {
-		err := k.RemoveService(ctx, name, namespace)
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to delete service %s", name)
-		}
-	}
 	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
 		err := k.RemoveConfigMap(ctx, name, namespace)
@@ -180,13 +183,14 @@ func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cl
 			log.Error().Err(err).Msgf("Failed to delete config map %s", name)
 		}
 	}
-	log.Info().Msgf("Recovering %d scaled and locked deployments", len(r.DeploymentsToScale))
+	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		err := k.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
 		}
 	}
+	log.Info().Msgf("Recovering %d locked deployments", len(r.DeploymentsToUnlock))
 	for _, name := range r.DeploymentsToUnlock {
 		if app, err := k.GetDeployment(ctx, name, namespace); err == nil {
 			delete(app.Annotations, common.KtLock)
@@ -196,8 +200,26 @@ func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cl
 			}
 		}
 	}
+	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
+	for _, name := range r.ServicesToDelete {
+		err := k.RemoveService(ctx, name, namespace)
+		if err != nil {
+			log.Error().Err(err).Msgf("Failed to delete service %s", name)
+		}
+	}
+	log.Info().Msgf("Recovering %d meshed services", len(r.ServicesToRecover))
 	for _, name := range r.ServicesToRecover {
 		general.RecoverOriginalService(ctx, k, name, namespace)
+	}
+	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
+	for _, name := range r.ServicesToUnlock {
+		if app, err := k.GetService(ctx, name, namespace); err == nil {
+			delete(app.Annotations, common.KtLock)
+			_, err = k.UpdateService(ctx, app)
+			if err != nil {
+				log.Error().Err(err).Msgf("Failed to lock service %s", name)
+			}
+		}
 	}
 	log.Info().Msg("Done")
 }
@@ -216,20 +238,32 @@ func (action *Action) toPid(pidFileName string) int {
 }
 
 func (action *Action) printResourceToClean(r ResourceToClean) {
-	log.Info().Msgf("Found %d unavailing pods:", len(r.PodsToDelete))
+	log.Info().Msgf("Found %d unavailing pods to delete:", len(r.PodsToDelete))
 	for _, name := range r.PodsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Found %d unavailing service:", len(r.ServicesToDelete))
-	for _, name := range r.ServicesToDelete {
+	log.Info().Msgf("Found %d unavailing config maps to delete:", len(r.ConfigMapsToDelete))
+	for _, name := range r.ConfigMapsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
 	log.Info().Msgf("Found %d exchanged deployments to recover:", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		log.Info().Msgf(" * %s -> %d", name, replica)
 	}
+	log.Info().Msgf("Found %d locked deployments to recover:", len(r.DeploymentsToUnlock))
+	for _, name := range r.DeploymentsToUnlock {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Found %d unavailing service to delete:", len(r.ServicesToDelete))
+	for _, name := range r.ServicesToDelete {
+		log.Info().Msgf(" * %s", name)
+	}
 	log.Info().Msgf("Found %d meshed service to recover:", len(r.ServicesToRecover))
 	for _, name := range r.ServicesToRecover {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Found %d locked services to recover:", len(r.ServicesToUnlock))
+	for _, name := range r.ServicesToUnlock {
 		log.Info().Msgf(" * %s", name)
 	}
 }

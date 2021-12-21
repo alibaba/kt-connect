@@ -12,16 +12,20 @@ import (
 )
 
 // GetKtResources fetch all kt pods and deployments
-func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, []appV1.Deployment, error) {
+func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, []appV1.Deployment, []coreV1.Service, error) {
 	pods, err := k.GetPodsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	deployments, err := k.GetDeploymentsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return pods.Items, deployments.Items, nil
+	services, err := k.GetServicesByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return pods.Items, deployments.Items, services.Items, nil
 }
 
 // GetOrCreateShadow create shadow

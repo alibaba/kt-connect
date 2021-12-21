@@ -75,8 +75,8 @@ func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, res
 		} else {
 			return []coreV1.Pod{*pod}, nil
 		}
-	case "service":
 	case "svc":
+	case "service":
 		return getPodsOfService(ctx, k8s, name, namespace)
 	}
 	return nil, fmt.Errorf("invalid resource type: %s", resourceType)
