@@ -16,6 +16,7 @@ import (
 	urfave "github.com/urfave/cli"
 	"os"
 	"strconv"
+	"time"
 )
 
 // NewProvideCommand return new provide command
@@ -64,6 +65,10 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 		general.CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()
-	<-ch
+
+	s := <-ch
+	log.Info().Msgf("Terminal Signal is %s", s)
+	// when process interrupt by signal, wait a while for resource clean up
+	time.Sleep(1 * time.Second)
 	return nil
 }

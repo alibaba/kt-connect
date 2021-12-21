@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
+	"time"
 )
 
 // NewConnectCommand return new connect command
@@ -68,6 +69,8 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
+	// when process interrupt by signal, wait a while for resource clean up
+	time.Sleep(1 * time.Second)
 	return nil
 }
 

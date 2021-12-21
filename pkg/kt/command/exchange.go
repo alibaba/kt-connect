@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
+	"time"
 )
 
 // NewExchangeCommand return new exchange command
@@ -76,5 +77,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
+	// when process interrupt by signal, wait a while for resource clean up
+	time.Sleep(1 * time.Second)
 	return nil
 }

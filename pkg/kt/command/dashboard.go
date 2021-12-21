@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 // NewDashboardCommand dashboard command
@@ -83,5 +84,7 @@ func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.Daem
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
-	return
+	// when process interrupt by signal, wait a while for resource clean up
+	time.Sleep(1 * time.Second)
+	return nil
 }

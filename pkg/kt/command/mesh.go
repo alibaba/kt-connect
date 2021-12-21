@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
+	"time"
 )
 
 // NewMeshCommand return new mesh command
@@ -84,7 +85,8 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
-
+	// when process interrupt by signal, wait a while for resource clean up
+	time.Sleep(1 * time.Second)
 	return nil
 }
 
