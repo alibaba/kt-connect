@@ -3,8 +3,10 @@ package sshchannel
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/armon/go-socks5"
 	"github.com/rs/zerolog/log"
@@ -16,8 +18,8 @@ import (
 type SSHChannel struct{}
 
 // StartSocks5Proxy start socks5 proxy
-func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) (err error) {
-	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
+func (c *SSHChannel) StartSocks5Proxy(privateKey string, sshAddress, socks5Address string) (err error) {
+	conn, err := connection(privateKey, sshAddress)
 	if err != nil {
 		return err
 	}
@@ -42,8 +44,8 @@ func (c *SSHChannel) StartSocks5Proxy(certificate *Certificate, sshAddress, sock
 }
 
 // RunScript run the script on remote host.
-func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script string) (result string, err error) {
-	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
+func (c *SSHChannel) RunScript(privateKey string, sshAddress, script string) (result string, err error) {
+	conn, err := connection(privateKey, sshAddress)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
 		return "", err
@@ -69,8 +71,8 @@ func (c *SSHChannel) RunScript(certificate *Certificate, sshAddress, script stri
 }
 
 // ForwardRemoteToLocal forward remote request to local
-func (c *SSHChannel) ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
-	conn, err := connection(certificate.Username, certificate.Password, sshAddress)
+func (c *SSHChannel) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
+	conn, err := connection(privateKey, sshAddress)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
 		return err
@@ -110,12 +112,21 @@ func handleRequest(listener net.Listener, localEndpoint string) {
 	}
 }
 
-func connection(username string, password string, address string) (*ssh.Client, error) {
+func connection(privateKey string, address string) (*ssh.Client, error) {
+	key, err := ioutil.ReadFile(privateKey)
+	if err != nil {
+		return nil, err
+	}
+	signer, err := ssh.ParsePrivateKey(key)
+	if err != nil {
+		return nil, err
+	}
 	config := &ssh.ClientConfig{
-		User:            username,
+		User:            "root",
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         30 * time.Second,
 		Auth: []ssh.AuthMethod{
-			ssh.Password(password),
+			ssh.PublicKeys(signer),
 		},
 	}
 

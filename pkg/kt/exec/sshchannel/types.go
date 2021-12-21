@@ -1,15 +1,8 @@
 package sshchannel
 
-// Certificate certificate
-type Certificate struct {
-	Username   string
-	Password   string
-	PrivateKey string
-}
-
 // Channel network channel
 type Channel interface {
-	StartSocks5Proxy(certificate *Certificate, sshAddress, socks5Address string) error
-	ForwardRemoteToLocal(certificate *Certificate, sshAddress, remoteEndpoint, localEndpoint string) error
-	RunScript(certificate *Certificate, sshAddress, script string) (string, error)
+	StartSocks5Proxy(privateKey string, sshAddress, socks5Address string) error
+	ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint, localEndpoint string) error
+	RunScript(privateKey string, sshAddress, script string) (string, error)
 }

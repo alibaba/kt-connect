@@ -14,7 +14,7 @@ import (
 )
 
 // ForwardPodToLocal mapping pod port to local port
-func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) (int, error) {
+func ForwardPodToLocal(exposePorts, podName, privateKey string, opt *options.DaemonOptions) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
 	localSSHPort := util.GetRandomSSHPort()
 	if localSSHPort < 0 {
@@ -36,7 +36,7 @@ func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) 
 		portPairs := strings.Split(exposePorts, ",")
 		for _, exposePort := range portPairs {
 			localPort, remotePort := util.ParsePortMapping(exposePort)
-			ExposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort)
+			ExposeLocalPort(&wg, &ssh, localPort, remotePort, localSSHPort, privateKey)
 		}
 		wg.Wait()
 	}
@@ -44,15 +44,12 @@ func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) 
 }
 
 // ExposeLocalPort forward remote pod to local
-func ExposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remotePort string, localSSHPort int) {
+func ExposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remotePort string, localSSHPort int, privateKey string) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Debug().Msgf("Exposing remote pod:%s to local port localhost:%s", remotePort, localPort)
 		err := ssh.ForwardRemoteToLocal(
-			&sshchannel.Certificate{
-				Username: "root",
-				Password: "root",
-			},
+			privateKey,
 			fmt.Sprintf("127.0.0.1:%d", localSSHPort),
 			fmt.Sprintf("0.0.0.0:%s", remotePort),
 			fmt.Sprintf("127.0.0.1:%s", localPort),

@@ -33,7 +33,7 @@ func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *opt
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		err2 := createEphemeralContainer(ctx, k8s, common.KtExchangeContainer, pod.Name, options)
+		privateKey, err2 := createEphemeralContainer(ctx, k8s, common.KtExchangeContainer, pod.Name, options)
 		if err2 != nil {
 			return err2
 		}
@@ -41,11 +41,11 @@ func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *opt
 		// record data
 		options.RuntimeOptions.Shadow = util.Append(options.RuntimeOptions.Shadow, pod.Name)
 
-		localSSHPort, err2 := tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, pod.Name, options)
+		localSSHPort, err2 := tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, pod.Name, privateKey, options)
 		if err2 != nil {
 			return err2
 		}
-		err = exchangeWithEphemeralContainer(options.ExchangeOptions.Expose, localSSHPort)
+		err = exchangeWithEphemeralContainer(options.ExchangeOptions.Expose, localSSHPort, privateKey)
 		if err != nil {
 			return err
 		}
@@ -94,26 +94,26 @@ func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serv
 	return pods.Items, nil
 }
 
-func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string, options *options.DaemonOptions) error {
+func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string, options *options.DaemonOptions) (string, error) {
 	log.Info().Msgf("Adding ephemeral container for pod %s", podName)
 
 	envs := make(map[string]string)
-	err := k8s.AddEphemeralContainer(ctx, containerName, podName, options, envs)
+	privateKey, err := k8s.AddEphemeralContainer(ctx, containerName, podName, options, envs)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	for i := 0; i < 10; i++ {
 		log.Info().Msgf("Waiting for ephemeral container %s to be ready", containerName)
 		ready, err2 := isEphemeralContainerReady(ctx, k8s, containerName, podName, options.Namespace)
 		if err2 != nil {
-			return err2
+			return "", err2
 		} else if ready {
 			break
 		}
 		time.Sleep(5 * time.Second)
 	}
-	return nil
+	return privateKey, nil
 }
 
 func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterface, podName, containerName, namespace string) (bool, error) {
@@ -135,10 +135,10 @@ func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterf
 	return false, nil
 }
 
-func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error {
+func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privateKey string) error {
 	ssh := sshchannel.SSHChannel{}
 	// Get all listened ports on remote host
-	listenedPorts, err := getListenedPorts(&ssh, localSSHPort)
+	listenedPorts, err := getListenedPorts(&ssh, localSSHPort, privateKey)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error 
 		redirectPortStr += fmt.Sprintf("%s:%s,", k, v)
 	}
 	redirectPortStr = redirectPortStr[:len(redirectPortStr)-1]
-	err = setupIptables(&ssh, redirectPortStr, localSSHPort)
+	err = setupIptables(&ssh, redirectPortStr, localSSHPort, privateKey)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error 
 	for _, exposePort := range portPairs {
 		localPort, remotePort := util.ParsePortMapping(exposePort)
 		var wg sync.WaitGroup
-		tunnel.ExposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort)
+		tunnel.ExposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
 		wg.Done()
 	}
 
@@ -168,12 +168,9 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int) error 
 }
 
 
-func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort int) error {
+func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort int, privateKey string) error {
 	res, err := ssh.RunScript(
-		&sshchannel.Certificate{
-			Username: "root",
-			Password: "root",
-		},
+		privateKey,
 		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
 		fmt.Sprintf("/setup_iptables.sh %s", redirectPorts))
 
@@ -185,12 +182,9 @@ func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort in
 	return err
 }
 
-func getListenedPorts(ssh sshchannel.Channel, localSSHPort int) (map[string]struct{}, error) {
+func getListenedPorts(ssh sshchannel.Channel, localSSHPort int, privateKey string) (map[string]struct{}, error) {
 	result, err := ssh.RunScript(
-		&sshchannel.Certificate{
-			Username: "root",
-			Password: "root",
-		},
+		privateKey,
 		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
 		`netstat -tuln | grep -E '^(tcp|udp|tcp6)' |grep LISTEN |awk '{print $4}' | awk -F: '{printf("%s\n", $NF)}'`)
 

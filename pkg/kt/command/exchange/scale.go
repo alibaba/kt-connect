@@ -32,7 +32,7 @@ func ByScale(deploymentName string, cli kt.CliInterface, options *options.Daemon
 	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	_, podName, _, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
+	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
 		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
 
@@ -48,7 +48,7 @@ func ByScale(deploymentName string, cli kt.CliInterface, options *options.Daemon
 		return err
 	}
 
-	if _, err = tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, podName, options); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err
 	}
 

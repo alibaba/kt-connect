@@ -144,21 +144,21 @@ func (k *Kubernetes) GetPodsByLabel(ctx context.Context, labels map[string]strin
 
 // AddEphemeralContainer add ephemeral container to specified pod
 func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, name string,
-	options *options.DaemonOptions, envs map[string]string) error {
+	options *options.DaemonOptions, envs map[string]string) (string, error) {
 	pod, err := k.GetPod(ctx, name, options.Namespace)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	privateKeyPath := util.PrivateKeyPath(name)
 	generator, err := util.Generate(privateKeyPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, map[string]string{}, name, options.Namespace, generator)
 
 	if err2 != nil {
-		return errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
+		return "", errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
 	}
 
 	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey]))
@@ -187,7 +187,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 	pod.Spec.EphemeralContainers = append(pod.Spec.EphemeralContainers, ec)
 
 	pod, err = k.Clientset.CoreV1().Pods(pod.Namespace).UpdateEphemeralContainers(ctx, pod.Name, pod, metav1.UpdateOptions{})
-	return err
+	return privateKeyPath, err
 }
 
 // RemoveEphemeralContainer remove ephemeral container from specified pod
