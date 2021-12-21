@@ -24,7 +24,7 @@ func BySocks5(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	_, _, err = tunnel.ForwardSSHTunnelToLocal(cli.Exec().PortForward(), cli.Exec().Kubectl(), options, podName, options.ConnectOptions.SSHPort)
+	_, _, err = tunnel.ForwardSSHTunnelToLocal(cli.Exec().Kubectl(), options, podName, options.ConnectOptions.SSHPort)
 	if err != nil {
 		return err
 	}

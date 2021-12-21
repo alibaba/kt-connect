@@ -1,4 +1,4 @@
-package portforward
+package tunnel
 
 import (
 	"net/url"

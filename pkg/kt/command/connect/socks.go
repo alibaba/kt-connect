@@ -4,7 +4,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
@@ -28,7 +27,7 @@ func BySocks(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	return forwardSocksTunnelToLocal(cli.Exec().PortForward(), cli.Exec().Kubectl(), options, podName)
+	return forwardSocksTunnelToLocal(cli.Exec().Kubectl(), options, podName)
 }
 
 func setupGlobalProxy(options *options.DaemonOptions) {
@@ -42,13 +41,13 @@ func setupGlobalProxy(options *options.DaemonOptions) {
 	}
 }
 
-func forwardSocksTunnelToLocal(pfCli portforward.CliInterface, kubectlCli kubectl.CliInterface,
+func forwardSocksTunnelToLocal(kubectlCli kubectl.CliInterface,
 	options *options.DaemonOptions, podName string) (err error) {
 	showSetupSocksMessage(common.ConnectMethodSocks, options.ConnectOptions)
 	if options.UseKubectl {
 		err = tunnel.PortForwardViaKubectl(kubectlCli, options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
 	} else {
-		_, _, err = pfCli.ForwardPodPortToLocal(options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
+		_, _, err = tunnel.ForwardPodPortToLocal(options, podName, common.Socks4Port, options.ConnectOptions.SocksPort)
 	}
 	return err
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// ForwardPodToLocal mapping local port from cluster
+// ForwardPodToLocal mapping pod port to local port
 func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
 	localSSHPort := util.GetRandomSSHPort()
@@ -23,7 +23,7 @@ func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) 
 
 	// port forward pod 22 -> local <random port>
 	cli := exec.Cli{}
-	_, _, err := ForwardSSHTunnelToLocal(cli.PortForward(), cli.Kubectl(), opt, podName, localSSHPort)
+	_, _, err := ForwardSSHTunnelToLocal(cli.Kubectl(), opt, podName, localSSHPort)
 	if err != nil {
 		return -1, err
 	}
@@ -43,6 +43,7 @@ func ForwardPodToLocal(exposePorts, podName string, opt *options.DaemonOptions) 
 	return localSSHPort, nil
 }
 
+// ExposeLocalPort forward remote pod to local
 func ExposeLocalPort(wg *sync.WaitGroup, ssh sshchannel.Channel, localPort, remotePort string, localSSHPort int) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {

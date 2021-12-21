@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
-	portforward "github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
@@ -51,20 +50,6 @@ func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
 func (mr *MockCliInterfaceMockRecorder) Kubectl() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubectl", reflect.TypeOf((*MockCliInterface)(nil).Kubectl))
-}
-
-// PortForward mocks base method.
-func (m *MockCliInterface) PortForward() portforward.CliInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PortForward")
-	ret0, _ := ret[0].(portforward.CliInterface)
-	return ret0
-}
-
-// PortForward indicates an expected call of PortForward.
-func (mr *MockCliInterfaceMockRecorder) PortForward() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PortForward", reflect.TypeOf((*MockCliInterface)(nil).PortForward))
 }
 
 // SSH mocks base method.

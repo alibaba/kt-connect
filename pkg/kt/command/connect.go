@@ -53,7 +53,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	} else if options.ConnectOptions.Method == common.ConnectMethodTun {
 		err = connect.ByTun(cli, options)
 	} else {
-		err = fmt.Errorf("invalid connect mode: \"%s\"", options.ConnectOptions.Method)
+		err = fmt.Errorf("invalid connect mode: '%s'", options.ConnectOptions.Method)
 	}
 	if err != nil {
 		return err

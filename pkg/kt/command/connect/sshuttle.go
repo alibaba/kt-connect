@@ -32,7 +32,7 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	stop, rootCtx, err := tunnel.ForwardSSHTunnelToLocal(cli.Exec().PortForward(), cli.Exec().Kubectl(),
+	stop, rootCtx, err := tunnel.ForwardSSHTunnelToLocal(cli.Exec().Kubectl(),
 		options, podName, options.ConnectOptions.SSHPort)
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@ package exec
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/portforward"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
@@ -16,7 +15,6 @@ type CliInterface interface {
 	SSH() ssh.CliInterface
 	Tunnel() tun.CliInterface
 	SshChannel() sshchannel.Channel
-	PortForward() portforward.CliInterface
 }
 
 // Cli ...
@@ -27,11 +25,6 @@ type Cli struct {
 	DestIP      string
 	// MaskLen the net mask length of tun cidr
 	MaskLen string
-}
-
-// PortForward ...
-func (c *Cli) PortForward() portforward.CliInterface {
-	return &portforward.Cli{}
 }
 
 // SshChannel ...
