@@ -42,6 +42,7 @@ func setupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch 
 	ch = setupWaitingChannel()
 	go func() {
 		<-ch
+		log.Info().Msgf("Process is gonna close")
 		CleanupWorkspace(cli, options)
 		os.Exit(0)
 	}()

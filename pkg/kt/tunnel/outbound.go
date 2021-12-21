@@ -61,6 +61,7 @@ func ForwardPodPortToLocal(options *options.DaemonOptions, podName string, remot
 	go func() {
 		err := portForward(options, podName, remotePort, localPort, stop)
 		if err != nil {
+			log.Error().Err(err).Msgf("Port forward to %s -> %s pod %s interrupted", localPort, remotePort, podName)
 			stop <- struct{}{}
 		}
 	}()
@@ -94,6 +95,7 @@ func portForward(options *options.DaemonOptions, podName string, remotePort, loc
 	if err != nil {
 		return err
 	}
+	// in client-go 0.22, this always return nil
 	return fw.ForwardPorts()
 }
 

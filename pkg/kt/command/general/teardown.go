@@ -27,7 +27,6 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 
 	log.Info().Msgf("Cleaning workspace")
 	cleanLocalFiles(opts)
-	removePrivateKey(opts)
 	if opts.RuntimeOptions.Component == common.ComponentConnect {
 		recoverGlobalHostsAndProxy(opts)
 		removeTunDevice(cli, opts)
@@ -81,10 +80,24 @@ func recoverGlobalHostsAndProxy(opts *options.DaemonOptions) {
 
 func cleanLocalFiles(opts *options.DaemonOptions) {
 	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, opts.RuntimeOptions.Component, os.Getpid())
-	if _, err := os.Stat(pidFile); err == nil {
-		log.Info().Msgf("Removing pid %s", pidFile)
-		if err = os.Remove(pidFile); err != nil {
-			log.Error().Err(err).Msgf("Stop process %s failed", pidFile)
+	if err := os.Remove(pidFile); os.IsNotExist(err) {
+		log.Debug().Msgf("Pid file %s not exist", pidFile)
+	} else if err != nil {
+		log.Debug().Err(err).Msgf("Remove pid file %s failed", pidFile)
+	} else {
+		log.Info().Msgf("Removed pid file %s", pidFile)
+	}
+
+	if opts.RuntimeOptions.Shadow != "" {
+		for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
+			file := util.PrivateKeyPath(sshcm)
+			if err := os.Remove(file); os.IsNotExist(err) {
+				log.Debug().Msgf("Key file %s not exist", file)
+			} else if err != nil {
+				log.Debug().Msgf("Remove key file %s failed", pidFile)
+			} else {
+				log.Info().Msgf("Removed key file %s", file)
+			}
 		}
 	}
 
@@ -237,19 +250,6 @@ func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions
 					log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
 				}
 			}
-		}
-	}
-}
-
-// removePrivateKey remove the private key of ssh
-func removePrivateKey(opts *options.DaemonOptions) {
-	if opts.RuntimeOptions.Shadow == "" {
-		return
-	}
-	for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
-		file := util.PrivateKeyPath(sshcm)
-		if err := os.Remove(file); os.IsNotExist(err) {
-			log.Error().Msgf("Key file %s not exist", file)
 		}
 	}
 }
