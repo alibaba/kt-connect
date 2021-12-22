@@ -12,22 +12,18 @@ import (
 )
 
 func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
 	if len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
-		options.RuntimeOptions.Dump2Host = setupDump2Host(kubernetes, options.Namespace,
+		options.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), options.Namespace,
 			options.ConnectOptions.Dump2HostsNamespaces, options.ConnectOptions.ClusterDomain)
 	}
 	checkSshuttleInstalled(cli.Exec().Sshuttle())
 
-	podIP, podName, credential, err := getOrCreateShadow(kubernetes, options)
+	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
 		return err
 	}
 
-	cidrs, err := kubernetes.ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
+	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
 	if err != nil {
 		return err
 	}

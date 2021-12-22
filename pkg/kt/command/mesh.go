@@ -58,16 +58,11 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
-
 	ctx := context.Background()
 	if options.MeshOptions.Method == common.MeshMethodManual {
-		err = mesh.ManualMesh(ctx, kubernetes, resourceName, options)
+		err = mesh.ManualMesh(ctx, cli.Kubernetes(), resourceName, options)
 	} else if options.MeshOptions.Method == common.MeshMethodAuto {
-		err = mesh.AutoMesh(ctx, kubernetes, resourceName, options)
+		err = mesh.AutoMesh(ctx, cli.Kubernetes(), resourceName, options)
 	} else {
 		err = fmt.Errorf("invalid mesh method \"%s\"", options.MeshOptions.Method)
 	}

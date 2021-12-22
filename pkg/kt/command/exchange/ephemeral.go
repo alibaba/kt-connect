@@ -20,20 +20,16 @@ import (
 
 func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23, and it can NOT work with istio.")
-	k8s, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
 
 	ctx := context.Background()
-	pods, err := getPodsOfResource(ctx, k8s, resourceName, options.Namespace)
+	pods, err := getPodsOfResource(ctx, cli.Kubernetes(), resourceName, options.Namespace)
 
 	for _, pod := range pods {
 		if pod.Status.Phase != coreV1.PodRunning {
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		privateKey, err2 := createEphemeralContainer(ctx, k8s, common.KtExchangeContainer, pod.Name, options)
+		privateKey, err2 := createEphemeralContainer(ctx, cli.Kubernetes(), common.KtExchangeContainer, pod.Name, options)
 		if err2 != nil {
 			return err2
 		}

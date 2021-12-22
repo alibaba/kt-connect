@@ -33,11 +33,7 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 	}
 
 	ctx := context.Background()
-	k8s, err := cli.Kubernetes()
-	if err != nil {
-		log.Error().Err(err).Msgf("Fails create kubernetes client when clean up workspace")
-		return
-	}
+	k8s := cli.Kubernetes()
 	if opts.RuntimeOptions.Component == common.ComponentExchange {
 		recoverExchangedTarget(ctx, opts, k8s)
 	} else if opts.RuntimeOptions.Component == common.ComponentMesh {

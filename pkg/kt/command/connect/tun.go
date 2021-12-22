@@ -19,17 +19,12 @@ func ByTun(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	kubernetes, err := cli.Kubernetes()
+	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
 		return err
 	}
 
-	podIP, podName, credential, err := getOrCreateShadow(kubernetes, options)
-	if err != nil {
-		return err
-	}
-
-	cidrs, err := kubernetes.ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
+	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
 	if err != nil {
 		return err
 	}
@@ -113,7 +108,7 @@ func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credenti
 	}
 
 	if !options.ConnectOptions.DisableDNS {
-		// 6. Setup dns config.
+		// 5. Setup dns config.
 		// This will overwrite the file /etc/resolv.conf
 		err = util.AddNameserver(podIP)
 		if err == nil {

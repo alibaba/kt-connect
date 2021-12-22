@@ -16,11 +16,6 @@ import (
 
 // Expose create a new service in cluster
 func Expose(ctx context.Context, serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
-
 	version := strings.ToLower(util.RandomString(5))
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
@@ -32,7 +27,7 @@ func Expose(ctx context.Context, serviceName string, cli kt.CliInterface, option
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
-	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, options, kubernetes, cli)
+	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, options, cli.Kubernetes(), cli)
 }
 
 // exposeLocalService create shadow and expose service if need

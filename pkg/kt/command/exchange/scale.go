@@ -15,12 +15,8 @@ import (
 )
 
 func ByScale(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
 	ctx := context.Background()
-	app, err := kubernetes.GetDeployment(ctx, deploymentName, options.Namespace)
+	app, err := cli.Kubernetes().GetDeployment(ctx, deploymentName, options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -32,7 +28,7 @@ func ByScale(deploymentName string, cli kt.CliInterface, options *options.Daemon
 	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options,
+	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, cli.Kubernetes(), shadowPodName, options,
 		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(options), envs)
 	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
 
@@ -44,7 +40,7 @@ func ByScale(deploymentName string, cli kt.CliInterface, options *options.Daemon
 	options.RuntimeOptions.Shadow = shadowPodName
 
 	down := int32(0)
-	if err = kubernetes.ScaleTo(ctx, deploymentName, options.Namespace, &down); err != nil {
+	if err = cli.Kubernetes().ScaleTo(ctx, deploymentName, options.Namespace, &down); err != nil {
 		return err
 	}
 

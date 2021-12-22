@@ -16,6 +16,7 @@ const (
 	ConnectMethodSocks5     = "socks5"
 	ExchangeMethodScale     = "scale"
 	ExchangeMethodEphemeral = "ephemeral"
+	ExchangeMethodSwitch    = "switch"
 	MeshMethodAuto          = "auto"
 	MeshMethodManual        = "manual"
 	YyyyMmDdHhMmSs          = "2006-01-02 15:04:05"

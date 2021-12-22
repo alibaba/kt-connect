@@ -9,13 +9,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// CreateFromClientSet kubernetes instance
-func CreateFromClientSet(clientSet kubernetes.Interface) (kubernetes KubernetesInterface, err error) {
-	return &Kubernetes{
-		Clientset: clientSet,
-	}, nil
-}
-
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
 	CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error

@@ -57,11 +57,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	action.cleanPidFiles()
 	ctx := context.Background()
 
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
-	pods, deployments, svcs, err := cluster.GetKtResources(ctx, kubernetes, options.Namespace)
+	pods, deployments, svcs, err := cluster.GetKtResources(ctx, cli.Kubernetes(), options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -83,7 +79,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		if options.CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
 		} else {
-			action.cleanResource(ctx, resourceToClean, kubernetes, options.Namespace)
+			action.cleanResource(ctx, resourceToClean, cli.Kubernetes(), options.Namespace)
 		}
 	} else {
 		log.Info().Msg("No unavailing kt pod found (^.^)YYa!!")

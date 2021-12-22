@@ -11,18 +11,14 @@ import (
 )
 
 func BySocks(cli kt.CliInterface, options *options.DaemonOptions) error {
-	kubernetes, err := cli.Kubernetes()
-	if err != nil {
-		return err
-	}
-	options.RuntimeOptions.Dump2Host = setupDump2Host(kubernetes, options.Namespace,
+	options.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), options.Namespace,
 		options.ConnectOptions.Dump2HostsNamespaces, options.ConnectOptions.ClusterDomain)
 
 	if options.ConnectOptions.UseGlobalProxy {
 		setupGlobalProxy(options)
 	}
 
-	_, podName, _, err := getOrCreateShadow(kubernetes, options)
+	_, podName, _, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
 		return err
 	}

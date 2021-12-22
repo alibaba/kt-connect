@@ -9,7 +9,7 @@ import (
 
 // CliInterface ...
 type CliInterface interface {
-	Kubernetes() (cluster.KubernetesInterface, error)
+	Kubernetes() cluster.KubernetesInterface
 	Exec() exec.CliInterface
 }
 
@@ -19,8 +19,10 @@ type Cli struct {
 }
 
 // Kubernetes ...
-func (c *Cli) Kubernetes() (cluster.KubernetesInterface, error) {
-	return cluster.CreateFromClientSet(c.Options.RuntimeOptions.Clientset)
+func (c *Cli) Kubernetes() cluster.KubernetesInterface {
+	return &cluster.Kubernetes{
+		Clientset: c.Options.RuntimeOptions.Clientset,
+	}
 }
 
 // Exec ...
