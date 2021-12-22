@@ -107,7 +107,7 @@ func cleanLocalFiles(opts *options.DaemonOptions) {
 }
 
 func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
-	if opts.ExchangeOptions.Method == common.ExchangeMethodScale && len(opts.RuntimeOptions.Origin) > 0 {
+	if opts.ExchangeOptions.Method == common.ExchangeMethodScale {
 		log.Info().Msgf("Recovering origin deployment %s", opts.RuntimeOptions.Origin)
 		err := k.ScaleTo(ctx, opts.RuntimeOptions.Origin, opts.Namespace, &opts.RuntimeOptions.Replicas)
 		if err != nil {
@@ -122,6 +122,8 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 			ch <- syscall.SIGINT
 		}()
 		_ = <-ch
+	} else if opts.ExchangeOptions.Method == common.ExchangeMethodSwitch {
+		RecoverOriginalService(ctx, k, opts.RuntimeOptions.Origin, opts.Namespace)
 	}
 }
 

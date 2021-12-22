@@ -99,7 +99,7 @@ func CombineKubeOpts(options *options.DaemonOptions) error {
 			}
 		}
 		if !found {
-			return fmt.Errorf("context \"%s\" not exist, check your kubeconfig file please", options.KubeContext)
+			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", options.KubeContext)
 		}
 		config.CurrentContext = options.KubeContext
 	}

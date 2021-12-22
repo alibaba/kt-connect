@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
@@ -19,7 +20,7 @@ func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshKey, meshVersion, app)
 	annotations := make(map[string]string)
-	if err = createShadowAndInbound(ctx, k, shadowPodName, labels, annotations, opts); err != nil {
+	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, labels, annotations, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")

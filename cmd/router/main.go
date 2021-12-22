@@ -30,7 +30,7 @@ func main() {
 		case actionRemove:
 			remove(os.Args[2:])
 		default:
-			log.Error().Msgf("Invalid action \"%s\"", os.Args[1])
+			log.Error().Msgf("Invalid action '%s'", os.Args[1])
 			usage()
 		}
 	}

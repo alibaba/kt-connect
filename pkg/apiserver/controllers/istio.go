@@ -33,7 +33,7 @@ func (c *IstioController) VirtualServices(context *gin.Context) {
 
 	vsList, err := ic.NetworkingV1alpha3().VirtualServices(namespace).List(context2.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to get VirtualService in namespace \"%s\"", namespace)
+		log.Error().Err(err).Msgf("Failed to get VirtualService in namespace '%s'", namespace)
 	}
 
 	if err != nil {

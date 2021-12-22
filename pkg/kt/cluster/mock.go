@@ -39,11 +39,12 @@ func (m *MockKubernetesInterface) EXPECT() *MockKubernetesInterfaceMockRecorder 
 }
 
 // AddEphemeralContainer mocks base method.
-func (m *MockKubernetesInterface) AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) error {
+func (m *MockKubernetesInterface) AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddEphemeralContainer", ctx, containerName, podName, options, envs)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddEphemeralContainer indicates an expected call of AddEphemeralContainer.
@@ -278,6 +279,21 @@ func (m *MockKubernetesInterface) GetServices(ctx context.Context, matchLabels m
 func (mr *MockKubernetesInterfaceMockRecorder) GetServices(ctx, matchLabels, namespace interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServices", reflect.TypeOf((*MockKubernetesInterface)(nil).GetServices), ctx, matchLabels, namespace)
+}
+
+// GetServicesByLabel mocks base method.
+func (m *MockKubernetesInterface) GetServicesByLabel(ctx context.Context, labels map[string]string, namespace string) (*v10.ServiceList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetServicesByLabel", ctx, labels, namespace)
+	ret0, _ := ret[0].(*v10.ServiceList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetServicesByLabel indicates an expected call of GetServicesByLabel.
+func (mr *MockKubernetesInterfaceMockRecorder) GetServicesByLabel(ctx, labels, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServicesByLabel", reflect.TypeOf((*MockKubernetesInterface)(nil).GetServicesByLabel), ctx, labels, namespace)
 }
 
 // IncreaseRef mocks base method.

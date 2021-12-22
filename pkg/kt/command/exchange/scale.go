@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
@@ -27,24 +26,14 @@ func ByScale(deploymentName string, cli kt.CliInterface, options *options.Daemon
 
 	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
-	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, cli.Kubernetes(), shadowPodName, options,
-		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(options), envs)
-	log.Info().Msgf("Create exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
-
-	if err != nil {
+	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
+	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, getExchangeLabels(shadowPodName, app),
+		getExchangeAnnotation(options), options); err != nil {
 		return err
 	}
-
-	// record data
-	options.RuntimeOptions.Shadow = shadowPodName
 
 	down := int32(0)
 	if err = cli.Kubernetes().ScaleTo(ctx, deploymentName, options.Namespace, &down); err != nil {
-		return err
-	}
-
-	if _, err = tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err
 	}
 
@@ -60,7 +49,6 @@ func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
 
 func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
-		common.ControlBy: common.KubernetesTool,
 		common.KtRole:    common.RoleExchangeShadow,
 		common.KtName:    workload,
 	}

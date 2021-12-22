@@ -1,6 +1,7 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
@@ -62,9 +63,9 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	} else if method == common.ExchangeMethodEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName, cli, options)
 	} else if method == common.ExchangeMethodSwitch {
-		err = exchange.BySwitchOver(resourceName, cli, options)
+		err = exchange.BySwitchOver(context.TODO(), cli.Kubernetes(), resourceName, options)
 	} else {
-		err = fmt.Errorf("invalid exchange method \"%s\"", method)
+		err = fmt.Errorf("invalid exchange method '%s'", method)
 	}
 	if err != nil {
 		return err

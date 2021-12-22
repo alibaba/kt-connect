@@ -8,11 +8,11 @@ import (
 func Test_isValidKey(t *testing.T) {
 	validCases := []string{"kt", "k123", "kt-version_1123"}
 	for _, c := range validCases {
-		require.True(t, isValidKey(c), "\"%s\" should be valid", c)
+		require.True(t, isValidKey(c), "'%s' should be valid", c)
 	}
 	invalidCases := []string{"-version_1123", "123", "", "kt.ver"}
 	for _, c := range invalidCases {
-		require.True(t, !isValidKey(c), "\"%s\" should be invalid", c)
+		require.True(t, !isValidKey(c), "'%s' should be invalid", c)
 	}
 }
 

@@ -64,7 +64,7 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface, options *op
 	} else if options.MeshOptions.Method == common.MeshMethodAuto {
 		err = mesh.AutoMesh(ctx, cli.Kubernetes(), resourceName, options)
 	} else {
-		err = fmt.Errorf("invalid mesh method \"%s\"", options.MeshOptions.Method)
+		err = fmt.Errorf("invalid mesh method '%s'", options.MeshOptions.Method)
 	}
 	if err != nil {
 		return err
