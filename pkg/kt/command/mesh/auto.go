@@ -18,11 +18,20 @@ import (
 )
 
 func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
-	svc, err := getServiceToMesh(ctx, k, resourceName, opts)
+	// 1.Get service to mesh
+	svcName, err := getServiceToMesh(ctx, k, resourceName, opts)
 	if err != nil {
 		return err
 	}
 
+	// 2.Lock service to avoid conflict
+	svc, err := lockAndFetchService(ctx, k, svcName, opts.Namespace, 0)
+	if err != nil {
+		return err
+	}
+	defer unlockService(ctx, k, svcName, opts.Namespace)
+
+	// 3.Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
 	opts.RuntimeOptions.Mesh = versionMark
@@ -32,22 +41,24 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		ports[int(p.Port)] = p.TargetPort.IntValue()
 	}
 
+	// 4.Create origin service
 	originSvcName := svc.Name + common.OriginServiceSuffix
 	if err = createOriginService(ctx, k, originSvcName, ports, svc.Spec.Selector, opts); err != nil {
 		return err
 	}
 
-	shadowPodName := resourceName + common.MeshPodInfix + meshVersion
-	shadowSvcName := svc.Name + common.MeshPodInfix + meshVersion
+	// 5.Create shadow service
+	shadowName := svc.Name + common.MeshPodInfix + meshVersion
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
-		common.KtName: shadowPodName,
+		common.KtName: shadowName,
 	}
-	if err = createShadowService(ctx, k, shadowSvcName, ports, util.CopyMap(shadowLabels), opts); err != nil {
+	if err = createShadowService(ctx, k, shadowName, ports, util.CopyMap(shadowLabels), opts); err != nil {
 		return err
 	}
 
-	routerPodName := resourceName + common.RouterPodSuffix
+	// 6.Create router pod
+	routerPodName := svc.Name + common.RouterPodSuffix
 	routerLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
 		common.KtName: routerPodName,
@@ -56,6 +67,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
+	// 7.Let target service select router pod
 	if _, ok := svc.Annotations[common.KtSelector]; !ok {
 		if marshaledSelector, err2 := json.Marshal(svc.Spec.Selector); err2 != nil {
 			log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
@@ -69,10 +81,11 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
+	// 8.Create shadow pod
 	annotations := map[string]string{
-		common.KtConfig: fmt.Sprintf("service=%s", shadowSvcName),
+		common.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
-	if err = createShadowAndInbound(ctx, k, shadowPodName, shadowLabels, annotations, opts); err != nil {
+	if err = createShadowAndInbound(ctx, k, shadowName, shadowLabels, annotations, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")
@@ -81,11 +94,11 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	return nil
 }
 
-func getServiceToMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) (*coreV1.Service, error) {
+func getServiceToMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) (string, error) {
 	segments := strings.Split(resourceName, "/")
 	var resourceType, name string
 	if len(segments) > 2 {
-		return nil, fmt.Errorf("invalid resource name: %s", resourceName)
+		return "", fmt.Errorf("invalid resource name: %s", resourceName)
 	} else if len(segments) == 2 {
 		resourceType = segments[0]
 		name = segments[1]
@@ -94,91 +107,53 @@ func getServiceToMesh(ctx context.Context, k cluster.KubernetesInterface, resour
 		name = resourceName
 	}
 
+	var svcName string
 	switch resourceType {
 	case "deploy":
 	case "deployment":
-		app, err := lockAndFetchDeployment(ctx, k, name, opts.Namespace, 0)
+		app, err := k.GetDeployment(ctx, name, opts.Namespace)
 		if err != nil {
-			return nil, err
+			log.Error().Err(err).Msgf("Failed to find deployment '%s'", name)
+			return "", err
 		}
-		defer unlockDeployment(ctx, k, name, opts.Namespace)
-		return getServiceByDeployment(ctx, k, app, opts)
+		svc, err := getServiceByDeployment(ctx, k, app, opts)
+		if err != nil {
+			log.Error().Err(err).Msgf("Failed to find deployment '%s'", name)
+			return "", err
+		}
+		svcName = svc.Name
 	case "svc":
 	case "service":
-		err := lockService(ctx, k, name, opts.Namespace, 0)
-		if err != nil {
-			return nil, err
-		}
-		defer unlockService(ctx, k, name, opts.Namespace)
-		return k.GetService(ctx, name, opts.Namespace)
+		svcName = name
+	default:
+		return "", fmt.Errorf("invalid resource type: %s", resourceType)
 	}
-	return nil, fmt.Errorf("invalid resource type: %s", resourceType)
+	return svcName, nil
 }
 
-func lockAndFetchDeployment(ctx context.Context, k cluster.KubernetesInterface, deploymentName, namespace string, times int) (*appV1.Deployment, error) {
+func lockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
 	if times > 10 {
 		log.Warn().Msgf("Unable to obtain auto mesh lock, please try again later.")
-		return nil, fmt.Errorf("failed to obtain auto meth lock of deployment %s", deploymentName)
-	}
-	app, err := k.GetDeployment(ctx, deploymentName, namespace)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := app.Annotations[common.KtLock]; ok {
-		log.Info().Msgf("Another user is meshing deployment %s, waiting for lock ...", deploymentName)
-		time.Sleep(3 * time.Second)
-		return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
-	} else {
-		util.MapPut(app.Annotations, common.KtLock, util.GetTimestamp())
-		if app, err = k.UpdateDeployment(ctx, app); err != nil {
-			log.Warn().Err(err).Msgf("Failed to lock deployment %s", deploymentName)
-			return lockAndFetchDeployment(ctx, k, deploymentName, namespace, times + 1)
-		}
-	}
-	log.Info().Msgf("Deployment %s locked for auto mesh", deploymentName)
-	return app, nil
-}
-
-func unlockDeployment(ctx context.Context, k cluster.KubernetesInterface, deploymentName, namespace string) {
-	app, err := k.GetDeployment(ctx, deploymentName, namespace)
-	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to get deployment %s for unlock", deploymentName)
-		return
-	}
-	if _, ok := app.Annotations[common.KtLock]; ok {
-		delete(app.Annotations, common.KtLock)
-		if _, err2 := k.UpdateDeployment(ctx, app); err2 != nil {
-			log.Warn().Err(err2).Msgf("Failed to unlock deployment %s", deploymentName)
-		}
-	} else {
-		log.Info().Msgf("Deployment %s doesn't have lock", deploymentName)
-	}
-}
-
-func lockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) error {
-	if times > 10 {
-		log.Warn().Msgf("Unable to obtain auto mesh lock, please try again later.")
-		return fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
+		return nil, fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if _, ok := svc.Annotations[common.KtLock]; ok {
 		log.Info().Msgf("Another user is meshing service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
-		return lockService(ctx, k, serviceName, namespace, times + 1)
+		return lockAndFetchService(ctx, k, serviceName, namespace, times + 1)
 	} else {
 		util.MapPut(svc.Annotations, common.KtLock, util.GetTimestamp())
 		if svc, err = k.UpdateService(ctx, svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
-			return lockService(ctx, k, serviceName, namespace, times + 1)
+			return lockAndFetchService(ctx, k, serviceName, namespace, times + 1)
 		}
 	}
 	log.Info().Msgf("Service %s locked for auto mesh", serviceName)
-	return nil
+	return svc, nil
 }
 
 func unlockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string) {
