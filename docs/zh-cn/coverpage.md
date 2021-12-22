@@ -1,4 +1,4 @@
-![logo](../media/logo.png)
+![logo](media/logo.png)
 
 # KtConnect<small>0.2.3</small>
 
