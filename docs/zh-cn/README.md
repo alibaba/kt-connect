@@ -29,4 +29,4 @@ kt-connect是一款能让开发者在本地运行的服务与Kubernetes集群中
 
 请加入`kt-dev`钉钉群：
 
-<img src="https://img.alicdn.com/imgextra/i4/O1CN01sTW3D61NzAFgUCNqz_!!6000000001640-0-tps-573-657.jpg" width="50%"></img>
+<img src="https://img.alicdn.com/imgextra/i4/O1CN01sTW3D61NzAFgUCNqz_!!6000000001640-0-tps-573-657.jpg" width="30%"></img>

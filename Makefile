@@ -34,8 +34,7 @@ compile:
 
 # check the style
 check:
-	golint ./pkg/... ./cmd/...
-# 	golangci-lint run ./pkg/...
+	go vet ./pkg/... ./cmd/...
 
 # build this image before shadow
 build-shadow-base:
@@ -55,15 +54,6 @@ build-router:
 build-shadow-dlv:
 	make build-shadow TAG=latest
 	scripts/build-shadow-dlv
-
-build-dashboard: build-frontend
-
-build-frontend:
-	docker build -t $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG) -f build/docker/dashboard/Dockerfile .
-
-release-dashboard:
-	docker push $(PREFIX)/$(DASHBOARD_IMAGE):$(TAG)
-	docker push $(PREFIX)/$(SERVER_IMAGE):$(TAG)
 
 clean:
 	rm -fr artifacts

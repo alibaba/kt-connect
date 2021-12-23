@@ -73,7 +73,7 @@ func (action *Action) ApplyDashboard(cli kt.CliInterface, options *options.Daemo
 
 // OpenDashboard ...
 func (action *Action) OpenDashboard(ktCli kt.CliInterface, options *options.DaemonOptions) (err error) {
-	ch := make(chan os.Signal)
+	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 	command := ktCli.Exec().Kubectl().PortForwardDashboardToLocal(options.DashboardOptions.Port)
 	err = util.BackgroundRun(command, "forward dashboard to localhost")

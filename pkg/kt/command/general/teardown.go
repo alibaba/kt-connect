@@ -115,7 +115,7 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 				opts.RuntimeOptions.Origin, opts.RuntimeOptions.Replicas)
 		}
 		// wait for scale complete
-		ch := make(chan os.Signal)
+		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
 		go func() {
 			waitDeploymentRecoverComplete(ctx, opts, k)
