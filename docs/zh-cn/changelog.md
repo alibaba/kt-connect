@@ -5,11 +5,11 @@
 
 > 发布时间：2021-12-23
 
-- 支持Mesh命令的Auto模式使用Service名指定访问目标
-- 新增Exchange命令的Switch模式，退出时不再需要等待Pod恢复
+- 支持`mesh`命令的`auto`模式使用Service名指定访问目标
+- 新增`exchange`命令的`switch`模式，退出时不再需要等待Pod恢复
 - 移除Shadow Pod的默认密码，统一使用临时私钥访问，提高安全性
-- 修复本地kube config文件未配置Namespace时，ktctl运行必须指定Namespace的问题
-- 修复使用Ctrl+C中断Exchange退出等待时概率性未清理Shadow Pod的问题
+- 修复本地kube config文件未配置Namespace时，`ktctl`运行必须指定Namespace的问题
+- 修复使用Ctrl+C中断`exchange`退出等待时概率性未清理Shadow Pod的问题
 - 修复启动Sshuttle失败时程序无法自动退出的问题
 
 ### 0.2.3
@@ -128,7 +128,7 @@
 
 > 发布时间：2020-02-02
 
-* ktctl命令参数适配windows操作系统
+* `ktctl`命令参数适配windows操作系统
 * 添加`--dump2hosts`参数用于通过service到本地hosts文件，支持socks5模式下在本地使用域名访问 
 
 ### 0.0.9
