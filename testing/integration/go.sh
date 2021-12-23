@@ -11,6 +11,19 @@ function log() {
     printf "\e[34m>>\e[0m ${*}\n"
 }
 
+# Exit with error
+function fail() {
+  log "\e[31m${*} !!!\e[0m"
+  log "check logs for detail: \e[33m`ls -cr /tmp/kt-it-*.log`\e[0m"
+  cleanup
+  exit 1
+}
+
+# Test passed
+function success() {
+  log "\e[32m${*} !!!\e[0m"
+}
+
 # Clean everything up
 function cleanup() {
   log "cleaning up ..."
@@ -28,20 +41,21 @@ function cleanup() {
   docker rm -f tomcat
   kubectl -n ${NS} delete deployment tomcat
   kubectl -n ${NS} delete service tomcat
+  check_resources_cleaned
   kubectl delete namespace ${NS}
 }
 
-# Exit with error
-function fail() {
-  log "\e[31m${*} !!!\e[0m"
-  log "check logs for detail: \e[33m`ls -cr /tmp/kt-it-*.log`\e[0m"
-  cleanup
-  exit 1
-}
-
-# Test passed
-function success() {
-  log "\e[32m${*} !!!\e[0m"
+# Wait all resource created by ktctl get cleaned
+function check_resources_cleaned() {
+  for i in `seq 10`; do
+    log "checking resource clean up, ${i} times"
+    resource_count=`kubectl -n ${NS} get pod,configmap,service | grep '^\(pod/\|configmap/\|service/\).*' | grep -v 'kube-root-ca\.crt' | wc -l`
+    if [ $resource_count -eq 0 ]; then
+      return
+    fi
+    sleep 6
+  done
+  fail "some resource are left in namespace ${NS}"
 }
 
 # Wait pod ready
