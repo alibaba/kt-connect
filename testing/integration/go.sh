@@ -171,7 +171,7 @@ function prepare_local() {
 
 function test_ktctl_exchange() {
   # Test exchange
-  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange tomcat --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange tomcat --method switch --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
   wait_for_pod tomcat-kt-exchange 1
   check_job exchange
   check_pid_file exchange

@@ -32,6 +32,7 @@ func ForwardSSHTunnelToLocal(kubectlCli kubectl.CliInterface, options *options.D
 
 // PortForwardViaKubectl port forwarding via kubectl tool
 func PortForwardViaKubectl(kubectlCli kubectl.CliInterface, options *options.DaemonOptions, podName string, remotePort, localPort int) error {
+	log.Debug().Msgf("Forwarding pod %d to local %d", remotePort, localPort)
 	command := kubectlCli.PortForward(options.Namespace, podName, remotePort, localPort)
 
 	// If localSSHPort is in use by another process, return an error.
@@ -77,7 +78,7 @@ func ForwardPodPortToLocal(options *options.DaemonOptions, podName string, remot
 func portForward(options *options.DaemonOptions, podName string, remotePort, localPort int, stop chan struct{}) error {
 	ready := make(chan struct{})
 	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", options.Namespace, podName)
-	log.Debug().Msgf("Request port forward %d:%d to %s", localPort, remotePort, options.RuntimeOptions.RestConfig.Host)
+	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, options.RuntimeOptions.RestConfig.Host)
 	apiUrl, err := parseReqHost(options.RuntimeOptions.RestConfig.Host, apiPath)
 
 	transport, upgrader, err := spdy.RoundTripperFor(options.RuntimeOptions.RestConfig)

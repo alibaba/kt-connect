@@ -13,37 +13,37 @@ import (
 	"strings"
 )
 
-func ByScale(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func ByScale(deploymentName string, cli kt.CliInterface, opts *options.DaemonOptions) error {
 	ctx := context.Background()
-	app, err := cli.Kubernetes().GetDeployment(ctx, deploymentName, options.Namespace)
+	app, err := cli.Kubernetes().GetDeployment(ctx, deploymentName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
 	// record context inorder to remove after command exit
-	options.RuntimeOptions.Origin = deploymentName
-	options.RuntimeOptions.Replicas = *app.Spec.Replicas
+	opts.RuntimeOptions.Origin = deploymentName
+	opts.RuntimeOptions.Replicas = *app.Spec.Replicas
 
 	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
-	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, options.Namespace)
-	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, getExchangeLabels(shadowPodName, app),
-		getExchangeAnnotation(options), options); err != nil {
+	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opts.Namespace)
+	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, opts.ExchangeOptions.Expose,
+		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(opts), opts); err != nil {
 		return err
 	}
 
 	down := int32(0)
-	if err = cli.Kubernetes().ScaleTo(ctx, deploymentName, options.Namespace, &down); err != nil {
+	if err = cli.Kubernetes().ScaleTo(ctx, deploymentName, opts.Namespace, &down); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func getExchangeAnnotation(options *options.DaemonOptions) map[string]string {
+func getExchangeAnnotation(opts *options.DaemonOptions) map[string]string {
 	return map[string]string{
 		common.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
-			options.RuntimeOptions.Origin, options.RuntimeOptions.Replicas),
+			opts.RuntimeOptions.Origin, opts.RuntimeOptions.Replicas),
 	}
 }
 

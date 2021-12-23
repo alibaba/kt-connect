@@ -60,7 +60,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		common.KtRole: common.RoleMeshShadow,
 		common.KtName: routerPodName,
 	}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, util.CopyMap(routerLabels), versionMark, opts); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, versionMark, opts); err != nil {
 		return err
 	}
 
@@ -73,7 +73,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	annotations := map[string]string{
 		common.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
-	if err = general.CreateShadowAndInbound(ctx, k, shadowName, util.CopyMap(shadowLabels), annotations, opts); err != nil {
+	if err = general.CreateShadowAndInbound(ctx, k, shadowName, opts.MeshOptions.Expose, shadowLabels, annotations, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")
@@ -104,9 +104,9 @@ func createShadowService(ctx context.Context, k cluster.KubernetesInterface, sha
 }
 
 func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodName string, svcName string,
-	ports map[int]int, routerLabels map[string]string, versionMark string, opts *options.DaemonOptions) error {
+	ports map[int]int, labels map[string]string, versionMark string, opts *options.DaemonOptions) error {
+	routerLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	routerPod, err := k.GetPod(ctx, routerPodName, opts.Namespace)
-	routerLabels[common.ControlBy] = common.KubernetesTool
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err

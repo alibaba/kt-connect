@@ -16,12 +16,11 @@ import (
 	"time"
 )
 
-func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName string,
+func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName, portsToExpose string,
 	labels, annotations map[string]string, options *options.DaemonOptions) error {
-
-	labels[common.ControlBy] = common.KubernetesTool
+	podLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, labels, annotations, envs)
+	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, podLabels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -29,7 +28,7 @@ func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	// record context data
 	options.RuntimeOptions.Shadow = shadowPodName
 
-	if _, err = tunnel.ForwardPodToLocal(options.MeshOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(portsToExpose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err
 	}
 	return nil
@@ -74,7 +73,7 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 
 func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
 	if times > 10 {
-		log.Warn().Msgf("Unable to obtain auto mesh lock, please try again later.")
+		log.Warn().Msgf("Unable to obtain service lock, please try again later.")
 		return nil, fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
@@ -83,7 +82,7 @@ func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, ser
 	}
 
 	if _, ok := svc.Annotations[common.KtLock]; ok {
-		log.Info().Msgf("Another user is meshing service %s, waiting for lock ...", serviceName)
+		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
 		return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
 	} else {

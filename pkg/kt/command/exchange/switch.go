@@ -30,7 +30,7 @@ func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceNa
 		common.KtRole: common.RoleExchangeShadow,
 		common.KtName: shadowName,
 	}
-	if err = general.CreateShadowAndInbound(ctx, k, shadowName, util.CopyMap(shadowLabels), map[string]string{}, opts); err != nil {
+	if err = general.CreateShadowAndInbound(ctx, k, shadowName, opts.ExchangeOptions.Expose, shadowLabels, map[string]string{}, opts); err != nil {
 		return err
 	}
 

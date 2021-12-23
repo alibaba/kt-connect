@@ -20,7 +20,7 @@ func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentNa
 	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshKey, meshVersion, app)
 	annotations := make(map[string]string)
-	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, labels, annotations, opts); err != nil {
+	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, opts.MeshOptions.Expose, labels, annotations, opts); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
