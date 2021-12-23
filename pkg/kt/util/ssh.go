@@ -64,6 +64,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 		PrivateKeyPath: privateKeyPath,
 		PublicKey:      publicKeyBytes,
 	}
+	_ = os.Remove(sshKey.PrivateKeyPath)
 	err = WritePrivateKey(sshKey.PrivateKeyPath, sshKey.PrivateKey)
 	return sshKey, err
 }

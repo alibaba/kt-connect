@@ -64,9 +64,12 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 		}
 	}
 
-	podIP, podName, credential, err := createShadow(ctx, k, &PodMetaAndSpec{&resourceMeta, options.Image, envs},
-		&sshKeyMeta, options)
-	return podIP, podName, credential, err
+	podMeta := PodMetaAndSpec{
+		Meta:  &resourceMeta,
+		Image: options.Image,
+		Envs:  envs,
+	}
+	return createShadow(ctx, k, &podMeta, &sshKeyMeta, options)
 }
 
 func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta, options *options.DaemonOptions) (
@@ -76,17 +79,15 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 	if err != nil {
 		return
 	}
-	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
 
-	if err2 != nil {
-		err = err2
+	configMap, err := k.CreateConfigMapWithSshKey(ctx, metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
+	if err != nil {
 		return
 	}
 	log.Info().Msgf("Successful create config map %v", configMap.Name)
 
-	pod, err2 := createAndGetPod(ctx, k, metaAndSpec, sshKeyMeta.SshConfigMapName, options)
-	if err2 != nil {
-		err = err2
+	pod, err := createAndGetPod(ctx, k, metaAndSpec, sshKeyMeta.SshConfigMapName, options)
+	if err != nil {
 		return
 	}
 	podIP, podName, credential = shadowResult(pod, generator)
@@ -127,10 +128,11 @@ func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface,
 		return
 	}
 
-	return getShadowPod(ctx, k, resourceMeta, generator)
+	pod, err = getShadowPod(ctx, k, resourceMeta)
+	return
 }
 
-func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, generator *util.SSHGenerator) (pod *coreV1.Pod, sshGenerator *util.SSHGenerator, err error) {
+func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
 	podList, err := k.GetPodsByLabel(ctx, resourceMeta.Labels, resourceMeta.Namespace)
 	if err != nil {
 		return
@@ -140,7 +142,7 @@ func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *Reso
 		if err = k.IncreaseRef(ctx, resourceMeta.Name, resourceMeta.Namespace); err != nil {
 			return
 		}
-		return &(podList.Items[0]), generator, nil
+		return &(podList.Items[0]), nil
 	} else if len(podList.Items) > 1 {
 		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
 	}

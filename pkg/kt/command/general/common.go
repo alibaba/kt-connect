@@ -93,7 +93,7 @@ func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, ser
 			return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
 		}
 	}
-	log.Info().Msgf("Service %s locked for auto mesh", serviceName)
+	log.Info().Msgf("Service %s locked", serviceName)
 	return svc, nil
 }
 
@@ -105,8 +105,10 @@ func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceNa
 	}
 	if _, ok := svc.Annotations[common.KtLock]; ok {
 		delete(svc.Annotations, common.KtLock)
-		if _, err2 := k.UpdateService(ctx, svc); err2 != nil {
-			log.Warn().Err(err2).Msgf("Failed to unlock service %s", serviceName)
+		if _, err = k.UpdateService(ctx, svc); err != nil {
+			log.Warn().Err(err).Msgf("Failed to unlock service %s", serviceName)
+		} else {
+			log.Info().Msgf("Service %s unlocked", serviceName)
 		}
 	} else {
 		log.Info().Msgf("Service %s doesn't have lock", serviceName)

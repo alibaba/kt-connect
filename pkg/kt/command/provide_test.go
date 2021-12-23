@@ -4,14 +4,10 @@ import (
 	"errors"
 	"flag"
 	fakeKt "github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/golang/mock/gomock"
 	"github.com/urfave/cli"
 	"io/ioutil"
-	coreV1 "k8s.io/api/core/v1"
 	"testing"
 )
 
@@ -57,45 +53,3 @@ func Test_runCommand(t *testing.T) {
 	}
 }
 
-func testDaemonOptions(labels string, opt *options.ProvideOptions) *options.DaemonOptions {
-	daemonOptions := options.NewDaemonOptions("test")
-	daemonOptions.WithLabels = labels
-	daemonOptions.ProvideOptions = opt
-	return daemonOptions
-}
-
-func getHandlers(t *testing.T) (*fakeKt.MockCliInterface, *cluster.MockKubernetesInterface, *tunnel.MockShadowInterface) {
-	ctl := gomock.NewController(t)
-	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
-	kubernetes := cluster.NewMockKubernetesInterface(ctl)
-	shadow := tunnel.NewMockShadowInterface(ctl)
-
-	fakeKtCli.EXPECT().Kubernetes().AnyTimes().Return(kubernetes, nil)
-	fakeKtCli.EXPECT().Shadow().AnyTimes().Return(shadow)
-	return fakeKtCli, kubernetes, shadow
-}
-
-type args struct {
-	service         string
-	options         *options.DaemonOptions
-	shadowResponse  createShadowResponse
-	serviceResponse createServiceResponse
-	inboundResponse inboundResponse
-}
-
-type inboundResponse struct {
-	err error
-}
-
-type createServiceResponse struct {
-	service *coreV1.Service
-	err     error
-}
-
-type createShadowResponse struct {
-	podIP      string
-	podName    string
-	sshcm      string
-	credential *util.SSHCredential
-	err        error
-}
