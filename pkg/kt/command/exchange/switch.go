@@ -18,14 +18,13 @@ func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceNa
 	}
 
 	// 2. Lock service to avoid conflict
-	svc, err := general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0)
-	if err != nil {
+	if err = general.LockService(ctx, k, svcName, opts.Namespace, 0); err != nil {
 		return err
 	}
 	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
 
 	// 3. Create shadow pod
-	shadowName := svc.Name + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
+	shadowName := svcName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleExchangeShadow,
 		common.KtName: shadowName,
@@ -35,6 +34,10 @@ func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceNa
 	}
 
 	// 4. Let target service select shadow pod
+	svc, err := k.GetService(ctx, svcName, opts.Namespace)
+	if err != nil {
+		return err
+	}
 	opts.RuntimeOptions.Origin = svcName
 	if err = general.UpdateServiceSelector(ctx, k, svc, shadowLabels); err != nil {
 		return err

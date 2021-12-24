@@ -22,8 +22,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// 2. Lock service to avoid conflict
-	svc, err := general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0)
-	if err != nil {
+	if err = general.LockService(ctx, k, svcName, opts.Namespace, 0); err != nil {
 		return err
 	}
 	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
@@ -33,19 +32,23 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	versionMark := meshKey + ":" + meshVersion
 	opts.RuntimeOptions.Mesh = versionMark
 
+	svc, err := k.GetService(ctx, svcName, opts.Namespace)
+	if err != nil {
+		return err
+	}
 	ports := make(map[int]int)
 	for _, p := range svc.Spec.Ports {
 		ports[int(p.Port)] = p.TargetPort.IntValue()
 	}
 
 	// 4. Create origin service
-	originSvcName := svc.Name + common.OriginServiceSuffix
+	originSvcName := svcName + common.OriginServiceSuffix
 	if err = createOriginService(ctx, k, originSvcName, ports, svc.Spec.Selector, opts); err != nil {
 		return err
 	}
 
 	// 5. Create shadow service
-	shadowName := svc.Name + common.MeshPodInfix + meshVersion
+	shadowName := svcName + common.MeshPodInfix + meshVersion
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
 		common.KtName: shadowName,
@@ -55,12 +58,12 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// 6. Create router pod
-	routerPodName := svc.Name + common.RouterPodSuffix
+	routerPodName := svcName + common.RouterPodSuffix
 	routerLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
 		common.KtName: routerPodName,
 	}
-	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, versionMark, opts); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svcName, ports, routerLabels, versionMark, opts); err != nil {
 		return err
 	}
 

@@ -73,29 +73,29 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 	return svcName, nil
 }
 
-func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
+func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) error {
 	if times > 10 {
 		log.Warn().Msgf("Unable to obtain service lock, please try again later.")
-		return nil, fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
+		return fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if _, ok := svc.Annotations[common.KtLock]; ok {
 		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
-		return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
+		return LockService(ctx, k, serviceName, namespace, times + 1)
 	} else {
 		util.MapPut(svc.Annotations, common.KtLock, util.GetTimestamp())
 		if svc, err = k.UpdateService(ctx, svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
-			return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
+			return LockService(ctx, k, serviceName, namespace, times + 1)
 		}
 	}
 	log.Info().Msgf("Service %s locked", serviceName)
-	return svc, nil
+	return nil
 }
 
 func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string) {
