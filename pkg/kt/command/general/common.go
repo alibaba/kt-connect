@@ -89,7 +89,7 @@ func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName
 		return LockService(ctx, k, serviceName, namespace, times + 1)
 	} else {
 		util.MapPut(svc.Annotations, common.KtLock, util.GetTimestamp())
-		if svc, err = k.UpdateService(ctx, svc); err != nil {
+		if _, err = k.UpdateService(ctx, svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
 			return LockService(ctx, k, serviceName, namespace, times + 1)
 		}
@@ -116,7 +116,7 @@ func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceNa
 	}
 }
 
-func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface,svc *coreV1.Service, selector map[string]string) error {
+func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, svc *coreV1.Service, selector map[string]string) error {
 	if _, ok := svc.Annotations[common.KtSelector]; !ok {
 		if marshaledSelector, err := json.Marshal(svc.Spec.Selector); err != nil {
 			log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)

@@ -22,10 +22,10 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// 2. Lock service to avoid conflict
-	if err = general.LockService(ctx, k, svcName, opts.Namespace, 0); err != nil {
-		return err
-	}
-	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
+	//if err = general.LockService(ctx, k, svcName, opts.Namespace, 0); err != nil {
+	//	return err
+	//}
+	//defer general.UnlockService(ctx, k, svcName, opts.Namespace)
 
 	// 3. Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
