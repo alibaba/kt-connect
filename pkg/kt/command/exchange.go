@@ -31,17 +31,15 @@ func NewExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, act
 			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
-			resourceToExchange := c.Args().First()
-			expose := options.ExchangeOptions.Expose
 
-			if len(resourceToExchange) == 0 {
+			if len(c.Args()) == 0 {
 				return errors.New("name of resource to exchange is required")
 			}
-			if len(expose) == 0 {
+			if len(options.ExchangeOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
 
-			return action.Exchange(resourceToExchange, cli, options)
+			return action.Exchange(c.Args().First(), cli, options)
 		},
 	}
 }

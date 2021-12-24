@@ -31,18 +31,15 @@ func NewMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action 
 			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
-			resourceToMesh := c.Args().First()
-			expose := options.MeshOptions.Expose
 
-			if len(resourceToMesh) == 0 {
+			if len(c.Args()) == 0 {
 				return errors.New("name of deployment to mesh is required")
 			}
-
-			if len(expose) == 0 {
+			if len(options.MeshOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
 
-			return action.Mesh(resourceToMesh, cli, options)
+			return action.Mesh(c.Args().First(), cli, options)
 		},
 	}
 }

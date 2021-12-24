@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,7 +40,7 @@ func GetOutboundIP() (address string) {
 }
 
 // ParsePortMapping parse <port> or <localPort>:<removePort> parameter
-func ParsePortMapping(exposePort string) (string, string) {
+func ParsePortMapping(exposePort string) (int, int, error) {
 	localPort := exposePort
 	remotePort := exposePort
 	ports := strings.SplitN(exposePort, ":", 2)
@@ -47,7 +48,15 @@ func ParsePortMapping(exposePort string) (string, string) {
 		localPort = ports[0]
 		remotePort = ports[1]
 	}
-	return localPort, remotePort
+	lp, err := strconv.Atoi(localPort)
+	if err != nil {
+		return -1, -1, fmt.Errorf("local port '%s' is not a number", localPort)
+	}
+	rp, err := strconv.Atoi(remotePort)
+	if err != nil {
+		return -1, -1, fmt.Errorf("remote port '%s' is not a number", remotePort)
+	}
+	return lp, rp, nil
 }
 
 // ExtractNetMaskFromCidr extract net mask length (e.g. 16) from cidr (e.g. 1.2.3.4/16)

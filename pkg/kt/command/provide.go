@@ -15,7 +15,6 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
-	"strconv"
 	"time"
 )
 
@@ -32,11 +31,10 @@ func NewProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 			if err := general.CombineKubeOpts(options); err != nil {
 				return err
 			}
-			port := options.ProvideOptions.Expose
 			if len(c.Args()) == 0 {
 				return errors.New("an service name must be specified")
 			}
-			if port == 0 {
+			if len(options.ProvideOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
 			return action.Provide(c.Args().First(), cli, options)
@@ -51,7 +49,7 @@ func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *
 		return err
 	}
 
-	if port := util.FindBrokenPort(strconv.Itoa(options.ProvideOptions.Expose)); port != "" {
+	if port := util.FindBrokenPort(options.ProvideOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 

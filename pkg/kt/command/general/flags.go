@@ -222,9 +222,9 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 
 func ProvideActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
-		cli.IntFlag{
+		cli.StringFlag{
 			Name:        "expose",
-			Usage:       "The port that exposes",
+			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.ProvideOptions.Expose,
 		},
 		cli.BoolFlag{

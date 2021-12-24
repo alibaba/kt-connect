@@ -10,12 +10,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-// ProvideOptions ...
-type ProvideOptions struct {
-	External bool
-	Expose   int
-}
-
 // ConnectOptions ...
 type ConnectOptions struct {
 	Global               bool
@@ -42,8 +36,8 @@ type ConnectOptions struct {
 
 // ExchangeOptions ...
 type ExchangeOptions struct {
-	Method string
-	Expose string
+	Method          string
+	Expose          string
 	RecoverWaitTime int
 }
 
@@ -53,6 +47,12 @@ type MeshOptions struct {
 	Expose      string
 	VersionMark string
 	RouterImage string
+}
+
+// ProvideOptions ...
+type ProvideOptions struct {
+	External bool
+	Expose   string
 }
 
 // CleanOptions ...

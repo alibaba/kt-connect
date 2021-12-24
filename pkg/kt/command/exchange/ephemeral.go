@@ -155,7 +155,10 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 	}
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
-		localPort, remotePort := util.ParsePortMapping(exposePort)
+		localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
+		if err2 != nil {
+			return err2
+		}
 		var wg sync.WaitGroup
 		tunnel.ExposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
 		wg.Done()
@@ -179,39 +182,47 @@ func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort in
 	return err
 }
 
-func getListenedPorts(ssh sshchannel.Channel, localSSHPort int, privateKey string) (map[string]struct{}, error) {
+func getListenedPorts(ssh sshchannel.Channel, localSSHPort int, privateKey string) (map[int]struct{}, error) {
 	result, err := ssh.RunScript(
 		privateKey,
 		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
-		`netstat -tuln | grep -E '^(tcp|udp|tcp6)' |grep LISTEN |awk '{print $4}' | awk -F: '{printf("%s\n", $NF)}'`)
+		`netstat -tuln | grep -E '^(tcp|udp|tcp6)' | grep LISTEN | awk '{print $4}' | awk -F: '{printf("%s\n", $NF)}'`)
 
 	if err != nil {
 		return nil, err
 	}
 
 	log.Debug().Msgf("Run get listened ports result: %s", result)
-	var listenedPorts = make(map[string]struct{})
+	var listenedPorts = make(map[int]struct{})
 	// The result should be a string like
 	// 38059
 	// 22
 	parts := strings.Split(result, "\n")
 	for i := range parts {
 		if len(parts[i]) > 0 {
-			listenedPorts[parts[i]] = struct{}{}
+			port, err2 := strconv.Atoi(parts[i])
+			if err2 != nil {
+				log.Warn().Err(err2).Msgf("Failed to fetch listened ports (got '%s')", parts[i])
+				continue
+			}
+			listenedPorts[port] = struct{}{}
 		}
 	}
 
 	return listenedPorts, nil
 }
 
-func remoteRedirectPort(exposePorts string, listenedPorts map[string]struct{}) (redirectPort map[string]string, err error) {
+func remoteRedirectPort(exposePorts string, listenedPorts map[int]struct{}) (map[int]int, error) {
 	portPairs := strings.Split(exposePorts, ",")
-	redirectPort = make(map[string]string)
+	redirectPort := make(map[int]int)
 	for _, exposePort := range portPairs {
-		_, remotePort := util.ParsePortMapping(exposePort)
+		_, remotePort, err := util.ParsePortMapping(exposePort)
+		if err != nil {
+			return nil, err
+		}
 		port := randPort(listenedPorts)
-		if port == "" {
-			return nil, fmt.Errorf("failed to find redirect port for port: %s", remotePort)
+		if port == -1 {
+			return nil, fmt.Errorf("failed to find redirect port for port: %d", remotePort)
 		}
 		redirectPort[remotePort] = port
 	}
@@ -219,13 +230,13 @@ func remoteRedirectPort(exposePorts string, listenedPorts map[string]struct{}) (
 	return redirectPort, nil
 }
 
-func randPort(listenedPorts map[string]struct{}) string {
+func randPort(listenedPorts map[int]struct{}) int {
 	for i := 0; i < 100; i++ {
-		port := strconv.Itoa(util.RandomPort())
+		port := util.RandomPort()
 		if _, exists := listenedPorts[port]; !exists {
 			return port
 		}
 	}
-	return ""
+	return -1
 }
 

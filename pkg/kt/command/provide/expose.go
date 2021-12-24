@@ -10,7 +10,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	"strconv"
 	"strings"
 )
 
@@ -27,12 +26,12 @@ func Expose(ctx context.Context, serviceName string, cli kt.CliInterface, option
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
-	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, options, cli.Kubernetes(), cli)
+	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, options, cli.Kubernetes())
 }
 
 // exposeLocalService create shadow and expose service if need
 func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string,
-	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface, cli kt.CliInterface) (err error) {
+	options *options.DaemonOptions, kubernetes cluster.KubernetesInterface) error {
 
 	envs := make(map[string]string)
 	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, options, labels, annotations, envs)
@@ -41,8 +40,15 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	}
 	log.Info().Msgf("Created shadow pod %s", podName)
 
-	log.Info().Msgf("Expose deployment %s to service %s:%v", shadowPodName, serviceName, options.ProvideOptions.Expose)
-	ports := map[int]int {options.ProvideOptions.Expose: options.ProvideOptions.Expose}
+	portPairs := strings.Split(options.ProvideOptions.Expose, ",")
+	ports := make(map[int]int)
+	for _, exposePort := range portPairs {
+		localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
+		if err2 != nil {
+			return err
+		}
+		ports[localPort] = remotePort
+	}
 	if _, err = kubernetes.CreateService(ctx, &cluster.SvcMetaAndSpec{
 		Meta: &cluster.ResourceMeta{
 			Name: serviceName,
@@ -59,7 +65,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	options.RuntimeOptions.Service = serviceName
 	options.RuntimeOptions.Shadow = shadowPodName
 
-	if _, err = tunnel.ForwardPodToLocal(strconv.Itoa(options.ProvideOptions.Expose), podName, credential.PrivateKeyPath, options); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(options.ProvideOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err
 	}
 
