@@ -73,29 +73,32 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 	return svcName, nil
 }
 
-func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) error {
+func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
 	if times > 10 {
 		log.Warn().Msgf("Unable to obtain service lock, please try again later.")
-		return fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
+		return nil, fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
+	if svc.Annotations == nil {
+		svc.Annotations = make(map[string]string)
+	}
 	if _, ok := svc.Annotations[common.KtLock]; ok {
 		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
-		return LockService(ctx, k, serviceName, namespace, times + 1)
+		return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
 	} else {
-		util.MapPut(svc.Annotations, common.KtLock, util.GetTimestamp())
-		if _, err = k.UpdateService(ctx, svc); err != nil {
+		svc.Annotations[common.KtLock] = util.GetTimestamp()
+		if svc, err = k.UpdateService(ctx, svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
-			return LockService(ctx, k, serviceName, namespace, times + 1)
+			return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
 		}
 	}
 	log.Info().Msgf("Service %s locked", serviceName)
-	return nil
+	return svc, nil
 }
 
 func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string) {
@@ -116,17 +119,26 @@ func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceNa
 	}
 }
 
-func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, svc *coreV1.Service, selector map[string]string) error {
-	if _, ok := svc.Annotations[common.KtSelector]; !ok {
-		if marshaledSelector, err := json.Marshal(svc.Spec.Selector); err != nil {
-			log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
-			return err
-		} else {
-			util.MapPut(svc.Annotations, common.KtSelector, string(marshaledSelector))
-		}
+func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string, selector map[string]string) error {
+	svc, err := k.GetService(ctx, svcName, namespace)
+	if err != nil {
+		return err
+	}
+	marshaledSelector, err := json.Marshal(svc.Spec.Selector)
+	if err != nil {
+		log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
+		return err
+	}
+
+	// if KtSelector annotation not exist, you are the first exchange/mesh user to this service, record original selector
+	// otherwise just skip it
+	if svc.Annotations == nil {
+		util.MapPut(svc.Annotations, common.KtSelector, string(marshaledSelector))
+	} else if _, ok := svc.Annotations[common.KtSelector]; !ok {
+		svc.Annotations[common.KtSelector] = string(marshaledSelector)
 	}
 	svc.Spec.Selector = selector
-	if _, err := k.UpdateService(ctx, svc); err != nil {
+	if _, err = k.UpdateService(ctx, svc); err != nil {
 		return err
 	}
 	return nil

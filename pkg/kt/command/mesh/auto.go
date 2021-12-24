@@ -22,20 +22,17 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// 2. Lock service to avoid conflict
-	//if err = general.LockService(ctx, k, svcName, opts.Namespace, 0); err != nil {
-	//	return err
-	//}
-	//defer general.UnlockService(ctx, k, svcName, opts.Namespace)
+	svc, err := general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0)
+	if err != nil {
+		return err
+	}
+	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
 
 	// 3. Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
 	opts.RuntimeOptions.Mesh = versionMark
 
-	svc, err := k.GetService(ctx, svcName, opts.Namespace)
-	if err != nil {
-		return err
-	}
 	ports := make(map[int]int)
 	for _, p := range svc.Spec.Ports {
 		ports[int(p.Port)] = p.TargetPort.IntValue()
@@ -68,7 +65,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// 7. Let target service select router pod
-	if err = general.UpdateServiceSelector(ctx, k, svc, routerLabels); err != nil {
+	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace,routerLabels); err != nil {
 		return err
 	}
 

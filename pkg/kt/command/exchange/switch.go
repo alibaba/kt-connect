@@ -18,7 +18,7 @@ func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceNa
 	}
 
 	// 2. Lock service to avoid conflict
-	if err = general.LockService(ctx, k, svcName, opts.Namespace, 0); err != nil {
+	if _, err = general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0); err != nil {
 		return err
 	}
 	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
@@ -34,12 +34,8 @@ func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceNa
 	}
 
 	// 4. Let target service select shadow pod
-	svc, err := k.GetService(ctx, svcName, opts.Namespace)
-	if err != nil {
-		return err
-	}
 	opts.RuntimeOptions.Origin = svcName
-	if err = general.UpdateServiceSelector(ctx, k, svc, shadowLabels); err != nil {
+	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace, shadowLabels); err != nil {
 		return err
 	}
 
