@@ -24,7 +24,11 @@ func BySocks5(cli kt.CliInterface, options *options.DaemonOptions) error {
 	if err != nil {
 		return err
 	}
-	return startSocks5Connection(cli.Exec().SshChannel(), options, credential.PrivateKeyPath)
+	if err = startSocks5Connection(cli.Exec().SshChannel(), options, credential.PrivateKeyPath); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOptions, privateKey string) (err error) {

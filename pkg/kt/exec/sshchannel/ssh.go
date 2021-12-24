@@ -36,10 +36,11 @@ func (c *SSHChannel) StartSocks5Proxy(privateKey string, sshAddress, socks5Addre
 		return err
 	}
 
-	// Process will hang at here
-	if err = serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
-		log.Error().Err(err).Msgf("Failed to create socks5 server")
-	}
+	go func() {
+		if err = serverSocks.ListenAndServe("tcp", socks5Address); err != nil {
+			log.Error().Err(err).Msgf("Failed to create socks5 server")
+		}
+	}()
 	return
 }
 
