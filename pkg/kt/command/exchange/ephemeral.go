@@ -72,6 +72,7 @@ func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, res
 			return []coreV1.Pod{*pod}, nil
 		}
 	case "svc":
+		fallthrough
 	case "service":
 		return getPodsOfService(ctx, k8s, name, namespace)
 	}

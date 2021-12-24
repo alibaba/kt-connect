@@ -50,6 +50,7 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 	var svcName string
 	switch resourceType {
 	case "deploy":
+		fallthrough
 	case "deployment":
 		app, err := k.GetDeployment(ctx, name, opts.Namespace)
 		if err != nil {
@@ -63,6 +64,7 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 		}
 		svcName = svc.Name
 	case "svc":
+		fallthrough
 	case "service":
 		svcName = name
 	default:
