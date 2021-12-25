@@ -83,8 +83,8 @@ func getEnvs(options *options.DaemonOptions) map[string]string {
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
 	if options.ConnectOptions.Method == common.ConnectMethodTun {
-		envs[common.ClientTunIP] = options.ConnectOptions.SourceIP
-		envs[common.ServerTunIP] = options.ConnectOptions.DestIP
+		envs[common.ClientTunIP] = options.RuntimeOptions.SourceIP
+		envs[common.ServerTunIP] = options.RuntimeOptions.DestIP
 		envs[common.TunMaskLength] = util.ExtractNetMaskFromCidr(options.ConnectOptions.TunCidr)
 	}
 	return envs

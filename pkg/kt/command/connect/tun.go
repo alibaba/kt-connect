@@ -42,8 +42,8 @@ func completeOptions(options *options.DaemonOptions) error {
 		if err != nil {
 			return err
 		}
-		options.ConnectOptions.SourceIP = srcIP
-		options.ConnectOptions.DestIP = destIP
+		options.RuntimeOptions.SourceIP = srcIP
+		options.RuntimeOptions.DestIP = destIP
 	}
 	return nil
 }

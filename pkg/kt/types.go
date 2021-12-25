@@ -30,8 +30,8 @@ func (c *Cli) Exec() exec.CliInterface {
 	return &exec.Cli{
 		KubeOptions: c.Options.KubeOptions,
 		TunName:     c.Options.ConnectOptions.TunName,
-		SourceIP:    c.Options.ConnectOptions.SourceIP,
-		DestIP:      c.Options.ConnectOptions.DestIP,
+		SourceIP:    c.Options.RuntimeOptions.SourceIP,
+		DestIP:      c.Options.RuntimeOptions.DestIP,
 		MaskLen:     util.ExtractNetMaskFromCidr(c.Options.ConnectOptions.TunCidr),
 	}
 }

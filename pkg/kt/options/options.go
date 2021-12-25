@@ -28,10 +28,6 @@ type ConnectOptions struct {
 	ClusterDomain        string
 	JvmrcDir             string
 	UseGlobalProxy       bool
-
-	// Used for tun mode
-	SourceIP string
-	DestIP   string
 }
 
 // ExchangeOptions ...
@@ -90,6 +86,10 @@ type RuntimeOptions struct {
 	ProxyConfig registry.ProxyConfig
 	// RestConfig kubectl config
 	RestConfig *rest.Config
+	// SourceIP for tun mode
+	SourceIP string
+	// DestIP for tun mode
+	DestIP   string
 }
 
 type dashboardOptions struct {
