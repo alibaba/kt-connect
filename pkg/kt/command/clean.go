@@ -72,17 +72,20 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		ServicesToUnlock: make([]string, 0),
 	}
 	for _, pod := range pods {
-		action.analysisExpiredPods(pod, options, &resourceToClean)
+		action.analysisExpiredPods(pod, options.CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
+	for _, svc := range svcs {
+		action.analysisExpiredServices(svc, options.CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
 	action.analysisLocked(deployments, svcs, &resourceToClean)
-	if len(resourceToClean.PodsToDelete) > 0 {
+	if isEmpty(resourceToClean) {
+		log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
+	} else {
 		if options.CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
 		} else {
 			action.cleanResource(ctx, resourceToClean, cli.Kubernetes(), options.Namespace)
 		}
-	} else {
-		log.Info().Msg("No unavailing kt pod found (^.^)YYa!!")
 	}
 
 	if !options.CleanOptions.DryRun {
@@ -108,9 +111,9 @@ func (action *Action) cleanPidFiles() {
 	}
 }
 
-func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.DaemonOptions, resourceToClean *ResourceToClean) {
+func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat, err := strconv.ParseInt(pod.Annotations[common.KtLastHeartBeat], 10, 64)
-	if err == nil && action.isExpired(lastHeartBeat, options) {
+	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
 		resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
 		log.Debug().Msgf("   role %s, config: %s", pod.Labels[common.KtRole], pod.Annotations[common.KtConfig])
@@ -121,11 +124,7 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.Labels[common.KtRole] == common.RoleProvideShadow {
-			if service, ok := config["service"]; ok {
-				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
-			}
-		} else if pod.Labels[common.KtRole] == common.RoleMeshShadow {
+		} else if pod.Labels[common.KtRole] == common.RoleProvideShadow || pod.Labels[common.KtRole] == common.RoleMeshShadow {
 			if service, ok := config["service"]; ok {
 				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
 			}
@@ -142,6 +141,13 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, options *options.Daemo
 		}
 	} else {
 		log.Debug().Msgf("Pod %s does no have heart beat annotation", pod.Name)
+	}
+}
+
+func (action *Action) analysisExpiredServices(svc coreV1.Service, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+	lastHeartBeat, err := strconv.ParseInt(svc.Annotations[common.KtLastHeartBeat], 10, 64)
+	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+		resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, svc.Name)
 	}
 }
 
@@ -264,6 +270,16 @@ func (action *Action) printResourceToClean(r ResourceToClean) {
 	}
 }
 
-func (action *Action) isExpired(lastHeartBeat int64, options *options.DaemonOptions) bool {
-	return time.Now().Unix()-lastHeartBeat > options.CleanOptions.ThresholdInMinus*60
+func isExpired(lastHeartBeat, cleanThresholdInMinus int64) bool {
+	return time.Now().Unix()-lastHeartBeat > cleanThresholdInMinus*60
+}
+
+func isEmpty(r ResourceToClean) bool {
+	return len(r.ServicesToDelete) == 0 &&
+		len(r.PodsToDelete) == 0 &&
+		len(r.ConfigMapsToDelete) == 0 &&
+		len(r.ServicesToUnlock) == 0 &&
+		len(r.DeploymentsToUnlock) == 0 &&
+		len(r.ServicesToRecover) == 0 &&
+		len(r.DeploymentsToScale) == 0
 }
