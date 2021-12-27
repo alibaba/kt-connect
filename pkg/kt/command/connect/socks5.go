@@ -8,7 +8,9 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
+	"time"
 )
 
 func BySocks5(cli kt.CliInterface, options *options.DaemonOptions) error {
@@ -38,10 +40,24 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 			options.ConnectOptions.SocksPort)), 0644)
 	}
 
-	showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions)
-	return ssh.StartSocks5Proxy(
-		privateKey,
-		fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
-		fmt.Sprintf("%s:%d", options.ConnectOptions.SocksAddr, options.ConnectOptions.SocksPort),
-	)
+	var success = make(chan bool)
+	go func() {
+		time.Sleep(2 * time.Second)
+		success <- true
+	}()
+	go func() {
+		err = ssh.StartSocks5Proxy(
+			privateKey,
+			fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
+			fmt.Sprintf("%s:%d", options.ConnectOptions.SocksAddr, options.ConnectOptions.SocksPort),
+		)
+		if err != nil {
+			log.Error().Err(err).Msgf("failed to create socks5 connection")
+			success <- false
+		}
+	}()
+	if <- success {
+		showSetupSocksMessage(common.ConnectMethodSocks5, options.ConnectOptions)
+	}
+	return
 }
