@@ -17,6 +17,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -30,7 +31,7 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs string) ([]string, error) {
+func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace, podCIDRs string) ([]string, error) {
 	var cidrs []string
 
 	if podCIDRs != "" {
@@ -40,8 +41,7 @@ func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs s
 		return cidrs, nil
 	}
 
-	nodeList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-
+	nodeList, err := k.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		log.Error().Err(err).Msgf("Fails to get node info of cluster")
 		return nil, err
@@ -55,7 +55,7 @@ func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs s
 
 	if len(cidrs) == 0 {
 		log.Info().Msgf("Node has empty PodCIDR, try to get CIDR with pod sample")
-		samples, err2 := getPodCidrByInstance(ctx, clientset)
+		samples, err2 := getPodCidrByInstance(ctx, k, namespace)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -67,11 +67,10 @@ func getPodCidrs(ctx context.Context, clientset kubernetes.Interface, podCIDRs s
 	return cidrs, nil
 }
 
-func getPodCidrByInstance(ctx context.Context, clientset kubernetes.Interface) (samples mapset.Set, err error) {
-	podList, err := clientset.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
+func getPodCidrByInstance(ctx context.Context, k kubernetes.Interface, namespace string) (samples mapset.Set, err error) {
+	podList, err := k.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Msgf("Fails to get service info of cluster")
-		return
+		podList, err = k.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	}
 
 	samples = mapset.NewSet()
@@ -83,9 +82,14 @@ func getPodCidrByInstance(ctx context.Context, clientset kubernetes.Interface) (
 	return
 }
 
-func getServiceCidr(serviceList []coreV1.Service) (cidr []string, err error) {
+func getServiceCidr(ctx context.Context, k kubernetes.Interface, namespace string) (cidr []string, err error) {
+	serviceList, err := fetchServiceList(ctx, k, namespace)
+	if err != nil {
+		return
+	}
+
 	samples := mapset.NewSet()
-	for _, service := range serviceList {
+	for _, service := range serviceList.Items {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
 			samples.Add(getCidrFromSample(service.Spec.ClusterIP))
 		}
@@ -95,6 +99,15 @@ func getServiceCidr(serviceList []coreV1.Service) (cidr []string, err error) {
 		cidr = append(cidr, fmt.Sprint(sample))
 	}
 	return
+}
+
+// fetchServiceList try list service at cluster scope. fallback to namespace scope
+func fetchServiceList(ctx context.Context, k kubernetes.Interface, namespace string) (*coreV1.ServiceList, error) {
+	serviceList, err := k.CoreV1().Services("").List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return k.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
+	}
+	return serviceList, err
 }
 
 func getCidrFromSample(sample string) string {
@@ -281,4 +294,13 @@ func execute(method string, url *url.URL, config *restclient.Config, stdin io.Re
 		Stderr: stderr,
 		Tty:    tty,
 	})
+}
+
+func decreaseRef(refCount string) (count string, err error) {
+	currentCount, err := strconv.Atoi(refCount)
+	if err != nil {
+		return
+	}
+	count = strconv.Itoa(currentCount - 1)
+	return
 }

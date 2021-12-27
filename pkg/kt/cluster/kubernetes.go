@@ -297,34 +297,19 @@ func (k *Kubernetes) CreateService(ctx context.Context, metaAndSpec *SvcMetaAndS
 
 // ClusterCidrs get cluster Cidrs
 func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *options.ConnectOptions) (cidrs []string, err error) {
-	serviceList, err := fetchServiceList(ctx, k, namespace)
-	if err != nil {
-		return
-	}
-
 	if !opt.DisablePodIp {
-		cidrs, err = getPodCidrs(ctx, k.Clientset, opt.CIDRs)
+		cidrs, err = getPodCidrs(ctx, k.Clientset, namespace, opt.CIDRs)
 		if err != nil {
 			return
 		}
 	}
 
-	services := serviceList.Items
-	serviceCidr, err := getServiceCidr(services)
+	serviceCidr, err := getServiceCidr(ctx, k.Clientset, namespace)
 	if err != nil {
 		return
 	}
 	cidrs = append(cidrs, serviceCidr...)
 	return
-}
-
-// fetchServiceList try list service at cluster scope. fallback to namespace scope
-func fetchServiceList(ctx context.Context, k *Kubernetes, namespace string) (*coreV1.ServiceList, error) {
-	serviceList, err := k.Clientset.CoreV1().Services("").List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
-	}
-	return serviceList, err
 }
 
 // GetServiceHosts get service dns map
@@ -460,14 +445,5 @@ func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *c
 	}
 	util.MapPut(pod.Annotations, common.KtRefCount, count)
 	_, err = k.UpdatePod(ctx, pod)
-	return
-}
-
-func decreaseRef(refCount string) (count string, err error) {
-	currentCount, err := strconv.Atoi(refCount)
-	if err != nil {
-		return
-	}
-	count = strconv.Itoa(currentCount - 1)
 	return
 }
