@@ -7,17 +7,16 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 )
 
 // GetKtResources fetch all kt pods and deployments
-func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, []appV1.Deployment, []coreV1.Service, error) {
+func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error) {
 	pods, err := k.GetPodsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	deployments, err := k.GetDeploymentsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	configmaps, err := k.GetConfigMapsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -25,7 +24,7 @@ func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	return pods.Items, deployments.Items, services.Items, nil
+	return pods.Items, configmaps.Items, services.Items, nil
 }
 
 // GetOrCreateShadow create shadow

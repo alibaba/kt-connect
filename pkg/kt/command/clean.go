@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"io/ioutil"
-	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"os"
 	"strconv"
@@ -27,7 +26,6 @@ type ResourceToClean struct {
 	ServicesToDelete    []string
 	ConfigMapsToDelete  []string
 	DeploymentsToScale  map[string]int32
-	DeploymentsToUnlock []string
 	ServicesToRecover   []string
 	ServicesToUnlock   []string
 }
@@ -57,7 +55,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	action.cleanPidFiles()
 	ctx := context.Background()
 
-	pods, deployments, svcs, err := cluster.GetKtResources(ctx, cli.Kubernetes(), options.Namespace)
+	pods, cfs, svcs, err := cluster.GetKtResources(ctx, cli.Kubernetes(), options.Namespace)
 	if err != nil {
 		return err
 	}
@@ -67,17 +65,19 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		ServicesToDelete: make([]string, 0),
 		ConfigMapsToDelete: make([]string, 0),
 		DeploymentsToScale: make(map[string]int32),
-		DeploymentsToUnlock: make([]string, 0),
 		ServicesToRecover: make([]string, 0),
 		ServicesToUnlock: make([]string, 0),
 	}
 	for _, pod := range pods {
 		action.analysisExpiredPods(pod, options.CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
+	for _, cf := range cfs {
+		action.analysisExpiredConfigmaps(cf, options.CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
 	for _, svc := range svcs {
 		action.analysisExpiredServices(svc, options.CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
-	action.analysisLocked(deployments, svcs, &resourceToClean)
+	action.analysisLocked(svcs, &resourceToClean)
 	if isEmpty(resourceToClean) {
 		log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
 	} else {
@@ -124,23 +124,20 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus 
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.Labels[common.KtRole] == common.RoleProvideShadow || pod.Labels[common.KtRole] == common.RoleMeshShadow {
-			if service, ok := config["service"]; ok {
-				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service)
-			}
 		} else if pod.Labels[common.KtRole] == common.RoleRouter {
 			if service, ok := config["service"]; ok {
 				resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
-				resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, service + common.OriginServiceSuffix)
-			}
-		}
-		for _, v := range pod.Spec.Volumes {
-			if v.ConfigMap != nil && len(v.ConfigMap.Items) == 1 && v.ConfigMap.Items[0].Key == common.SshAuthKey {
-				resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, v.ConfigMap.Name)
 			}
 		}
 	} else {
 		log.Debug().Msgf("Pod %s does no have heart beat annotation", pod.Name)
+	}
+}
+
+func (action *Action) analysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+	lastHeartBeat, err := strconv.ParseInt(cf.Annotations[common.KtLastHeartBeat], 10, 64)
+	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+		resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, cf.Name)
 	}
 }
 
@@ -151,15 +148,7 @@ func (action *Action) analysisExpiredServices(svc coreV1.Service, cleanThreshold
 	}
 }
 
-func (action *Action) analysisLocked(apps []appV1.Deployment, svcs []coreV1.Service, resourceToClean *ResourceToClean) {
-	for _, app := range apps {
-		if lock, ok := app.Annotations[common.KtLock]; ok {
-			lockTime, err := strconv.ParseInt(lock, 10, 64)
-			if err == nil && time.Now().Unix() - lockTime > SecondsOf10Mins {
-				resourceToClean.DeploymentsToUnlock = append(resourceToClean.DeploymentsToUnlock, app.Name)
-			}
-		}
-	}
+func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *ResourceToClean) {
 	for _, svc := range svcs {
 		if lock, ok := svc.Annotations[common.KtLock]; ok {
 			lockTime, err := strconv.ParseInt(lock, 10, 64)
@@ -190,16 +179,6 @@ func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cl
 		err := k.ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
-		}
-	}
-	log.Info().Msgf("Recovering %d locked deployments", len(r.DeploymentsToUnlock))
-	for _, name := range r.DeploymentsToUnlock {
-		if app, err := k.GetDeployment(ctx, name, namespace); err == nil {
-			delete(app.Annotations, common.KtLock)
-			_, err = k.UpdateDeployment(ctx, app)
-			if err != nil {
-				log.Error().Err(err).Msgf("Failed to lock deployment %s", name)
-			}
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
@@ -252,10 +231,6 @@ func (action *Action) printResourceToClean(r ResourceToClean) {
 	for name, replica := range r.DeploymentsToScale {
 		log.Info().Msgf(" * %s -> %d", name, replica)
 	}
-	log.Info().Msgf("Found %d locked deployments to recover:", len(r.DeploymentsToUnlock))
-	for _, name := range r.DeploymentsToUnlock {
-		log.Info().Msgf(" * %s", name)
-	}
 	log.Info().Msgf("Found %d unavailing service to delete:", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
 		log.Info().Msgf(" * %s", name)
@@ -279,7 +254,6 @@ func isEmpty(r ResourceToClean) bool {
 		len(r.PodsToDelete) == 0 &&
 		len(r.ConfigMapsToDelete) == 0 &&
 		len(r.ServicesToUnlock) == 0 &&
-		len(r.DeploymentsToUnlock) == 0 &&
 		len(r.ServicesToRecover) == 0 &&
 		len(r.DeploymentsToScale) == 0
 }

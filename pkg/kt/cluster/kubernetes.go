@@ -118,6 +118,13 @@ func (k *Kubernetes) GetConfigMap(ctx context.Context, name, namespace string) (
 	return k.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
+// GetConfigMapsByLabel get deployments by label
+func (k *Kubernetes) GetConfigMapsByLabel(ctx context.Context, labels map[string]string, namespace string) (pods *coreV1.ConfigMapList, err error) {
+	return k.Clientset.CoreV1().ConfigMaps(namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+	})
+}
+
 // GetDeployment ...
 func (k *Kubernetes) GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Get(ctx, name, metav1.GetOptions{})
