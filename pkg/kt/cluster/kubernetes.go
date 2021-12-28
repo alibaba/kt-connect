@@ -14,12 +14,15 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/cache"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // PodMetaAndSpec ...
@@ -335,6 +338,41 @@ func (k *Kubernetes) GetServicesByLabel(ctx context.Context, labels map[string]s
 	})
 }
 
+// WatchService ...
+func (k *Kubernetes) WatchService(name, namespace string, f func()) {
+	watchlist := cache.NewListWatchFromClient(
+		k.Clientset.CoreV1().RESTClient(),
+		string(coreV1.ResourceServices),
+		namespace,
+		fields.OneTermEqualSelector("metadata.name", name),
+	)
+	_, controller := cache.NewInformer(
+		watchlist,
+		&coreV1.Service{},
+		0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				log.Debug().Msgf("Service %s in %s created", name, namespace)
+			},
+			DeleteFunc: func(obj interface{}) {
+				log.Debug().Msgf("Service %s in %s deleted", name, namespace)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				log.Debug().Msgf("Service %s in %s changed", name, namespace)
+				f()
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	defer close(stop)
+	go controller.Run(stop)
+	for {
+		time.Sleep(1000 * time.Second)
+	}
+}
+
+// WaitPodReady ...
 func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error) {
 	stopSignal := make(chan struct{})
 	defer close(stopSignal)

@@ -65,7 +65,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// 7. Let target service select router pod
-	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace,routerLabels); err != nil {
+	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace, routerLabels); err != nil {
 		return err
 	}
 

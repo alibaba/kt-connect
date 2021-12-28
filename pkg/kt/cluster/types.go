@@ -36,6 +36,7 @@ type KubernetesInterface interface {
 	GetServiceHosts(ctx context.Context, namespace string) (hosts map[string]string)
 	GetServicesByLabel(ctx context.Context, labels map[string]string, namespace string) (*coreV1.ServiceList, error)
 	RemoveService(ctx context.Context, name, namespace string) (err error)
+	WatchService(name, namespace string, f func())
 
 	CreateConfigMapWithSshKey(ctx context.Context, labels map[string]string, sshcm string, namespace string,
 		generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error)

@@ -141,6 +141,8 @@ func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, s
 	if _, err = k.UpdateService(ctx, svc); err != nil {
 		return err
 	}
+
+	go k.WatchService(svcName, namespace, func() {})
 	return nil
 }
 
