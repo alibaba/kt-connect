@@ -47,7 +47,7 @@ func NewProvideCommand(streams genericclioptions.IOStreams, version string) *cob
 	cmd.Flags().IntVarP(&opt.Timeout, "timeout", "", 30, "timeout to wait port-forward")
 
 	// run
-	cmd.Flags().IntVarP(&opt.Expose, "expose", "", 80, " The port that exposes")
+	cmd.Flags().StringVarP(&opt.Expose, "expose", "", "80", " The port that exposes")
 	cmd.Flags().BoolVarP(&opt.External, "external", "e", false, " If specified, a public, external service is created")
 	return cmd
 }

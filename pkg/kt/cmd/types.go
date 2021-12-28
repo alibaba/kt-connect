@@ -77,7 +77,7 @@ type ProvideOptions struct {
 	configFlags *genericclioptions.ConfigFlags
 
 	// run
-	Expose   int
+	Expose   string
 	External bool
 	Target   string
 }

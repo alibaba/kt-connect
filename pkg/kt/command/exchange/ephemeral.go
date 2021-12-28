@@ -146,7 +146,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 	}
 	var redirectPortStr string
 	for k, v := range redirectPorts {
-		redirectPortStr += fmt.Sprintf("%s:%s,", k, v)
+		redirectPortStr += fmt.Sprintf("%d:%d,", k, v)
 	}
 	redirectPortStr = redirectPortStr[:len(redirectPortStr)-1]
 	err = setupIptables(&ssh, redirectPortStr, localSSHPort, privateKey)

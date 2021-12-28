@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/require"
 	"reflect"
+	"strconv"
 	"testing"
 
 	coreV1 "k8s.io/api/core/v1"
@@ -129,18 +130,18 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 		{
 			name: "1 range",
 			ips: []string{"1.2.3.4", "1.2.3.100"},
-			miniRange: []string{"1.2.3.0/24"},
+			miniRange: []string{"1.2.3.0/25"},
 		},
 		{
 			name: "2 ranges",
-			ips: []string{"1.2.3.4", "2.3.4.5", "1.2.3.100"},
-			miniRange: []string{"1.2.3.0/24", "2.3.4.0/24"},
+			ips: []string{"1.2.3.4", "2.3.4.5", "1.2.3.100", "2.3.5.5"},
+			miniRange: []string{"1.2.3.0/25", "2.3.0.0/23"},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			realRange := calculateMinimalIpRange(test.ips)
-			require.Equal(t, len(realRange), len(test.miniRange), "range length should equal for %s", test.name)
+			require.Equal(t, len(test.miniRange), len(realRange), "range length should equal for %s", test.name)
 			for i := 0; i < len(realRange); i++ {
 				found := false
 				for j := 0; j < len(test.miniRange); j++ {
@@ -155,6 +156,52 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_decToBin(t *testing.T) {
+	tests := []struct {
+		num int
+		bin []int
+	}{
+		{num: 0, bin: []int{0, 0, 0, 0, 0, 0, 0, 0}},
+		{num: 25, bin: []int{0, 0, 0, 1, 1, 0, 0, 1}},
+		{num: 100, bin: []int{0, 1, 1, 0, 0, 1, 0, 0}},
+		{num: 255, bin: []int{1, 1, 1, 1, 1, 1, 1, 1}},
+	}
+	for _, test := range tests {
+		t.Run(strconv.Itoa(test.num), func(t *testing.T) {
+			res := decToBin(test.num)
+			require.Equal(t, len(res), len(test.bin))
+			for i := 0; i < len(res); i++ {
+				require.Equal(t, res[i], test.bin[i])
+			}
+		})
+	}
+}
+
+func Test_ipToBin(t *testing.T) {
+	ipNum, _ := ipToBin("100.25.255.0")
+	expIp := []int{0, 1, 1, 0, 0, 1, 0, 0,
+		0, 0, 0, 1, 1, 0, 0, 1,
+		1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0}
+	for i := 0; i < 32; i++ {
+		require.Equal(t, expIp[i], ipNum[i], "failed on index: %d", i)
+	}
+}
+
+func Test_binToIpRange(t *testing.T)  {
+	ipBin := [32]int{0, 1, 1, 0, 0, 1, 0, 0,
+		0, 0, 0, 1, 1, 0, 0, 1,
+		1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0}
+	require.Equal(t, "100.25.255.0/32", binToIpRange(ipBin))
+
+	ipBin = [32]int{0, 1, 1, 0, 0, 1, 0, 0,
+		0, 0, 0, 1, 1, 0, 0, 1,
+		1, 1, 1, 1, 1, 1, 1, -1,
+		0, 0, 0, 0, 0, 0, 0, 0}
+	require.Equal(t, "100.25.254.0/23", binToIpRange(ipBin))
 }
 
 func buildService(namespace, name, clusterIP string) *coreV1.Service {

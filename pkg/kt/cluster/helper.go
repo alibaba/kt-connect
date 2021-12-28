@@ -107,15 +107,104 @@ func fetchServiceList(ctx context.Context, k kubernetes.Interface, namespace str
 }
 
 func calculateMinimalIpRange(ips []string) []string {
-	rangeMap := make(map[string]bool)
+	var miniBins [][32]int
+	threshold := 16
 	for _, ip := range ips {
-		rangeMap[strings.Join(append(strings.Split(ip, ".")[:3], "0"), ".") + "/24"] = true
+		ipBin, err := ipToBin(ip)
+		if err != nil {
+			// skip invalid ip
+			continue
+		}
+		if len(miniBins) == 0 {
+			// accept first ip
+			miniBins = append(miniBins, ipBin)
+			continue
+		}
+		match := false
+		for i, bins := range miniBins {
+			for j, b := range bins {
+				if b != ipBin[j] {
+					if j >= threshold {
+						// mark the match start position
+						match = true
+						miniBins[i][j] = -1
+					}
+					break
+				}
+			}
+			if match {
+				break
+			}
+		}
+		if !match {
+			// no include in current range, append it
+			miniBins = append(miniBins, ipBin)
+		}
 	}
 	var miniRange []string
-	for k, _ := range rangeMap {
-		miniRange = append(miniRange, k)
+	for _, bins := range miniBins {
+		miniRange = append(miniRange, binToIpRange(bins))
 	}
 	return miniRange
+}
+
+func binToIpRange(bins [32]int) string {
+	ips := []string {"0", "0", "0", "0"}
+	mask := 0
+	end := false
+	for i := 0; i < 4; i++ {
+		segment := 0
+		factor := 128
+		for j := 0; j < 8; j++ {
+			if bins[i*8+j] < 0 {
+				end = true
+				break
+			}
+			segment += bins[i*8+j] * factor
+			factor /= 2
+			mask++
+		}
+		ips[i] = strconv.Itoa(segment)
+		if end {
+			break
+		}
+	}
+	return fmt.Sprintf("%s/%d", strings.Join(ips, "."), mask)
+}
+
+func ipToBin(ip string) (ipBin [32]int, err error) {
+	ipNum, err := parseIp(ip)
+	if err != nil {
+		return
+	}
+	for i, n := range ipNum {
+		bin := decToBin(n)
+		copy(ipBin[i*8:i*8+8], bin[:])
+	}
+	return
+}
+
+func parseIp(ip string) (ipNum [4]int, err error) {
+	for i, seg := range strings.Split(ip, ".") {
+		ipNum[i], err = strconv.Atoi(seg)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func decToBin(n int) [8]int {
+	var bin [8]int
+	for i := 0; n > 0; n /= 2 {
+		bin[i] = n % 2
+		i++
+	}
+	// revert it
+	for i, j := 0, len(bin)-1; i < j; i, j = i+1, j-1 {
+		bin[i], bin[j] = bin[j], bin[i]
+	}
+	return bin
 }
 
 func getTargetPod(labelsKey string, name string, podList []*coreV1.Pod) *coreV1.Pod {
