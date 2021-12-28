@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 
@@ -42,10 +43,8 @@ func Test_getPodCidrs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-
 			client := testclient.NewSimpleClientset(tt.objs...)
-
-			gotCidrs, err := getPodCidrs(context.TODO(), client, "")
+			gotCidrs, err := getPodCidrs(context.TODO(), client, "default", "")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPodCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -58,21 +57,16 @@ func Test_getPodCidrs(t *testing.T) {
 }
 
 func Test_getServiceCidr(t *testing.T) {
-	type args struct {
-		serviceList []coreV1.Service
-	}
 	tests := []struct {
 		name     string
-		args     args
+		objs      []runtime.Object
 		wantCidr []string
 		wantErr  bool
 	}{
 		{
 			name: "should_get_service_cidr_by_svc_sample",
-			args: args{
-				[]coreV1.Service{
-					buildService("default", "name", "173.168.0.1"),
-				},
+			objs: []runtime.Object{
+				buildPod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
 			},
 			wantErr:  false,
 			wantCidr: []string{"173.168.0.0/16"},
@@ -80,7 +74,8 @@ func Test_getServiceCidr(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotCidr, err := getServiceCidr(tt.args.serviceList)
+			client := testclient.NewSimpleClientset(tt.objs...)
+			gotCidr, err := getServiceCidr(context.TODO(), client, "default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getServiceCidr() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -125,16 +120,44 @@ func Test_getKubernetesClient(t *testing.T) {
 	}
 }
 
-func buildService(namespace, name, clusterIP string) coreV1.Service {
-	return coreV1.Service{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: coreV1.ServiceSpec{
-			ClusterIP: clusterIP,
+func Test_calculateMinimalIpRange(t *testing.T) {
+	tests := []struct {
+		name string
+		ips []string
+		miniRange []string
+	}{
+		{
+			name: "1 range",
+			ips: []string{"1.2.3.4", "1.2.3.100"},
+			miniRange: []string{"1.2.3.0/24"},
 		},
+		{
+			name: "2 ranges",
+			ips: []string{"1.2.3.4", "2.3.4.5", "1.2.3.100"},
+			miniRange: []string{"1.2.3.0/24", "2.3.4.0/24"},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			realRange := calculateMinimalIpRange(test.ips)
+			require.Equal(t, len(realRange), len(test.miniRange), "range length should equal for %s", test.name)
+			for i := 0; i < len(realRange); i++ {
+				found := false
+				for j := 0; j < len(test.miniRange); j++ {
+					if realRange[i] == test.miniRange[j] {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Fatalf("range %s not found for %s", realRange[i], test.name)
+				}
+			}
+		})
 	}
 }
 
-func buildService2(namespace, name, clusterIP string) *coreV1.Service {
+func buildService(namespace, name, clusterIP string) *coreV1.Service {
 	return &coreV1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: coreV1.ServiceSpec{

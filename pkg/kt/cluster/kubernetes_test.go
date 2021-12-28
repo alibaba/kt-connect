@@ -36,7 +36,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				buildPod("pod1", "default", "image", "192.168.0.7", map[string]string{
 					"labe": "value",
 				}),
-				buildService2("default", "name", "172.168.0.18"),
+				buildService("default", "name", "172.168.0.18"),
 			},
 			wantCidrs: []string{
 				"172.168.0.0/24",

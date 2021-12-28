@@ -86,7 +86,7 @@ func (k *Kubernetes) ScaleTo(ctx context.Context, name, namespace string, replic
 	deployment.Spec.Replicas = replicas
 
 	if _, err = k.UpdateDeployment(ctx, deployment); err != nil {
-		log.Error().Err(err).Msgf("Fails to scale deployment %s", deployment.Name)
+		log.Error().Err(err).Msgf("Failed to scale deployment %s", deployment.Name)
 		return
 	}
 	log.Info().Msgf("Deployment %s successfully scaled to %d replicas", name, *replicas)

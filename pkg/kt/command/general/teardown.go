@@ -48,7 +48,7 @@ func removeTunDevice(cli kt.CliInterface, opts *options.DaemonOptions) {
 		log.Debug().Msg("Removing tun device ...")
 		err := cli.Exec().Tunnel().RemoveDevice()
 		if err != nil {
-			log.Error().Err(err).Msgf("Fails to delete tun device")
+			log.Error().Err(err).Msgf("Failed to delete tun device")
 		}
 
 		if !opts.ConnectOptions.DisableDNS {

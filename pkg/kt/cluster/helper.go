@@ -6,7 +6,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	mapset "github.com/deckarep/golang-set"
 	"github.com/rs/zerolog/log"
 	"io"
 	coreV1 "k8s.io/api/core/v1"
@@ -41,64 +40,61 @@ func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace, podCIDR
 		return cidrs, nil
 	}
 
-	nodeList, err := k.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		log.Error().Err(err).Msgf("Fails to get node info of cluster")
-		return nil, err
-	}
-
-	for _, node := range nodeList.Items {
-		if node.Spec.PodCIDR != "" && len(node.Spec.PodCIDR) != 0 {
-			cidrs = append(cidrs, node.Spec.PodCIDR)
+	if nodeList, err := k.CoreV1().Nodes().List(ctx, metav1.ListOptions{}); err != nil {
+		// Usually cause by the local kube config has not enough permission
+		log.Debug().Err(err).Msgf("Failed to read node information of cluster")
+	} else {
+		for _, node := range nodeList.Items {
+			if node.Spec.PodCIDR != "" && len(node.Spec.PodCIDR) != 0 {
+				cidrs = append(cidrs, node.Spec.PodCIDR)
+			}
 		}
 	}
 
 	if len(cidrs) == 0 {
 		log.Info().Msgf("Node has empty PodCIDR, try to get CIDR with pod sample")
-		samples, err2 := getPodCidrByInstance(ctx, k, namespace)
-		if err2 != nil {
-			return nil, err2
+		ipRanges, err := getPodCidrByInstance(ctx, k, namespace)
+		if err != nil {
+			return nil, err
 		}
-		for _, sample := range samples.ToSlice() {
-			cidrs = append(cidrs, fmt.Sprint(sample))
+		for _, ir := range ipRanges {
+			cidrs = append(cidrs, ir)
 		}
 	}
 
 	return cidrs, nil
 }
 
-func getPodCidrByInstance(ctx context.Context, k kubernetes.Interface, namespace string) (samples mapset.Set, err error) {
+func getPodCidrByInstance(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
 	podList, err := k.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {
 		podList, err = k.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
 	}
 
-	samples = mapset.NewSet()
+	var ips []string
 	for _, pod := range podList.Items {
 		if pod.Status.PodIP != "" && pod.Status.PodIP != "None" {
-			samples.Add(getCidrFromSample(pod.Status.PodIP))
+			ips = append(ips, pod.Status.PodIP)
 		}
 	}
-	return
+
+	return calculateMinimalIpRange(ips), nil
 }
 
-func getServiceCidr(ctx context.Context, k kubernetes.Interface, namespace string) (cidr []string, err error) {
+func getServiceCidr(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
 	serviceList, err := fetchServiceList(ctx, k, namespace)
 	if err != nil {
-		return
+		return []string{}, err
 	}
 
-	samples := mapset.NewSet()
+	var ips []string
 	for _, service := range serviceList.Items {
 		if service.Spec.ClusterIP != "" && service.Spec.ClusterIP != "None" {
-			samples.Add(getCidrFromSample(service.Spec.ClusterIP))
+			ips = append(ips, service.Spec.ClusterIP)
 		}
 	}
 
-	for _, sample := range samples.ToSlice() {
-		cidr = append(cidr, fmt.Sprint(sample))
-	}
-	return
+	return calculateMinimalIpRange(ips), nil
 }
 
 // fetchServiceList try list service at cluster scope. fallback to namespace scope
@@ -110,8 +106,16 @@ func fetchServiceList(ctx context.Context, k kubernetes.Interface, namespace str
 	return serviceList, err
 }
 
-func getCidrFromSample(sample string) string {
-	return strings.Join(append(strings.Split(sample, ".")[:2], []string{"0", "0"}...), ".") + "/16"
+func calculateMinimalIpRange(ips []string) []string {
+	rangeMap := make(map[string]bool)
+	for _, ip := range ips {
+		rangeMap[strings.Join(append(strings.Split(ip, ".")[:3], "0"), ".") + "/24"] = true
+	}
+	var miniRange []string
+	for k, _ := range rangeMap {
+		miniRange = append(miniRange, k)
+	}
+	return miniRange
 }
 
 func getTargetPod(labelsKey string, name string, podList []*coreV1.Pod) *coreV1.Pod {
