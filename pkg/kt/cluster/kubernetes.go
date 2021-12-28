@@ -198,7 +198,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 }
 
 // RemoveEphemeralContainer remove ephemeral container from specified pod
-func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) (err error) {
+func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, _, podName string, namespace string) (err error) {
 	// TODO: implement container removal
 	return k.RemovePod(ctx, podName, namespace)
 }
@@ -303,11 +303,14 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 			return
 		}
 	}
+	log.Debug().Msgf("Pod CIDR is %v", cidrs)
 
 	serviceCidr, err := getServiceCidr(ctx, k.Clientset, namespace)
 	if err != nil {
 		return
 	}
+	log.Debug().Msgf("Service CIDR is %v", serviceCidr)
+
 	cidrs = append(cidrs, serviceCidr...)
 	return
 }

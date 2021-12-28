@@ -66,9 +66,9 @@ func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace, podCIDR
 }
 
 func getPodCidrByInstance(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
-	podList, err := k.CoreV1().Pods("").List(ctx, metav1.ListOptions{})
+	podList, err := k.CoreV1().Pods("").List(ctx, metav1.ListOptions{Limit: 1000})
 	if err != nil {
-		podList, err = k.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{})
+		podList, err = k.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{Limit: 1000})
 	}
 
 	var ips []string
@@ -99,9 +99,9 @@ func getServiceCidr(ctx context.Context, k kubernetes.Interface, namespace strin
 
 // fetchServiceList try list service at cluster scope. fallback to namespace scope
 func fetchServiceList(ctx context.Context, k kubernetes.Interface, namespace string) (*coreV1.ServiceList, error) {
-	serviceList, err := k.CoreV1().Services("").List(ctx, metav1.ListOptions{})
+	serviceList, err := k.CoreV1().Services("").List(ctx, metav1.ListOptions{Limit: 1000})
 	if err != nil {
-		return k.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
+		return k.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{Limit: 1000})
 	}
 	return serviceList, err
 }
