@@ -25,9 +25,10 @@ func Test_getPodCidrs(t *testing.T) {
 			name: "should_get_pod_cidr_from_pods",
 			objs: []runtime.Object{
 				buildPod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
+				buildPod("POD2", "default", "b", "172.168.1.3", map[string]string{}),
 			},
 			wantCidrs: []string{
-				"172.168.0.0/16",
+				"172.168.1.0/24",
 			},
 			wantErr: false,
 		},
@@ -67,10 +68,11 @@ func Test_getServiceCidr(t *testing.T) {
 		{
 			name: "should_get_service_cidr_by_svc_sample",
 			objs: []runtime.Object{
-				buildPod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
+				buildService( "default", "SVC1", "172.168.1.2"),
+				buildService( "default", "SVC2", "172.168.2.2"),
 			},
 			wantErr:  false,
-			wantCidr: []string{"173.168.0.0/16"},
+			wantCidr: []string{"172.168.0.0/16"},
 		},
 	}
 	for _, tt := range tests {
@@ -130,12 +132,12 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 		{
 			name: "1 range",
 			ips: []string{"1.2.3.4", "1.2.3.100"},
-			miniRange: []string{"1.2.3.0/25"},
+			miniRange: []string{"1.2.3.0/24"},
 		},
 		{
 			name: "2 ranges",
 			ips: []string{"1.2.3.4", "2.3.4.5", "1.2.3.100", "2.3.5.5"},
-			miniRange: []string{"1.2.3.0/25", "2.3.0.0/23"},
+			miniRange: []string{"1.2.3.0/24", "2.3.0.0/16"},
 		},
 	}
 	for _, test := range tests {
@@ -195,13 +197,13 @@ func Test_binToIpRange(t *testing.T)  {
 		0, 0, 0, 1, 1, 0, 0, 1,
 		1, 1, 1, 1, 1, 1, 1, 1,
 		0, 0, 0, 0, 0, 0, 0, 0}
-	require.Equal(t, "100.25.255.0/32", binToIpRange(ipBin))
+	require.Equal(t, "100.25.255.0/32", binToIpRange(ipBin, false))
 
 	ipBin = [32]int{0, 1, 1, 0, 0, 1, 0, 0,
 		0, 0, 0, 1, 1, 0, 0, 1,
 		1, 1, 1, 1, 1, 1, 1, -1,
 		0, 0, 0, 0, 0, 0, 0, 0}
-	require.Equal(t, "100.25.254.0/23", binToIpRange(ipBin))
+	require.Equal(t, "100.25.254.0/23", binToIpRange(ipBin, false))
 }
 
 func buildService(namespace, name, clusterIP string) *coreV1.Service {

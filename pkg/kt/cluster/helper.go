@@ -109,6 +109,7 @@ func fetchServiceList(ctx context.Context, k kubernetes.Interface, namespace str
 func calculateMinimalIpRange(ips []string) []string {
 	var miniBins [][32]int
 	threshold := 16
+	withAlign := true
 	for _, ip := range ips {
 		ipBin, err := ipToBin(ip)
 		if err != nil {
@@ -143,12 +144,12 @@ func calculateMinimalIpRange(ips []string) []string {
 	}
 	var miniRange []string
 	for _, bins := range miniBins {
-		miniRange = append(miniRange, binToIpRange(bins))
+		miniRange = append(miniRange, binToIpRange(bins, withAlign))
 	}
 	return miniRange
 }
 
-func binToIpRange(bins [32]int) string {
+func binToIpRange(bins [32]int, withAlign bool) string {
 	ips := []string {"0", "0", "0", "0"}
 	mask := 0
 	end := false
@@ -164,8 +165,13 @@ func binToIpRange(bins [32]int) string {
 			factor /= 2
 			mask++
 		}
-		ips[i] = strconv.Itoa(segment)
+		if !withAlign || !end {
+			ips[i] = strconv.Itoa(segment)
+		}
 		if end {
+			if withAlign {
+				mask = i * 8
+			}
 			break
 		}
 	}

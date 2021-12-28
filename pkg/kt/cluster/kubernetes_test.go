@@ -28,18 +28,17 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 			name: "shouldGetClusterCidr",
 			args: args{
 				podCIDR: []string{
-					"172.168.0.0/24",
+					"192.168.0.0/24",
 				},
 			},
 			objs: []runtime.Object{
 				buildNode("default", "node1", ""),
-				buildPod("pod1", "default", "image", "192.168.0.7", map[string]string{
-					"labe": "value",
-				}),
-				buildService("default", "name", "172.168.0.18"),
+				buildPod("pod1", "default", "image", "192.168.0.7", map[string]string{"labe": "value"}),
+				buildService("default", "svc1", "172.168.0.18"),
+				buildService("default", "svc2", "172.168.1.18"),
 			},
 			wantCidrs: []string{
-				"172.168.0.0/24",
+				"192.168.0.0/24",
 				"172.168.0.0/16",
 			},
 			wantErr: false,
