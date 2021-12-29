@@ -9,15 +9,14 @@ import (
 // AddDevice add a tun device on machine
 func (s *Cli) AddDevice() error {
 	// run command: ip tuntap add dev tun0 mod tun
-	err := ktexec.RunAndWait(exec.Command("ip",
+	if err := ktexec.RunAndWait(exec.Command("ip",
 		"tuntap",
 		"add",
 		"dev",
 		s.TunName,
 		"mod",
 		"tun",
-	), "add_device")
-	if err != nil {
+	), "add_device"); err != nil {
 		return err
 	}
 	// run command: ip link set dev tun0 up

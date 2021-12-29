@@ -19,51 +19,48 @@ type CMDContext struct {
 }
 
 // RunAndWait run cmd
-func RunAndWait(cmd *exec.Cmd, name string) (err error) {
+func RunAndWait(cmd *exec.Cmd, name string) error {
 	ctx := &CMDContext{
 		Cmd:  cmd,
 		Name: name,
 	}
-	if err = runCmd(ctx); err != nil {
-		return
+	if err := runCmd(ctx); err != nil {
+		return err
 	}
-	err = cmd.Wait()
-	return
+	return cmd.Wait()
 }
 
 // BackgroundRun run cmd in background
-func BackgroundRun(cmd *exec.Cmd, name string) (err error) {
+func BackgroundRun(cmd *exec.Cmd, name string) error {
 	ctx := &CMDContext{
 		Cmd:  cmd,
 		Name: name,
 	}
-	err = runCmd(ctx)
-	if err != nil {
-		return
+	if err := runCmd(ctx); err != nil {
+		return err
 	}
 	go func() {
-		err = cmd.Wait()
+		err := cmd.Wait()
 		if err != nil {
 			return
 		}
 		log.Info().Msgf("Finished %s", name)
 	}()
-	return
+	return nil
 }
 
 // BackgroundRunWithCtx run cmd in background with context
-func BackgroundRunWithCtx(cmdCtx *CMDContext) (err error) {
-	err = runCmd(cmdCtx)
-	if err != nil {
-		return
+func BackgroundRunWithCtx(cmdCtx *CMDContext) error {
+	if err := runCmd(cmdCtx); err != nil {
+		return err
 	}
 	go func() {
-		if err = cmdCtx.Cmd.Wait(); err != nil {
+		if err := cmdCtx.Cmd.Wait(); err != nil {
 			log.Info().Msgf("Background process %s exit abnormally: %s", cmdCtx.Name, err.Error())
 		}
 		log.Info().Msgf("Finished %s with context", cmdCtx.Name)
 	}()
-	return
+	return nil
 }
 
 // CanRun check whether a command can execute successful
@@ -84,8 +81,7 @@ func runCmd(cmdCtx *CMDContext) error {
 		go io.Copy(os.Stderr, stderr)
 	}
 
-	err = cmd.Start()
-	if err != nil {
+	if err = cmd.Start(); err != nil {
 		return err
 	}
 
@@ -97,12 +93,12 @@ func runCmd(cmdCtx *CMDContext) error {
 		if cmdCtx.Ctx != nil {
 			select {
 			case <-cmdCtx.Ctx.Done():
-				err := cmd.Process.Kill()
-				if err != nil {
+				err2 := cmd.Process.Kill()
+				if err2 != nil {
 					log.Debug().Msgf("Process %d already competed", pid)
 				}
 			}
 		}
 	}()
-	return err
+	return nil
 }

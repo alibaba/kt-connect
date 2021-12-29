@@ -70,52 +70,45 @@ func allocateTunIP(cidr string) (srcIP, destIP string, err error) {
 func startTunConnection(rootCtx context.Context, cli exec.CliInterface, credential *util.SSHCredential,
 	options *options.DaemonOptions, podIP string, cidrs []string, stop chan struct{}) (err error) {
 
-	// 1. Create tun device.
-	err = cli.Tunnel().AddDevice()
-	if err != nil {
-		return err
+	// Create tun device.
+	if err = cli.Tunnel().AddDevice(); err != nil {
+		return
 	}
 	log.Info().Msgf("Add tun device successful")
 
-	// 2. Setup device ip
-	err = cli.Tunnel().SetDeviceIP()
-	if err != nil {
-		return err
+	// Setup device ip
+	if err = cli.Tunnel().SetDeviceIP(); err != nil {
+		return
 	}
 	log.Info().Msgf("Set tun device ip successful")
 
-	// 3. Create ssh tunnel.
-	err = util.BackgroundRunWithCtx(&util.CMDContext{
+	// Create ssh tunnel.
+	if err = util.BackgroundRunWithCtx(&util.CMDContext{
 		Ctx:  rootCtx,
 		Cmd:  cli.SSH().TunnelToRemote(0, credential.RemoteHost, credential.PrivateKeyPath, options.ConnectOptions.SSHPort),
 		Name: "ssh_tun",
 		Stop: stop,
-	})
-
-	if err != nil {
-		return err
+	}); err != nil {
+		return
 	} else {
 		log.Info().Msgf("Create ssh tun successful")
 	}
 
-	// 4. Add route to kubernetes cluster.
+	// Add route to kubernetes cluster.
 	for i := range cidrs {
-		err = cli.Tunnel().AddRoute(cidrs[i])
-		if err != nil {
-			return err
+		if err = cli.Tunnel().AddRoute(cidrs[i]); err != nil {
+			return
 		}
 		log.Info().Msgf("Add route %s successful", cidrs[i])
 	}
 
 	if !options.ConnectOptions.DisableDNS {
-		// 5. Setup dns config.
+		// Setup dns config.
 		// This will overwrite the file /etc/resolv.conf
-		err = util.AddNameserver(podIP)
-		if err == nil {
+		if err = util.AddNameserver(podIP); err == nil {
 			log.Info().Msgf("Add nameserver %s successful", podIP)
 		}
-		return err
 	}
 
-	return nil
+	return
 }

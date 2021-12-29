@@ -37,9 +37,10 @@ func main() {
 	action := command.Action{}
 
 	app.Commands = newCommands(context, &action, options)
-	err := app.Run(os.Args)
-	if err != nil {
+	app.ExitErrHandler = func(context *cli.Context, err error) {
 		log.Error().Err(err).Msgf("Failed to start")
+	}
+	if err := app.Run(os.Args); err != nil {
 		general.CleanupWorkspace(context, options)
 		os.Exit(-1)
 	}
