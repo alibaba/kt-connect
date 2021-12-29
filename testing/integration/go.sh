@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 NS="kt-integration-test"
-SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.4"
-ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v0.2.4"
+SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.5"
+ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v0.2.5"
 MODE="vpn"
 DOCKER_HOST="ubuntu@192.168.64.2"
 

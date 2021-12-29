@@ -1,6 +1,6 @@
 ![logo](media/logo.png)
 
-# KtConnect<small>0.2.4</small>
+# KtConnect<small>0.2.5</small>
 
 > Management and Integration with your Kubernetes dev environment more efficient.
 
