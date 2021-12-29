@@ -43,16 +43,12 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 	if options.ConnectOptions.ShareShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
-	annotations := make(map[string]string)
 
 	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
-		shadowPodName, options, getLabels(shadowPodName), annotations, getEnvs(options))
+		shadowPodName, options, getLabels(shadowPodName), make(map[string]string), getEnvs(options))
 	if err != nil {
 		return "", "", nil, err
 	}
-
-	// record shadow name will clean up terminal
-	options.RuntimeOptions.Shadow = shadowPodName
 
 	return endPointIP, podName, credential, nil
 }

@@ -18,15 +18,13 @@ import (
 
 func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName, portsToExpose string,
 	labels, annotations map[string]string, options *options.DaemonOptions) error {
+
 	podLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	envs := make(map[string]string)
 	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, options, podLabels, annotations, envs)
 	if err != nil {
 		return err
 	}
-
-	// record context data
-	options.RuntimeOptions.Shadow = shadowPodName
 
 	if _, err = tunnel.ForwardPodToLocal(portsToExpose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err

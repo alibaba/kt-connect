@@ -63,7 +63,6 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 		return err
 	}
 	options.RuntimeOptions.Service = serviceName
-	options.RuntimeOptions.Shadow = shadowPodName
 
 	if _, err = tunnel.ForwardPodToLocal(options.ProvideOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err

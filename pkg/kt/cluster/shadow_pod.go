@@ -31,14 +31,15 @@ func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string
 func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
 	string, string, *util.SSHCredential, error) {
 
-	privateKeyPath := util.PrivateKeyPath(name)
+	// record context data
+	options.RuntimeOptions.Shadow = name
 
 	// extra labels must be applied after origin labels
-	for k, v := range util.String2Map(options.WithLabels) {
-		labels[k] = v
+	for key, val := range util.String2Map(options.WithLabels) {
+		labels[key] = val
 	}
-	for k, v := range util.String2Map(options.WithAnnotations) {
-		annotations[k] = v
+	for key, val := range util.String2Map(options.WithAnnotations) {
+		annotations[key] = val
 	}
 	annotations[common.KtUser] = util.GetLocalUserName()
 	resourceMeta := ResourceMeta{
@@ -49,7 +50,7 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 	}
 	sshKeyMeta := SSHkeyMeta{
 		SshConfigMapName: name,
-		PrivateKeyPath:   privateKeyPath,
+		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
 	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
