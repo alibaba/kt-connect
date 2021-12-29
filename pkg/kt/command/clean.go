@@ -115,7 +115,9 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus 
 	lastHeartBeat, err := strconv.ParseInt(pod.Annotations[common.KtLastHeartBeat], 10, 64)
 	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
-		resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
+		if pod.DeletionTimestamp == nil {
+			resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
+		}
 		log.Debug().Msgf("   role %s, config: %s", pod.Labels[common.KtRole], pod.Annotations[common.KtConfig])
 		config := util.String2Map(pod.Annotations[common.KtConfig])
 		if pod.Labels[common.KtRole] == common.RoleExchangeShadow {

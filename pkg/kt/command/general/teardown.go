@@ -168,7 +168,14 @@ func RecoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, 
 		return
 	} else {
 		var selector map[string]string
-		err = json.Unmarshal([]byte(svc.Annotations[common.KtSelector]), &selector)
+		if svc.Annotations == nil {
+			log.Warn().Msgf("No annotation found in service %s, skipping", svcName)
+		}
+		originSelector, ok := svc.Annotations[common.KtSelector]
+		if !ok {
+			log.Warn().Msgf("No selector annotation found in service %s, skipping", svcName)
+		}
+		err = json.Unmarshal([]byte(originSelector), &selector)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to unmarshal original selector of service %s", svcName)
 			return
