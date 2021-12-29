@@ -45,16 +45,6 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
-	// Create router pod
-	routerPodName := svcName + common.RouterPodSuffix
-	routerLabels := map[string]string{
-		common.KtRole: common.RoleRouter,
-		common.KtName: routerPodName,
-	}
-	if err = createRouter(ctx, k, routerPodName, svcName, ports, routerLabels, versionMark, opts); err != nil {
-		return err
-	}
-
 	// Create origin service
 	originSvcName := svcName + common.OriginServiceSuffix
 	if err = createOriginService(ctx, k, originSvcName, ports, svc.Spec.Selector, opts); err != nil {
@@ -71,7 +61,19 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
+	// Create router pod
+	// Must after origin service and shadow service, otherwise will cause 'host not found in upstream' error
+	routerPodName := svcName + common.RouterPodSuffix
+	routerLabels := map[string]string{
+		common.KtRole: common.RoleRouter,
+		common.KtName: routerPodName,
+	}
+	if err = createRouter(ctx, k, routerPodName, svcName, ports, routerLabels, versionMark, opts); err != nil {
+		return err
+	}
+
 	// Let target service select router pod
+	// Must after router pod created, otherwise request will be interrupted
 	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace, routerLabels); err != nil {
 		return err
 	}
