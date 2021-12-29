@@ -48,7 +48,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	// Create router pod
 	routerPodName := svcName + common.RouterPodSuffix
 	routerLabels := map[string]string{
-		common.KtRole: common.RoleMeshShadow,
+		common.KtRole: common.RoleRouter,
 		common.KtName: routerPodName,
 	}
 	if err = createRouter(ctx, k, routerPodName, svcName, ports, routerLabels, versionMark, opts); err != nil {

@@ -77,5 +77,3 @@ const (
 	// RoleRouter router role
 	RoleRouter = "router"
 )
-
-

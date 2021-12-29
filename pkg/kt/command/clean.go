@@ -30,7 +30,7 @@ type ResourceToClean struct {
 	ServicesToUnlock   []string
 }
 
-const SecondsOf10Mins = 10 * 60
+const SecondsOfFiveMinutes = 5 * 60
 
 // NewCleanCommand return new connect command
 func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
@@ -152,7 +152,7 @@ func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *Res
 	for _, svc := range svcs {
 		if lock, ok := svc.Annotations[common.KtLock]; ok {
 			lockTime, err := strconv.ParseInt(lock, 10, 64)
-			if err == nil && time.Now().Unix() - lockTime > SecondsOf10Mins {
+			if err == nil && time.Now().Unix() - lockTime > SecondsOfFiveMinutes {
 				resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 			}
 		}
