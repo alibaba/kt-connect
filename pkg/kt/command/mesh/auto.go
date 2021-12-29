@@ -12,23 +12,24 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
-	// 1. Get service to mesh
+	// Get service to mesh
 	svcName, err := general.GetServiceByResourceName(ctx, k, resourceName, opts)
 	if err != nil {
 		return err
 	}
 
-	// 2. Lock service to avoid conflict
+	// Lock service to avoid conflict
 	svc, err := general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0)
 	if err != nil {
 		return err
 	}
 	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
 
-	// 3. Parse or generate mesh kv
+	// Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
 	opts.RuntimeOptions.Mesh = versionMark
@@ -38,13 +39,18 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		ports[int(p.Port)] = p.TargetPort.IntValue()
 	}
 
-	// 4. Create origin service
+	// Check name usable
+	if err = isNameUsable(ctx, k, svcName, meshVersion, opts, 0); err != nil {
+		return err
+	}
+
+	// Create origin service
 	originSvcName := svcName + common.OriginServiceSuffix
 	if err = createOriginService(ctx, k, originSvcName, ports, svc.Spec.Selector, opts); err != nil {
 		return err
 	}
 
-	// 5. Create shadow service
+	// Create shadow service
 	shadowName := svcName + common.MeshPodInfix + meshVersion
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
@@ -54,7 +60,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
-	// 6. Create router pod
+	// Create router pod
 	routerPodName := svcName + common.RouterPodSuffix
 	routerLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
@@ -64,12 +70,12 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
-	// 7. Let target service select router pod
+	// Let target service select router pod
 	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace, routerLabels); err != nil {
 		return err
 	}
 
-	// 8. Create shadow pod
+	// Create shadow pod
 	annotations := map[string]string{
 		common.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
@@ -79,6 +85,27 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	log.Info().Msg("---------------------------------------------------------------")
 	log.Info().Msgf(" Now you can access your service by header '%s: %s' ", strings.ToUpper(meshKey), meshVersion)
 	log.Info().Msg("---------------------------------------------------------------")
+	return nil
+}
+
+func isNameUsable(ctx context.Context, k cluster.KubernetesInterface, name, meshVersion string,
+	opts *options.DaemonOptions, times int) error {
+	if times > 10 {
+		return fmt.Errorf("meshing pod for service %s still terminating, please try again later", name)
+	}
+	shadowName := name + common.MeshPodInfix + meshVersion
+	if pod, err := k.GetPod(ctx, shadowName, opts.Namespace); err == nil {
+		if pod.DeletionTimestamp == nil {
+			msg := fmt.Sprintf("Another user is meshing service '%s' via version '%s'", name, meshVersion)
+			if opts.MeshOptions.VersionMark != "" {
+				return fmt.Errorf("%s, please specify a different version mark", msg)
+			}
+			return fmt.Errorf( "%s, please retry or use '--versionMark' parameter to spcify an uniq one", msg)
+		}
+		log.Info().Msgf("Previous meshing pod for service '%s' not finished yet, waiting ...", name)
+		time.Sleep(3 * time.Second)
+		return isNameUsable(ctx, k, name, meshVersion, opts, times + 1)
+	}
 	return nil
 }
 

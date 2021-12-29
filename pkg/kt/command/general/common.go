@@ -73,8 +73,7 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 
 func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
 	if times > 10 {
-		log.Warn().Msgf("Unable to obtain service lock, please try again later.")
-		return nil, fmt.Errorf("failed to obtain auto meth lock of service %s", serviceName)
+		return nil, fmt.Errorf("failed to obtain kt lock of service %s, please try again later", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
 	if err != nil {

@@ -67,7 +67,7 @@ func TestKubernetes_CreateShadow(t *testing.T) {
 			envs := make(map[string]string)
 			annotations := make(map[string]string)
 			option := options.DaemonOptions{Namespace: tt.args.namespace, Image: tt.args.image, Debug: tt.args.debug,
-				ConnectOptions: &options.ConnectOptions{ShareShadow: false}}
+				ConnectOptions: &options.ConnectOptions{ShareShadow: false}, RuntimeOptions: &options.RuntimeOptions{}}
 			gotPodIP, gotPodName, _, err := GetOrCreateShadow(context.TODO(), k, tt.args.name, &option, tt.args.labels, annotations, envs)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.GetOrCreateShadow() error = %v, wantErr %v", err, tt.wantErr)
