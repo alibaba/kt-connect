@@ -77,7 +77,8 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	for _, svc := range svcs {
 		action.analysisExpiredServices(svc, options.CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
-	action.analysisLocked(svcs, &resourceToClean)
+	svcList, err := cli.Kubernetes().GetAllServiceInNamespace(ctx, options.Namespace)
+	action.analysisLocked(svcList.Items, &resourceToClean)
 	if isEmpty(resourceToClean) {
 		log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
 	} else {
@@ -152,6 +153,9 @@ func (action *Action) analysisExpiredServices(svc coreV1.Service, cleanThreshold
 
 func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *ResourceToClean) {
 	for _, svc := range svcs {
+		if svc.Annotations == nil {
+			continue
+		}
 		if lock, ok := svc.Annotations[common.KtLock]; ok {
 			lockTime, err := strconv.ParseInt(lock, 10, 64)
 			if err == nil && time.Now().Unix() - lockTime > SecondsOfFiveMinutes {

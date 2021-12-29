@@ -167,7 +167,7 @@ func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaled
 
 func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, app *appV1.Deployment,
 	options *options.DaemonOptions) (*coreV1.Service, error) {
-	svcList, err := k.GetServices(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
+	svcList, err := k.GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
 	if err != nil {
 		return nil, err
 	} else if len(svcList) == 0 {

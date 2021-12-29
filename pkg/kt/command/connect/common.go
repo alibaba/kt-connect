@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func setupDump2Host(kubernetes cluster.KubernetesInterface, currentNamespace, targetNamespaces, clusterDomain string) bool {
+func setupDump2Host(k cluster.KubernetesInterface, currentNamespace, targetNamespaces, clusterDomain string) bool {
 	namespacesToDump := []string{currentNamespace}
 	if targetNamespaces != "" {
 		namespacesToDump = []string{}
@@ -22,7 +22,7 @@ func setupDump2Host(kubernetes cluster.KubernetesInterface, currentNamespace, ta
 	hosts := map[string]string{}
 	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
-		host := kubernetes.GetServiceHosts(context.TODO(), namespace)
+		host := getServiceHosts(k, namespace)
 		for svc, ip := range host {
 			if ip == "" || ip == "None" {
 				continue
@@ -36,6 +36,17 @@ func setupDump2Host(kubernetes cluster.KubernetesInterface, currentNamespace, ta
 		}
 	}
 	return util.DumpHosts(hosts)
+}
+
+func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string]string {
+	hosts := map[string]string{}
+	services, err := k.GetAllServiceInNamespace(context.TODO(), namespace)
+	if err == nil {
+		for _, service := range services.Items {
+			hosts[service.Name] = service.Spec.ClusterIP
+		}
+	}
+	return hosts
 }
 
 func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (string, string, *util.SSHCredential, error) {

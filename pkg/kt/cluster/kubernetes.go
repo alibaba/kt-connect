@@ -106,21 +106,6 @@ func (k *Kubernetes) GetService(ctx context.Context, name, namespace string) (*c
 	return k.Clientset.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
-// GetServices get pods by label
-func (k *Kubernetes) GetServices(ctx context.Context, matchLabels map[string]string, namespace string) ([]coreV1.Service, error) {
-	var matchedSvcs []coreV1.Service
-	svcList, err := k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	for _, svc := range svcList.Items {
-		if util.MapContains(svc.Spec.Selector, matchLabels) {
-			matchedSvcs = append(matchedSvcs, svc)
-		}
-	}
-	return matchedSvcs, nil
-}
-
 // GetConfigMap get configmap
 func (k *Kubernetes) GetConfigMap(ctx context.Context, name, namespace string) (*coreV1.ConfigMap, error) {
 	return k.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
@@ -323,17 +308,9 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 	return
 }
 
-// GetServiceHosts get service dns map
-func (k *Kubernetes) GetServiceHosts(ctx context.Context, namespace string) (hosts map[string]string) {
-	services, err := k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return
-	}
-	hosts = map[string]string{}
-	for _, service := range services.Items {
-		hosts[service.Name] = service.Spec.ClusterIP
-	}
-	return
+// GetAllServiceInNamespace get all services in specified namespace
+func (k *Kubernetes) GetAllServiceInNamespace(ctx context.Context, namespace string) (*coreV1.ServiceList, error) {
+	return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
 }
 
 // GetServicesByLabel get services by label
@@ -341,6 +318,21 @@ func (k *Kubernetes) GetServicesByLabel(ctx context.Context, labels map[string]s
 	return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
 	})
+}
+
+// GetServicesBySelector get services by selector
+func (k *Kubernetes) GetServicesBySelector(ctx context.Context, matchLabels map[string]string, namespace string) ([]coreV1.Service, error) {
+	var matchedSvcs []coreV1.Service
+	svcList, err := k.GetAllServiceInNamespace(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+	for _, svc := range svcList.Items {
+		if util.MapContains(svc.Spec.Selector, matchLabels) {
+			matchedSvcs = append(matchedSvcs, svc)
+		}
+	}
+	return matchedSvcs, nil
 }
 
 // WatchService ...
