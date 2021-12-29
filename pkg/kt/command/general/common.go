@@ -124,26 +124,48 @@ func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, s
 	if err != nil {
 		return err
 	}
-	marshaledSelector, err := json.Marshal(svc.Spec.Selector)
+	rawSelector, err := json.Marshal(svc.Spec.Selector)
 	if err != nil {
 		log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
 		return err
 	}
+	marshaledSelector := string(rawSelector)
 
 	// if KtSelector annotation not exist, you are the first exchange/mesh user to this service, record original selector
 	// otherwise just skip it
 	if svc.Annotations == nil {
-		util.MapPut(svc.Annotations, common.KtSelector, string(marshaledSelector))
+		util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
 	} else if _, ok := svc.Annotations[common.KtSelector]; !ok {
-		svc.Annotations[common.KtSelector] = string(marshaledSelector)
+		svc.Annotations[common.KtSelector] = marshaledSelector
 	}
 	svc.Spec.Selector = selector
 	if _, err = k.UpdateService(ctx, svc); err != nil {
 		return err
 	}
 
-	go k.WatchService(svcName, namespace, func() {})
+	go k.WatchService(svcName, namespace, func(newSvc *coreV1.Service) {
+		if !isServiceChanged(newSvc, selector, marshaledSelector) {
+			return
+		}
+		log.Debug().Msgf("Change in service %s detected", svcName)
+		time.Sleep(util.RandomSeconds(1, 10))
+		if svc, err = k.GetService(ctx, svcName, namespace); err == nil {
+			if isServiceChanged(svc, selector, marshaledSelector) {
+				svc.Spec.Selector = selector
+				util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
+				if _, err = k.UpdateService(ctx, svc); err != nil {
+					log.Error().Err(err).Msgf("Failed to recover service %s", svcName)
+				} else {
+					log.Info().Msgf("Service %s recovered", svcName)
+				}
+			}
+		}
+	})
 	return nil
+}
+
+func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaledSelector string) bool {
+	return !util.MapEquals(svc.Spec.Selector, selector) || svc.Annotations == nil || svc.Annotations[common.KtSelector] != marshaledSelector
 }
 
 func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, app *appV1.Deployment,

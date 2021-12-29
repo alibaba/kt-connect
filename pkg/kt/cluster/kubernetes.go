@@ -339,7 +339,7 @@ func (k *Kubernetes) GetServicesByLabel(ctx context.Context, labels map[string]s
 }
 
 // WatchService ...
-func (k *Kubernetes) WatchService(name, namespace string, f func()) {
+func (k *Kubernetes) WatchService(name, namespace string, f func(*coreV1.Service)) {
 	watchlist := cache.NewListWatchFromClient(
 		k.Clientset.CoreV1().RESTClient(),
 		string(coreV1.ResourceServices),
@@ -351,15 +351,8 @@ func (k *Kubernetes) WatchService(name, namespace string, f func()) {
 		&coreV1.Service{},
 		0,
 		cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				log.Debug().Msgf("Service %s in %s created", name, namespace)
-			},
-			DeleteFunc: func(obj interface{}) {
-				log.Debug().Msgf("Service %s in %s deleted", name, namespace)
-			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				log.Debug().Msgf("Service %s in %s changed", name, namespace)
-				f()
+				f(newObj.(*coreV1.Service))
 			},
 		},
 	)

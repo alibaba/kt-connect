@@ -23,9 +23,13 @@ func RandomString(n int) string {
 	return string(b)
 }
 
-// RandomDuration Generate random duration number
-func RandomDuration(n int) time.Duration {
-	return time.Duration(rand.Int63n(int64(n)))
+// RandomSeconds Generate random duration number in second
+func RandomSeconds(min, max int) time.Duration {
+	val := rand.Intn(max)
+	if val < min {
+		val = min
+	}
+	return time.Duration(int64(val)) * time.Second
 }
 
 // RandomPort Generate random number [1024, 65535)

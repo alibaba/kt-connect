@@ -22,18 +22,15 @@ func Contains(obj interface{}, target interface{}) bool {
 
 func MapContains(subset, fullset map[string]string) bool {
 	for sk, sv := range subset {
-		find := false
-		for fk, fv := range fullset {
-			if sk == fk && sv == fv {
-				find = true
-				break
-			}
-		}
-		if !find {
+		if fullset[sk] != sv {
 			return false
 		}
 	}
 	return true
+}
+
+func MapEquals(src, target map[string]string) bool {
+	return len(src) == len(target) && MapContains(src, target)
 }
 
 func MapPut(m map[string]string, k, v string) {

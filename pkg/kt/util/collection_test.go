@@ -39,7 +39,7 @@ func TestContains(t *testing.T) {
 	}
 }
 
-func TestMapEquals(t *testing.T) {
+func TestMapContains(t *testing.T) {
 	type args struct {
 		subset map[string]string
 		fullset map[string]string

@@ -17,7 +17,7 @@ const portForwardHeartBeatIntervalSec = 60
 
 // SetupPodHeartBeat setup heartbeat watcher for deployment
 func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name string) {
-	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - time.Second * RandomDuration(10))
+	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat pod %s ticked at %s", name, formattedTime())
@@ -32,7 +32,7 @@ func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name str
 
 // SetupServiceHeartBeat setup heartbeat watcher for service
 func SetupServiceHeartBeat(ctx context.Context, client coreV1.ServiceInterface, name string) {
-	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - time.Second * RandomDuration(10))
+	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat service %s ticked at %s", name, formattedTime())
@@ -47,7 +47,7 @@ func SetupServiceHeartBeat(ctx context.Context, client coreV1.ServiceInterface, 
 
 // SetupConfigMapHeartBeat setup heartbeat watcher for config map
 func SetupConfigMapHeartBeat(ctx context.Context, client coreV1.ConfigMapInterface, name string) {
-	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - time.Second * RandomDuration(10))
+	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
@@ -62,7 +62,7 @@ func SetupConfigMapHeartBeat(ctx context.Context, client coreV1.ConfigMapInterfa
 
 // SetupPortForwardHeartBeat setup heartbeat watcher for port forward
 func SetupPortForwardHeartBeat(port int) {
-	ticker := time.NewTicker(time.Second * (portForwardHeartBeatIntervalSec - RandomDuration(5)))
+	ticker := time.NewTicker(time.Second * portForwardHeartBeatIntervalSec - RandomSeconds(0, 5))
 	go func() {
 		for range ticker.C {
 			conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
