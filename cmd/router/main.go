@@ -104,11 +104,11 @@ func getPorts(portsParameter string) [][]string {
 
 func updateRoute(header, version, action string) error {
 	ktConf, err := router.ReadKtConf()
-	if ktConf.Header != header {
-		return fmt.Errorf("specfied header '%s' no match mesh pod header '%s'", header, ktConf.Header)
-	}
 	if err != nil {
 		return err
+	}
+	if ktConf.Header != header {
+		return fmt.Errorf("specfied header '%s' no match mesh pod header '%s'", header, ktConf.Header)
 	}
 	switch action {
 	case actionAdd:
