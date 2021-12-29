@@ -13,10 +13,15 @@ function log() {
 
 # Exit with error
 function fail() {
-  log "\e[31m${*} !!!\e[0m"
-  log "check logs for detail: \e[33m`ls -cr /tmp/kt-it-*.log`\e[0m"
+  error "${@}"
   cleanup
   exit 1
+}
+
+# Print error message
+function error() {
+  log "\e[31m${*} !!!\e[0m"
+  log "check logs for detail: \e[33m`ls -cr /tmp/kt-it-*.log`\e[0m"
 }
 
 # Test passed
@@ -48,14 +53,15 @@ function cleanup() {
 # Wait all resource created by ktctl get cleaned
 function check_resources_cleaned() {
   for i in `seq 10`; do
+    sleep 6
     log "checking resource clean up, ${i} times"
     resource_count=`kubectl -n ${NS} get pod,configmap,service | grep '^\(pod/\|configmap/\|service/\).*' | grep -v 'kube-root-ca\.crt' | wc -l`
     if [ $resource_count -eq 0 ]; then
       return
     fi
-    sleep 6
   done
-  fail "some resource are left in namespace ${NS}"
+  kubectl -n ${NS} get pod,configmap,service -o wide >/tmp/kt-it-left.log
+  error "some resource are left in namespace ${NS}"
 }
 
 # Wait pod ready
