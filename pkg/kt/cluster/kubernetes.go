@@ -455,28 +455,20 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 	refCount := pod.Annotations[common.KtRefCount]
 	if refCount == "1" {
 		cleanup = true
+		log.Info().Msgf("Pod %s has only one ref, gonna remove", name)
 		err = k.RemovePod(ctx, pod.Name, pod.Namespace)
-		if err != nil {
-			return
-		}
-		log.Info().Msgf("Pod %s has only one ref, removed", name)
 	} else {
-		err2 := k.decreasePodRef(ctx, refCount, pod)
-		if err2 != nil {
-			err = err2
-			return
-		}
-		log.Info().Msgf("Decreased %s ref by one", name)
+		err = k.decreasePodRefByOne(ctx, refCount, pod)
 	}
 	return
 }
 
-func (k *Kubernetes) decreasePodRef(ctx context.Context, refCount string, pod *coreV1.Pod) (err error) {
-	log.Info().Msgf("Shared shadow has more than one ref, decrease the ref")
+func (k *Kubernetes) decreasePodRefByOne(ctx context.Context, refCount string, pod *coreV1.Pod) (err error) {
 	count, err := decreaseRef(refCount)
 	if err != nil {
 		return
 	}
+	log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
 	util.MapPut(pod.Annotations, common.KtRefCount, count)
 	_, err = k.UpdatePod(ctx, pod)
 	return
