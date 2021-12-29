@@ -39,9 +39,15 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Value:       "",
 			Destination: &options.ImagePullSecret,
 		},
+		cli.StringFlag{
+			Name:        "nodeSelector",
+			Usage:       "Specify location of shadow and route pod by node label, e.g. 'disk=ssd,region=hangzhou'",
+			Value:       "",
+			Destination: &options.NodeSelector,
+		},
 		cli.BoolFlag{
 			Name:        "debug,d",
-			Usage:       "print debug log",
+			Usage:       "Print debug log",
 			Destination: &options.Debug,
 		},
 		cli.StringFlag{
@@ -56,23 +62,23 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        "useKubectl",
-			Usage:       "use kubectl for port-forward",
+			Usage:       "Use kubectl for port-forward",
 			Destination: &options.UseKubectl,
 		},
 		cli.StringSliceFlag{
 			Name:  "e",
-			Usage: "extra kubectl options (must use with '--useKubectl') e.g. -e '--cluster=name' -e '--insecure-skip-tls-verify=true'",
+			Usage: "Extra kubectl options (must use with '--useKubectl') e.g. -e '--cluster=name' -e '--insecure-skip-tls-verify=true'",
 			Value: &options.KubeOptions,
 		},
 		cli.IntFlag{
 			Name:        "waitTime",
-			Usage:       "seconds to wait before kubectl port-forward connect timeout",
+			Usage:       "Seconds to wait before kubectl port-forward connect timeout",
 			Destination: &options.WaitTime,
 			Value:       10,
 		},
 		cli.BoolFlag{
 			Name:        "forceUpdate,f",
-			Usage:       "always update shadow image",
+			Usage:       "Always update shadow image",
 			Destination: &options.AlwaysUpdateShadow,
 		},
 		cli.StringFlag{
@@ -181,12 +187,12 @@ func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "expose",
-			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Usage:       "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.ExchangeOptions.Expose,
 		},
 		cli.IntFlag{
 			Name:        "recoverWaitTime",
-			Usage:       "(scale method only) seconds to wait for original deployment recover before turn off the shadow pod",
+			Usage:       "(scale method only) Seconds to wait for original deployment recover before turn off the shadow pod",
 			Destination: &options.ExchangeOptions.RecoverWaitTime,
 			Value:       120,
 		},
@@ -203,12 +209,12 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "expose",
-			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Usage:       "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.MeshOptions.Expose,
 		},
 		cli.StringFlag{
 			Name:        "versionMark",
-			Usage:       "specify the version of mesh service, e.g. '0.0.1' or 'kt-version:local'",
+			Usage:       "Specify the version of mesh service, e.g. '0.0.1' or 'kt-version:local'",
 			Destination: &options.MeshOptions.VersionMark,
 		},
 		cli.StringFlag{
@@ -224,7 +230,7 @@ func ProvideActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "expose",
-			Usage:       "ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
+			Usage:       "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
 			Destination: &options.ProvideOptions.Expose,
 		},
 		cli.BoolFlag{

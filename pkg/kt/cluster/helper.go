@@ -326,6 +326,10 @@ func createPod(metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) *cor
 		addImagePullSecret(pod, options.ImagePullSecret)
 	}
 
+	if options.NodeSelector != "" {
+		pod.Spec.NodeSelector = util.String2Map(options.NodeSelector)
+	}
+
 	return pod
 }
 

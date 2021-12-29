@@ -112,6 +112,7 @@ type DaemonOptions struct {
 	Debug             bool
 	Image             string
 	ImagePullSecret   string
+	NodeSelector      string
 	WithLabels        string
 	WithAnnotations   string
 	KubeOptions       cli.StringSlice
