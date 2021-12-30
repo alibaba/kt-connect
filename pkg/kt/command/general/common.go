@@ -121,23 +121,31 @@ func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, s
 	if err != nil {
 		return err
 	}
-	rawSelector, err := json.Marshal(svc.Spec.Selector)
-	if err != nil {
-		log.Error().Err(err).Msgf("Unable to record original pod selector of service %s", svc.Name)
-		return err
-	}
-	marshaledSelector := string(rawSelector)
 
-	// if KtSelector annotation not exist, you are the first exchange/mesh user to this service, record original selector
-	// otherwise just skip it
-	if svc.Annotations == nil {
-		util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
-	} else if _, ok := svc.Annotations[common.KtSelector]; !ok {
-		svc.Annotations[common.KtSelector] = marshaledSelector
+	// if KtSelector annotation already exist, fetch current value
+	// otherwise you are the first exchange/mesh user to this service, record original selector
+	var marshaledSelector string
+	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
+		marshaledSelector = svc.Annotations[common.KtSelector]
+	} else {
+		rawSelector, err2 := json.Marshal(svc.Spec.Selector)
+		if err2 != nil {
+			log.Error().Err(err2).Msgf("Unable to record original pod selector of service %s", svc.Name)
+			return err2
+		}
+		marshaledSelector = string(rawSelector)
+		if svc.Annotations == nil {
+			util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
+		} else if _, ok := svc.Annotations[common.KtSelector]; !ok {
+			svc.Annotations[common.KtSelector] = marshaledSelector
+		}
 	}
-	svc.Spec.Selector = selector
-	if _, err = k.UpdateService(ctx, svc); err != nil {
-		return err
+
+	if isServiceChanged(svc, selector, marshaledSelector) {
+		svc.Spec.Selector = selector
+		if _, err = k.UpdateService(ctx, svc); err != nil {
+			return err
+		}
 	}
 
 	go k.WatchService(svcName, namespace, func(newSvc *coreV1.Service) {
