@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
@@ -28,6 +29,23 @@ func BySocks5(cli kt.CliInterface, options *options.DaemonOptions) error {
 	}
 	if err = startSocks5Connection(cli.Exec().SshChannel(), options, credential.PrivateKeyPath); err != nil {
 		return err
+	}
+
+	socksAddr := fmt.Sprintf("socks5://%s:%d", options.ConnectOptions.SocksAddr, options.ConnectOptions.SocksPort)
+	err = cli.Exec().Tunnel().ToSocks(socksAddr)
+	if err != nil {
+		return err
+	}
+
+	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range cidrs {
+		if err = cli.Exec().Tunnel().AddRoute(c); err != nil {
+			log.Error().Err(err).Msgf("Failed to add route to %s", c)
+		}
 	}
 
 	return nil
