@@ -2,20 +2,27 @@ package sshchannel
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
 	"sync"
 	"time"
 
-	"github.com/armon/go-socks5"
 	"github.com/rs/zerolog/log"
+	"github.com/wzshiming/socks5"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/net/context"
 )
 
 // SSHChannel ssh channel
 type SSHChannel struct{}
+
+type SocksLogger struct {}
+
+func (s SocksLogger) Println(v ...interface{}) {
+	log.Info().Msgf(fmt.Sprint(v...))
+}
 
 // StartSocks5Proxy start socks5 proxy
 func (c *SSHChannel) StartSocks5Proxy(privateKey string, sshAddress, socks5Address string) (err error) {
@@ -25,19 +32,13 @@ func (c *SSHChannel) StartSocks5Proxy(privateKey string, sshAddress, socks5Addre
 	}
 	defer conn.Close()
 
-	conf := &socks5.Config{
-		Dial: func(ctx context.Context, network, addr string) (net.Conn, error) {
-			return conn.Dial(network, addr)
+	svc := &socks5.Server{
+		Logger: SocksLogger{},
+		ProxyDial: func(ctx context.Context, network string, address string) (net.Conn, error) {
+			return conn.Dial(network, address)
 		},
 	}
-
-	serverSocks, err := socks5.New(conf)
-	if err != nil {
-		return err
-	}
-
-	// Process will hang at here
-	return serverSocks.ListenAndServe("tcp", socks5Address)
+	return svc.ListenAndServe("tcp", socks5Address)
 }
 
 // RunScript run the script on remote host.
