@@ -163,15 +163,10 @@ func (s *server) getSuffixes() (suffixes []string) {
 // Get upstream dns server address
 func (s *server) getResolveServer() (address string, err error) {
 	if len(s.config.Servers) <= 0 {
-		err = errors.New("error: no dns server available")
-		return
+		return "", errors.New("error: no dns server available")
 	}
 
-	server := s.config.Servers[0]
-	port := s.config.Port
-
-	address = net.JoinHostPort(server, port)
-	return
+	return net.JoinHostPort(s.config.Servers[0], s.config.Port), nil
 }
 
 // Look for domain record from upstream dns server

@@ -34,13 +34,13 @@ func AddNameserver(nameserver string) error {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, fieldNameserver) {
+		if strings.HasPrefix(line, prefix) {
+			return nil
+		} else if strings.HasPrefix(line, fieldNameserver) {
 			buf.WriteString("#")
 			buf.WriteString(line)
 			buf.WriteString(commentKtRemoved)
 			buf.WriteString("\n")
-		} else if strings.HasPrefix(line, prefix) {
-			return nil
 		} else {
 			buf.WriteString(line)
 			buf.WriteString("\n")
