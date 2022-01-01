@@ -36,6 +36,12 @@ compile:
 check:
 	go vet ./pkg/... ./cmd/...
 
+# build ktctl
+build-ktctl:
+	GOARCH=amd64 GOOS=linux go build -o "artifacts/ktctl/ktctl-linux" ./cmd/ktctl
+	GOARCH=amd64 GOOS=darwin go build -o "artifacts/ktctl/ktctl-darwin" ./cmd/ktctl
+	GOARCH=amd64 GOOS=windows go build -o "artifacts/ktctl/ktctl-windows" ./cmd/ktctl
+
 # build this image before shadow
 build-shadow-base:
 	docker build -t $(PREFIX)/$(SHADOW_BASE_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile_base .
