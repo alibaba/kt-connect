@@ -2,20 +2,23 @@ package tun
 
 import (
 	ktexec "github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
 	"os/exec"
 )
 
 // SetRoute set specified ip range route to tun device
 func (s *Cli) SetRoute(ipRange []string) error {
 	for _, r := range ipRange {
+		tunIp := firstIp(r)
 		// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.1
 		err := ktexec.RunAndWait(exec.Command("ifconfig",
 			s.TunName,
 			"inet",
 			r,
-			firstIp(r),
+			tunIp,
 		), "add_ip_addr")
 		if err != nil {
+			log.Error().Err(err).Msgf("Failed to add ip addr %s to tun device", tunIp)
 			return err
 		}
 		// run command: route add -net 172.20.0.0/16 -iface 172.20.0.1
@@ -24,9 +27,10 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			"-net",
 			r,
 			"-iface",
-			firstIp(r),
+			tunIp,
 		), "add_route")
 		if err != nil {
+			log.Error().Err(err).Msgf("Failed to set route %s to tun device", r)
 			return err
 		}
 	}

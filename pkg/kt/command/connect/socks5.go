@@ -42,10 +42,8 @@ func BySocks5(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	for _, c := range cidrs {
-		if err = cli.Exec().Tunnel().AddRoute(c); err != nil {
-			log.Error().Err(err).Msgf("Failed to add route to %s", c)
-		}
+	if err = cli.Exec().Tunnel().SetRoute(cidrs); err != nil {
+		return err
 	}
 
 	return nil

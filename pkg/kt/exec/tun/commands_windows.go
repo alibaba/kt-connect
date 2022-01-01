@@ -3,6 +3,7 @@ package tun
 import (
 	"fmt"
 	ktexec "github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
 	"os/exec"
 )
 
@@ -15,7 +16,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			return err
 		}
 		if i == 0 {
-			// run command: netsh interface ip set address "tun0" static 172.20.0.1 255.255.0.0
+			// run command: netsh interface ip set address KtConnectTunnel static 172.20.0.1 255.255.0.0
 			err = ktexec.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
@@ -27,7 +28,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				mask,
 			), "add_ip_addr")
 		} else {
-			// run command: netsh interface ip add address "tun0" 172.21.0.1 255.255.0.0
+			// run command: netsh interface ip add address KtConnectTunnel 172.21.0.1 255.255.0.0
 			err = ktexec.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
@@ -39,6 +40,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			), "add_ip_addr")
 		}
 		if err != nil {
+			log.Error().Err(err).Msgf("Failed to add ip addr %s to tun device", tunIp)
 			return err
 		}
 		// run command: route add 172.20.0.0 mask 255.255.0.0 172.20.0.1
@@ -50,6 +52,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			tunIp,
 		), "add_route")
 		if err != nil {
+			log.Error().Err(err).Msgf("Failed to set route %s to tun device", r)
 			return err
 		}
 	}
@@ -60,7 +63,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 	for i, dns := range dnsServers {
 		if i == 0 {
-			// run command: netsh interface ip set dnsservers name="tun0" source=static address=8.8.8.8
+			// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
 			err = ktexec.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
@@ -71,7 +74,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 				fmt.Sprintf("address=%s", dns),
 			), "add_dns_server")
 		} else {
-			// run command: netsh interface ip add dnsservers name="tun0" address=4.4.4.4
+			// run command: netsh interface ip add dnsservers name=KtConnectTunnel address=4.4.4.4
 			err = ktexec.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
