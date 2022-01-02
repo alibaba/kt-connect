@@ -19,7 +19,7 @@ manage and integrate with your Kubernetes dev environment more efficiently.
 * `Connect`: Directly Access a remote Kubernetes cluster. KtConnect use ssh-vpn, socks-proxy or tun-device to access remote Kubernetes cluster networks.
 * `Exchange`: Developer can exchange the workload to redirect the requests to a local app.
 * `Mesh`: You can create a mesh version service in local host, and redirect specified workload requests to your local.
-* `Provide`: Expose a local running app to Kubernetes cluster as a common service, all requests to that service are redirect to local app.
+* `Preview`: Expose a local running app to Kubernetes cluster as a common service, all requests to that service are redirect to local app.
 
 ## QuickStart
 

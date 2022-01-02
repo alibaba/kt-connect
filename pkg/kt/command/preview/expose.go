@@ -1,4 +1,4 @@
-package provide
+package preview
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func Expose(ctx context.Context, serviceName string, cli kt.CliInterface, option
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
 		common.ControlBy: common.KubernetesTool,
-		common.KtRole:    common.RoleProvideShadow,
+		common.KtRole:    common.RolePreviewShadow,
 		common.KtName:    shadowPodName,
 	}
 	annotations := map[string]string{
@@ -40,7 +40,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	}
 	log.Info().Msgf("Created shadow pod %s", podName)
 
-	portPairs := strings.Split(options.ProvideOptions.Expose, ",")
+	portPairs := strings.Split(options.PreviewOptions.Expose, ",")
 	ports := make(map[int]int)
 	for _, exposePort := range portPairs {
 		localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
@@ -56,7 +56,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 			Labels: map[string]string{},
 			Annotations: map[string]string{},
 		},
-		External: options.ProvideOptions.External,
+		External: options.PreviewOptions.External,
 		Ports: ports,
 		Selectors: labels,
 	}); err != nil {
@@ -64,10 +64,10 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	}
 	options.RuntimeOptions.Service = serviceName
 
-	if _, err = tunnel.ForwardPodToLocal(options.ProvideOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
+	if _, err = tunnel.ForwardPodToLocal(options.PreviewOptions.Expose, podName, credential.PrivateKeyPath, options); err != nil {
 		return err
 	}
 
-	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podName, options.ProvideOptions.Expose, options.ProvideOptions.Expose)
+	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podName, options.PreviewOptions.Expose, options.PreviewOptions.Expose)
 	return nil
 }

@@ -213,15 +213,15 @@ function test_ktctl_mesh() {
   success "ktctl mesh test passed"
 }
 
-function test_ktctl_provide() {
-  # Test provide
-  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f provide tomcat-preview --expose 8080 >/tmp/kt-it-provide.log 2>&1 &
+function test_ktctl_preview() {
+  # Test preview
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f preview tomcat-preview --expose 8080 >/tmp/kt-it-preview.log 2>&1 &
   wait_for_pod tomcat-preview-kt 1
-  check_job provide
-  check_pid_file provide
+  check_job preview
+  check_pid_file preview
 
   verify "service-domain" "http://tomcat-preview.${NS}.svc.cluster.local:8080" "kt-connect local v2"
-  success "ktctl provide test passed"
+  success "ktctl preview test passed"
 }
 
 prepare_cluster
@@ -229,6 +229,6 @@ test_ktctl_connect
 prepare_local
 test_ktctl_mesh
 test_ktctl_exchange
-test_ktctl_provide
+test_ktctl_preview
 cleanup
 success "all tests done"

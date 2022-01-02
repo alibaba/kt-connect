@@ -120,7 +120,7 @@ KtConnect offers 3 commands for accessing local service from cluster in differen
 
 - Exchange：redirect all request to specified service in cluster to local
 - Mesh：redirect partial request to specified service in cluster (base on mesh rule) to local
-- Provide：create a new service in cluster, and redirect any request to this service to local
+- Preview：create a new service in cluster, and redirect any request to this service to local
 
 <!-- tabs:start -->
 
@@ -197,14 +197,14 @@ The most significant difference between `ktctl mesh` and `ktctl exchange` comman
 
 > Read [Mesh Best Practice](/zh-cn/guide/mesh) doc for more detail
 
-#### ** Provide **
+#### ** Preview **
 
-Register a local service instance to cluster. Unlike the previous two commands, `ktctl provide` is mainly used to debug or preview a services under developing.
+Register a local service instance to cluster. Unlike the previous two commands, `ktctl preview` is mainly used to debug or preview a services under developing.
 
 The following command will register the service running on the port `8080` locally to the cluster as a service named `tomcat-preview`.
 
 ```bash
-$ ktctl provide tomcat-preview --expose 8080
+$ ktctl preview tomcat-preview --expose 8080
 00:00AM INF KtConnect start at <PID>
 ... ...
 ```

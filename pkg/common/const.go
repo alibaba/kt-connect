@@ -6,7 +6,7 @@ const (
 	ComponentConnect      = "connect"
 	ComponentExchange     = "exchange"
 	ComponentMesh         = "mesh"
-	ComponentProvide      = "provide"
+	ComponentPreview      = "preview"
 	ConnectModeShuttle    = "sshuttle"
 	ConnectModeTun        = "tun"
 	ExchangeModeScale     = "scale"
@@ -66,8 +66,8 @@ const (
 	RoleExchangeShadow = "shadow-exchange"
 	// RoleMeshShadow shadow role
 	RoleMeshShadow = "shadow-mesh"
-	// RoleProvideShadow shadow role
-	RoleProvideShadow = "shadow-provide"
+	// RolePreviewShadow shadow role
+	RolePreviewShadow = "shadow-preview"
 	// RoleRouter router role
 	RoleRouter = "router"
 )

@@ -188,17 +188,17 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
-func ProvideActionFlag(options *options.DaemonOptions) []cli.Flag {
+func PreviewActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "expose",
 			Usage:       "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80",
-			Destination: &options.ProvideOptions.Expose,
+			Destination: &options.PreviewOptions.Expose,
 		},
 		cli.BoolFlag{
 			Name:        "external",
 			Usage:       "If specified, a public, external service is created",
-			Destination: &options.ProvideOptions.External,
+			Destination: &options.PreviewOptions.External,
 		},
 	}
 }

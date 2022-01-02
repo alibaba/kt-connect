@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/command/provide"
+	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/process"
@@ -18,12 +18,12 @@ import (
 	"time"
 )
 
-// NewProvideCommand return new provide command
-func NewProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+// NewPreviewCommand return new preview command
+func NewPreviewCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
-		Name:  "provide",
+		Name:  "preview",
 		Usage: "create a shadow service to redirect request to user local",
-		Flags: general.ProvideActionFlag(options),
+		Flags: general.PreviewActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -34,26 +34,26 @@ func NewProvideCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 			if len(c.Args()) == 0 {
 				return errors.New("an service name must be specified")
 			}
-			if len(options.ProvideOptions.Expose) == 0 {
+			if len(options.PreviewOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
-			return action.Provide(c.Args().First(), cli, options)
+			return action.Preview(c.Args().First(), cli, options)
 		},
 	}
 }
 
-// Provide create a new service in cluster
-func (action *Action) Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch, err := general.SetupProcess(cli, options, common.ComponentProvide)
+// Preview create a new service in cluster
+func (action *Action) Preview(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+	ch, err := general.SetupProcess(cli, options, common.ComponentPreview)
 	if err != nil {
 		return err
 	}
 
-	if port := util.FindBrokenPort(options.ProvideOptions.Expose); port != "" {
+	if port := util.FindBrokenPort(options.PreviewOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if err = provide.Expose(context.TODO(), serviceName, cli, options); err != nil {
+	if err = preview.Expose(context.TODO(), serviceName, cli, options); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception

@@ -91,16 +91,16 @@ func (mr *MockActionInterfaceMockRecorder) Mesh(deploymentName, cli, options int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mesh", reflect.TypeOf((*MockActionInterface)(nil).Mesh), deploymentName, cli, options)
 }
 
-// Provide mocks base method.
-func (m *MockActionInterface) Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+// Preview mocks base method.
+func (m *MockActionInterface) Preview(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Provide", serviceName, cli, options)
+	ret := m.ctrl.Call(m, "Preview", serviceName, cli, options)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Provide indicates an expected call of Provide.
-func (mr *MockActionInterfaceMockRecorder) Provide(serviceName, cli, options interface{}) *gomock.Call {
+// Preview indicates an expected call of Preview.
+func (mr *MockActionInterfaceMockRecorder) Preview(serviceName, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Provide", reflect.TypeOf((*MockActionInterface)(nil).Provide), serviceName, cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Preview", reflect.TypeOf((*MockActionInterface)(nil).Preview), serviceName, cli, options)
 }

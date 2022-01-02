@@ -38,8 +38,8 @@ type MeshOptions struct {
 	RouterImage string
 }
 
-// ProvideOptions ...
-type ProvideOptions struct {
+// PreviewOptions ...
+type PreviewOptions struct {
 	External bool
 	Expose   string
 }
@@ -59,7 +59,7 @@ type RuntimeOptions struct {
 	UserHome string
 	// AppHome path of kt config folder, default to ${UserHome}/.ktctl
 	AppHome string
-	// Component current sub-command (connect, exchange, mesh or provide)
+	// Component current sub-command (connect, exchange, mesh or preview)
 	Component string
 	// Shadow pod name
 	Shadow string
@@ -82,7 +82,7 @@ type RuntimeOptions struct {
 // DaemonOptions cli options
 type DaemonOptions struct {
 	RuntimeOptions    *RuntimeOptions
-	ProvideOptions    *ProvideOptions
+	PreviewOptions    *PreviewOptions
 	ConnectOptions    *ConnectOptions
 	ExchangeOptions   *ExchangeOptions
 	MeshOptions       *MeshOptions
@@ -112,10 +112,10 @@ func NewDaemonOptions(version string) *DaemonOptions {
 			UserHome: util.UserHome,
 			AppHome:  util.KtHome,
 		},
-		ConnectOptions:   &ConnectOptions{},
-		ExchangeOptions:  &ExchangeOptions{},
-		MeshOptions:      &MeshOptions{},
-		ProvideOptions:   &ProvideOptions{},
-		CleanOptions:     &CleanOptions{},
+		ConnectOptions:  &ConnectOptions{},
+		ExchangeOptions: &ExchangeOptions{},
+		MeshOptions:     &MeshOptions{},
+		PreviewOptions:  &PreviewOptions{},
+		CleanOptions:    &CleanOptions{},
 	}
 }
