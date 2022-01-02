@@ -82,11 +82,6 @@ type RuntimeOptions struct {
 	RestConfig *rest.Config
 }
 
-type dashboardOptions struct {
-	Install bool
-	Port    string
-}
-
 // DaemonOptions cli options
 type DaemonOptions struct {
 	RuntimeOptions    *RuntimeOptions
@@ -95,7 +90,6 @@ type DaemonOptions struct {
 	ExchangeOptions   *ExchangeOptions
 	MeshOptions       *MeshOptions
 	CleanOptions      *CleanOptions
-	DashboardOptions  *dashboardOptions
 	KubeConfig        string
 	Namespace         string
 	ServiceAccount    string
@@ -126,8 +120,7 @@ func NewDaemonOptions(version string) *DaemonOptions {
 		ConnectOptions:   &ConnectOptions{},
 		ExchangeOptions:  &ExchangeOptions{},
 		MeshOptions:      &MeshOptions{},
-		CleanOptions:     &CleanOptions{},
-		DashboardOptions: &dashboardOptions{},
 		ProvideOptions:   &ProvideOptions{},
+		CleanOptions:     &CleanOptions{},
 	}
 }

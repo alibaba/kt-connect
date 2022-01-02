@@ -7,13 +7,11 @@ import (
 
 // ActionInterface all action defined
 type ActionInterface interface {
-	OpenDashboard(cli kt.CliInterface, options *options.DaemonOptions) error
 	Connect(cli kt.CliInterface, options *options.DaemonOptions) error
 	Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Clean(cli kt.CliInterface, options *options.DaemonOptions) error
-	ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) error
 }
 
 // Action cmd action

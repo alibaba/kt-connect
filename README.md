@@ -20,7 +20,6 @@ manage and integrate with your Kubernetes dev environment more efficiently.
 * `Exchange`: Developer can exchange the workload to redirect the requests to a local app.
 * `Mesh`: You can create a mesh version service in local host, and redirect specified workload requests to your local.
 * `Provide`: Expose a local running app to Kubernetes cluster as a common service, all requests to that service are redirect to local app.
-* `Dashboard`: A dashboard view can help you know how the environment has been used.
 
 ## QuickStart
 

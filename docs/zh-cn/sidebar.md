@@ -6,9 +6,6 @@
   - [本地联调测试](zh-cn/guide/localdev.md)
   - [Mesh最佳实践](zh-cn/guide/mesh.md)
   - [使用DNS服务](zh-cn/guide/how-to-use-dns.md)
-  - [在IDEA中联调](zh-cn/guide/how-to-use-in-idea.md)
-  - [Windows支持](zh-cn/guide/windows-support.md)
-  - [可视化](zh-cn/guide/dashboard.md)
 
 - Cli参考
   - [ktctl connect](zh-cn/cli/connect.md)
@@ -16,7 +13,6 @@
   - [ktctl mesh](zh-cn/cli/mesh.md)
   - [ktctl provide](zh-cn/cli/provide.md)
   - [ktctl clean](zh-cn/cli/clean.md)
-  - [ktctl dashboard](zh-cn/cli/dashboard.md)
 
 - 问题排查：
   - [connect](zh-cn/troubleshoot.md)

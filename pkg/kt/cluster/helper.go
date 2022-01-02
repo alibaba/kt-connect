@@ -18,7 +18,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, err error) {
@@ -211,30 +210,6 @@ func decToBin(n int) [8]int {
 		bin[i], bin[j] = bin[j], bin[i]
 	}
 	return bin
-}
-
-func getTargetPod(labelsKey string, name string, podList []*coreV1.Pod) *coreV1.Pod {
-	for _, p := range podList {
-		if len(p.Labels) <= 0 {
-			// almost impossible
-			continue
-		}
-		item, containKey := p.Labels[labelsKey]
-		if !containKey || item != name {
-			continue
-		}
-		return p
-	}
-	return nil
-}
-
-func wait(podName string) {
-	time.Sleep(3 * time.Second)
-	if len(podName) > 0 {
-		log.Info().Msgf("Waiting for pod %s ...", podName)
-	} else {
-		log.Info().Msg("Waiting for pod ...")
-	}
 }
 
 func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {

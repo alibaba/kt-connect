@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -15,9 +14,7 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
-	k8sLabels "k8s.io/apimachinery/pkg/labels"
 	labelApi "k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"strconv"
@@ -358,49 +355,8 @@ func (k *Kubernetes) WatchService(name, namespace string, f func(*coreV1.Service
 }
 
 // WaitPodReady ...
-func (k *Kubernetes) WaitPodReady(name, namespace string) (pod *coreV1.Pod, err error) {
-	stopSignal := make(chan struct{})
-	defer close(stopSignal)
-	podListener, err := clusterWatcher.PodListenerWithNamespace(k.Clientset, namespace, stopSignal)
-	if err != nil {
-		return
-	}
-	pod = &coreV1.Pod{}
-	podLabels := k8sLabels.NewSelector()
-	requirement, err := k8sLabels.NewRequirement(common.KtName, selection.Equals, []string{name})
-	if err != nil {
-		return
-	}
-	podLabels.Add(*requirement)
-
-	pods, err := podListener.Pods(namespace).List(podLabels)
-	if err != nil {
-		return pod, err
-	}
-
-	for {
-		hasRunningPod := len(pods) > 0
-		var podName string
-		if hasRunningPod {
-			// podLister do not support FieldSelector
-			// https://github.com/kubernetes/client-go/issues/604
-			p := getTargetPod(common.KtName, name, pods)
-			if p != nil {
-				if p.Status.Phase == "Running" {
-					pod = p
-					log.Info().Msgf("Pod %s is ready", pod.Name)
-					break
-				}
-				podName = p.Name
-			}
-		}
-		wait(podName)
-		pods, err = podListener.Pods(namespace).List(podLabels)
-		if err != nil {
-			return pod, err
-		}
-	}
-	return pod, nil
+func (k *Kubernetes) WaitPodReady(ctx context.Context, name, namespace string) (*coreV1.Pod, error) {
+	return k.waitPodReady(ctx, name, namespace, 0)
 }
 
 // UpdatePod ...
@@ -453,6 +409,23 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 		err = k.decreasePodRefByOne(ctx, refCount, pod)
 	}
 	return
+}
+
+func (k *Kubernetes) waitPodReady(ctx context.Context, name, namespace string, times int) (*coreV1.Pod, error) {
+	if times > 10 {
+		return nil, fmt.Errorf("pod %s failed to start", name)
+	}
+	pod, err := k.GetPod(ctx, name, namespace)
+	if err != nil {
+		return nil, err
+	}
+	if pod.Status.Phase != coreV1.PodRunning {
+		log.Info().Msgf("Waiting for pod %s ...", name)
+		time.Sleep(6 * time.Second)
+		return k.waitPodReady(ctx, name, namespace, times + 1)
+	}
+	log.Info().Msgf("Pod %s is ready", pod.Name)
+	return pod, err
 }
 
 func (k *Kubernetes) decreasePodRefByOne(ctx context.Context, refCount string, pod *coreV1.Pod) (err error) {

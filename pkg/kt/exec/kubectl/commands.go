@@ -9,31 +9,6 @@ import (
 // KUBECTL the path to kubectl
 var KUBECTL = "kubectl"
 
-// ApplyDashboardToCluster ...
-func (k *Cli) ApplyDashboardToCluster() *exec.Cmd {
-	args := kubectl(k, "kube-system")
-	args = append(
-		args,
-		"apply",
-		"-f",
-		"https://raw.githubusercontent.com/alibaba/kt-connect/master/docs/deploy/manifest/all-in-one.yaml")
-	return exec.Command(
-		KUBECTL,
-		args...)
-}
-
-// PortForwardDashboardToLocal ...
-func (k *Cli) PortForwardDashboardToLocal(port string) *exec.Cmd {
-	args := kubectl(k, "kube-system")
-	args = append(args, "port-forward",
-		"service/kt-dashboard",
-		port+":80")
-	return exec.Command(
-		KUBECTL,
-		args...,
-	)
-}
-
 // PortForward ...
 func (k *Cli) PortForward(namespace, resource string, remotePort, localPort int) *exec.Cmd {
 	args := kubectl(k, namespace)

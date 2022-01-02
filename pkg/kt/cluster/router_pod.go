@@ -18,7 +18,7 @@ func CreateRouterPod(ctx context.Context, k KubernetesInterface, name string, op
 		return err
 	}
 	log.Info().Msgf("Router pod %s created", name)
-	if _, err := k.WaitPodReady(name, options.Namespace); err != nil {
+	if _, err := k.WaitPodReady(ctx, name, options.Namespace); err != nil {
 		return err
 	}
 	return nil

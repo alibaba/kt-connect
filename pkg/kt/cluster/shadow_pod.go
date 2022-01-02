@@ -106,7 +106,7 @@ func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *Po
 
 	log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 
-	return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
+	return k.WaitPodReady(ctx, metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 }
 
 func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *coreV1.Pod, generator *util.SSHGenerator, err error) {
