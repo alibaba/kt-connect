@@ -55,12 +55,12 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	method := options.ExchangeOptions.Method
-	if method == common.ExchangeMethodScale {
+	method := options.ExchangeOptions.Mode
+	if method == common.ExchangeModeScale {
 		err = exchange.ByScale(resourceName, cli, options)
-	} else if method == common.ExchangeMethodEphemeral {
+	} else if method == common.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName, cli, options)
-	} else if method == common.ExchangeMethodSwitch {
+	} else if method == common.ExchangeModeSwitch {
 		err = exchange.BySwitchOver(context.TODO(), cli.Kubernetes(), resourceName, options)
 	} else {
 		err = fmt.Errorf("invalid exchange method '%s'", method)

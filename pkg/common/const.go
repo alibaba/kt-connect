@@ -1,21 +1,21 @@
 package common
 
 const (
-	EnvVarLocalDomains      = "LOCAL_DOMAIN"
-	KubernetesTool          = "kt"
-	ComponentConnect        = "connect"
-	ComponentExchange       = "exchange"
-	ComponentMesh           = "mesh"
-	ComponentProvide        = "provide"
-	ConnectMethodShuttle    = "sshuttle"
-	ConnectMethodTun        = "tun"
-	ExchangeMethodScale     = "scale"
-	ExchangeMethodEphemeral = "ephemeral"
-	ExchangeMethodSwitch    = "switch"
-	MeshMethodAuto          = "auto"
-	MeshMethodManual        = "manual"
-	YyyyMmDdHhMmSs          = "2006-01-02 15:04:05"
-	SshPort                 = 22
+	EnvVarLocalDomains    = "LOCAL_DOMAIN"
+	KubernetesTool        = "kt"
+	ComponentConnect      = "connect"
+	ComponentExchange     = "exchange"
+	ComponentMesh         = "mesh"
+	ComponentProvide      = "provide"
+	ConnectModeShuttle    = "sshuttle"
+	ConnectModeTun        = "tun"
+	ExchangeModeScale     = "scale"
+	ExchangeModeEphemeral = "ephemeral"
+	ExchangeModeSwitch    = "switch"
+	MeshModeAuto          = "auto"
+	MeshModeManual        = "manual"
+	YyyyMmDdHhMmSs        = "2006-01-02 15:04:05"
+	SshPort               = 22
 
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"

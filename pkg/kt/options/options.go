@@ -15,27 +15,25 @@ type ConnectOptions struct {
 	DisablePodIp         bool
 	SSHPort              int
 	SocksPort            int
-	SocksAddr            string
 	CIDRs                string
 	ExcludeIps           string
-	Method               string
+	Mode                 string
 	Dump2HostsNamespaces string
 	ShareShadow          bool
 	ClusterDomain        string
-	JvmrcDir             string
 }
 
 // ExchangeOptions ...
 type ExchangeOptions struct {
-	Method          string
-	Expose          string
+	Mode   string
+	Expose string
 	RecoverWaitTime int
 }
 
 // MeshOptions ...
 type MeshOptions struct {
-	Method      string
-	Expose      string
+	Mode   string
+	Expose string
 	VersionMark string
 	RouterImage string
 }
