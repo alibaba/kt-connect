@@ -3,7 +3,6 @@ package tunnel
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"strings"
 	"sync"
@@ -22,8 +21,7 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string, opt *options.Dae
 	}
 
 	// port forward pod 22 -> local <random port>
-	cli := exec.Cli{}
-	_, _, err := ForwardSSHTunnelToLocal(cli.Kubectl(), opt, podName, localSSHPort)
+	_, _, err := ForwardSSHTunnelToLocal(opt, podName, localSSHPort)
 	if err != nil {
 		return -1, err
 	}

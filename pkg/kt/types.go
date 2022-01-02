@@ -26,7 +26,5 @@ func (c *Cli) Kubernetes() cluster.KubernetesInterface {
 
 // Exec ...
 func (c *Cli) Exec() exec.CliInterface {
-	return &exec.Cli{
-		KubeOptions: c.Options.KubeOptions,
-	}
+	return &exec.Cli{}
 }

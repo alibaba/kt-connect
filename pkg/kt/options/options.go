@@ -6,7 +6,6 @@ import (
 	"k8s.io/client-go/rest"
 
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/urfave/cli"
 )
 
 // ConnectOptions ...
@@ -99,10 +98,8 @@ type DaemonOptions struct {
 	NodeSelector      string
 	WithLabels        string
 	WithAnnotations   string
-	KubeOptions       cli.StringSlice
 	WaitTime          int
 	AlwaysUpdateShadow bool
-	UseKubectl        bool
 	KubeContext       string
 }
 

@@ -1,7 +1,6 @@
 package exec
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/tun"
@@ -9,25 +8,17 @@ import (
 
 // CliInterface ...
 type CliInterface interface {
-	Kubectl() kubectl.CliInterface
 	Sshuttle() sshuttle.CliInterface
 	Tunnel() tun.CliInterface
 	SshChannel() sshchannel.Channel
 }
 
 // Cli ...
-type Cli struct {
-	KubeOptions []string
-}
+type Cli struct {}
 
 // SshChannel ...
 func (c *Cli) SshChannel() sshchannel.Channel {
 	return &sshchannel.SSHChannel{}
-}
-
-// Kubectl ...
-func (c *Cli) Kubectl() kubectl.CliInterface {
-	return &kubectl.Cli{KubeOptions: c.KubeOptions}
 }
 
 // Sshuttle ...
