@@ -56,7 +56,7 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 	}
 
 	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
-		shadowPodName, options, getLabels(shadowPodName), make(map[string]string), getEnvs(options))
+		shadowPodName, options, getLabels(shadowPodName), make(map[string]string), getEnvs())
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -64,35 +64,12 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 	return endPointIP, podName, credential, nil
 }
 
-func showSetupSocksMessage(protocol string, connectOptions *options.ConnectOptions) {
-	port := connectOptions.SocksPort
-	log.Info().Msgf("Starting up %s proxy ...", protocol)
-	if !connectOptions.UseGlobalProxy {
-		log.Info().Msgf("--------------------------------------------------------------")
-		if util.IsWindows() {
-			if util.IsCmd() {
-				log.Info().Msgf("Please setup proxy config by: set http_proxy=%s://127.0.0.1:%d", protocol, port)
-			} else {
-				log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"%s://127.0.0.1:%d\"", protocol, port)
-			}
-		} else {
-			log.Info().Msgf("Please setup proxy config by: export http_proxy=%s://127.0.0.1:%d", protocol, port)
-		}
-		log.Info().Msgf("--------------------------------------------------------------")
-	}
-}
-
-func getEnvs(options *options.DaemonOptions) map[string]string {
+func getEnvs() map[string]string {
 	envs := make(map[string]string)
 	localDomains := util.GetLocalDomains()
 	if localDomains != "" {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
-	}
-	if options.ConnectOptions.Method == common.ConnectMethodTun {
-		envs[common.ClientTunIP] = options.RuntimeOptions.SourceIP
-		envs[common.ServerTunIP] = options.RuntimeOptions.DestIP
-		envs[common.TunMaskLength] = util.ExtractNetMaskFromCidr(options.ConnectOptions.TunCidr)
 	}
 	return envs
 }

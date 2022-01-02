@@ -2,7 +2,6 @@ package options
 
 import (
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -23,11 +22,8 @@ type ConnectOptions struct {
 	Method               string
 	Dump2HostsNamespaces string
 	ShareShadow          bool
-	TunName              string
-	TunCidr              string
 	ClusterDomain        string
 	JvmrcDir             string
-	UseGlobalProxy       bool
 }
 
 // ExchangeOptions ...
@@ -82,14 +78,8 @@ type RuntimeOptions struct {
 	Service string
 	// Dump2Host whether dump2host enabled
 	Dump2Host bool
-	// ProxyConfig windows global proxy config
-	ProxyConfig registry.ProxyConfig
 	// RestConfig kubectl config
 	RestConfig *rest.Config
-	// SourceIP for tun mode
-	SourceIP string
-	// DestIP for tun mode
-	DestIP   string
 }
 
 type dashboardOptions struct {

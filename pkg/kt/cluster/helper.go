@@ -353,31 +353,6 @@ func getSSHVolume(volume string) coreV1.Volume {
 	return sshVolume
 }
 
-func addTunHostPath(pod *coreV1.Pod) {
-	path := "/dev/net/tun"
-
-	pod.Spec.Volumes = append(pod.Spec.Volumes, coreV1.Volume{
-		Name: "tun",
-		VolumeSource: coreV1.VolumeSource{
-			HostPath: &coreV1.HostPathVolumeSource{Path: path},
-		},
-	})
-
-	for i := range pod.Spec.Containers {
-		c := &pod.Spec.Containers[i]
-		if c.Name != common.DefaultContainer {
-			continue
-		} else {
-			c.VolumeMounts = append(c.VolumeMounts, coreV1.VolumeMount{
-				Name:      "tun",
-				MountPath: path,
-			})
-			c.SecurityContext.Capabilities.Add = append(c.SecurityContext.Capabilities.Add, "NET_ADMIN")
-			break
-		}
-	}
-}
-
 func addImagePullSecret(pod *coreV1.Pod, imagePullSecret string) {
 	pod.Spec.ImagePullSecrets = []coreV1.LocalObjectReference{
 		{

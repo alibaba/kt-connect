@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/alibaba/kt-connect/pkg/proxy/dnsserver"
-	"github.com/alibaba/kt-connect/pkg/proxy/socks"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -16,6 +15,5 @@ func init() {
 
 func main() {
 	log.Info().Msg("Shadow staring...")
-	go socks.Start()
 	dnsserver.Start()
 }

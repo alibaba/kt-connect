@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
-	ssh "github.com/alibaba/kt-connect/pkg/kt/exec/ssh"
 	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	tun "github.com/alibaba/kt-connect/pkg/kt/exec/tun"
@@ -50,20 +49,6 @@ func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
 func (mr *MockCliInterfaceMockRecorder) Kubectl() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubectl", reflect.TypeOf((*MockCliInterface)(nil).Kubectl))
-}
-
-// SSH mocks base method.
-func (m *MockCliInterface) SSH() ssh.CliInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SSH")
-	ret0, _ := ret[0].(ssh.CliInterface)
-	return ret0
-}
-
-// SSH indicates an expected call of SSH.
-func (mr *MockCliInterfaceMockRecorder) SSH() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SSH", reflect.TypeOf((*MockCliInterface)(nil).SSH))
 }
 
 // SshChannel mocks base method.

@@ -2,17 +2,12 @@ package common
 
 const (
 	EnvVarLocalDomains      = "LOCAL_DOMAIN"
-	ClientTunIP             = "CLIENT_TUN_IP"
-	ServerTunIP             = "SERVER_TUN_IP"
-	TunMaskLength           = "TUN_MASK_LEN"
 	KubernetesTool          = "kt"
 	ComponentConnect        = "connect"
 	ComponentExchange       = "exchange"
 	ComponentMesh           = "mesh"
 	ComponentProvide        = "provide"
 	ConnectMethodVpn        = "vpn"
-	ConnectMethodTun        = "tun"
-	ConnectMethodSocks      = "socks"
 	ConnectMethodSocks5     = "socks5"
 	ExchangeMethodScale     = "scale"
 	ExchangeMethodEphemeral = "ephemeral"
@@ -21,7 +16,6 @@ const (
 	MeshMethodManual        = "manual"
 	YyyyMmDdHhMmSs          = "2006-01-02 15:04:05"
 	SshPort                 = 22
-	Socks4Port              = 1080
 
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
