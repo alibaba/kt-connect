@@ -3,7 +3,6 @@
 NS="kt-integration-test"
 SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.5"
 ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v0.2.5"
-MODE="vpn"
 DOCKER_HOST="ubuntu@192.168.64.2"
 
 # Log
@@ -150,9 +149,9 @@ function prepare_cluster() {
 function test_ktctl_connect() {
   # Test connect
   if [ "${DOCKER_HOST}" == "" ]; then
-    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --method ${MODE} >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode tun >/tmp/kt-it-connect.log 2>&1 &
   else
-    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --method ${MODE} --excludeIps ${DOCKER_HOST#*@} \
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode tun --excludeIps ${DOCKER_HOST#*@} \
       >/tmp/kt-it-connect.log 2>&1 &
   fi
   wait_for_pod kt-connect 1
@@ -191,7 +190,7 @@ function prepare_local() {
 
 function test_ktctl_exchange() {
   # Test exchange
-  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange tomcat --method switch --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange tomcat --mode switch --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
   wait_for_pod tomcat-kt-exchange 1
   check_job exchange
   check_pid_file exchange
@@ -202,7 +201,7 @@ function test_ktctl_exchange() {
 
 function test_ktctl_mesh() {
   # Test mesh
-  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f mesh tomcat --method auto --expose 8080 --versionMark ci \
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f mesh tomcat --mode auto --expose 8080 --versionMark ci \
     --routerImage ${ROUTER_IMAGE} >/tmp/kt-it-mesh.log 2>&1 &
   wait_for_pod tomcat-kt-mesh 1
   check_job mesh
