@@ -14,34 +14,6 @@ builds:
       - windows
     env:
       - CGO_ENABLED=0
-  - id: "kubectl-connect"
-    main: ./cmd/kubectl-connect/main.go
-    binary: kubectl-connect
-    goos:
-      - linux
-      - darwin
-      - windows
-  - id: "kubectl-exchange"
-    main: ./cmd/kubectl-exchange/main.go
-    binary: kubectl-exchange
-    goos:
-      - linux
-      - darwin
-      - windows
-  - id: "kubectl-mesh"
-    main: ./cmd/kubectl-mesh/main.go
-    binary: kubectl-mesh
-    goos:
-      - linux
-      - darwin
-      - windows
-  - id: "kubectl-provide"
-    main: ./cmd/kubectl-provide/main.go
-    binary: kubectl-provide
-    goos:
-      - linux
-      - darwin
-      - windows
   - id: "shadow"
     main: ./cmd/shadow/main.go
     binary: shadow
@@ -110,42 +82,6 @@ archives:
     files:
       - LICENSE
       - README.md
-  - id: kubectl-connect
-    builds:
-      - kubectl-connect
-    name_template: 'kubectl-connect_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-    format: zip
-    files:
-      - LICENSE
-      - README.md
-  - id: kubectl-exchange
-    builds:
-      - kubectl-exchange
-    name_template: 'kubectl-exchange_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-    format: zip
-    files:
-      - LICENSE
-      - README.md
-  - id: kubectl-mesh
-    builds:
-      - kubectl-mesh
-    name_template: 'kubectl-mesh_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-    format: zip
-    files:
-      - LICENSE
-      - README.md
-  - id: kubectl-provide
-    builds:
-      - kubectl-provide
-    name_template: 'kubectl-provide_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-    format: zip
-    files:
-      - LICENSE
-      - README.md
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -162,10 +98,6 @@ release:
     name: kt-connect
   ids:
     - ktctl
-    - kubectl-connect
-    - kubectl-exchange
-    - kubectl-mesh
-    - kubectl-provide
   # @see https://github.com/goreleaser/goreleaser/issues/1023
   draft: false
   # If set to auto, will mark the release as not ready for production
