@@ -9,7 +9,6 @@ generate-mock:
 	echo "generate mocks"
 	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/kt/cluster/mock.go -package=cluster
 	mockgen -source=pkg/kt/command/types.go -destination=pkg/kt/command/mock.go -package=command
-	mockgen -source=pkg/kt/exec/kubectl/types.go -destination=pkg/kt/exec/kubectl/mock.go -package=kubectl
 	mockgen -source=pkg/kt/exec/sshchannel/types.go -destination=pkg/kt/exec/sshchannel/mock.go -package=sshchannel
 	mockgen -source=pkg/kt/exec/sshuttle/types.go -destination=pkg/kt/exec/sshuttle/mock.go -package=sshuttle
 	mockgen -source=pkg/kt/exec/types.go -destination=pkg/kt/exec/mock.go -package=exec

@@ -7,7 +7,6 @@ package exec
 import (
 	reflect "reflect"
 
-	kubectl "github.com/alibaba/kt-connect/pkg/kt/exec/kubectl"
 	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	tun "github.com/alibaba/kt-connect/pkg/kt/exec/tun"
@@ -35,20 +34,6 @@ func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
-}
-
-// Kubectl mocks base method.
-func (m *MockCliInterface) Kubectl() kubectl.CliInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Kubectl")
-	ret0, _ := ret[0].(kubectl.CliInterface)
-	return ret0
-}
-
-// Kubectl indicates an expected call of Kubectl.
-func (mr *MockCliInterfaceMockRecorder) Kubectl() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Kubectl", reflect.TypeOf((*MockCliInterface)(nil).Kubectl))
 }
 
 // SshChannel mocks base method.

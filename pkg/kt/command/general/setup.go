@@ -67,25 +67,6 @@ func validateKubeOpts(opts []string) error {
 
 // CombineKubeOpts set default options of kubectl if not assign
 func CombineKubeOpts(options *options.DaemonOptions) error {
-	if err := validateKubeOpts(options.KubeOptions); err != nil {
-		return err
-	}
-
-	for _, opt := range options.KubeOptions {
-		strs := strings.Fields(opt)
-		if len(strs) == 1 {
-			strs = strings.Split(opt, "=")
-		}
-		switch strs[0] {
-		case "-n", "--namespace":
-			options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--namespace=%s", strs[1]))
-		case "-c", "--kubeconfig":
-			options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--kubeconfig=%s", strs[1]))
-		case "--context":
-			options.KubeOptions = append(options.KubeOptions, fmt.Sprintf("--context=%s", strs[1]))
-		}
-	}
-
 	config, err := clientcmd.LoadFromFile(options.KubeConfig)
 	if err != nil {
 		return err

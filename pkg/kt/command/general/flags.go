@@ -60,16 +60,6 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Usage:       "Extra annotation on proxy pod e.g. 'annotation1=val1,annotation2=val2'",
 			Destination: &options.WithAnnotations,
 		},
-		cli.BoolFlag{
-			Name:        "useKubectl",
-			Usage:       "Use kubectl for port-forward",
-			Destination: &options.UseKubectl,
-		},
-		cli.StringSliceFlag{
-			Name:  "e",
-			Usage: "Extra kubectl options (must use with '--useKubectl') e.g. -e '--cluster=name' -e '--insecure-skip-tls-verify=true'",
-			Value: &options.KubeOptions,
-		},
 		cli.IntFlag{
 			Name:        "waitTime",
 			Usage:       "Seconds to wait before kubectl port-forward connect timeout",
@@ -94,9 +84,9 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "method",
-			Usage:       methodDefaultUsage(),
+			Usage:       "Connect method 'tun' or 'sshuttle'",
 			Destination: &options.ConnectOptions.Method,
-			Value:       methodDefaultValue(),
+			Value:       common.ConnectMethodTun,
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
@@ -238,20 +228,4 @@ func CleanActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Value:       util.ResourceHeartBeatIntervalMinus * 3,
 		},
 	}
-}
-
-func methodDefaultValue() string {
-	if util.IsWindows() {
-		return common.ConnectMethodSocks5
-	}
-	return common.ConnectMethodVpn
-}
-
-func methodDefaultUsage() string {
-	if util.IsWindows() {
-		return "Connect method 'socks' or 'socks5'"
-	} else if util.IsLinux() {
-		return "Connect method 'vpn', 'socks', 'socks5' or 'tun'"
-	}
-	return "Connect method 'vpn', 'socks' or 'socks5'"
 }
