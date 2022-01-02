@@ -45,12 +45,12 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		return err
 	}
 
-	if options.ConnectOptions.Method == common.ConnectMethodTun {
+	if options.ConnectOptions.Mode == common.ConnectModeTun {
 		err = connect.ByTun(cli, options)
-	} else if options.ConnectOptions.Method == common.ConnectMethodShuttle {
+	} else if options.ConnectOptions.Mode == common.ConnectModeShuttle {
 		err = connect.BySshuttle(cli, options)
 	} else {
-		err = fmt.Errorf("invalid connect mode: '%s'", options.ConnectOptions.Method)
+		err = fmt.Errorf("invalid connect mode: '%s'", options.ConnectOptions.Mode)
 	}
 	if err != nil {
 		return err

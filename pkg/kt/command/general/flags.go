@@ -83,14 +83,14 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:        "method",
-			Usage:       "Connect method 'tun' or 'sshuttle'",
-			Destination: &options.ConnectOptions.Method,
-			Value:       common.ConnectMethodTun,
+			Name:        "mode",
+			Usage:       "Connect mode 'tun' or 'sshuttle'",
+			Destination: &options.ConnectOptions.Mode,
+			Value:       common.ConnectModeTun,
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
-			Usage:       "Use shared shadow pod with other clients (Beta)",
+			Usage:       "Use shared shadow pod with other clients",
 			Destination: &options.ConnectOptions.ShareShadow,
 		},
 		cli.IntFlag{
@@ -112,40 +112,29 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        "disablePodIp",
-			Usage:       "(vpn mode only) Disable access to pod IP address",
+			Usage:       "Disable access to pod IP address",
 			Destination: &options.ConnectOptions.DisablePodIp,
+		},
+		cli.StringFlag{
+			Name:        "cidr",
+			Usage:       "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
+			Destination: &options.ConnectOptions.CIDRs,
+		},
+		cli.BoolFlag{
+			Name:        "disableDNS",
+			Usage:       "Disable Cluster DNS",
+			Destination: &options.ConnectOptions.DisableDNS,
 		},
 		cli.StringFlag{
 			Name:        "excludeIps",
 			Usage:       "(vpn mode only) Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
 			Destination: &options.ConnectOptions.ExcludeIps,
 		},
-		cli.StringFlag{
-			Name:        "cidr",
-			Usage:       "(vpn mode only) Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
-			Destination: &options.ConnectOptions.CIDRs,
-		},
-		cli.BoolFlag{
-			Name:        "disableDNS",
-			Usage:       "(vpn / tun mode only) Disable Cluster DNS",
-			Destination: &options.ConnectOptions.DisableDNS,
-		},
-		cli.StringFlag{
-			Name:        "proxyAddr",
-			Usage:       "(socks5 method only) Specify the address which socks5 proxy should listen to",
-			Destination: &options.ConnectOptions.SocksAddr,
-			Value:       "127.0.0.1",
-		},
 		cli.IntFlag{
 			Name:        "proxyPort",
-			Usage:       "(socks5 method only) Specify the local port which socks5 proxy should use",
+			Usage:       "(tun method only) Specify the local port which socks5 proxy should use",
 			Destination: &options.ConnectOptions.SocksPort,
 			Value:       2223,
-		},
-		cli.StringFlag{
-			Name:        "jvmrc",
-			Usage:       "(Windows only) Generate .jvmrc file to specified folder",
-			Destination: &options.ConnectOptions.JvmrcDir,
 		},
 	}
 }
@@ -153,10 +142,10 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:        "method",
-			Usage:       "Exchange method 'scale' or 'ephemeral'(experimental)",
-			Destination: &options.ExchangeOptions.Method,
-			Value:       "scale",
+			Name:        "mode",
+			Usage:       "Exchange method 'switch', 'scale' or 'ephemeral'(experimental)",
+			Destination: &options.ExchangeOptions.Mode,
+			Value:       common.ExchangeModeSwitch,
 		},
 		cli.StringFlag{
 			Name:        "expose",
@@ -175,10 +164,10 @@ func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
-			Name:        "method",
-			Value:       "manual",
-			Usage:       "Mesh method 'manual' or 'auto'(beta)",
-			Destination: &options.MeshOptions.Method,
+			Name:        "mode",
+			Usage:       "Mesh method 'auto' or 'manual'",
+			Destination: &options.MeshOptions.Mode,
+			Value:       common.MeshModeAuto,
 		},
 		cli.StringFlag{
 			Name:        "expose",

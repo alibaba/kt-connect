@@ -75,17 +75,6 @@ func WritePidFile(componentName string) error {
 	return ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
 }
 
-// GetJvmrcFilePath get jvmrc file from jvmrc dir
-func GetJvmrcFilePath(jvmrcDir string) string {
-	if jvmrcDir != "" {
-		folder, err := os.Stat(jvmrcDir)
-		if err == nil && folder.IsDir() {
-			return filepath.Join(jvmrcDir, ".jvmrc")
-		}
-	}
-	return ""
-}
-
 // FixFileOwner set owner to original user when run with sudo
 func FixFileOwner(path string) {
 	var uid int

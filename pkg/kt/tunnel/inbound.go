@@ -26,7 +26,7 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string, opt *options.Dae
 		return -1, err
 	}
 
-	if opt.ExchangeOptions.Method != common.ExchangeMethodEphemeral {
+	if opt.ExchangeOptions.Mode != common.ExchangeModeEphemeral {
 		// remote forward pod -> local via ssh
 		var wg sync.WaitGroup
 		ssh := sshchannel.SSHChannel{}

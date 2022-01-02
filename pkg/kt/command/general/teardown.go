@@ -70,18 +70,10 @@ func cleanLocalFiles(opts *options.DaemonOptions) {
 			}
 		}
 	}
-
-	jvmrcFilePath := util.GetJvmrcFilePath(opts.ConnectOptions.JvmrcDir)
-	if jvmrcFilePath != "" {
-		log.Info().Msg("Removing .jvmrc")
-		if err := os.Remove(jvmrcFilePath); err != nil {
-			log.Error().Err(err).Msgf("Delete .jvmrc failed")
-		}
-	}
 }
 
 func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
-	if opts.ExchangeOptions.Method == common.ExchangeMethodScale {
+	if opts.ExchangeOptions.Mode == common.ExchangeModeScale {
 		log.Info().Msgf("Recovering origin deployment %s", opts.RuntimeOptions.Origin)
 		err := k.ScaleTo(ctx, opts.RuntimeOptions.Origin, opts.Namespace, &opts.RuntimeOptions.Replicas)
 		if err != nil {
@@ -96,7 +88,7 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 			ch <- syscall.SIGINT
 		}()
 		_ = <-ch
-	} else if opts.ExchangeOptions.Method == common.ExchangeMethodSwitch {
+	} else if opts.ExchangeOptions.Mode == common.ExchangeModeSwitch {
 		RecoverOriginalService(ctx, k, opts.RuntimeOptions.Origin, opts.Namespace)
 	}
 }
@@ -213,7 +205,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions
 				}
 			}
 		}
-		if opts.ExchangeOptions != nil && opts.ExchangeOptions.Method == common.ExchangeMethodEphemeral {
+		if opts.ExchangeOptions != nil && opts.ExchangeOptions.Mode == common.ExchangeModeEphemeral {
 			for _, shadow := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
 				log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
 				err = k.RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opts.Namespace)
