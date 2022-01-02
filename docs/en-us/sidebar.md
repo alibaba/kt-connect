@@ -10,7 +10,7 @@
   - [ktctl connect](en-us/cli/connect.md)
   - [ktctl exchange](en-us/cli/exchange.md)
   - [ktctl mesh](en-us/cli/mesh.md)
-  - [ktctl provide](en-us/cli/provide.md)
+  - [ktctl preview](en-us/cli/preview.md)
   - [ktctl clean](en-us/cli/clean.md)
 
 - Troubleshot

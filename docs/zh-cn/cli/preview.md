@@ -1,11 +1,11 @@
-## Command: ktctl provide
+## Command: ktctl preview
 
 将本地服务添加到Kubernetes集群
 
 ### 示例
 
 ```
-ktctl provide localservice --expose 8080
+ktctl preview localservice --expose 8080
 ```
 
 ### 常用参数

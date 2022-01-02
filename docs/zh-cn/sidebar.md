@@ -11,7 +11,7 @@
   - [ktctl connect](zh-cn/cli/connect.md)
   - [ktctl exchange](zh-cn/cli/exchange.md)
   - [ktctl mesh](zh-cn/cli/mesh.md)
-  - [ktctl provide](zh-cn/cli/provide.md)
+  - [ktctl preview](zh-cn/cli/preview.md)
   - [ktctl clean](zh-cn/cli/clean.md)
 
 - 问题排查：

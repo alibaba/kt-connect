@@ -1,11 +1,11 @@
-## Command: ktctl provide
+## Command: ktctl preview
 
 Expose local service to cluster
 
 ### Usage
 
 ```
-ktctl provide localservice --expose 8080
+ktctl preview localservice --expose 8080
 ```
 
 ### Options

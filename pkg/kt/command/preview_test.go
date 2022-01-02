@@ -17,7 +17,7 @@ func Test_runCommand(t *testing.T) {
 	fakeKtCli := fakeKt.NewMockCliInterface(ctl)
 
 	mockAction := NewMockActionInterface(ctl)
-	mockAction.EXPECT().Provide(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
+	mockAction.EXPECT().Preview(gomock.Eq("service"), fakeKtCli, gomock.Any()).Return(nil).AnyTimes()
 
 	cases := []struct {
 		testArgs               []string
@@ -25,9 +25,9 @@ func Test_runCommand(t *testing.T) {
 		useShortOptionHandling bool
 		expectedErr            error
 	}{
-		{testArgs: []string{"provide", "service", "--expose", "8080", "--external"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
-		{testArgs: []string{"provide", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--expose is required")},
-		{testArgs: []string{"provide"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("an service name must be specified")},
+		{testArgs: []string{"preview", "service", "--expose", "8080", "--external"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
+		{testArgs: []string{"preview", "service"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("--expose is required")},
+		{testArgs: []string{"preview"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: errors.New("an service name must be specified")},
 	}
 
 	for _, c := range cases {
@@ -40,7 +40,7 @@ func Test_runCommand(t *testing.T) {
 
 		opts := options.NewDaemonOptions("test")
 		opts.Debug = true
-		command := NewProvideCommand(fakeKtCli, opts, mockAction)
+		command := NewPreviewCommand(fakeKtCli, opts, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

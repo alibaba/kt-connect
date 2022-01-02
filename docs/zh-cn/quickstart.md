@@ -126,7 +126,7 @@ KtConnect提供了三种能够让集群访问本地服务的命令，分别用�
 
 - Exchange：将集群指定服务的所有流量转向本地
 - Mesh：将集群指定服务的部分流量（按Mesh规则）转向本地
-- Provide：在集群中创建一个新服务，并将其流量转向本地
+- Preview：在集群中创建一个新服务，并将其流量转向本地
 
 <!-- tabs:start -->
 
@@ -210,14 +210,14 @@ kt-connect local v2
 
 `ktctl exchange`与`ktctl mesh`命令的最大区别在于，前者会将原应用实例流量全部替换为由本地服务接收，而后者仅将包含指定Header的流量导流到本地，同时保证测试环境正常链路始终可用。
 
-#### ** Provide **
+#### ** Preview **
 
-将本地运行的服务实例注册到集群上。与前两种命令不同，`ktctl provide`主要用于将本地开发中的服务提供给其他开发者进行联调和预览。
+将本地运行的服务实例注册到集群上。与前两种命令不同，`ktctl preview`主要用于将本地开发中的服务提供给其他开发者进行联调和预览。
 
 以下命令会将运行在本地`8080`端口的服务注册到测试集群，命名为`tomcat-preview`。
 
 ```bash
-$ ktctl provide tomcat-preview --expose 8080
+$ ktctl preview tomcat-preview --expose 8080
 00:00AM INF KtConnect start at <PID>
 ... ...
 ```

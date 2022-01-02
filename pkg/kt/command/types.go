@@ -8,7 +8,7 @@ import (
 // ActionInterface all action defined
 type ActionInterface interface {
 	Connect(cli kt.CliInterface, options *options.DaemonOptions) error
-	Provide(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error
+	Preview(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error
 	Clean(cli kt.CliInterface, options *options.DaemonOptions) error

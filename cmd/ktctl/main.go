@@ -52,7 +52,7 @@ func newCommands(kt kt.CliInterface, action command.ActionInterface, options *op
 		command.NewConnectCommand(kt, options, action),
 		command.NewExchangeCommand(kt, options, action),
 		command.NewMeshCommand(kt, options, action),
-		command.NewProvideCommand(kt, options, action),
+		command.NewPreviewCommand(kt, options, action),
 		command.NewCleanCommand(kt, options, action),
 	}
 }
