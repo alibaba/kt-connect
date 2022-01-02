@@ -35,20 +35,6 @@ func (m *MockActionInterface) EXPECT() *MockActionInterfaceMockRecorder {
 	return m.recorder
 }
 
-// ApplyDashboard mocks base method.
-func (m *MockActionInterface) ApplyDashboard(cli kt.CliInterface, options *options.DaemonOptions) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ApplyDashboard", cli, options)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ApplyDashboard indicates an expected call of ApplyDashboard.
-func (mr *MockActionInterfaceMockRecorder) ApplyDashboard(cli, options interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyDashboard", reflect.TypeOf((*MockActionInterface)(nil).ApplyDashboard), cli, options)
-}
-
 // Clean mocks base method.
 func (m *MockActionInterface) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
 	m.ctrl.T.Helper()
@@ -103,20 +89,6 @@ func (m *MockActionInterface) Mesh(deploymentName string, cli kt.CliInterface, o
 func (mr *MockActionInterfaceMockRecorder) Mesh(deploymentName, cli, options interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mesh", reflect.TypeOf((*MockActionInterface)(nil).Mesh), deploymentName, cli, options)
-}
-
-// OpenDashboard mocks base method.
-func (m *MockActionInterface) OpenDashboard(cli kt.CliInterface, options *options.DaemonOptions) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "OpenDashboard", cli, options)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// OpenDashboard indicates an expected call of OpenDashboard.
-func (mr *MockActionInterfaceMockRecorder) OpenDashboard(cli, options interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OpenDashboard", reflect.TypeOf((*MockActionInterface)(nil).OpenDashboard), cli, options)
 }
 
 // Provide mocks base method.

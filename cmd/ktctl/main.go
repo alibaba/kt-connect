@@ -54,6 +54,5 @@ func newCommands(kt kt.CliInterface, action command.ActionInterface, options *op
 		command.NewMeshCommand(kt, options, action),
 		command.NewProvideCommand(kt, options, action),
 		command.NewCleanCommand(kt, options, action),
-		command.NewDashboardCommand(kt, options, action),
 	}
 }

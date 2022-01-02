@@ -1,12 +1,8 @@
-
 PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
 TAG				  ?= $(shell date +%s)
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 ROUTER_IMAGE	  =  kt-connect-router
-BUILDER_IMAGE	  =  builder
-DASHBOARD_IMAGE   =  kt-connect-dashboard
-SERVER_IMAGE	  =  kt-connect-server
 
 # generate mock
 generate-mock:
