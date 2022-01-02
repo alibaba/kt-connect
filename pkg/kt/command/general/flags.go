@@ -141,18 +141,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.DisableDNS,
 		},
 		cli.StringFlag{
-			Name:        "tunName",
-			Usage:       "(tun method only) The tun device name to create on client machine (Alpha)",
-			Destination: &options.ConnectOptions.TunName,
-			Value:       "tun0",
-		},
-		cli.StringFlag{
-			Name:        "tunCidr",
-			Usage:       "(tun method only) The cidr used by local tun and peer tun device, at least 4 ips. This cidr MUST NOT overlay with kubernetes service cidr and pod cidr",
-			Destination: &options.ConnectOptions.TunCidr,
-			Value:       "10.1.1.0/30",
-		},
-		cli.StringFlag{
 			Name:        "proxyAddr",
 			Usage:       "(socks5 method only) Specify the address which socks5 proxy should listen to",
 			Destination: &options.ConnectOptions.SocksAddr,
@@ -168,11 +156,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Name:        "jvmrc",
 			Usage:       "(Windows only) Generate .jvmrc file to specified folder",
 			Destination: &options.ConnectOptions.JvmrcDir,
-		},
-		cli.BoolFlag{
-			Name:        "setupGlobalProxy",
-			Usage:       "(Windows only) Auto setup HTTP_PROXY variable and system global proxy configuration",
-			Destination: &options.ConnectOptions.UseGlobalProxy,
 		},
 	}
 }
@@ -259,7 +242,7 @@ func CleanActionFlag(options *options.DaemonOptions) []cli.Flag {
 
 func methodDefaultValue() string {
 	if util.IsWindows() {
-		return common.ConnectMethodSocks
+		return common.ConnectMethodSocks5
 	}
 	return common.ConnectMethodVpn
 }

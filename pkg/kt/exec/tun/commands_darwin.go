@@ -1,7 +1,7 @@
 package tun
 
 import (
-	ktexec "github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
 )
@@ -11,8 +11,8 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	for _, r := range ipRange {
 		tunIp := firstIp(r)
 		// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.1
-		err := ktexec.RunAndWait(exec.Command("ifconfig",
-			s.TunName,
+		err := util.RunAndWait(exec.Command("ifconfig",
+			s.getTunName(),
 			"inet",
 			r,
 			tunIp,
@@ -22,7 +22,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			return err
 		}
 		// run command: route add -net 172.20.0.0/16 -iface 172.20.0.1
-		ktexec.RunAndWait(exec.Command("route",
+		util.RunAndWait(exec.Command("route",
 			"add",
 			"-net",
 			r,

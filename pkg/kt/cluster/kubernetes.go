@@ -163,7 +163,6 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 
 	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey]))
 
-	authKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SshAuthKey]))
 	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SshAuthPrivateKey]))
 
 	ec := coreV1.EphemeralContainer{
@@ -171,7 +170,6 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 			Name:  containerName,
 			Image: options.Image,
 			Env: []coreV1.EnvVar{
-				{Name: common.SshAuthKey, Value: authKey},
 				{Name: common.SshAuthPrivateKey, Value: privateKey},
 			},
 			SecurityContext: &coreV1.SecurityContext{
@@ -259,9 +257,6 @@ func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAn
 	}
 	pod.Spec.Volumes = []coreV1.Volume{
 		getSSHVolume(sshcm),
-	}
-	if options.ConnectOptions != nil && options.ConnectOptions.Method == common.ConnectMethodTun {
-		addTunHostPath(pod)
 	}
 	if _, err := cli.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return err

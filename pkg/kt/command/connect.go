@@ -45,14 +45,10 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		return err
 	}
 
-	if options.ConnectOptions.Method == common.ConnectMethodSocks {
-		err = connect.BySocks(cli, options)
-	} else if options.ConnectOptions.Method == common.ConnectMethodSocks5 {
+	if options.ConnectOptions.Method == common.ConnectMethodSocks5 {
 		err = connect.BySocks5(cli, options)
 	} else if options.ConnectOptions.Method == common.ConnectMethodVpn {
 		err = connect.BySshuttle(cli, options)
-	} else if options.ConnectOptions.Method == common.ConnectMethodTun {
-		err = connect.ByTun(cli, options)
 	} else {
 		err = fmt.Errorf("invalid connect mode: '%s'", options.ConnectOptions.Method)
 	}

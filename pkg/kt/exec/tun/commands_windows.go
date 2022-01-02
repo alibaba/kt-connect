@@ -2,7 +2,7 @@ package tun
 
 import (
 	"fmt"
-	ktexec "github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
 )
@@ -17,7 +17,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 		}
 		if i == 0 {
 			// run command: netsh interface ip set address KtConnectTunnel static 172.20.0.1 255.255.0.0
-			err = ktexec.RunAndWait(exec.Command("netsh",
+			err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
 				"set",
@@ -29,7 +29,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			), "add_ip_addr")
 		} else {
 			// run command: netsh interface ip add address KtConnectTunnel 172.21.0.1 255.255.0.0
-			err = ktexec.RunAndWait(exec.Command("netsh",
+			err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
 				"add",
@@ -44,7 +44,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			return err
 		}
 		// run command: route add 172.20.0.0 mask 255.255.0.0 172.20.0.1
-		err = ktexec.RunAndWait(exec.Command("route",
+		err = util.RunAndWait(exec.Command("route",
 			"add",
 			ip,
 			"mask",
@@ -64,7 +64,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 	for i, dns := range dnsServers {
 		if i == 0 {
 			// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
-			err = ktexec.RunAndWait(exec.Command("netsh",
+			err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
 				"set",
@@ -75,7 +75,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 			), "add_dns_server")
 		} else {
 			// run command: netsh interface ip add dnsservers name=KtConnectTunnel address=4.4.4.4
-			err = ktexec.RunAndWait(exec.Command("netsh",
+			err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
 				"add",

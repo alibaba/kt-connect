@@ -8,7 +8,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -29,7 +28,6 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 	cleanLocalFiles(opts)
 	if opts.RuntimeOptions.Component == common.ComponentConnect {
 		recoverGlobalHostsAndProxy(opts)
-		removeTunDevice(cli, opts)
 	}
 
 	ctx := context.Background()
@@ -43,34 +41,10 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 	cleanShadowPodAndConfigMap(ctx, opts, k8s)
 }
 
-func removeTunDevice(cli kt.CliInterface, opts *options.DaemonOptions) {
-	if opts.ConnectOptions.Method == common.ConnectMethodTun {
-		log.Debug().Msg("Removing tun device ...")
-		err := cli.Exec().Tunnel().RemoveDevice()
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to delete tun device")
-		}
-
-		if !opts.ConnectOptions.DisableDNS {
-			err = util.RestoreConfig()
-			if err != nil {
-				log.Error().Err(err).Msgf("Restore resolv.conf failed")
-			}
-		}
-	}
-}
-
 func recoverGlobalHostsAndProxy(opts *options.DaemonOptions) {
 	if opts.RuntimeOptions.Dump2Host {
 		log.Debug().Msg("Dropping hosts records ...")
 		util.DropHosts()
-	}
-	if opts.ConnectOptions.UseGlobalProxy {
-		log.Debug().Msg("Cleaning up global proxy and environment variable ...")
-		if opts.ConnectOptions.Method == common.ConnectMethodSocks {
-			registry.CleanGlobalProxy(&opts.RuntimeOptions.ProxyConfig)
-		}
-		registry.CleanHttpProxyEnvironmentVariable(&opts.RuntimeOptions.ProxyConfig)
 	}
 }
 

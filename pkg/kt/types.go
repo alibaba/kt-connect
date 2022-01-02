@@ -4,7 +4,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/exec"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
 // CliInterface ...
@@ -29,9 +28,5 @@ func (c *Cli) Kubernetes() cluster.KubernetesInterface {
 func (c *Cli) Exec() exec.CliInterface {
 	return &exec.Cli{
 		KubeOptions: c.Options.KubeOptions,
-		TunName:     c.Options.ConnectOptions.TunName,
-		SourceIP:    c.Options.RuntimeOptions.SourceIP,
-		DestIP:      c.Options.RuntimeOptions.DestIP,
-		MaskLen:     util.ExtractNetMaskFromCidr(c.Options.ConnectOptions.TunCidr),
 	}
 }

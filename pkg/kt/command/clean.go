@@ -8,7 +8,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/registry"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -94,8 +93,6 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		util.CleanRsaKeys()
 		log.Debug().Msg("Cleaning up hosts file ...")
 		util.DropHosts()
-		log.Debug().Msg("Cleaning up global proxy and environment variable ...")
-		registry.ResetGlobalProxyAndEnvironmentVariable()
 	}
 	return nil
 }
