@@ -36,6 +36,7 @@ func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action
 	return urfave.Command{
 		Name:  "clean",
 		Usage: "delete unavailing shadow pods from kubernetes cluster",
+		UsageText: "ktctl clean [command options]",
 		Flags: general.CleanActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {

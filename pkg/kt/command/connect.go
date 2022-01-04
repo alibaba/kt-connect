@@ -20,7 +20,8 @@ import (
 func NewConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "connect",
-		Usage: "connection to kubernetes cluster",
+		Usage: "create a network tunnel to kubernetes cluster",
+		UsageText: "ktctl connect [command options]",
 		Flags: general.ConnectActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {
@@ -45,7 +46,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 		return err
 	}
 
-	if options.ConnectOptions.Mode == common.ConnectModeTun {
+	if options.ConnectOptions.Mode == common.ConnectModeTun2Socks {
 		err = connect.ByTun(cli, options)
 	} else if options.ConnectOptions.Mode == common.ConnectModeShuttle {
 		err = connect.BySshuttle(cli, options)

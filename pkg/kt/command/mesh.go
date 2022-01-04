@@ -22,7 +22,8 @@ import (
 func NewMeshCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "mesh",
-		Usage: "mesh kubernetes deployment to local",
+		Usage: "redirect marked requests of specified kubernetes service to local",
+		UsageText: "ktctl mesh <service-name> [command options]",
 		Flags: general.MeshActionFlag(options),
 		Action: func(c *urfave.Context) error {
 			if options.Debug {

@@ -8,7 +8,7 @@ const (
 	ComponentMesh         = "mesh"
 	ComponentPreview      = "preview"
 	ConnectModeShuttle    = "sshuttle"
-	ConnectModeTun        = "tun"
+	ConnectModeTun2Socks  = "tun2socks"
 	ExchangeModeScale     = "scale"
 	ExchangeModeEphemeral = "ephemeral"
 	ExchangeModeSwitch    = "switch"
