@@ -283,7 +283,7 @@ func (k *Kubernetes) CreateService(ctx context.Context, metaAndSpec *SvcMetaAndS
 // ClusterCidrs get cluster Cidrs
 func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *options.ConnectOptions) (cidrs []string, err error) {
 	if !opt.DisablePodIp {
-		cidrs, err = getPodCidrs(ctx, k.Clientset, namespace, opt.CIDRs)
+		cidrs, err = getPodCidrs(ctx, k.Clientset, namespace)
 		if err != nil {
 			return
 		}
@@ -294,9 +294,12 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 	if err != nil {
 		return
 	}
+	cidrs = append(cidrs, serviceCidr...)
 	log.Debug().Msgf("Service CIDR is %v", serviceCidr)
 
-	cidrs = append(cidrs, serviceCidr...)
+	if opt.IncludeIps != "" {
+		cidrs = append(cidrs, strings.Split(opt.IncludeIps, ",")...)
+	}
 	return
 }
 

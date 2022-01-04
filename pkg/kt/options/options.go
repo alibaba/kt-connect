@@ -15,7 +15,7 @@ type ConnectOptions struct {
 	DisablePodIp         bool
 	SSHPort              int
 	SocksPort            int
-	CIDRs                string
+	IncludeIps           string
 	ExcludeIps           string
 	Mode                 string
 	Dump2HostsNamespaces string

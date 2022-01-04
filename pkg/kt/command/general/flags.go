@@ -100,7 +100,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Value:       2222,
 		},
 		cli.StringFlag{
-			Name:        "dump2hosts",
+			Name:        "dumpToHosts",
 			Usage:       "Specify namespaces to dump service into local hosts file, use ',' separated",
 			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
 		},
@@ -115,15 +115,15 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "Disable access to pod IP address",
 			Destination: &options.ConnectOptions.DisablePodIp,
 		},
-		cli.StringFlag{
-			Name:        "cidr",
-			Usage:       "Custom CIDR, e.g. '172.2.0.0/16', use ',' separated",
-			Destination: &options.ConnectOptions.CIDRs,
-		},
 		cli.BoolFlag{
 			Name:        "disableDNS",
 			Usage:       "Disable Cluster DNS",
 			Destination: &options.ConnectOptions.DisableDNS,
+		},
+		cli.StringFlag{
+			Name:        "includeIps",
+			Usage:       "Specify extra IP ranges which should be route to cluster, e.g. '172.2.0.0/16', use ',' separated",
+			Destination: &options.ConnectOptions.IncludeIps,
 		},
 		cli.StringFlag{
 			Name:        "excludeIps",
