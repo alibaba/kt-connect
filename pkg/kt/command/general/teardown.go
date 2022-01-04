@@ -190,13 +190,13 @@ func cleanShadowPodAndConfigMap(ctx context.Context, opts *options.DaemonOptions
 	var err error
 	if opts.RuntimeOptions.Shadow != "" {
 		shouldDelWithShared := false
-		if opts.ConnectOptions.ShareShadow {
+		if !opts.ConnectOptions.SoleShadow {
 			shouldDelWithShared, err = k.DecreaseRef(ctx, opts.RuntimeOptions.Shadow, opts.Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opts.RuntimeOptions.Shadow)
 			}
 		}
-		if shouldDelWithShared || !opts.ConnectOptions.ShareShadow {
+		if shouldDelWithShared || opts.ConnectOptions.SoleShadow {
 			for _, sshcm := range strings.Split(opts.RuntimeOptions.Shadow, ",") {
 				log.Info().Msgf("Cleaning configmap %s", sshcm)
 				err = k.RemoveConfigMap(ctx, sshcm, opts.Namespace)

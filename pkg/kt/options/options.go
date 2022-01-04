@@ -19,7 +19,7 @@ type ConnectOptions struct {
 	ExcludeIps           string
 	Mode                 string
 	Dump2HostsNamespaces string
-	ShareShadow          bool
+	SoleShadow           bool
 	ClusterDomain        string
 }
 
