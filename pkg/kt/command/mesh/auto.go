@@ -18,17 +18,17 @@ import (
 
 func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
 	// Get service to mesh
-	svcName, err := general.GetServiceByResourceName(ctx, k, resourceName, opts)
+	svc, err := general.GetServiceByResourceName(ctx, k, resourceName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
 	// Lock service to avoid conflict
-	svc, err := general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0)
+	err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0)
 	if err != nil {
 		return err
 	}
-	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
+	defer general.UnlockService(ctx, k, svc.Name, opts.Namespace)
 
 	// Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
@@ -41,18 +41,18 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// Check name usable
-	if err = isNameUsable(ctx, k, svcName, meshVersion, opts, 0); err != nil {
+	if err = isNameUsable(ctx, k, svc.Name, meshVersion, opts, 0); err != nil {
 		return err
 	}
 
 	// Create origin service
-	originSvcName := svcName + common.OriginServiceSuffix
+	originSvcName := svc.Name + common.OriginServiceSuffix
 	if err = createOriginService(ctx, k, originSvcName, ports, svc.Spec.Selector, opts); err != nil {
 		return err
 	}
 
 	// Create shadow service
-	shadowName := svcName + common.MeshPodInfix + meshVersion
+	shadowName := svc.Name + common.MeshPodInfix + meshVersion
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
 		common.KtName: shadowName,
@@ -63,18 +63,18 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 
 	// Create router pod
 	// Must after origin service and shadow service, otherwise will cause 'host not found in upstream' error
-	routerPodName := svcName + common.RouterPodSuffix
+	routerPodName := svc.Name + common.RouterPodSuffix
 	routerLabels := map[string]string{
 		common.KtRole: common.RoleRouter,
 		common.KtName: routerPodName,
 	}
-	if err = createRouter(ctx, k, routerPodName, svcName, ports, routerLabels, versionMark, opts); err != nil {
+	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, versionMark, opts); err != nil {
 		return err
 	}
 
 	// Let target service select router pod
 	// Must after router pod created, otherwise request will be interrupted
-	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace, routerLabels); err != nil {
+	if err = general.UpdateServiceSelector(ctx, k, svc.Name, opts.Namespace, routerLabels); err != nil {
 		return err
 	}
 

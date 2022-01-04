@@ -6,6 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
@@ -51,16 +52,9 @@ func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *opt
 
 
 func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, resourceName, namespace string) ([]coreV1.Pod, error) {
-	segments := strings.Split(resourceName, "/")
-	var resourceType, name string
-	if len(segments) > 2 {
-		return nil, fmt.Errorf("invalid resource name: %s", resourceName)
-	} else if len(segments) == 2 {
-		resourceType = segments[0]
-		name = segments[1]
-	} else {
-		resourceType = "pod"
-		name = resourceName
+	resourceType, name, err := general.ParseResourceName(resourceName)
+	if err != nil {
+		return nil, err
 	}
 
 	switch resourceType {

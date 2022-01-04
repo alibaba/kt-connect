@@ -32,52 +32,76 @@ func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	return nil
 }
 
-func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) (string, error) {
-	segments := strings.Split(resourceName, "/")
-	var resourceType, name string
-	if len(segments) > 2 {
-		return "", fmt.Errorf("invalid resource name: %s", resourceName)
-	} else if len(segments) == 2 {
-		resourceType = segments[0]
-		name = segments[1]
-	} else {
-		resourceType = "deployment"
-		name = resourceName
+func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface, resourceName, namespace string) (*coreV1.Service, error) {
+	resourceType, name, err := ParseResourceName(resourceName)
+	if err != nil {
+		return nil, err
 	}
 
-	var svcName string
 	switch resourceType {
 	case "deploy":
 		fallthrough
 	case "deployment":
-		app, err := k.GetDeployment(ctx, name, opts.Namespace)
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to find deployment '%s'", name)
-			return "", err
+		app, err2 := k.GetDeployment(ctx, name, namespace)
+		if err2 != nil {
+			return nil, err2
 		}
-		svc, err := getServiceByDeployment(ctx, k, app, opts)
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to find deployment '%s'", name)
-			return "", err
-		}
-		svcName = svc.Name
+		return getServiceByDeployment(ctx, k, app, namespace)
 	case "svc":
 		fallthrough
 	case "service":
-		svcName = name
+		return k.GetService(ctx, name, namespace)
 	default:
-		return "", fmt.Errorf("invalid resource type: %s", resourceType)
+		return nil, fmt.Errorf("invalid resource type: %s", resourceType)
 	}
-	return svcName, nil
 }
 
-func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
+func GetDeploymentByResourceName(ctx context.Context, k cluster.KubernetesInterface, resourceName, namespace string) (*appV1.Deployment, error) {
+	resourceType, name, err := ParseResourceName(resourceName)
+	if err != nil {
+		return nil, err
+	}
+
+	switch resourceType {
+	case "deploy":
+		fallthrough
+	case "deployment":
+		return k.GetDeployment(ctx, name, namespace)
+	case "svc":
+		fallthrough
+	case "service":
+		svc, err2 := k.GetService(ctx, name, namespace)
+		if err2 != nil {
+			return nil, err2
+		}
+		return getDeploymentByService(ctx, k, svc, namespace)
+	default:
+		return nil, fmt.Errorf("invalid resource type: %s", resourceType)
+	}
+}
+
+func ParseResourceName(resourceName string) (string, string, error) {
+	segments := strings.Split(resourceName, "/")
+	var resourceType, name string
+	if len(segments) > 2 {
+		return "", "", fmt.Errorf("invalid resource name: %s", resourceName)
+	} else if len(segments) == 2 {
+		resourceType = segments[0]
+		name = segments[1]
+	} else {
+		resourceType = "service"
+		name = resourceName
+	}
+	return resourceType, name, nil
+}
+
+func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) error {
 	if times > 10 {
-		return nil, fmt.Errorf("failed to obtain kt lock of service %s, please try again later", serviceName)
+		return fmt.Errorf("failed to obtain kt lock of service %s, please try again later", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	if svc.Annotations == nil {
@@ -86,16 +110,16 @@ func LockAndFetchService(ctx context.Context, k cluster.KubernetesInterface, ser
 	if _, ok := svc.Annotations[common.KtLock]; ok {
 		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
-		return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
+		return LockService(ctx, k, serviceName, namespace, times + 1)
 	} else {
 		svc.Annotations[common.KtLock] = util.GetTimestamp()
 		if svc, err = k.UpdateService(ctx, svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
-			return LockAndFetchService(ctx, k, serviceName, namespace, times + 1)
+			return LockService(ctx, k, serviceName, namespace, times + 1)
 		}
 	}
 	log.Info().Msgf("Service %s locked", serviceName)
-	return svc, nil
+	return nil
 }
 
 func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string) {
@@ -174,8 +198,8 @@ func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaled
 }
 
 func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, app *appV1.Deployment,
-	options *options.DaemonOptions) (*coreV1.Service, error) {
-	svcList, err := k.GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, options.Namespace)
+	namespace string) (*coreV1.Service, error) {
+	svcList, err := k.GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, namespace)
 	if err != nil {
 		return nil, err
 	} else if len(svcList) == 0 {
@@ -193,7 +217,22 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 	}
 	svc := svcList[0]
 	if strings.HasSuffix(svc.Name, common.OriginServiceSuffix) {
-		return k.GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), options.Namespace)
+		return k.GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), namespace)
 	}
 	return &svc, nil
+}
+
+func getDeploymentByService(ctx context.Context, k cluster.KubernetesInterface, svc *coreV1.Service, namespace string) (*appV1.Deployment, error) {
+	apps, err := k.GetAllDeploymentInNamespace(ctx, namespace)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, app := range apps.Items {
+		if util.MapContains(svc.Spec.Selector, app.Spec.Template.Labels) {
+			log.Info().Msgf("Using first matched deployment '%s'", app)
+			return &app, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to find deployment for service '%s', with selector '%v'", svc.Name, svc.Spec.Selector)
 }

@@ -26,6 +26,7 @@ type KubernetesInterface interface {
 
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
 	GetDeploymentsByLabel(ctx context.Context, labels map[string]string, namespace string) (*appV1.DeploymentList, error)
+	GetAllDeploymentInNamespace(ctx context.Context, namespace string) (*appV1.DeploymentList, error)
 	UpdateDeployment(ctx context.Context, deployment *appV1.Deployment) (*appV1.Deployment, error)
 	ScaleTo(ctx context.Context, deployment, namespace string, replicas *int32) (err error)
 
