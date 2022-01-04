@@ -84,9 +84,9 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "mode",
-			Usage:       "Connect mode 'tun' or 'sshuttle'",
+			Usage:       "Connect mode 'tun2socks' or 'sshuttle'",
 			Destination: &options.ConnectOptions.Mode,
-			Value:       common.ConnectModeTun,
+			Value:       common.ConnectModeTun2Socks,
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
@@ -127,12 +127,12 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "excludeIps",
-			Usage:       "(vpn mode only) Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
+			Usage:       "(sshuttle mode only) Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
 			Destination: &options.ConnectOptions.ExcludeIps,
 		},
 		cli.IntFlag{
 			Name:        "proxyPort",
-			Usage:       "(tun method only) Specify the local port which socks5 proxy should use",
+			Usage:       "(tun2socks mode only) Specify the local port which socks5 proxy should use",
 			Destination: &options.ConnectOptions.SocksPort,
 			Value:       2223,
 		},
