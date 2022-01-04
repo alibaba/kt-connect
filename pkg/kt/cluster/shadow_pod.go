@@ -53,7 +53,7 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
-	if options.ConnectOptions != nil && options.ConnectOptions.ShareShadow {
+	if options.RuntimeOptions.Component == common.ComponentConnect && !options.ConnectOptions.SoleShadow {
 		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, k, &resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", nil, err2

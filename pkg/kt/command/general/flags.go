@@ -90,8 +90,8 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
-			Usage:       "Use shared shadow pod with other clients",
-			Destination: &options.ConnectOptions.ShareShadow,
+			Usage:       "Use standalone shadow pod",
+			Destination: &options.ConnectOptions.SoleShadow,
 		},
 		cli.IntFlag{
 			Name:        "sshPort",
