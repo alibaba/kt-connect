@@ -7,16 +7,26 @@ import (
 )
 
 // SetRoute set specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
-	for _, r := range ipRange {
+func (s *Cli) SetRoute(ipRange []string) (err error) {
+	for i, r := range ipRange {
 		tunIp := firstIp(r)
-		// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.1
-		err := util.RunAndWait(exec.Command("ifconfig",
-			s.getTunName(),
-			"inet",
-			r,
-			tunIp,
-		), "add_ip_addr")
+		if i == 0 {
+			// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.1
+			err = util.RunAndWait(exec.Command("ifconfig",
+				s.getTunName(),
+				"inet",
+				r,
+				tunIp,
+			), "add_ip_addr")
+		} else {
+			// run command: ifconfig utun6 add 172.20.0.0/16 172.20.0.1
+			err = util.RunAndWait(exec.Command("ifconfig",
+				s.getTunName(),
+				"add",
+				r,
+				tunIp,
+			), "add_ip_addr")
+		}
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to add ip addr %s to tun device", tunIp)
 			return err
