@@ -29,16 +29,8 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace, podCIDRs string) ([]string, error) {
+func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
 	var cidrs []string
-
-	if podCIDRs != "" {
-		for _, cidr := range strings.Split(podCIDRs, ",") {
-			cidrs = append(cidrs, cidr)
-		}
-		return cidrs, nil
-	}
-
 	if nodeList, err := k.CoreV1().Nodes().List(ctx, metav1.ListOptions{}); err != nil {
 		// Usually cause by the local kube config has not enough permission
 		log.Debug().Err(err).Msgf("Failed to read node information of cluster")

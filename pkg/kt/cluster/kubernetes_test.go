@@ -50,7 +50,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 			ops := &options.ConnectOptions{
-				CIDRs: strings.Join(tt.args.podCIDR, ","),
+				IncludeIps: strings.Join(tt.args.podCIDR, ","),
 			}
 			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default", ops)
 			if (err != nil) != tt.wantErr {
