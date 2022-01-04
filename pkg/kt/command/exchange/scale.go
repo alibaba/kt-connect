@@ -13,18 +13,18 @@ import (
 	"strings"
 )
 
-func ByScale(deploymentName string, cli kt.CliInterface, opts *options.DaemonOptions) error {
+func ByScale(resourceName string, cli kt.CliInterface, opts *options.DaemonOptions) error {
 	ctx := context.Background()
-	app, err := cli.Kubernetes().GetDeployment(ctx, deploymentName, opts.Namespace)
+	app, err := general.GetDeploymentByResourceName(ctx, cli.Kubernetes(), resourceName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
 	// record context inorder to remove after command exit
-	opts.RuntimeOptions.Origin = deploymentName
+	opts.RuntimeOptions.Origin = resourceName
 	opts.RuntimeOptions.Replicas = *app.Spec.Replicas
 
-	shadowPodName := deploymentName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
+	shadowPodName := resourceName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opts.Namespace)
 	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, opts.ExchangeOptions.Expose,
@@ -33,7 +33,7 @@ func ByScale(deploymentName string, cli kt.CliInterface, opts *options.DaemonOpt
 	}
 
 	down := int32(0)
-	if err = cli.Kubernetes().ScaleTo(ctx, deploymentName, opts.Namespace, &down); err != nil {
+	if err = cli.Kubernetes().ScaleTo(ctx, resourceName, opts.Namespace, &down); err != nil {
 		return err
 	}
 

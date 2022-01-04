@@ -10,14 +10,14 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 )
 
-func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, deploymentName string, opts *options.DaemonOptions) error {
-	app, err := k.GetDeployment(ctx, deploymentName, opts.Namespace)
+func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
+	app, err := general.GetDeploymentByResourceName(ctx, k, resourceName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
-	shadowPodName := deploymentName + common.MeshPodInfix + meshVersion
+	shadowPodName := app.Name + common.MeshPodInfix + meshVersion
 	labels := getMeshLabels(shadowPodName, meshKey, meshVersion, app)
 	annotations := make(map[string]string)
 	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, opts.MeshOptions.Expose, labels, annotations, opts); err != nil {

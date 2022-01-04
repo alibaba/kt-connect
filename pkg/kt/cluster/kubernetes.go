@@ -303,6 +303,11 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 	return
 }
 
+// GetAllDeploymentInNamespace get all deployment in specified namespace
+func (k *Kubernetes) GetAllDeploymentInNamespace(ctx context.Context, namespace string) (*appV1.DeploymentList, error) {
+	return k.Clientset.AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{})
+}
+
 // GetAllServiceInNamespace get all services in specified namespace
 func (k *Kubernetes) GetAllServiceInNamespace(ctx context.Context, namespace string) (*coreV1.ServiceList, error) {
 	return k.Clientset.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})

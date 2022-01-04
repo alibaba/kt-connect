@@ -11,20 +11,20 @@ import (
 )
 
 func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
-	// 1. Get service to exchange
-	svcName, err := general.GetServiceByResourceName(ctx, k, resourceName, opts)
+	// Get service to exchange
+	svc, err := general.GetServiceByResourceName(ctx, k, resourceName, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
-	// 2. Lock service to avoid conflict
-	if _, err = general.LockAndFetchService(ctx, k, svcName, opts.Namespace, 0); err != nil {
+	// Lock service to avoid conflict
+	if err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0); err != nil {
 		return err
 	}
-	defer general.UnlockService(ctx, k, svcName, opts.Namespace)
+	defer general.UnlockService(ctx, k, svc.Name, opts.Namespace)
 
-	// 3. Create shadow pod
-	shadowName := svcName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
+	// Create shadow pod
+	shadowName := svc.Name + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleExchangeShadow,
 		common.KtName: shadowName,
@@ -33,9 +33,9 @@ func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceNa
 		return err
 	}
 
-	// 4. Let target service select shadow pod
-	opts.RuntimeOptions.Origin = svcName
-	if err = general.UpdateServiceSelector(ctx, k, svcName, opts.Namespace, shadowLabels); err != nil {
+	// Let target service select shadow pod
+	opts.RuntimeOptions.Origin = svc.Name
+	if err = general.UpdateServiceSelector(ctx, k, svc.Name, opts.Namespace, shadowLabels); err != nil {
 		return err
 	}
 
