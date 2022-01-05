@@ -367,6 +367,11 @@ func (k *Kubernetes) WaitPodReady(ctx context.Context, name, namespace string, t
 	return k.waitPodReady(ctx, name, namespace, timeoutSec, 0)
 }
 
+// WaitPodTerminate ...
+func (k *Kubernetes) WaitPodTerminate(ctx context.Context, name, namespace string) (*coreV1.Pod, error) {
+	return k.waitPodTerminate(ctx, name, namespace, 0)
+}
+
 // UpdatePod ...
 func (k *Kubernetes) UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Pod, error) {
 	return k.Clientset.CoreV1().Pods(pod.Namespace).Update(ctx, pod, metav1.UpdateOptions{})
@@ -435,6 +440,23 @@ func (k *Kubernetes) waitPodReady(ctx context.Context, name, namespace string, t
 	}
 	log.Info().Msgf("Pod %s is ready", pod.Name)
 	return pod, err
+}
+
+func (k *Kubernetes) waitPodTerminate(ctx context.Context, name, namespace string, times int) (*coreV1.Pod, error) {
+	const interval = 6
+	if times > 10 {
+		return nil, fmt.Errorf("pod '%s' still terminating, please try again later", name)
+	}
+	log.Info().Msgf("Pod '%s' not finished yet, waiting ...", name)
+	time.Sleep(interval * time.Second)
+	routerPod, err := k.GetPod(ctx, name, namespace)
+	if err != nil {
+		return nil, err
+	} else if routerPod.DeletionTimestamp != nil {
+		return k.waitPodTerminate(ctx, name, namespace, times+1)
+	} else {
+		return routerPod, nil
+	}
 }
 
 func (k *Kubernetes) decreasePodRefByOne(ctx context.Context, refCount string, pod *coreV1.Pod) (err error) {
