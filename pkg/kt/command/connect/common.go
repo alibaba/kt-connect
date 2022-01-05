@@ -51,7 +51,7 @@ func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string
 
 func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (string, string, *util.SSHCredential, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
-	if !options.ConnectOptions.SoleShadow {
+	if options.ConnectOptions.SharedShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
