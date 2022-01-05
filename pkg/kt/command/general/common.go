@@ -230,7 +230,7 @@ func getDeploymentByService(ctx context.Context, k cluster.KubernetesInterface, 
 
 	for _, app := range apps.Items {
 		if util.MapContains(svc.Spec.Selector, app.Spec.Template.Labels) {
-			log.Info().Msgf("Using first matched deployment '%s'", app)
+			log.Info().Msgf("Using first matched deployment '%s'", app.Name)
 			return &app, nil
 		}
 	}

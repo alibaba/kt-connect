@@ -24,8 +24,8 @@ func Test_getPodCidrs(t *testing.T) {
 		{
 			name: "should_get_pod_cidr_from_pods",
 			objs: []runtime.Object{
-				buildPod("POD1", "default", "a", "172.168.1.2", map[string]string{}),
-				buildPod("POD2", "default", "b", "172.168.1.3", map[string]string{}),
+				buildPod("default", "POD1", "a", "172.168.1.2", map[string]string{}),
+				buildPod("default", "POD2", "b", "172.168.1.3", map[string]string{}),
 			},
 			wantCidrs: []string{
 				"172.168.1.0/24",
@@ -46,7 +46,7 @@ func Test_getPodCidrs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := testclient.NewSimpleClientset(tt.objs...)
-			gotCidrs, err := getPodCidrs(context.TODO(), client, "default", "")
+			gotCidrs, err := getPodCidrs(context.TODO(), client, "default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPodCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -224,7 +224,7 @@ func buildNode(namespace, name, cidr string) *coreV1.Node {
 	}
 }
 
-func buildPod(name, namespace, image string, ip string, labels map[string]string) *coreV1.Pod {
+func buildPod(namespace, name, image string, ip string, labels map[string]string) *coreV1.Pod {
 	return &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
