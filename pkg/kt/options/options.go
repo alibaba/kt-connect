@@ -81,24 +81,25 @@ type RuntimeOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	RuntimeOptions    *RuntimeOptions
-	PreviewOptions    *PreviewOptions
-	ConnectOptions    *ConnectOptions
-	ExchangeOptions   *ExchangeOptions
-	MeshOptions       *MeshOptions
-	CleanOptions      *CleanOptions
-	KubeConfig        string
-	Namespace         string
-	ServiceAccount    string
-	Debug             bool
-	Image             string
-	ImagePullSecret   string
-	NodeSelector      string
-	WithLabels        string
-	WithAnnotations   string
-	WaitTime          int
-	AlwaysUpdateShadow bool
-	KubeContext       string
+	RuntimeOptions      *RuntimeOptions
+	PreviewOptions      *PreviewOptions
+	ConnectOptions      *ConnectOptions
+	ExchangeOptions     *ExchangeOptions
+	MeshOptions         *MeshOptions
+	CleanOptions        *CleanOptions
+	KubeConfig          string
+	Namespace           string
+	ServiceAccount      string
+	Debug               bool
+	Image               string
+	ImagePullSecret     string
+	NodeSelector        string
+	WithLabels          string
+	WithAnnotations     string
+	PortForwardWaitTime int
+	PodCreationWaitTime int
+	AlwaysUpdateShadow  bool
+	KubeContext         string
 }
 
 // NewDaemonOptions return new cli default options
@@ -106,7 +107,6 @@ func NewDaemonOptions(version string) *DaemonOptions {
 	return &DaemonOptions{
 		Namespace:  common.DefaultNamespace,
 		KubeConfig: util.KubeConfig(),
-		WaitTime:   5,
 		RuntimeOptions: &RuntimeOptions{
 			Version:  version,
 			UserHome: util.UserHome,

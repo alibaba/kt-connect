@@ -19,8 +19,8 @@ import (
 )
 
 // ForwardSSHTunnelToLocal mapping local port to shadow pod ssh port
-func ForwardSSHTunnelToLocal(options *options.DaemonOptions, podName string, localPort int) (stop chan struct{}, rootCtx context.Context, err error) {
-	stop = make(chan struct{})
+func ForwardSSHTunnelToLocal(options *options.DaemonOptions, podName string, localPort int) (chan struct{}, context.Context, error) {
+	stop := make(chan struct{})
 	remotePort := common.SshPort
 	rootCtx, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
@@ -35,7 +35,7 @@ func ForwardSSHTunnelToLocal(options *options.DaemonOptions, podName string, loc
 		}
 	}()
 
-	if !util.WaitPortBeReady(options.WaitTime, localPort) {
+	if !util.WaitPortBeReady(options.PortForwardWaitTime, localPort) {
 		return nil, nil, fmt.Errorf("connect to port-forward failed")
 	}
 	util.SetupPortForwardHeartBeat(localPort)

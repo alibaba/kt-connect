@@ -363,8 +363,8 @@ func (k *Kubernetes) WatchService(name, namespace string, f func(*coreV1.Service
 }
 
 // WaitPodReady ...
-func (k *Kubernetes) WaitPodReady(ctx context.Context, name, namespace string) (*coreV1.Pod, error) {
-	return k.waitPodReady(ctx, name, namespace, 0)
+func (k *Kubernetes) WaitPodReady(ctx context.Context, name, namespace string, timeoutSec int) (*coreV1.Pod, error) {
+	return k.waitPodReady(ctx, name, namespace, timeoutSec, 0)
 }
 
 // UpdatePod ...
@@ -419,8 +419,9 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 	return
 }
 
-func (k *Kubernetes) waitPodReady(ctx context.Context, name, namespace string, times int) (*coreV1.Pod, error) {
-	if times > 10 {
+func (k *Kubernetes) waitPodReady(ctx context.Context, name, namespace string, timeoutSec int, times int) (*coreV1.Pod, error) {
+	const interval = 6
+	if times > timeoutSec / interval {
 		return nil, fmt.Errorf("pod %s failed to start", name)
 	}
 	pod, err := k.GetPod(ctx, name, namespace)
@@ -429,8 +430,8 @@ func (k *Kubernetes) waitPodReady(ctx context.Context, name, namespace string, t
 	}
 	if pod.Status.Phase != coreV1.PodRunning {
 		log.Info().Msgf("Waiting for pod %s ...", name)
-		time.Sleep(6 * time.Second)
-		return k.waitPodReady(ctx, name, namespace, times + 1)
+		time.Sleep(interval * time.Second)
+		return k.waitPodReady(ctx, name, namespace, timeoutSec, times + 1)
 	}
 	log.Info().Msgf("Pod %s is ready", pod.Name)
 	return pod, err
