@@ -13,6 +13,8 @@ type ConnectOptions struct {
 	Global               bool
 	DisableDNS           bool
 	DisablePodIp         bool
+	DisableTunDevice     bool
+	DisableTunRoute      bool
 	SSHPort              int
 	SocksPort            int
 	IncludeIps           string

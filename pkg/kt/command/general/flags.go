@@ -136,6 +136,16 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Usage:       "(sshuttle mode only) Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
 			Destination: &options.ConnectOptions.ExcludeIps,
 		},
+		cli.BoolFlag{
+			Name:        "disableTunDevice",
+			Usage:       "(tun2socks mode only) Create socks5 proxy without tun device",
+			Destination: &options.ConnectOptions.DisableTunDevice,
+		},
+		cli.BoolFlag{
+			Name:        "disableTunRoute",
+			Usage:       "(tun2socks mode only) Do not auto setup tun device route",
+			Destination: &options.ConnectOptions.DisableTunRoute,
+		},
 		cli.IntFlag{
 			Name:        "proxyPort",
 			Usage:       "(tun2socks mode only) Specify the local port which socks5 proxy should use",
