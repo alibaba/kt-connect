@@ -7,7 +7,8 @@ import (
 )
 
 // SetRoute set specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) (err error) {
+func (s *Cli) SetRoute(ipRange []string) error {
+	var err, lastErr error
 	for i, r := range ipRange {
 		tunIp := firstIp(r)
 		if i == 0 {
@@ -28,11 +29,12 @@ func (s *Cli) SetRoute(ipRange []string) (err error) {
 			), "add_ip_addr")
 		}
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to add ip addr %s to tun device", tunIp)
-			return err
+			log.Warn().Msgf("Failed to add ip addr %s to tun device", tunIp)
+			lastErr = err
+			continue
 		}
 		// run command: route add -net 172.20.0.0/16 -iface 172.20.0.1
-		util.RunAndWait(exec.Command("route",
+		err = util.RunAndWait(exec.Command("route",
 			"add",
 			"-net",
 			r,
@@ -40,11 +42,11 @@ func (s *Cli) SetRoute(ipRange []string) (err error) {
 			tunIp,
 		), "add_route")
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to set route %s to tun device", r)
-			return err
+			log.Warn().Msgf("Failed to set route %s to tun device", r)
+			lastErr = err
 		}
 	}
-	return nil
+	return lastErr
 }
 
 // SetDnsServer set dns server records
