@@ -9,7 +9,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"strconv"
 	"strings"
@@ -138,7 +137,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 	routerLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	routerPod, err := k.GetPod(ctx, routerPodName, opts.Namespace)
 	if err == nil && routerPod.DeletionTimestamp != nil {
-		routerPod, err = waitRouterPodTerminate(ctx, k, routerPodName, opts.Namespace, 0)
+		routerPod, err = k.WaitPodTerminate(ctx, routerPodName, opts.Namespace)
 	}
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
@@ -179,22 +178,6 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 	log.Info().Msgf("Router pod configuration done")
 	opts.RuntimeOptions.Router = routerPodName
 	return nil
-}
-
-func waitRouterPodTerminate(ctx context.Context, k cluster.KubernetesInterface, name, namespace string, times int) (*coreV1.Pod, error) {
-	if times > 10 {
-		return nil, fmt.Errorf("router pod still terminating, please try again later")
-	}
-	log.Info().Msgf("Router pod '%s' not finished yet, waiting ...", name)
-	time.Sleep(3 * time.Second)
-	routerPod, err := k.GetPod(ctx, name, namespace)
-	if err != nil {
-		return nil, err
-	} else if routerPod.DeletionTimestamp != nil {
-		return waitRouterPodTerminate(ctx, k, name, namespace, times+1)
-	} else {
-		return routerPod, nil
-	}
 }
 
 func createOriginService(ctx context.Context, k cluster.KubernetesInterface, originSvcName string,

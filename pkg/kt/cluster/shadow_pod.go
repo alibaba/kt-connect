@@ -8,6 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
 // GetKtResources fetch all kt pods and deployments
@@ -110,13 +111,20 @@ func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *Po
 }
 
 func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *coreV1.Pod, generator *util.SSHGenerator, err error) {
-	if _, ignorableErr := k.GetPod(ctx, resourceMeta.Name, resourceMeta.Namespace); ignorableErr != nil {
+	pod, ignorableErr := k.GetPod(ctx, resourceMeta.Name, resourceMeta.Namespace);
+	if ignorableErr != nil {
 		return
 	}
 
 	configMap, err := k.GetConfigMap(ctx, sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
 	if err != nil {
-		log.Error().Msgf("Found shadow Pod without ConfigMap. Please delete the pod '%s'", resourceMeta.Name)
+		if k8sErrors.IsNotFound(err) {
+			if pod.DeletionTimestamp == nil {
+				log.Error().Msgf("Found shadow Pod without ConfigMap. Please delete the pod '%s'", resourceMeta.Name)
+			} else {
+				_, err = k.WaitPodTerminate(ctx, resourceMeta.Name, resourceMeta.Namespace)
+			}
+		}
 		return
 	}
 
