@@ -110,10 +110,10 @@ func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *Po
 	return k.WaitPodReady(ctx, metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, options.PodCreationWaitTime)
 }
 
-func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (pod *coreV1.Pod, generator *util.SSHGenerator, err error) {
+func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
 	pod, ignorableErr := k.GetPod(ctx, resourceMeta.Name, resourceMeta.Namespace);
 	if ignorableErr != nil {
-		return
+		return nil, nil, nil
 	}
 
 	configMap, err := k.GetConfigMap(ctx, sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
@@ -123,19 +123,23 @@ func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface,
 				log.Error().Msgf("Found shadow Pod without ConfigMap. Please delete the pod '%s'", resourceMeta.Name)
 			} else {
 				_, err = k.WaitPodTerminate(ctx, resourceMeta.Name, resourceMeta.Namespace)
+				if k8sErrors.IsNotFound(err) {
+					// Pod already terminated
+					return nil, nil, nil
+				}
 			}
 		}
-		return
+		return nil, nil, err
 	}
 
-	generator = util.NewSSHGenerator(configMap.Data[common.SshAuthPrivateKey], configMap.Data[common.SshAuthKey], sshKeyMeta.PrivateKeyPath)
+	generator := util.NewSSHGenerator(configMap.Data[common.SshAuthPrivateKey], configMap.Data[common.SshAuthKey], sshKeyMeta.PrivateKeyPath)
 
 	if err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey])); err != nil {
-		return
+		return nil, nil, err
 	}
 
 	pod, err = getShadowPod(ctx, k, resourceMeta)
-	return
+	return pod, generator, err
 }
 
 func getShadowPod(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
