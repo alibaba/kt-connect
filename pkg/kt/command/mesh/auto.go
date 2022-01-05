@@ -141,8 +141,10 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 	}
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
+			// Failed to get or wait router pod
 			return err
 		}
+		// Router not exist or just terminated
 		annotations := map[string]string{common.KtRefCount: "1", common.KtConfig: fmt.Sprintf("service=%s", svcName)}
 		if err = cluster.CreateRouterPod(ctx, k, routerPodName, opts, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
@@ -158,6 +160,7 @@ func createRouter(ctx context.Context, k cluster.KubernetesInterface, routerPodN
 			return err2
 		}
 	} else {
+		// Router pod exist
 		if _, err = strconv.Atoi(routerPod.Annotations[common.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err

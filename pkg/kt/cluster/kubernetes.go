@@ -451,6 +451,7 @@ func (k *Kubernetes) waitPodTerminate(ctx context.Context, name, namespace strin
 	time.Sleep(interval * time.Second)
 	routerPod, err := k.GetPod(ctx, name, namespace)
 	if err != nil {
+		// Note: will return a Not Found error when pod finally terminated
 		return nil, err
 	} else if routerPod.DeletionTimestamp != nil {
 		return k.waitPodTerminate(ctx, name, namespace, times+1)
