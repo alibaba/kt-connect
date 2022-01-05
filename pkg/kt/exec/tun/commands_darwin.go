@@ -13,7 +13,7 @@ func (s *Cli) SetRoute(ipRange []string) (err error) {
 		if i == 0 {
 			// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.1
 			err = util.RunAndWait(exec.Command("ifconfig",
-				s.getTunName(),
+				s.GetName(),
 				"inet",
 				r,
 				tunIp,
@@ -21,7 +21,7 @@ func (s *Cli) SetRoute(ipRange []string) (err error) {
 		} else {
 			// run command: ifconfig utun6 add 172.20.0.0/16 172.20.0.1
 			err = util.RunAndWait(exec.Command("ifconfig",
-				s.getTunName(),
+				s.GetName(),
 				"add",
 				r,
 				tunIp,
@@ -52,6 +52,6 @@ func (s *Cli) SetDnsServer(dnsServers []string) error {
 	return nil
 }
 
-func (s *Cli) getTunName() string {
+func (s *Cli) GetName() string {
 	return "utun6"
 }

@@ -22,7 +22,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				"ip",
 				"set",
 				"address",
-				s.getTunName(),
+				s.GetName(),
 				"static",
 				tunIp,
 				mask,
@@ -34,7 +34,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				"ip",
 				"add",
 				"address",
-				s.getTunName(),
+				s.GetName(),
 				tunIp,
 				mask,
 			), "add_ip_addr")
@@ -61,6 +61,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 
 // SetDnsServer set dns server records
 func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
+	// Windows dns config is set on device, so explicit removal is unnecessary
 	for i, dns := range dnsServers {
 		if i == 0 {
 			// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
@@ -69,7 +70,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 				"ip",
 				"set",
 				"dnsservers",
-				fmt.Sprintf("name=%s", s.getTunName()),
+				fmt.Sprintf("name=%s", s.GetName()),
 				"source=static",
 				fmt.Sprintf("address=%s", dns),
 			), "add_dns_server")
@@ -80,7 +81,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 				"ip",
 				"add",
 				"dnsservers",
-				fmt.Sprintf("name=%s", s.getTunName()),
+				fmt.Sprintf("name=%s", s.GetName()),
 				fmt.Sprintf("address=%s", dns),
 			), "add_dns_server")
 		}
@@ -91,6 +92,6 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 	return nil
 }
 
-func (s *Cli) getTunName() string {
+func (s *Cli) GetName() string {
 	return "KtConnectTunnel"
 }

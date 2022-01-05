@@ -26,7 +26,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 		"link",
 		"set",
 		"dev",
-		s.getTunName(),
+		s.GetName(),
 		"up",
 	), "set_device_up")
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			"add",
 			r,
 			"dev",
-			s.getTunName(),
+			s.GetName(),
 		), "add_route")
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to set route %s to tun device", r)
@@ -129,6 +129,6 @@ func RestoreDnsServer() error {
 	return err
 }
 
-func (s *Cli) getTunName() string {
+func (s *Cli) GetName() string {
 	return "kt0"
 }

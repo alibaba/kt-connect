@@ -18,7 +18,7 @@ func (s *Cli) ToSocks(sockAddr string, isDebug bool) error {
 	go func() {
 		var key = new(engine.Key)
 		key.Proxy = sockAddr
-		key.Device = s.getTunName()
+		key.Device = s.GetName()
 		key.LogLevel = logLevel
 		engine.Insert(key)
 		tunSignal <-engine.Start()
