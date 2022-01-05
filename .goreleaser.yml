@@ -1,6 +1,6 @@
 # Make sure to check the documentation at http://goreleaser.com
 env:
-  - GO_VERSION=1.16.7
+  - GO_VERSION=1.17.5
 before:
   hooks:
     - go mod download
