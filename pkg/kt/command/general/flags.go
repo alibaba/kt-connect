@@ -61,10 +61,16 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 			Destination: &options.WithAnnotations,
 		},
 		cli.IntFlag{
-			Name:        "waitTime",
-			Usage:       "Seconds to wait before kubectl port-forward connect timeout",
-			Destination: &options.WaitTime,
+			Name:        "portForwardTimeout",
+			Usage:       "Seconds to wait before port-forward connection timeout",
+			Destination: &options.PortForwardWaitTime,
 			Value:       10,
+		},
+		cli.IntFlag{
+			Name:        "podCreationTimeout",
+			Usage:       "Seconds to wait before shadow or router pod creation timeout",
+			Destination: &options.PodCreationWaitTime,
+			Value:       60,
 		},
 		cli.BoolFlag{
 			Name:        "forceUpdate,f",
