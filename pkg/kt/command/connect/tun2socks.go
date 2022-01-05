@@ -33,14 +33,17 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 		showSetupSocksMessage(options.ConnectOptions.SocksPort)
 	} else {
 		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", options.ConnectOptions.SocksPort)
-		if err = cli.Exec().Tunnel().ToSocks(socksAddr, options.Debug); err != nil {
+		tun := cli.Exec().Tunnel()
+		if err = tun.ToSocks(socksAddr, options.Debug); err != nil {
 			return err
 		}
+		log.Info().Msgf("Tun device %s is ready", tun.GetName())
 
 		if !options.ConnectOptions.DisableTunRoute {
 			if err = setupTunRoute(cli, options); err != nil {
 				return err
 			}
+			log.Info().Msgf("Route to tun device completed")
 		}
 	}
 	return nil
