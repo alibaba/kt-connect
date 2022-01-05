@@ -28,7 +28,7 @@ func ByTun(cli kt.CliInterface, options *options.DaemonOptions) error {
 	}
 
 	socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", options.ConnectOptions.SocksPort)
-	err = cli.Exec().Tunnel().ToSocks(socksAddr)
+	err = cli.Exec().Tunnel().ToSocks(socksAddr, options.Debug)
 	if err != nil {
 		return err
 	}

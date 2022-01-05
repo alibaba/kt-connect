@@ -2,7 +2,7 @@ package tun
 
 // CliInterface ...
 type CliInterface interface {
-	ToSocks(sockAddr string) error
+	ToSocks(sockAddr string, isDebug bool) error
 	SetRoute(ipRange []string) error
 	SetDnsServer(dnsServers []string) error
 }
