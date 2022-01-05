@@ -47,7 +47,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	}
 
 	if options.ConnectOptions.Mode == common.ConnectModeTun2Socks {
-		err = connect.ByTun(cli, options)
+		err = connect.ByTun2Socks(cli, options)
 	} else if options.ConnectOptions.Mode == common.ConnectModeShuttle {
 		err = connect.BySshuttle(cli, options)
 	} else {
