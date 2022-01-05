@@ -1,4 +1,4 @@
-FROM golang:1.16
+FROM golang:1.17
 LABEL MAINTAINER yunlong <zhenmu.zyl@alibaba-inc.com>
 # Install go debugger
 RUN GO111MODULE=off go get -u github.com/go-delve/delve/cmd/dlv
