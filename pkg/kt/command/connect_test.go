@@ -26,7 +26,7 @@ func Test_newConnectCommand(t *testing.T) {
 		useShortOptionHandling bool
 		expectedErr            error
 	}{
-		{testArgs: []string{"connect", "--method", "socks5"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
+		{testArgs: []string{"connect", "--mode", "tun2socks"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
 		{testArgs: []string{"connect"}, skipFlagParsing: false, useShortOptionHandling: false, expectedErr: nil},
 	}
 

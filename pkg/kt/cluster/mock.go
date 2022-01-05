@@ -162,6 +162,21 @@ func (mr *MockKubernetesInterfaceMockRecorder) ExecInPod(containerName, podName,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExecInPod", reflect.TypeOf((*MockKubernetesInterface)(nil).ExecInPod), varargs...)
 }
 
+// GetAllDeploymentInNamespace mocks base method.
+func (m *MockKubernetesInterface) GetAllDeploymentInNamespace(ctx context.Context, namespace string) (*v1.DeploymentList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllDeploymentInNamespace", ctx, namespace)
+	ret0, _ := ret[0].(*v1.DeploymentList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllDeploymentInNamespace indicates an expected call of GetAllDeploymentInNamespace.
+func (mr *MockKubernetesInterfaceMockRecorder) GetAllDeploymentInNamespace(ctx, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDeploymentInNamespace", reflect.TypeOf((*MockKubernetesInterface)(nil).GetAllDeploymentInNamespace), ctx, namespace)
+}
+
 // GetAllServiceInNamespace mocks base method.
 func (m *MockKubernetesInterface) GetAllServiceInNamespace(ctx context.Context, namespace string) (*v10.ServiceList, error) {
 	m.ctrl.T.Helper()

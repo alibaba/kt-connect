@@ -15,7 +15,7 @@ import (
 
 func TestKubernetes_ClusterCidrs(t *testing.T) {
 	type args struct {
-		podCIDR []string
+		extraIps []string
 	}
 	tests := []struct {
 		name      string
@@ -27,19 +27,20 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 		{
 			name: "shouldGetClusterCidr",
 			args: args{
-				podCIDR: []string{
-					"192.168.0.0/24",
+				extraIps: []string{
+					"10.10.10.0/24",
 				},
 			},
 			objs: []runtime.Object{
-				buildNode("default", "node1", ""),
-				buildPod("pod1", "default", "image", "192.168.0.7", map[string]string{"labe": "value"}),
+				buildNode("default", "node1", "192.168.0.0/24"),
+				buildPod("default", "pod1", "image", "192.168.0.7", map[string]string{"labe": "value"}),
 				buildService("default", "svc1", "172.168.0.18"),
 				buildService("default", "svc2", "172.168.1.18"),
 			},
 			wantCidrs: []string{
 				"192.168.0.0/24",
 				"172.168.0.0/16",
+				"10.10.10.0/24",
 			},
 			wantErr: false,
 		},
@@ -50,7 +51,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 			ops := &options.ConnectOptions{
-				IncludeIps: strings.Join(tt.args.podCIDR, ","),
+				IncludeIps: strings.Join(tt.args.extraIps, ","),
 			}
 			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default", ops)
 			if (err != nil) != tt.wantErr {
