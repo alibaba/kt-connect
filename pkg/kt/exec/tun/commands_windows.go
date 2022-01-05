@@ -9,6 +9,7 @@ import (
 
 // SetRoute let specified ip range route to tun device
 func (s *Cli) SetRoute(ipRange []string) error {
+	var lastErr error
 	for i, r := range ipRange {
 		ip, mask, err := toIpAndMask(r)
 		tunIp := firstIp(r)
@@ -40,8 +41,9 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			), "add_ip_addr")
 		}
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to add ip addr %s to tun device", tunIp)
-			return err
+			log.Warn().Msgf("Failed to add ip addr %s to tun device", tunIp)
+			lastErr = err
+			continue
 		}
 		// run command: route add 172.20.0.0 mask 255.255.0.0 172.20.0.1
 		err = util.RunAndWait(exec.Command("route",
@@ -52,11 +54,11 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			tunIp,
 		), "add_route")
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to set route %s to tun device", r)
-			return err
+			log.Warn().Msgf("Failed to set route %s to tun device", r)
+			lastErr = err
 		}
 	}
-	return nil
+	return lastErr
 }
 
 // SetDnsServer set dns server records
