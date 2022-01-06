@@ -4,13 +4,13 @@ go 1.17
 
 require (
 	github.com/golang/mock v1.6.0
-	github.com/linfan/tun2socks/v2 v2.3.2-fix
 	github.com/miekg/dns v1.1.31
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.23.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli v1.22.4
 	github.com/wzshiming/socks5 v0.4.0
+	github.com/xjasonlyu/tun2socks/v2 v2.3.3
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
@@ -23,7 +23,7 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
-	github.com/go-chi/chi v4.1.2+incompatible // indirect
+	github.com/go-chi/chi/v5 v5.0.7 // indirect
 	github.com/go-chi/cors v1.2.0 // indirect
 	github.com/go-chi/render v1.0.1 // indirect
 	github.com/go-logr/logr v0.4.0 // indirect
@@ -67,3 +67,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
+
+replace github.com/xjasonlyu/tun2socks/v2 v2.3.3 => github.com/linfan/tun2socks/v2 v2.3.3-0.20220107082344-761069ebf49b

@@ -15,6 +15,10 @@ generate-mock:
 	mockgen -source=pkg/kt/exec/tun/types.go -destination=pkg/kt/exec/tun/mock.go -package=tun
 	mockgen -source=pkg/kt/types.go -destination=pkg/kt/mock.go -package=kt
 
+# run mod tidy
+mod:
+	go mod tidy -compat=1.17
+
 # run unit test
 test:
 	mkdir -p artifacts/report/coverage

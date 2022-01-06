@@ -1,8 +1,9 @@
 package tun
 
 import (
-	"github.com/linfan/tun2socks/v2/engine"
+	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/xjasonlyu/tun2socks/v2/engine"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,7 +19,7 @@ func (s *Cli) ToSocks(sockAddr string, isDebug bool) error {
 	go func() {
 		var key = new(engine.Key)
 		key.Proxy = sockAddr
-		key.Device = s.GetName()
+		key.Device = fmt.Sprintf("tun://%s", s.GetName())
 		key.LogLevel = logLevel
 		engine.Insert(key)
 		tunSignal <-engine.Start()
