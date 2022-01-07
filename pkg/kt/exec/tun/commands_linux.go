@@ -20,7 +20,7 @@ const (
 ) 
 
 // SetRoute let specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
+func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	// run command: ip link set dev kt0 up
 	err := util.RunAndWait(exec.Command("ip",
 		"link",
@@ -28,7 +28,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 		"dev",
 		s.GetName(),
 		"up",
-	), "set_device_up")
+	), isDebug)
 	if err != nil {
 		log.Error().Msgf("Failed to set tun device up")
 		return err
@@ -42,7 +42,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			r,
 			"dev",
 			s.GetName(),
-		), "add_route")
+		), isDebug)
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
 			lastErr = err
@@ -52,7 +52,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 }
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(dnsServers []string) error {
+func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 	dnsSignal := make(chan error)
 	go func() {
 		f, err := os.Open(util.ResolvConf)

@@ -12,17 +12,19 @@ import (
 
 // CMDContext context of cmd
 type CMDContext struct {
-	Ctx  context.Context
-	Cmd  *exec.Cmd
-	Name string
-	Stop chan struct{} // notify parent current Cmd occur error
+	Ctx     context.Context
+	Cmd     *exec.Cmd
+	Name    string
+	IsDebug bool
+	Stop    chan struct{} // notify parent current Cmd occur error
 }
 
 // RunAndWait run cmd
-func RunAndWait(cmd *exec.Cmd, name string) error {
+func RunAndWait(cmd *exec.Cmd, isDebug bool) error {
 	ctx := &CMDContext{
-		Cmd:  cmd,
-		Name: name,
+		Cmd:     cmd,
+		Name:    cmd.Path,
+		IsDebug: isDebug,
 	}
 	if err := runCmd(ctx); err != nil {
 		return err
@@ -30,27 +32,8 @@ func RunAndWait(cmd *exec.Cmd, name string) error {
 	return cmd.Wait()
 }
 
-// BackgroundRun run cmd in background
-func BackgroundRun(cmd *exec.Cmd, name string) error {
-	ctx := &CMDContext{
-		Cmd:  cmd,
-		Name: name,
-	}
-	if err := runCmd(ctx); err != nil {
-		return err
-	}
-	go func() {
-		err := cmd.Wait()
-		if err != nil {
-			return
-		}
-		log.Info().Msgf("Finished %s", name)
-	}()
-	return nil
-}
-
-// BackgroundRunWithCtx run cmd in background with context
-func BackgroundRunWithCtx(cmdCtx *CMDContext) error {
+// BackgroundRun run cmd in background with context
+func BackgroundRun(cmdCtx *CMDContext) error {
 	if err := runCmd(cmdCtx); err != nil {
 		return err
 	}
@@ -76,7 +59,7 @@ func runCmd(cmdCtx *CMDContext) error {
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
-	if stdout != nil && stderr != nil {
+	if cmdCtx.IsDebug && stdout != nil && stderr != nil {
 		go io.Copy(os.Stdout, stdout)
 		go io.Copy(os.Stderr, stderr)
 	}

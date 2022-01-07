@@ -16,7 +16,7 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 		options.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), options.Namespace,
 			options.ConnectOptions.Dump2HostsNamespaces, options.ConnectOptions.ClusterDomain)
 	}
-	checkSshuttleInstalled(cli.Exec().Sshuttle())
+	checkSshuttleInstalled(cli.Exec().Sshuttle(), options.Debug)
 
 	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
@@ -42,9 +42,9 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 	})
 }
 
-func checkSshuttleInstalled(cli sshuttle.CliInterface) {
+func checkSshuttleInstalled(cli sshuttle.CliInterface, isDebug bool) {
 	if !util.CanRun(cli.Version()) {
-		err := util.RunAndWait(cli.Install(), "install_sshuttle")
+		err := util.RunAndWait(cli.Install(), isDebug)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed find or install sshuttle")
 		}
@@ -52,10 +52,11 @@ func checkSshuttleInstalled(cli sshuttle.CliInterface) {
 }
 
 func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, opt *options.ConnectOptions, req *sshuttle.SSHVPNRequest) (err error) {
-	err = util.BackgroundRunWithCtx(&util.CMDContext{
+	err = util.BackgroundRun(&util.CMDContext{
 		Ctx:  rootCtx,
 		Cmd:  cli.Sshuttle().Connect(opt, req),
 		Name: "vpn(sshuttle)",
+		IsDebug: true,
 		Stop: req.Stop,
 	})
 	return err
