@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-func firstIp(cidr string) string {
-	segments := strings.Split(cidr, "/")
-	return segments[0][:len(segments[0])-1] + "1"
-}
-
 func toIpAndMask(cidr string) (string, string, error) {
 	_, ipNet, err := net.ParseCIDR(cidr)
 	if err != nil {
