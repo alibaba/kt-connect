@@ -43,7 +43,7 @@ func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace string) 
 	}
 
 	if len(cidrs) == 0 {
-		log.Info().Msgf("Node has empty PodCIDR, try to get CIDR with pod sample")
+		log.Info().Msgf("No PodCIDR available, fetching with pod samples")
 		ipRanges, err := getPodCidrByInstance(ctx, k, namespace)
 		if err != nil {
 			return nil, err

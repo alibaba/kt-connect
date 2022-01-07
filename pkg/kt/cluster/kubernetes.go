@@ -298,9 +298,19 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 	log.Debug().Msgf("Service CIDR is %v", serviceCidr)
 
 	if opt.IncludeIps != "" {
-		cidrs = append(cidrs, strings.Split(opt.IncludeIps, ",")...)
+		for _, ipRange := range strings.Split(opt.IncludeIps, ",") {
+			if opt.Mode == common.ConnectModeTun2Socks && isSingleIp(ipRange) {
+				log.Warn().Msgf("Includes single IP '%s' is not allow in %s mode", ipRange, common.ConnectModeTun2Socks)
+			} else {
+				cidrs = append(cidrs, ipRange)
+			}
+		}
 	}
 	return
+}
+
+func isSingleIp(ipRange string) bool {
+	return !strings.Contains(ipRange, "/") || strings.Split(ipRange,"/")[1] == "32"
 }
 
 // GetAllDeploymentInNamespace get all deployment in specified namespace
