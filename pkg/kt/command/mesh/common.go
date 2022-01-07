@@ -8,7 +8,7 @@ import (
 )
 
 func getVersion(versionMark string) (string, string) {
-	versionKey := "kt-version"
+	versionKey := "version"
 	versionVal := strings.ToLower(util.RandomString(5))
 	if len(versionMark) != 0 {
 		versionParts := strings.Split(versionMark, ":")

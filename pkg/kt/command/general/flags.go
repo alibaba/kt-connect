@@ -192,7 +192,7 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "versionMark",
-			Usage:       "Specify the version of mesh service, e.g. '0.0.1' or 'kt-version:local'",
+			Usage:       "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'",
 			Destination: &options.MeshOptions.VersionMark,
 		},
 		cli.StringFlag{

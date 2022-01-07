@@ -19,10 +19,10 @@ func Test_isValidKey(t *testing.T) {
 func Test_getVersion(t *testing.T) {
 	var k, v string
 	k, v = getVersion("")
-	require.Equal(t, k, "kt-version")
+	require.Equal(t, k, "version")
 	require.Equal(t, len(v), 5)
 	k, v = getVersion("test")
-	require.Equal(t, k, "kt-version")
+	require.Equal(t, k, "version")
 	require.Equal(t, v, "test")
 	k, v = getVersion("mark:")
 	require.Equal(t, k, "mark")
