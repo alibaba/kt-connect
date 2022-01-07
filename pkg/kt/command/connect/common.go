@@ -32,7 +32,7 @@ func setupDump2Host(k cluster.KubernetesInterface, currentNamespace, targetNames
 				hosts[svc] = ip
 			}
 			hosts[svc+"."+namespace] = ip
-			hosts[svc+"."+namespace+"."+clusterDomain] = ip
+			hosts[svc+"."+namespace+".svc."+clusterDomain] = ip
 		}
 	}
 	return util.DumpHosts(hosts)
