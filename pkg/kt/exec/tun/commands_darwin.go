@@ -8,7 +8,7 @@ import (
 )
 
 // SetRoute set specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
+func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	var err, lastErr error
 	for i, r := range ipRange {
 		tunIp := strings.Split(r, "/")[0]
@@ -19,7 +19,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				"inet",
 				r,
 				tunIp,
-			), "add_ip_addr")
+			), isDebug)
 		} else {
 			// run command: ifconfig utun6 add 172.20.0.0/16 172.20.0.1
 			err = util.RunAndWait(exec.Command("ifconfig",
@@ -27,7 +27,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				"add",
 				r,
 				tunIp,
-			), "add_ip_addr")
+			), isDebug)
 		}
 		if err != nil {
 			log.Warn().Msgf("Failed to add ip addr %s to tun device", tunIp)
@@ -41,7 +41,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			r,
 			"-interface",
 			s.GetName(),
-		), "add_route")
+		), isDebug)
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
 			lastErr = err
@@ -51,7 +51,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 }
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(dnsServers []string) error {
+func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 	return nil
 }
 

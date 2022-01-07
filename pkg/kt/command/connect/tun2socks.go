@@ -55,7 +55,7 @@ func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	err = cli.Exec().Tunnel().SetRoute(cidrs)
+	err = cli.Exec().Tunnel().SetRoute(cidrs, options.Debug)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Some route rule is not setup properly")
 	}

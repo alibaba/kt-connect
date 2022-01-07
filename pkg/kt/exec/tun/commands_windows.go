@@ -9,7 +9,7 @@ import (
 )
 
 // SetRoute let specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
+func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	var lastErr error
 	for i, r := range ipRange {
 		ip, mask, err := toIpAndMask(r)
@@ -28,7 +28,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				"static",
 				tunIp,
 				mask,
-			), "add_ip_addr")
+			), isDebug)
 		} else {
 			// run command: netsh interface ip add address KtConnectTunnel 172.21.0.1 255.255.0.0
 			err = util.RunAndWait(exec.Command("netsh",
@@ -39,7 +39,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				s.GetName(),
 				tunIp,
 				mask,
-			), "add_ip_addr")
+			), isDebug)
 		}
 		if err != nil {
 			log.Warn().Msgf("Failed to add ip addr %s to tun device", tunIp)
@@ -53,7 +53,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			"mask",
 			mask,
 			tunIp,
-		), "add_route")
+		), isDebug)
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
 			lastErr = err
@@ -63,7 +63,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 }
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
+func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) (err error) {
 	// Windows dns config is set on device, so explicit removal is unnecessary
 	for i, dns := range dnsServers {
 		if i == 0 {
@@ -76,7 +76,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 				fmt.Sprintf("name=%s", s.GetName()),
 				"source=static",
 				fmt.Sprintf("address=%s", dns),
-			), "add_dns_server")
+			), isDebug)
 		} else {
 			// run command: netsh interface ip add dnsservers name=KtConnectTunnel address=4.4.4.4
 			err = util.RunAndWait(exec.Command("netsh",
@@ -86,7 +86,7 @@ func (s *Cli) SetDnsServer(dnsServers []string) (err error) {
 				"dnsservers",
 				fmt.Sprintf("name=%s", s.GetName()),
 				fmt.Sprintf("address=%s", dns),
-			), "add_dns_server")
+			), isDebug)
 		}
 		if err != nil {
 			return err
