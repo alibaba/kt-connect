@@ -11,6 +11,7 @@ import (
 func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	var err, lastErr error
 	for i, r := range ipRange {
+		log.Info().Msgf("Adding route to %s", r)
 		tunIp := strings.Split(r, "/")[0]
 		if i == 0 {
 			// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.0
