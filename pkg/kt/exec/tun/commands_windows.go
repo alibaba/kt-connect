@@ -5,6 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
+	"strings"
 )
 
 // SetRoute let specified ip range route to tun device
@@ -12,7 +13,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	var lastErr error
 	for i, r := range ipRange {
 		ip, mask, err := toIpAndMask(r)
-		tunIp := firstIp(r)
+		tunIp := strings.Split(r, "/")[0]
 		if err != nil {
 			return err
 		}

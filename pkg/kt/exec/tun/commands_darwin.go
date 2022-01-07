@@ -4,15 +4,16 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
+	"strings"
 )
 
 // SetRoute set specified ip range route to tun device
 func (s *Cli) SetRoute(ipRange []string) error {
 	var err, lastErr error
 	for i, r := range ipRange {
-		tunIp := firstIp(r)
+		tunIp := strings.Split(r, "/")[0]
 		if i == 0 {
-			// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.1
+			// run command: ifconfig utun6 inet 172.20.0.0/16 172.20.0.0
 			err = util.RunAndWait(exec.Command("ifconfig",
 				s.GetName(),
 				"inet",
@@ -33,13 +34,13 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			lastErr = err
 			continue
 		}
-		// run command: route add -net 172.20.0.0/16 -iface 172.20.0.1
+		// run command: route add -net 172.20.0.0/16 -interface utun6
 		err = util.RunAndWait(exec.Command("route",
 			"add",
 			"-net",
 			r,
-			"-iface",
-			tunIp,
+			"-interface",
+			s.GetName(),
 		), "add_route")
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
