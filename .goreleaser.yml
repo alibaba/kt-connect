@@ -3,7 +3,7 @@ env:
   - GO_VERSION=1.17.5
 before:
   hooks:
-    - go mod download
+    - make mod
 builds:
   - id: "ktctl"
     main: ./cmd/ktctl/main.go
@@ -12,6 +12,10 @@ builds:
       - linux
       - darwin
       - windows
+    goarch:
+      - 386
+      - amd64
+      - arm64
     env:
       - CGO_ENABLED=0
   - id: "shadow"
@@ -37,11 +41,11 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
-      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Version }}"
     dockerfile: build/docker/shadow/Dockerfile_releaser
     skip_push: false
     extra_files:
       - build/docker/shadow/run.sh
+      - build/docker/shadow/setup_iptables.sh
   - goos: linux
     goarch: amd64
     ids:
@@ -50,7 +54,6 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v{{ .Major }}"
-      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v{{ .Version }}"
     dockerfile: build/docker/router/Dockerfile_releaser
     skip_push: false
     extra_files:
@@ -59,22 +62,26 @@ archives:
   - id: ktctl
     builds:
       - ktctl
-    name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm
-        }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
-    format: zip
+    name_template: 'ktctl_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
     files:
-      - LICENSE
-      - README.md
+      - none*
+    replacements:
+      darwin: MacOS
+      linux: Linux
+      windows: Windows
+      386: i386
+      amd64: x86_64
+      arm64: arm_64
 checksum:
-  name_template: 'checksums.txt'
+  name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.txt'
 snapshot:
   name_template: "SNAPSHOT"
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+  use: github-native
 release:
   github:
     owner: alibaba
@@ -83,8 +90,4 @@ release:
     - ktctl
   # @see https://github.com/goreleaser/goreleaser/issues/1023
   draft: false
-  # If set to auto, will mark the release as not ready for production
-  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1
-  # If set to true, will mark the release as not ready for production.
-  # Default is false.
   prerelease: auto

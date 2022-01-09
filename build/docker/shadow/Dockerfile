@@ -1,4 +1,4 @@
-FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base:v0.2.4
+FROM registry.cn-hangzhou.aliyuncs.com/rdc-incubator/shadow-base:v0.3.0
 
 COPY artifacts/shadow/shadow-linux-amd64 /usr/sbin/shadow
 COPY build/docker/shadow/run.sh /run.sh
