@@ -3,8 +3,8 @@ output/**
 
 .idea/
 .vscode/
-artifacts
-dist
+artifacts/
+dist/
 
 node_modules/
 note/
