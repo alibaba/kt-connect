@@ -81,7 +81,12 @@ checksum:
 snapshot:
   name_template: "SNAPSHOT"
 changelog:
-  use: github-native
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^config:'
+      - '^refactor:'
 release:
   github:
     owner: alibaba
