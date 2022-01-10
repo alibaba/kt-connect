@@ -4,9 +4,18 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"golang.zx2c4.com/wintun"
 	"os/exec"
 	"strings"
 )
+
+// CheckContext check everything needed for tun setup
+func (s *Cli) CheckContext() error {
+	if _, err := wintun.RunningVersion(); err != nil {
+		return fmt.Errorf("failed to found wintun driver: %s", err)
+	}
+	return nil
+}
 
 // SetRoute let specified ip range route to tun device
 func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {

@@ -17,7 +17,13 @@ import (
 const (
 	commentKtAdded   = " # added by ktctl"
 	commentKtRemoved = " # removed by ktctl"
-) 
+)
+
+// CheckContext check everything needed for tun setup
+func (s *Cli) CheckContext() error {
+	// TODO: check whether ip command exists
+	return nil
+}
 
 // SetRoute let specified ip range route to tun device
 func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {

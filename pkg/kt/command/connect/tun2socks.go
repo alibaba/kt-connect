@@ -32,8 +32,11 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 	if options.ConnectOptions.DisableTunDevice {
 		showSetupSocksMessage(options.ConnectOptions.SocksPort)
 	} else {
-		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", options.ConnectOptions.SocksPort)
 		tun := cli.Exec().Tunnel()
+		if err = tun.CheckContext(); err != nil {
+			return err
+		}
+		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", options.ConnectOptions.SocksPort)
 		if err = tun.ToSocks(socksAddr, options.Debug); err != nil {
 			return err
 		}

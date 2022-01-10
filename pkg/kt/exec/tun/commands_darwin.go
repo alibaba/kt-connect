@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+// CheckContext check everything needed for tun setup
+func (s *Cli) CheckContext() error {
+	// TODO: check whether ifconfig and route command exists
+	return nil
+}
+
 // SetRoute set specified ip range route to tun device
 func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	var err, lastErr error

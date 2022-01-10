@@ -12,6 +12,7 @@ require (
 	github.com/wzshiming/socks5 v0.4.0
 	github.com/xjasonlyu/tun2socks/v2 v2.3.3
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
+	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
 	k8s.io/client-go v0.22.0
@@ -53,7 +54,6 @@ require (
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
-	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224 // indirect
 	golang.zx2c4.com/wireguard v0.0.0-20211129173154-2dd424e2d808 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
