@@ -4,6 +4,7 @@ env:
 before:
   hooks:
     - make mod
+    - bash build/scripts/wintun.sh
 builds:
   - id: "ktctl"
     main: ./cmd/ktctl/main.go
@@ -68,7 +69,9 @@ archives:
       - goos: windows
         format: zip
     files:
-      - none*
+      - src: 'artifacts/{{ .Os }}/{{ .Arch }}/*'
+        dst: .
+        strip_parent: true
     replacements:
       darwin: MacOS
       linux: Linux
@@ -77,7 +80,7 @@ archives:
       amd64: x86_64
       arm64: arm_64
 checksum:
-  name_template: '{{ .ProjectName }}_{{ .Version }}_checksums.txt'
+  name_template: '{{ .Tag }}_checksums.txt'
 snapshot:
   name_template: "SNAPSHOT"
 changelog:

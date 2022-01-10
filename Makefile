@@ -60,4 +60,4 @@ build-shadow-dlv:
 	scripts/build-shadow-dlv
 
 clean:
-	rm -fr artifacts
+	rm -fr artifacts dist

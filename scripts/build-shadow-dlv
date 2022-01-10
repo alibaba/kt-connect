@@ -1,4 +1,0 @@
-#!/bin/bash
-TAG=${1:-dlv}
-docker build --no-cache -t registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:$TAG -f build/docker/shadow/Dockerfile_dlv . && \
-docker push registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:$TAG
