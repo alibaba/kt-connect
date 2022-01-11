@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -137,5 +138,5 @@ func RestoreDnsServer() error {
 }
 
 func (s *Cli) GetName() string {
-	return "kt0"
+	return common.TunNameLinux
 }

@@ -70,4 +70,10 @@ const (
 	RolePreviewShadow = "shadow-preview"
 	// RoleRouter router role
 	RoleRouter = "router"
+	// TunNameWin tun device name in windows
+	TunNameWin = "KtConnectTunnel"
+	// TunNameLinux tun device name in linux
+	TunNameLinux = "kt0"
+	// TunNameMac tun device name in MacOS
+	TunNameMac = "utun"
 )

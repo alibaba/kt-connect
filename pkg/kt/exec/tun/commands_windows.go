@@ -2,6 +2,7 @@ package tun
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"golang.zx2c4.com/wintun"
@@ -105,5 +106,5 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) (err error) {
 }
 
 func (s *Cli) GetName() string {
-	return "KtConnectTunnel"
+	return common.TunNameWin
 }

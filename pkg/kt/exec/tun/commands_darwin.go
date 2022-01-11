@@ -1,9 +1,13 @@
 package tun
 
 import (
+	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"net"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -62,6 +66,22 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 	return nil
 }
 
+var tunName = ""
 func (s *Cli) GetName() string {
-	return "utun6"
+	if tunName != "" {
+		return tunName
+	}
+	tunName = fmt.Sprintf("%s%d", common.TunNameMac, 9)
+	if ifaces, err := net.Interfaces(); err == nil {
+		tunN := 0
+		for _, i := range ifaces {
+			if strings.HasPrefix(i.Name, common.TunNameMac) {
+				if num, err2 := strconv.Atoi(strings.TrimPrefix(i.Name, common.TunNameMac)); err2 == nil && num > tunN {
+					tunN = num
+				}
+			}
+		}
+		tunName = fmt.Sprintf("%s%d", common.TunNameMac, tunN + 1)
+	}
+	return tunName
 }
