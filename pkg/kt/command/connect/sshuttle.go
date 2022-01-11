@@ -12,10 +12,6 @@ import (
 )
 
 func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
-	if len(options.ConnectOptions.Dump2HostsNamespaces) > 0 {
-		options.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), options.Namespace,
-			options.ConnectOptions.Dump2HostsNamespaces, options.ConnectOptions.ClusterDomain)
-	}
 	checkSshuttleInstalled(cli.Exec().Sshuttle(), options.Debug)
 
 	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
@@ -32,14 +28,19 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 	if err != nil {
 		return err
 	}
-	return startVPNConnection(rootCtx, cli.Exec(), options.ConnectOptions, &sshuttle.SSHVPNRequest{
+
+	if err = startVPNConnection(rootCtx, cli.Exec(), options.ConnectOptions, &sshuttle.SSHVPNRequest{
 		RemoteSSHHost:          credential.RemoteHost,
 		RemoteSSHPKPath:        credential.PrivateKeyPath,
 		RemoteDNSServerAddress: podIP,
 		CustomCIDR:             cidrs,
 		Stop:                   stop,
 		Debug:                  options.Debug,
-	})
+	}); err != nil {
+		return err
+	}
+
+	return setupDns(cli.Kubernetes(), options, podIP)
 }
 
 func checkSshuttleInstalled(cli sshuttle.CliInterface, isDebug bool) {

@@ -94,6 +94,12 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.Mode,
 			Value:       common.ConnectModeTun2Socks,
 		},
+		cli.StringFlag{
+			Name:        "dnsMode",
+			Usage:       "Specify how to resolve service domains, can be 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation",
+			Destination: &options.ConnectOptions.DnsMode,
+			Value: 		 common.DnsModePodDns,
+		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
 			Usage:       "Use shared shadow pod",
@@ -106,11 +112,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Value:       2222,
 		},
 		cli.StringFlag{
-			Name:        "dumpToHosts",
-			Usage:       "Specify namespaces to dump service into local hosts file, use ',' separated",
-			Destination: &options.ConnectOptions.Dump2HostsNamespaces,
-		},
-		cli.StringFlag{
 			Name:        "clusterDomain",
 			Usage:       "The cluster domain provided to kubernetes api-server",
 			Destination: &options.ConnectOptions.ClusterDomain,
@@ -120,11 +121,6 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 			Name:        "disablePodIp",
 			Usage:       "Disable access to pod IP address",
 			Destination: &options.ConnectOptions.DisablePodIp,
-		},
-		cli.BoolFlag{
-			Name:        "disableDNS",
-			Usage:       "Disable Cluster DNS",
-			Destination: &options.ConnectOptions.DisableDNS,
 		},
 		cli.StringFlag{
 			Name:        "includeIps",

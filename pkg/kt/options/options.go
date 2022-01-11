@@ -11,7 +11,6 @@ import (
 // ConnectOptions ...
 type ConnectOptions struct {
 	Global               bool
-	DisableDNS           bool
 	DisablePodIp         bool
 	DisableTunDevice     bool
 	DisableTunRoute      bool
@@ -20,7 +19,7 @@ type ConnectOptions struct {
 	IncludeIps           string
 	ExcludeIps           string
 	Mode                 string
-	Dump2HostsNamespaces string
+	DnsMode              string
 	SharedShadow         bool
 	ClusterDomain        string
 }

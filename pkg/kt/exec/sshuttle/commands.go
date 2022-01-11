@@ -2,6 +2,7 @@ package sshuttle
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"io"
 	"os"
@@ -27,10 +28,9 @@ func (s *Cli) Install() *exec.Cmd {
 // Connect ssh-based vpn connect
 func (s *Cli) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
 	var args []string
-	if !opt.DisableDNS {
+	if opt.DnsMode == common.DnsModePodDns {
 		args = append(args, "--dns", "--to-ns", req.RemoteDNSServerAddress)
 	}
-
 	if req.Debug {
 		args = append(args, "--verbose")
 	}

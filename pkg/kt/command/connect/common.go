@@ -11,6 +11,19 @@ import (
 	"strings"
 )
 
+func setupDns(k cluster.KubernetesInterface, opt *options.DaemonOptions, shadowPodIp string) error {
+	if strings.HasPrefix(opt.ConnectOptions.DnsMode, common.DnsModeHosts) {
+		dump2HostsNamespaces := ""
+		pos := len(common.DnsModeHosts)
+		if len(opt.ConnectOptions.DnsMode) > pos + 1 && opt.ConnectOptions.DnsMode[pos:pos+1] == ":" {
+			dump2HostsNamespaces = opt.ConnectOptions.DnsMode[pos+1:]
+		}
+		opt.RuntimeOptions.Dump2Host = setupDump2Host(k, opt.Namespace,
+			dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain)
+	}
+	return nil
+}
+
 func setupDump2Host(k cluster.KubernetesInterface, currentNamespace, targetNamespaces, clusterDomain string) bool {
 	namespacesToDump := []string{currentNamespace}
 	if targetNamespaces != "" {

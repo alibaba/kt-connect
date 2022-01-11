@@ -13,10 +13,7 @@ import (
 )
 
 func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
-	options.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), options.Namespace,
-		options.ConnectOptions.Dump2HostsNamespaces, options.ConnectOptions.ClusterDomain)
-
-	_, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
+	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
 		return err
 	}
@@ -49,7 +46,8 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 			log.Info().Msgf("Route to tun device completed")
 		}
 	}
-	return nil
+
+	return setupDns(cli.Kubernetes(), options, podIP)
 }
 
 func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
