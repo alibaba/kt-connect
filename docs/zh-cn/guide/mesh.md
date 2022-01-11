@@ -132,7 +132,7 @@ spec:
 部署服务网格定义：
 
 ```bash
-$ kubectl -n mesh-demo apply -f tomcat7-deploy.yaml
+$ kubectl -n mesh-demo apply -f tomcat7-istio.yaml
 gateway.networking.istio.io/tomcat-gateway created
 destinationrule.networking.istio.io/tomcat created
 virtualservice.networking.istio.io/tomcat created
