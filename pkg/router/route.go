@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 )
 
-const pathKtLock = "/var/kt.lock"
 const pathKtConf = "/etc/kt.conf"
 
 func ReadKtConf() (*KtConf, error) {

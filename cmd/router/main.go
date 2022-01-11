@@ -19,6 +19,11 @@ const actionAdd = "add"
 const actionRemove = "remove"
 
 func main() {
+	if err := router.Lock(); err != nil {
+		log.Error().Err(err).Msgf("Unable to fetch route lock")
+		return
+	}
+	defer router.Unlock()
 	if len(os.Args) < 3 {
 		usage()
 	} else {
