@@ -47,7 +47,7 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 		}
 	}
 
-	return setupDns(cli.Kubernetes(), options, podIP)
+	return setupDns(cli, options, podIP)
 }
 
 func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {

@@ -5,8 +5,8 @@ import (
 	"os/exec"
 )
 
-// CliInterface ...
-type CliInterface interface {
+// Sshuttle ...
+type Sshuttle interface {
 	Version() *exec.Cmd
 	Install() *exec.Cmd
 	Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd

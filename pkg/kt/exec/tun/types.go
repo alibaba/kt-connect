@@ -1,11 +1,10 @@
 package tun
 
-// CliInterface ...
-type CliInterface interface {
+// Tunnel ...
+type Tunnel interface {
 	CheckContext() error
 	ToSocks(sockAddr string, isDebug bool) error
 	SetRoute(ipRange []string, isDebug bool) error
-	SetDnsServer(dnsServers []string, isDebug bool) error
 	GetName() string
 }
 

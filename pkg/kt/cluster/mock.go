@@ -457,18 +457,33 @@ func (mr *MockKubernetesInterfaceMockRecorder) UpdateService(ctx, svc interface{
 }
 
 // WaitPodReady mocks base method.
-func (m *MockKubernetesInterface) WaitPodReady(ctx context.Context, name, namespace string) (*v10.Pod, error) {
+func (m *MockKubernetesInterface) WaitPodReady(ctx context.Context, name, namespace string, timeoutSec int) (*v10.Pod, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WaitPodReady", ctx, name, namespace)
+	ret := m.ctrl.Call(m, "WaitPodReady", ctx, name, namespace, timeoutSec)
 	ret0, _ := ret[0].(*v10.Pod)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // WaitPodReady indicates an expected call of WaitPodReady.
-func (mr *MockKubernetesInterfaceMockRecorder) WaitPodReady(ctx, name, namespace interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) WaitPodReady(ctx, name, namespace, timeoutSec interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitPodReady", reflect.TypeOf((*MockKubernetesInterface)(nil).WaitPodReady), ctx, name, namespace)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitPodReady", reflect.TypeOf((*MockKubernetesInterface)(nil).WaitPodReady), ctx, name, namespace, timeoutSec)
+}
+
+// WaitPodTerminate mocks base method.
+func (m *MockKubernetesInterface) WaitPodTerminate(ctx context.Context, name, namespace string) (*v10.Pod, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WaitPodTerminate", ctx, name, namespace)
+	ret0, _ := ret[0].(*v10.Pod)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// WaitPodTerminate indicates an expected call of WaitPodTerminate.
+func (mr *MockKubernetesInterfaceMockRecorder) WaitPodTerminate(ctx, name, namespace interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitPodTerminate", reflect.TypeOf((*MockKubernetesInterface)(nil).WaitPodTerminate), ctx, name, namespace)
 }
 
 // WatchService mocks base method.

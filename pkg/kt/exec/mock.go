@@ -7,6 +7,7 @@ package exec
 import (
 	reflect "reflect"
 
+	dns "github.com/alibaba/kt-connect/pkg/kt/exec/dns"
 	sshchannel "github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	sshuttle "github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	tun "github.com/alibaba/kt-connect/pkg/kt/exec/tun"
@@ -36,6 +37,20 @@ func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
 }
 
+// DnsConfig mocks base method.
+func (m *MockCliInterface) DnsConfig() dns.DnsConfig {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DnsConfig")
+	ret0, _ := ret[0].(dns.DnsConfig)
+	return ret0
+}
+
+// DnsConfig indicates an expected call of DnsConfig.
+func (mr *MockCliInterfaceMockRecorder) DnsConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DnsConfig", reflect.TypeOf((*MockCliInterface)(nil).DnsConfig))
+}
+
 // SshChannel mocks base method.
 func (m *MockCliInterface) SshChannel() sshchannel.Channel {
 	m.ctrl.T.Helper()
@@ -51,10 +66,10 @@ func (mr *MockCliInterfaceMockRecorder) SshChannel() *gomock.Call {
 }
 
 // Sshuttle mocks base method.
-func (m *MockCliInterface) Sshuttle() sshuttle.CliInterface {
+func (m *MockCliInterface) Sshuttle() sshuttle.Sshuttle {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Sshuttle")
-	ret0, _ := ret[0].(sshuttle.CliInterface)
+	ret0, _ := ret[0].(sshuttle.Sshuttle)
 	return ret0
 }
 
@@ -65,10 +80,10 @@ func (mr *MockCliInterfaceMockRecorder) Sshuttle() *gomock.Call {
 }
 
 // Tunnel mocks base method.
-func (m *MockCliInterface) Tunnel() tun.CliInterface {
+func (m *MockCliInterface) Tunnel() tun.Tunnel {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Tunnel")
-	ret0, _ := ret[0].(tun.CliInterface)
+	ret0, _ := ret[0].(tun.Tunnel)
 	return ret0
 }
 

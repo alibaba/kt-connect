@@ -40,10 +40,10 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	return setupDns(cli.Kubernetes(), options, podIP)
+	return setupDns(cli, options, podIP)
 }
 
-func checkSshuttleInstalled(cli sshuttle.CliInterface, isDebug bool) {
+func checkSshuttleInstalled(cli sshuttle.Sshuttle, isDebug bool) {
 	if !util.CanRun(cli.Version()) {
 		err := util.RunAndWait(cli.Install(), isDebug)
 		if err != nil {

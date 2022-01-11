@@ -61,11 +61,6 @@ func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	return lastErr
 }
 
-// SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
-	return nil
-}
-
 var tunName = ""
 func (s *Cli) GetName() string {
 	if tunName != "" {

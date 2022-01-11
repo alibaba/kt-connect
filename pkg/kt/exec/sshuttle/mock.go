@@ -12,31 +12,31 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockCliInterface is a mock of CliInterface interface.
-type MockCliInterface struct {
+// MockSshuttle is a mock of Sshuttle interface.
+type MockSshuttle struct {
 	ctrl     *gomock.Controller
-	recorder *MockCliInterfaceMockRecorder
+	recorder *MockSshuttleMockRecorder
 }
 
-// MockCliInterfaceMockRecorder is the mock recorder for MockCliInterface.
-type MockCliInterfaceMockRecorder struct {
-	mock *MockCliInterface
+// MockSshuttleMockRecorder is the mock recorder for MockSshuttle.
+type MockSshuttleMockRecorder struct {
+	mock *MockSshuttle
 }
 
-// NewMockCliInterface creates a new mock instance.
-func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
-	mock := &MockCliInterface{ctrl: ctrl}
-	mock.recorder = &MockCliInterfaceMockRecorder{mock}
+// NewMockSshuttle creates a new mock instance.
+func NewMockSshuttle(ctrl *gomock.Controller) *MockSshuttle {
+	mock := &MockSshuttle{ctrl: ctrl}
+	mock.recorder = &MockSshuttleMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
+func (m *MockSshuttle) EXPECT() *MockSshuttleMockRecorder {
 	return m.recorder
 }
 
 // Connect mocks base method.
-func (m *MockCliInterface) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
+func (m *MockSshuttle) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Connect", opt, req)
 	ret0, _ := ret[0].(*exec.Cmd)
@@ -44,13 +44,13 @@ func (m *MockCliInterface) Connect(opt *options.ConnectOptions, req *SSHVPNReque
 }
 
 // Connect indicates an expected call of Connect.
-func (mr *MockCliInterfaceMockRecorder) Connect(opt, req interface{}) *gomock.Call {
+func (mr *MockSshuttleMockRecorder) Connect(opt, req interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockCliInterface)(nil).Connect), opt, req)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockSshuttle)(nil).Connect), opt, req)
 }
 
 // Install mocks base method.
-func (m *MockCliInterface) Install() *exec.Cmd {
+func (m *MockSshuttle) Install() *exec.Cmd {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Install")
 	ret0, _ := ret[0].(*exec.Cmd)
@@ -58,13 +58,13 @@ func (m *MockCliInterface) Install() *exec.Cmd {
 }
 
 // Install indicates an expected call of Install.
-func (mr *MockCliInterfaceMockRecorder) Install() *gomock.Call {
+func (mr *MockSshuttleMockRecorder) Install() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Install", reflect.TypeOf((*MockCliInterface)(nil).Install))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Install", reflect.TypeOf((*MockSshuttle)(nil).Install))
 }
 
 // Version mocks base method.
-func (m *MockCliInterface) Version() *exec.Cmd {
+func (m *MockSshuttle) Version() *exec.Cmd {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Version")
 	ret0, _ := ret[0].(*exec.Cmd)
@@ -72,7 +72,7 @@ func (m *MockCliInterface) Version() *exec.Cmd {
 }
 
 // Version indicates an expected call of Version.
-func (mr *MockCliInterfaceMockRecorder) Version() *gomock.Call {
+func (mr *MockSshuttleMockRecorder) Version() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockCliInterface)(nil).Version))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Version", reflect.TypeOf((*MockSshuttle)(nil).Version))
 }

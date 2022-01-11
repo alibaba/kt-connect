@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -11,15 +12,17 @@ import (
 	"strings"
 )
 
-func setupDns(k cluster.KubernetesInterface, opt *options.DaemonOptions, shadowPodIp string) error {
+func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp string) error {
 	if strings.HasPrefix(opt.ConnectOptions.DnsMode, common.DnsModeHosts) {
 		dump2HostsNamespaces := ""
 		pos := len(common.DnsModeHosts)
 		if len(opt.ConnectOptions.DnsMode) > pos + 1 && opt.ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.ConnectOptions.DnsMode[pos+1:]
 		}
-		opt.RuntimeOptions.Dump2Host = setupDump2Host(k, opt.Namespace,
+		opt.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), opt.Namespace,
 			dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain)
+	} else if opt.ConnectOptions.DnsMode == common.DnsModePodDns {
+		return cli.Exec().DnsConfig().SetDnsServer([]string{shadowPodIp}, opt.Debug)
 	}
 	return nil
 }

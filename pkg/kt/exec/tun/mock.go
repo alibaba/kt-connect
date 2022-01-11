@@ -10,67 +10,81 @@ import (
 	gomock "github.com/golang/mock/gomock"
 )
 
-// MockCliInterface is a mock of CliInterface interface.
-type MockCliInterface struct {
+// MockTunnel is a mock of Tunnel interface.
+type MockTunnel struct {
 	ctrl     *gomock.Controller
-	recorder *MockCliInterfaceMockRecorder
+	recorder *MockTunnelMockRecorder
 }
 
-// MockCliInterfaceMockRecorder is the mock recorder for MockCliInterface.
-type MockCliInterfaceMockRecorder struct {
-	mock *MockCliInterface
+// MockTunnelMockRecorder is the mock recorder for MockTunnel.
+type MockTunnelMockRecorder struct {
+	mock *MockTunnel
 }
 
-// NewMockCliInterface creates a new mock instance.
-func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
-	mock := &MockCliInterface{ctrl: ctrl}
-	mock.recorder = &MockCliInterfaceMockRecorder{mock}
+// NewMockTunnel creates a new mock instance.
+func NewMockTunnel(ctrl *gomock.Controller) *MockTunnel {
+	mock := &MockTunnel{ctrl: ctrl}
+	mock.recorder = &MockTunnelMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
+func (m *MockTunnel) EXPECT() *MockTunnelMockRecorder {
 	return m.recorder
 }
 
-// SetDnsServer mocks base method.
-func (m *MockCliInterface) SetDnsServer(dnsServers []string) error {
+// CheckContext mocks base method.
+func (m *MockTunnel) CheckContext() error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetDnsServer", dnsServers)
+	ret := m.ctrl.Call(m, "CheckContext")
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// SetDnsServer indicates an expected call of SetDnsServer.
-func (mr *MockCliInterfaceMockRecorder) SetDnsServer(dnsServers interface{}) *gomock.Call {
+// CheckContext indicates an expected call of CheckContext.
+func (mr *MockTunnelMockRecorder) CheckContext() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDnsServer", reflect.TypeOf((*MockCliInterface)(nil).SetDnsServer), dnsServers)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckContext", reflect.TypeOf((*MockTunnel)(nil).CheckContext))
+}
+
+// GetName mocks base method.
+func (m *MockTunnel) GetName() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetName")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetName indicates an expected call of GetName.
+func (mr *MockTunnelMockRecorder) GetName() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetName", reflect.TypeOf((*MockTunnel)(nil).GetName))
 }
 
 // SetRoute mocks base method.
-func (m *MockCliInterface) SetRoute(ipRange []string) error {
+func (m *MockTunnel) SetRoute(ipRange []string, isDebug bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetRoute", ipRange)
+	ret := m.ctrl.Call(m, "SetRoute", ipRange, isDebug)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SetRoute indicates an expected call of SetRoute.
-func (mr *MockCliInterfaceMockRecorder) SetRoute(ipRange interface{}) *gomock.Call {
+func (mr *MockTunnelMockRecorder) SetRoute(ipRange, isDebug interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRoute", reflect.TypeOf((*MockCliInterface)(nil).SetRoute), ipRange)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRoute", reflect.TypeOf((*MockTunnel)(nil).SetRoute), ipRange, isDebug)
 }
 
 // ToSocks mocks base method.
-func (m *MockCliInterface) ToSocks(sockAddr string) error {
+func (m *MockTunnel) ToSocks(sockAddr string, isDebug bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ToSocks", sockAddr)
+	ret := m.ctrl.Call(m, "ToSocks", sockAddr, isDebug)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // ToSocks indicates an expected call of ToSocks.
-func (mr *MockCliInterfaceMockRecorder) ToSocks(sockAddr interface{}) *gomock.Call {
+func (mr *MockTunnelMockRecorder) ToSocks(sockAddr, isDebug interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSocks", reflect.TypeOf((*MockCliInterface)(nil).ToSocks), sockAddr)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSocks", reflect.TypeOf((*MockTunnel)(nil).ToSocks), sockAddr, isDebug)
 }
