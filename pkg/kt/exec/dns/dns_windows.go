@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"os/exec"
 )
@@ -17,7 +18,7 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) (err error) {
 				"ip",
 				"set",
 				"dnsservers",
-				fmt.Sprintf("name=%s", s.GetName()),
+				fmt.Sprintf("name=%s", common.TunNameWin),
 				"source=static",
 				fmt.Sprintf("address=%s", dns),
 			), isDebug)
@@ -28,7 +29,7 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) (err error) {
 				"ip",
 				"add",
 				"dnsservers",
-				fmt.Sprintf("name=%s", s.GetName()),
+				fmt.Sprintf("name=%s", common.TunNameWin),
 				fmt.Sprintf("address=%s", dns),
 			), isDebug)
 		}
