@@ -53,7 +53,7 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 		stat, _ := f.Stat()
 		dnsSignal <-ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
 
-		defer RestoreDnsServer()
+		defer restoreDnsServer()
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 		<-sigCh
@@ -61,11 +61,12 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 	return <-dnsSignal
 }
 
-// RestoreDnsServer remove the nameservers added by ktctl
-func RestoreDnsServer() error {
+// restoreDnsServer remove the nameservers added by ktctl
+func restoreDnsServer() {
 	f, err := os.Open(util.ResolvConf)
 	if err != nil {
-		return err
+		log.Error().Err(err).Msgf("Failed to open resolve.conf during restoring")
+		return
 	}
 	defer f.Close()
 
@@ -88,6 +89,7 @@ func RestoreDnsServer() error {
 	}
 
 	stat, _ := f.Stat()
-	err = ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
-	return err
+	if err = ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode()); err != nil {
+		log.Error().Err(err).Msgf("Failed to write resolve.conf during restoring")
+	}
 }
