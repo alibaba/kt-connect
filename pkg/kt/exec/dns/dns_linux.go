@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -13,8 +14,13 @@ import (
 	"syscall"
 )
 
+const (
+	commentKtAdded   = " # Added by KtConnect"
+	commentKtRemoved = " # Removed by KtConnect"
+)
+
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
+func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, isDebug bool) error {
 	dnsSignal := make(chan error)
 	go func() {
 		f, err := os.Open(util.ResolvConf)
@@ -53,7 +59,7 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 		stat, _ := f.Stat()
 		dnsSignal <-ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
 
-		defer restoreDnsServer()
+		defer s.RestoreDnsServer()
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 		<-sigCh
@@ -61,8 +67,8 @@ func (s *Cli) SetDnsServer(dnsServers []string, isDebug bool) error {
 	return <-dnsSignal
 }
 
-// restoreDnsServer remove the nameservers added by ktctl
-func restoreDnsServer() {
+// RestoreDnsServer remove the nameservers added by ktctl
+func (s *Cli) RestoreDnsServer() {
 	f, err := os.Open(util.ResolvConf)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to open resolve.conf during restoring")

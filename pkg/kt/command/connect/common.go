@@ -22,7 +22,7 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 		opt.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), opt.Namespace,
 			dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain)
 	} else if opt.ConnectOptions.DnsMode == common.DnsModePodDns {
-		return cli.Exec().DnsConfig().SetDnsServer([]string{shadowPodIp}, opt.Debug)
+		return cli.Exec().DnsConfig().SetDnsServer(cli.Kubernetes(), []string{shadowPodIp}, opt.Debug)
 	}
 	return nil
 }

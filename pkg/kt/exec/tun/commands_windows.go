@@ -5,6 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"golang.zx2c4.com/wintun"
 	"os/exec"
 	"strings"
 )

@@ -46,6 +46,7 @@ type KubernetesInterface interface {
 	GetConfigMapsByLabel(ctx context.Context, labels map[string]string, namespace string) (*coreV1.ConfigMapList, error)
 	RemoveConfigMap(ctx context.Context, name, namespace string) (err error)
 
+	GetAllNamespaces(ctx context.Context) (*coreV1.NamespaceList, error)
 	ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error)
 }
 

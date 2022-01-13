@@ -7,11 +7,6 @@ import (
 	"os/exec"
 )
 
-const (
-	commentKtAdded   = " # added by ktctl"
-	commentKtRemoved = " # removed by ktctl"
-)
-
 // CheckContext check everything needed for tun setup
 func (s *Cli) CheckContext() error {
 	// TODO: check whether ip command exists

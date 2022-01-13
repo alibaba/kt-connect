@@ -92,8 +92,12 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 	if !options.CleanOptions.DryRun {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
 		util.CleanRsaKeys()
-		log.Debug().Msg("Cleaning up hosts file ...")
-		util.DropHosts()
+		if util.GetDaemonRunning(common.ComponentConnect) < 0 {
+			log.Debug().Msg("Cleaning up hosts file ...")
+			util.DropHosts()
+			log.Debug().Msg("Cleaning DNS configuration ...")
+			cli.Exec().DnsConfig().RestoreDnsServer()
+		}
 	}
 	return nil
 }

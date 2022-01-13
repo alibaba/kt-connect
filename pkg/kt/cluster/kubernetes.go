@@ -434,6 +434,11 @@ func (k *Kubernetes) DecreaseRef(ctx context.Context, name string, namespace str
 	return
 }
 
+// GetAllNamespaces get all namespaces
+func (k *Kubernetes) GetAllNamespaces(ctx context.Context) (*coreV1.NamespaceList, error) {
+	return k.Clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+}
+
 func (k *Kubernetes) waitPodReady(ctx context.Context, name, namespace string, timeoutSec int, times int) (*coreV1.Pod, error) {
 	const interval = 6
 	if times > timeoutSec / interval {
