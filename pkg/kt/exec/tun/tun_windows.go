@@ -5,7 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	"golang.zx2c4.com/wintun"
+	wintun "golang.zx2c4.com/wintun"
 	"os/exec"
 	"strings"
 )
@@ -17,9 +17,7 @@ func (s *Cli) CheckContext() (err error) {
 			err = fmt.Errorf("failed to found tun driver: %v", r)
 		}
 	}()
-	if _, err = wintun.RunningVersion(); err != nil {
-		return fmt.Errorf("failed to check wintun version: %s", err)
-	}
+	wintun.RunningVersion()
 	return
 }
 

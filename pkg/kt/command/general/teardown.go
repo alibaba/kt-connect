@@ -82,10 +82,10 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 		}
 		// wait for scale complete
 		ch := make(chan os.Signal, 1)
-		signal.Notify(ch, os.Interrupt, syscall.SIGINT)
+		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 		go func() {
 			waitDeploymentRecoverComplete(ctx, opts, k)
-			ch <- syscall.SIGINT
+			ch <- os.Interrupt
 		}()
 		_ = <-ch
 	} else if opts.ExchangeOptions.Mode == common.ExchangeModeSwitch {

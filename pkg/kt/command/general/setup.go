@@ -33,7 +33,7 @@ func SetupProcess(cli kt.CliInterface, options *options.DaemonOptions, component
 func setupWaitingChannel() (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	// see https://en.wikipedia.org/wiki/Signal_(IPC)
-	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
 	return
 }
 

@@ -38,6 +38,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 			dnsPort = preferedDnsInfo[1]
 		}
 
+		// TODO: read domain suffix from option
 		createResolverFile("local", "cluster.local", dnsIp, dnsPort)
 		for _, ns := range namespaces.Items {
 			createResolverFile(fmt.Sprintf("%s.local", ns.Name), ns.Name, dnsIp, dnsPort)
@@ -46,7 +47,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 
 		defer s.RestoreDnsServer()
 		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		<-sigCh
 	}()
 	return <-dnsSignal

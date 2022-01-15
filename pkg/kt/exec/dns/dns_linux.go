@@ -61,7 +61,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 
 		defer s.RestoreDnsServer()
 		sigCh := make(chan os.Signal, 1)
-		signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		<-sigCh
 	}()
 	return <-dnsSignal
