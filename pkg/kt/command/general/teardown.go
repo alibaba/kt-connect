@@ -19,11 +19,6 @@ import (
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
-	if !util.IsPidFileExist() {
-		log.Info().Msgf("Workspace already cleaned")
-		return
-	}
-
 	log.Info().Msgf("Cleaning workspace")
 	cleanLocalFiles(opts)
 	if opts.RuntimeOptions.Component == common.ComponentConnect {

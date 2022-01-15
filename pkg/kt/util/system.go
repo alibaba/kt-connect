@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -11,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	fs "github.com/fsnotify/fsnotify"
 	ps "github.com/mitchellh/go-ps"
 )
 
@@ -28,17 +30,6 @@ func GetDaemonRunning(componentName string) int {
 		}
 	}
 	return -1
-}
-
-// IsPidFileExist check pid file is exist or not
-func IsPidFileExist() bool {
-	files, _ := ioutil.ReadDir(KtHome)
-	for _, f := range files {
-		if strings.HasSuffix(f.Name(), fmt.Sprintf("-%d.pid", os.Getpid())) {
-			return true
-		}
-	}
-	return false
 }
 
 // IsProcessExist check whether specified process still running
@@ -72,7 +63,38 @@ func CreateDirIfNotExist(dir string) {
 // WritePidFile write pid to file
 func WritePidFile(componentName string) error {
 	pidFile := fmt.Sprintf("%s/%s-%d.pid", KtHome, componentName, os.Getpid())
-	return ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644)
+	if err := ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
+		return err
+	}
+	go watchPidFile(pidFile)
+	return nil
+}
+
+func watchPidFile(pidFile string) {
+	watcher, err := fs.NewWatcher()
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to create pid file watcher")
+	}
+	defer watcher.Close()
+
+	if err = watcher.Add(pidFile); err != nil {
+		log.Warn().Err(err).Msgf("Unable to watch pid file")
+	}
+
+	for event := range watcher.Events {
+		log.Debug().Msgf("Received event %s", event)
+		if event.Op & fs.Remove == fs.Remove || event.Op & fs.Rename == fs.Rename {
+			log.Warn().Msgf("Pid file was removed !!!")
+			process, err2 := os.FindProcess(os.Getpid())
+			if err2 != nil {
+				log.Warn().Err(err2).Msgf("Failed to fetch current process")
+			}
+			err2 = process.Signal(os.Interrupt)
+			if err2 != nil {
+				log.Warn().Err(err2).Msgf("Failed to interrupt current process")
+			}
+		}
+	}
 }
 
 // FixFileOwner set owner to original user when run with sudo

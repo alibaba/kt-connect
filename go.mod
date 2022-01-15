@@ -3,6 +3,7 @@ module github.com/alibaba/kt-connect
 go 1.17
 
 require (
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.31
 	github.com/mitchellh/go-ps v1.0.0
@@ -13,6 +14,7 @@ require (
 	github.com/xjasonlyu/tun2socks/v2 v2.3.3
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
 	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
+	gopkg.in/fsnotify.v1 v1.4.7
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
 	k8s.io/client-go v0.22.0
