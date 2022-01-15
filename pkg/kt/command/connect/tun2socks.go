@@ -3,12 +3,14 @@ package connect
 import (
 	"context"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"strings"
 	"time"
 )
 
@@ -28,6 +30,11 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 
 	if options.ConnectOptions.DisableTunDevice {
 		showSetupSocksMessage(options.ConnectOptions.SocksPort)
+		if strings.HasPrefix(options.ConnectOptions.DnsMode, common.DnsModeHosts) {
+			return setupDns(cli, options, podIP)
+		} else {
+			return nil
+		}
 	} else {
 		tun := cli.Exec().Tunnel()
 		if err = tun.CheckContext(); err != nil {
@@ -45,9 +52,8 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 			}
 			log.Info().Msgf("Route to tun device completed")
 		}
+		return setupDns(cli, options, podIP)
 	}
-
-	return setupDns(cli, options, podIP)
 }
 
 func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
