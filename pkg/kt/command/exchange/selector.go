@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func BySwitchOver(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
+func BySelector(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
 	// Get service to exchange
 	svc, err := general.GetServiceByResourceName(ctx, k, resourceName, opts.Namespace)
 	if err != nil {

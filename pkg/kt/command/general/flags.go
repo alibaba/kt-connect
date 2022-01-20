@@ -155,9 +155,9 @@ func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "mode",
-			Usage:       "Exchange method 'switch', 'scale' or 'ephemeral'(experimental)",
+			Usage:       "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)",
 			Destination: &options.ExchangeOptions.Mode,
-			Value:       common.ExchangeModeSwitch,
+			Value:       common.ExchangeModeSelector,
 		},
 		cli.StringFlag{
 			Name:        "expose",

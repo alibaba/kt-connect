@@ -61,8 +61,8 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 		err = exchange.ByScale(resourceName, cli, options)
 	} else if method == common.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName, cli, options)
-	} else if method == common.ExchangeModeSwitch {
-		err = exchange.BySwitchOver(context.TODO(), cli.Kubernetes(), resourceName, options)
+	} else if method == common.ExchangeModeSelector {
+		err = exchange.BySelector(context.TODO(), cli.Kubernetes(), resourceName, options)
 	} else {
 		err = fmt.Errorf("invalid exchange method '%s'", method)
 	}

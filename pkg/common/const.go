@@ -11,7 +11,7 @@ const (
 	ConnectModeTun2Socks  = "tun2socks"
 	ExchangeModeScale     = "scale"
 	ExchangeModeEphemeral = "ephemeral"
-	ExchangeModeSwitch    = "switch"
+	ExchangeModeSelector  = "selector"
 	MeshModeAuto          = "auto"
 	MeshModeManual        = "manual"
 	DnsModeLocalDns       = "localDNS"

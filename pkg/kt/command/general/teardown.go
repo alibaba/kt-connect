@@ -83,7 +83,7 @@ func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k 
 			ch <- os.Interrupt
 		}()
 		_ = <-ch
-	} else if opts.ExchangeOptions.Mode == common.ExchangeModeSwitch {
+	} else if opts.ExchangeOptions.Mode == common.ExchangeModeSelector {
 		RecoverOriginalService(ctx, k, opts.RuntimeOptions.Origin, opts.Namespace)
 	}
 }
