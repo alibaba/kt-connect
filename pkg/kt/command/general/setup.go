@@ -20,26 +20,16 @@ import (
 // SetupProcess write pid file and print setup message
 func SetupProcess(cli kt.CliInterface, options *options.DaemonOptions, componentName string) (chan os.Signal, error) {
 	options.RuntimeOptions.Component = componentName
-	err := util.WritePidFile(componentName)
-	if err != nil {
-		return nil, err
-	}
 	log.Info().Msgf("KtConnect %s start at %d (%s)", options.RuntimeOptions.Version, os.Getpid(), runtime.GOOS)
 	ch := setupCloseHandler(cli, options)
-	return ch, nil
-}
-
-// setupWaitingChannel registry waiting channel
-func setupWaitingChannel() (ch chan os.Signal) {
-	ch = make(chan os.Signal)
-	// see https://en.wikipedia.org/wiki/Signal_(IPC)
-	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
-	return
+	err := util.WritePidFile(componentName, ch)
+	return ch, err
 }
 
 // SetupCloseHandler registry close handler
 func setupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
-	ch = setupWaitingChannel()
+	ch = make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-ch
 		log.Info().Msgf("Process is gonna close")

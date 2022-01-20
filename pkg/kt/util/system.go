@@ -61,16 +61,16 @@ func CreateDirIfNotExist(dir string) {
 }
 
 // WritePidFile write pid to file
-func WritePidFile(componentName string) error {
+func WritePidFile(componentName string, ch chan os.Signal) error {
 	pidFile := fmt.Sprintf("%s/%s-%d.pid", KtHome, componentName, os.Getpid())
 	if err := ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
 		return err
 	}
-	go watchPidFile(pidFile)
+	go watchPidFile(pidFile, ch)
 	return nil
 }
 
-func watchPidFile(pidFile string) {
+func watchPidFile(pidFile string, ch chan os.Signal) {
 	watcher, err := fs.NewWatcher()
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to create pid file watcher")
@@ -84,15 +84,8 @@ func watchPidFile(pidFile string) {
 	for event := range watcher.Events {
 		log.Debug().Msgf("Received event %s", event)
 		if event.Op & fs.Remove == fs.Remove || event.Op & fs.Rename == fs.Rename {
-			log.Warn().Msgf("Pid file was removed !!!")
-			process, err2 := os.FindProcess(os.Getpid())
-			if err2 != nil {
-				log.Warn().Err(err2).Msgf("Failed to fetch current process")
-			}
-			err2 = process.Signal(os.Interrupt)
-			if err2 != nil {
-				log.Warn().Err(err2).Msgf("Failed to interrupt current process")
-			}
+			log.Info().Msgf("Pid file was removed")
+			ch <-os.Interrupt
 		}
 	}
 }
