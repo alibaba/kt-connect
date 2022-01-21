@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
-	"sync"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -136,8 +135,13 @@ func connection(privateKey string, address string) (*ssh.Client, error) {
 }
 
 func handleClient(client net.Conn, remote net.Conn) {
-	wg := sync.WaitGroup{}
-	wg.Add(2)
+	done := make(chan int)
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error().Msgf("Ssh tunnel broken: %v", r)
+			done<-1
+		}
+	}()
 
 	// Start remote -> local data transfer
 	go func() {
@@ -145,7 +149,7 @@ func handleClient(client net.Conn, remote net.Conn) {
 		if err != nil {
 			log.Error().Err(err).Msgf("Error while copy remote->local")
 		}
-		wg.Done()
+		done<-1
 	}()
 
 	// Start local -> remote data transfer
@@ -154,16 +158,16 @@ func handleClient(client net.Conn, remote net.Conn) {
 		if err != nil {
 			log.Error().Err(err).Msgf("Error while copy local->remote")
 		}
-		wg.Done()
+		done<-1
 	}()
 
-	wg.Wait()
+	<-done
 	err := remote.Close()
 	if err != nil {
-		log.Error().Err(err).Msgf("Close connection failed")
+		log.Error().Err(err).Msgf("Close remote connection failed")
 	}
 	err = client.Close()
 	if err != nil {
-		log.Error().Err(err).Msgf("Close connection failed")
+		log.Error().Err(err).Msgf("Close local connection failed")
 	}
 }

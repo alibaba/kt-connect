@@ -54,7 +54,6 @@ func CanRun(cmd *exec.Cmd) bool {
 func runCmd(cmdCtx *CMDContext) error {
 	var err error
 	cmd := cmdCtx.Cmd
-	log.Debug().Msgf("Child, os.Args = %+v", os.Args)
 	log.Debug().Msgf("Child, name = %s, cmd.Args = %+v", cmdCtx.Name, cmd.Args)
 
 	stdout, _ := cmd.StdoutPipe()
