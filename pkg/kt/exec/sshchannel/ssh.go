@@ -85,27 +85,35 @@ func (c *SSHChannel) ForwardRemoteToLocal(privateKey string, sshAddress, remoteE
 	log.Info().Msgf("Forward %s to local endpoint %s", remoteEndpoint, localEndpoint)
 
 	// Handle incoming connections on reverse forwarded tunnel
-	go handleRequest(listener, localEndpoint)
+	go func() {
+		for {
+			handleRequest(listener, localEndpoint)
+		}
+	}()
 	return
 }
 
 func handleRequest(listener net.Listener, localEndpoint string) {
-	for {
-		// Wait requests from remote endpoint
-		client, err := listener.Accept()
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to accept remote request")
+	defer func() {
+		if r := recover(); r != nil {
+			log.Error().Msgf("Failed to handle request: %v", r)
 		}
+	}()
 
-		// Open a (local) connection to localEndpoint whose content will be forwarded to remoteEndpoint
-		local, err := net.Dial("tcp", localEndpoint)
-		if err != nil {
-			_ = client.Close()
-			log.Error().Err(err).Msgf("Local service error")
-		} else {
-			// Handle request in individual coroutine, current coroutine continue to accept more requests
-			go handleClient(client, local)
-		}
+	// Wait requests from remote endpoint
+	client, err := listener.Accept()
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to accept remote request")
+	}
+
+	// Open a (local) connection to localEndpoint whose content will be forwarded to remoteEndpoint
+	local, err := net.Dial("tcp", localEndpoint)
+	if err != nil {
+		_ = client.Close()
+		log.Error().Err(err).Msgf("Local service error")
+	} else {
+		// Handle request in individual coroutine, current coroutine continue to accept more requests
+		go handleClient(client, local)
 	}
 }
 
