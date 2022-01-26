@@ -172,7 +172,7 @@ func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, s
 		}
 	}
 
-	go k.WatchService(svcName, namespace, func(newSvc *coreV1.Service) {
+	go k.WatchService(svcName, namespace, nil, nil, func(newSvc *coreV1.Service) {
 		if !isServiceChanged(newSvc, selector, marshaledSelector) {
 			return
 		}

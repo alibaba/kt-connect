@@ -346,20 +346,36 @@ func (k *Kubernetes) GetServicesBySelector(ctx context.Context, matchLabels map[
 }
 
 // WatchService ...
-func (k *Kubernetes) WatchService(name, namespace string, f func(*coreV1.Service)) {
+func (k *Kubernetes) WatchService(name, namespace string, fAdd, fDel, fMod func(*coreV1.Service)) {
+	selector := fields.Nothing()
+	if name != "" {
+		selector = fields.OneTermEqualSelector("metadata.name", name)
+	}
 	watchlist := cache.NewListWatchFromClient(
 		k.Clientset.CoreV1().RESTClient(),
 		string(coreV1.ResourceServices),
 		namespace,
-		fields.OneTermEqualSelector("metadata.name", name),
+		selector,
 	)
 	_, controller := cache.NewInformer(
 		watchlist,
 		&coreV1.Service{},
 		0,
 		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				if fAdd != nil {
+					fAdd(obj.(*coreV1.Service))
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				if fDel != nil {
+					fDel(obj.(*coreV1.Service))
+				}
+			},
 			UpdateFunc: func(oldObj, newObj interface{}) {
-				f(newObj.(*coreV1.Service))
+				if fMod != nil {
+					fMod(newObj.(*coreV1.Service))
+				}
 			},
 		},
 	)
