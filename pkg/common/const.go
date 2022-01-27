@@ -16,6 +16,7 @@ const (
 	DnsModeLocalDns       = "localDNS"
 	DnsModePodDns         = "podDNS"
 	DnsModeHosts          = "hosts"
+	Localhost             = "127.0.0.1"
 	YyyyMmDdHhMmSs        = "2006-01-02 15:04:05"
 	SshPort               = 22
 

@@ -25,20 +25,6 @@ func GetRandomSSHPort() int {
 	return -1
 }
 
-// GetOutboundIP Get preferred outbound ip of this machine
-func GetOutboundIP() (address string) {
-	address = "127.0.0.1"
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Error().Err(err).Msgf("Failed to get outbound IP")
-		return
-	}
-	defer conn.Close()
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-	address = fmt.Sprintf("%s", localAddr.IP)
-	return
-}
-
 // ParsePortMapping parse <port> or <localPort>:<removePort> parameter
 func ParsePortMapping(exposePort string) (int, int, error) {
 	localPort := exposePort
@@ -57,11 +43,6 @@ func ParsePortMapping(exposePort string) (int, int, error) {
 		return -1, -1, fmt.Errorf("remote port '%s' is not a number", remotePort)
 	}
 	return lp, rp, nil
-}
-
-// ExtractNetMaskFromCidr extract net mask length (e.g. 16) from cidr (e.g. 1.2.3.4/16)
-func ExtractNetMaskFromCidr(cidr string) string {
-	return cidr[strings.Index(cidr, "/")+1:]
 }
 
 // WaitPortBeReady return true when port is ready

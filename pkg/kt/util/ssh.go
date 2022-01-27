@@ -42,7 +42,7 @@ func NewSSHGenerator(privateKey string, publicKey string, privateKeyPath string)
 func NewDefaultSSHCredential() *SSHCredential {
 	return &SSHCredential{
 		Port:       "2222",
-		RemoteHost: "127.0.0.1",
+		RemoteHost: common.Localhost,
 	}
 }
 
