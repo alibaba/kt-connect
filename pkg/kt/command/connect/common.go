@@ -72,7 +72,7 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 	}
 
 	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
-		shadowPodName, options, getLabels(shadowPodName), make(map[string]string), getEnvs())
+		shadowPodName, options, getLabels(shadowPodName), make(map[string]string), getEnvs(options.ConnectOptions))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -80,12 +80,17 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 	return endPointIP, podName, credential, nil
 }
 
-func getEnvs() map[string]string {
+func getEnvs(opt *options.ConnectOptions) map[string]string {
 	envs := make(map[string]string)
 	localDomains := util.GetLocalDomains()
 	if localDomains != "" {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
+	}
+	if opt.DnsMode == common.DnsModeLocalDns {
+		envs[common.EnvVarDnsProtocol] = "tcp"
+	} else {
+		envs[common.EnvVarDnsProtocol] = "udp"
 	}
 	return envs
 }

@@ -23,6 +23,7 @@ const resolvFile = "/etc/resolv.conf"
 // Start setup dns server
 func Start() {
 	srv := NewDNSServerDefault()
+	srv.Net = os.Getenv(common.EnvVarDnsProtocol)
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to serve")

@@ -1,7 +1,6 @@
 package common
 
 const (
-	EnvVarLocalDomains    = "LOCAL_DOMAIN"
 	KubernetesTool        = "kt"
 	ComponentConnect      = "connect"
 	ComponentExchange     = "exchange"
@@ -20,6 +19,10 @@ const (
 	YyyyMmDdHhMmSs        = "2006-01-02 15:04:05"
 	SshPort               = 22
 
+	// EnvVarLocalDomains environment variable for local domain config
+	EnvVarLocalDomains = "LOCAL_DOMAIN"
+	// EnvVarDnsProtocol environment variable for shadow pod dns protocol
+	EnvVarDnsProtocol = "DNS_PROTOCOL"
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
 	// KtName label used for wait shadow pod ready
