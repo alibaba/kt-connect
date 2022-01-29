@@ -1,4 +1,4 @@
-package dnsserver
+package common
 
 // DomainNotExistError ...
 type DomainNotExistError struct {

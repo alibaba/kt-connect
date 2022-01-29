@@ -4,13 +4,11 @@ import (
 	"errors"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"net"
-	"os"
-	"strconv"
-	"strings"
-
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
+	"net"
+	"os"
+	"strings"
 )
 
 // DnsServer nds server
@@ -20,36 +18,19 @@ type DnsServer struct {
 
 // Start setup dns server
 func Start() {
-	srv := NewDNSServerDefault()
-	err := srv.ListenAndServe()
-	if err != nil {
-		log.Error().Err(err).Msgf("Failed to serve")
-		panic(err.Error())
-	}
-}
-
-// NewDNSServerDefault create default dns server
-func NewDNSServerDefault() (srv *dns.Server) {
 	config, _ := dns.ClientConfigFromFile(util.ResolvConf)
-	srv = &dns.Server{
-		Addr: ":" + strconv.Itoa(53),
-		Net: os.Getenv(common.EnvVarDnsProtocol),
-		Handler: &DnsServer{config},
-	}
-	log.Info().Msgf("Successful load local resolv conf")
 	for _, server := range config.Servers {
-		log.Info().Msgf("Success load nameserver %s", server)
+		log.Info().Msgf("Load nameserver %s", server)
 	}
 	for _, domain := range config.Search {
-		log.Info().Msgf("Success load search %s", domain)
+		log.Info().Msgf("Load search %s", domain)
 	}
-	return
+	common.SetupDnsServer(&DnsServer{config}, 53, os.Getenv(common.EnvVarDnsProtocol))
 }
 
 // ServeDNS query DNS record
 func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
-	msg := dns.Msg{}
-	msg.SetReply(req)
+	msg := (&dns.Msg{}).SetReply(req)
 	msg.Authoritative = true
 	// Stuff must be in the answer section
 	for _, a := range s.query(req) {
@@ -57,7 +38,9 @@ func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 		msg.Answer = append(msg.Answer, a)
 	}
 
-	_ = w.WriteMsg(&msg)
+	if err := w.WriteMsg(msg); err != nil {
+		log.Error().Err(err).Msgf("Failed to response")
+	}
 }
 
 // Simulate kubernetes-like dns look up logic
@@ -177,26 +160,9 @@ func (s *DnsServer) exchange(domain string, qtype uint16, name string) (rr []dns
 	}
 	log.Info().Msgf("Resolving domain %s via upstream %s", domain, address)
 
-	c := new(dns.Client)
-	msg := new(dns.Msg)
-	msg.RecursionDesired = true
-	msg.SetQuestion(domain, qtype)
-	res, _, err := c.Exchange(msg, address)
-
-	if res == nil {
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to resolve")
-		} else {
-			log.Error().Msgf("Failed to resolve")
-		}
-		return
-	}
-
-	if res.Rcode == dns.RcodeNameError {
-		err = DomainNotExistError{domain}
-		return
-	} else if res.Rcode != dns.RcodeSuccess {
-		log.Error().Msgf("Failed to answer name %s after %d query for %s", name, qtype, domain)
+	res, err := common.NsLookup(domain, qtype, "udp", address)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to answer name %s after %d query for %s", name, qtype, domain)
 		return
 	}
 

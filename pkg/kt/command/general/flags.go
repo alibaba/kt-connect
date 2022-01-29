@@ -96,9 +96,9 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "dnsMode",
-			Usage:       "Specify how to resolve service domains, can be 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation",
+			Usage:       "Specify how to resolve service domains, can be 'localDNS', 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation",
 			Destination: &options.ConnectOptions.DnsMode,
-			Value: 		 common.DnsModePodDns,
+			Value: 		 common.DnsModeLocalDns,
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
