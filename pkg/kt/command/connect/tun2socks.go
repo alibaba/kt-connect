@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
+	"github.com/alibaba/kt-connect/pkg/kt/tun"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -24,7 +25,7 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 	if err != nil {
 		return err
 	}
-	if err = startSocks5Connection(cli.Exec().SshChannel(), options, credential.PrivateKeyPath); err != nil {
+	if err = startSocks5Connection(options, credential.PrivateKeyPath); err != nil {
 		return err
 	}
 
@@ -36,15 +37,14 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 			return nil
 		}
 	} else {
-		tun := cli.Exec().Tunnel()
-		if err = tun.CheckContext(); err != nil {
+		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
 		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", options.ConnectOptions.SocksPort)
-		if err = tun.ToSocks(socksAddr, options.Debug); err != nil {
+		if err = tun.Ins().ToSocks(socksAddr, options.Debug); err != nil {
 			return err
 		}
-		log.Info().Msgf("Tun device %s is ready", tun.GetName())
+		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
 
 		if !options.ConnectOptions.DisableTunRoute {
 			if err = setupTunRoute(cli, options); err != nil {
@@ -62,14 +62,14 @@ func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	err = cli.Exec().Tunnel().SetRoute(cidrs, options.Debug)
+	err = tun.Ins().SetRoute(cidrs, options.Debug)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Some route rule is not setup properly")
 	}
 	return nil
 }
 
-func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOptions, privateKey string) error {
+func startSocks5Connection(options *options.DaemonOptions, privateKey string) error {
 	var success = make(chan error)
 	go func() {
 		time.Sleep(2 * time.Second)
@@ -77,7 +77,7 @@ func startSocks5Connection(ssh sshchannel.Channel, options *options.DaemonOption
 	}()
 	go func() {
 		// will hang here if not error happen
-		success <-ssh.StartSocks5Proxy(
+		success <-sshchannel.Ins().StartSocks5Proxy(
 			privateKey,
 			fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
 			fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SocksPort),

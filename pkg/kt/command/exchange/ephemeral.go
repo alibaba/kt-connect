@@ -7,8 +7,8 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -127,9 +127,8 @@ func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterf
 }
 
 func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privateKey string) error {
-	ssh := sshchannel.SSHChannel{}
 	// Get all listened ports on remote host
-	listenedPorts, err := getListenedPorts(&ssh, localSSHPort, privateKey)
+	listenedPorts, err := getListenedPorts(localSSHPort, privateKey)
 	if err != nil {
 		return err
 	}
@@ -143,7 +142,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 		redirectPortStr += fmt.Sprintf("%d:%d,", k, v)
 	}
 	redirectPortStr = redirectPortStr[:len(redirectPortStr)-1]
-	err = setupIptables(&ssh, redirectPortStr, localSSHPort, privateKey)
+	err = setupIptables(redirectPortStr, localSSHPort, privateKey)
 	if err != nil {
 		return err
 	}
@@ -154,7 +153,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 			return err2
 		}
 		var wg sync.WaitGroup
-		tunnel.ExposeLocalPort(&wg, &ssh, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
+		tunnel.ExposeLocalPort(&wg, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
 		wg.Done()
 	}
 
@@ -162,8 +161,8 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 }
 
 
-func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort int, privateKey string) error {
-	res, err := ssh.RunScript(
+func setupIptables(redirectPorts string, localSSHPort int, privateKey string) error {
+	res, err := sshchannel.Ins().RunScript(
 		privateKey,
 		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
 		fmt.Sprintf("/setup_iptables.sh %s", redirectPorts))
@@ -176,8 +175,8 @@ func setupIptables(ssh sshchannel.Channel, redirectPorts string, localSSHPort in
 	return err
 }
 
-func getListenedPorts(ssh sshchannel.Channel, localSSHPort int, privateKey string) (map[int]struct{}, error) {
-	result, err := ssh.RunScript(
+func getListenedPorts(localSSHPort int, privateKey string) (map[int]struct{}, error) {
+	result, err := sshchannel.Ins().RunScript(
 		privateKey,
 		fmt.Sprintf("127.0.0.1:%d", localSSHPort),
 		`netstat -tuln | grep -E '^(tcp|udp|tcp6)' | grep LISTEN | awk '{print $4}' | awk -F: '{printf("%s\n", $NF)}'`)

@@ -3,16 +3,15 @@ package connect
 import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/exec"
-	"github.com/alibaba/kt-connect/pkg/kt/exec/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
 
 func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
-	checkSshuttleInstalled(cli.Exec().Sshuttle(), options.Debug)
+	checkSshuttleInstalled(options.Debug)
 
 	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
@@ -29,7 +28,7 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 		return err
 	}
 
-	if err = startVPNConnection(rootCtx, cli.Exec(), options.ConnectOptions, &sshuttle.SSHVPNRequest{
+	if err = startVPNConnection(rootCtx, options.ConnectOptions, &sshuttle.SSHVPNRequest{
 		RemoteSSHHost:          credential.RemoteHost,
 		RemoteSSHPKPath:        credential.PrivateKeyPath,
 		RemoteDNSServerAddress: podIP,
@@ -43,19 +42,19 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 	return setupDns(cli, options, podIP)
 }
 
-func checkSshuttleInstalled(cli sshuttle.Sshuttle, isDebug bool) {
-	if !util.CanRun(cli.Version()) {
-		err := util.RunAndWait(cli.Install(), isDebug)
+func checkSshuttleInstalled(isDebug bool) {
+	if !util.CanRun(sshuttle.Ins().Version()) {
+		err := util.RunAndWait(sshuttle.Ins().Install(), isDebug)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed find or install sshuttle")
 		}
 	}
 }
 
-func startVPNConnection(rootCtx context.Context, cli exec.CliInterface, opt *options.ConnectOptions, req *sshuttle.SSHVPNRequest) (err error) {
+func startVPNConnection(rootCtx context.Context, opt *options.ConnectOptions, req *sshuttle.SSHVPNRequest) (err error) {
 	err = util.BackgroundRun(&util.CMDContext{
 		Ctx:  rootCtx,
-		Cmd:  cli.Sshuttle().Connect(opt, req),
+		Cmd:  sshuttle.Ins().Connect(opt, req),
 		Name: "vpn(sshuttle)",
 		IsDebug: true,
 		Stop: req.Stop,

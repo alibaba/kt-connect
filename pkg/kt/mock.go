@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	cluster "github.com/alibaba/kt-connect/pkg/kt/cluster"
-	exec "github.com/alibaba/kt-connect/pkg/kt/exec"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -33,20 +32,6 @@ func NewMockCliInterface(ctrl *gomock.Controller) *MockCliInterface {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockCliInterface) EXPECT() *MockCliInterfaceMockRecorder {
 	return m.recorder
-}
-
-// Exec mocks base method.
-func (m *MockCliInterface) Exec() exec.CliInterface {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exec")
-	ret0, _ := ret[0].(exec.CliInterface)
-	return ret0
-}
-
-// Exec indicates an expected call of Exec.
-func (mr *MockCliInterfaceMockRecorder) Exec() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exec", reflect.TypeOf((*MockCliInterface)(nil).Exec))
 }
 
 // Kubernetes mocks base method.

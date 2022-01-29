@@ -8,5 +8,14 @@ type DnsConfig interface {
 	RestoreDnsServer()
 }
 
-// Cli ...
+// Cli the singleton type
 type Cli struct {}
+var instance *Cli
+
+// Ins get singleton instance
+func Ins() *Cli {
+	if instance == nil {
+		instance = &Cli{}
+	}
+	return instance
+}

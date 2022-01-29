@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
+	"github.com/alibaba/kt-connect/pkg/kt/dns"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
@@ -96,7 +97,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 			log.Debug().Msg("Cleaning up hosts file ...")
 			util.DropHosts()
 			log.Debug().Msg("Cleaning DNS configuration ...")
-			cli.Exec().DnsConfig().RestoreDnsServer()
+			dns.Ins().RestoreDnsServer()
 		}
 	}
 	return nil

@@ -3,6 +3,7 @@ package dnsserver
 import (
 	"errors"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"net"
 	"os"
 	"strconv"
@@ -12,18 +13,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// dns server
-type server struct {
+// DnsServer nds server
+type DnsServer struct {
 	config *dns.ClientConfig
 }
-
-// constants
-const resolvFile = "/etc/resolv.conf"
 
 // Start setup dns server
 func Start() {
 	srv := NewDNSServerDefault()
-	srv.Net = os.Getenv(common.EnvVarDnsProtocol)
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to serve")
@@ -33,12 +30,13 @@ func Start() {
 
 // NewDNSServerDefault create default dns server
 func NewDNSServerDefault() (srv *dns.Server) {
-	srv = &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
-	config, _ := dns.ClientConfigFromFile(resolvFile)
-
-	srv.Handler = &server{config}
-
-	log.Info().Msgf("Successful load local " + resolvFile)
+	config, _ := dns.ClientConfigFromFile(util.ResolvConf)
+	srv = &dns.Server{
+		Addr: ":" + strconv.Itoa(53),
+		Net: os.Getenv(common.EnvVarDnsProtocol),
+		Handler: &DnsServer{config},
+	}
+	log.Info().Msgf("Successful load local resolv conf")
 	for _, server := range config.Servers {
 		log.Info().Msgf("Success load nameserver %s", server)
 	}
@@ -49,7 +47,7 @@ func NewDNSServerDefault() (srv *dns.Server) {
 }
 
 // ServeDNS query DNS record
-func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
+func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg := dns.Msg{}
 	msg.SetReply(req)
 	msg.Authoritative = true
@@ -63,7 +61,7 @@ func (s *server) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 }
 
 // Simulate kubernetes-like dns look up logic
-func (s *server) query(req *dns.Msg) (rr []dns.RR) {
+func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 	if len(req.Question) <= 0 {
 		log.Error().Msgf("No dns Msg question available")
 		return
@@ -99,7 +97,7 @@ func (s *server) query(req *dns.Msg) (rr []dns.RR) {
 }
 
 // get all domains need to lookup
-func (s *server) fetchAllPossibleDomains(name string) []string {
+func (s *DnsServer) fetchAllPossibleDomains(name string) []string {
 	count := strings.Count(name, ".")
 	domainSuffixes := s.getSuffixes()
 	var namesToLookup []string
@@ -149,7 +147,7 @@ func (s *server) fetchAllPossibleDomains(name string) []string {
 }
 
 // Convert short domain to fully qualified domain name
-func (s *server) getSuffixes() (suffixes []string) {
+func (s *DnsServer) getSuffixes() (suffixes []string) {
 	for _, s := range s.config.Search {
 		// @see https://github.com/alibaba/kt-connect/issues/153
 		if strings.HasSuffix(s, ".") {
@@ -162,7 +160,7 @@ func (s *server) getSuffixes() (suffixes []string) {
 }
 
 // Get upstream dns server address
-func (s *server) getResolveServer() (address string, err error) {
+func (s *DnsServer) getResolveServer() (address string, err error) {
 	if len(s.config.Servers) <= 0 {
 		return "", errors.New("error: no dns server available")
 	}
@@ -171,7 +169,7 @@ func (s *server) getResolveServer() (address string, err error) {
 }
 
 // Look for domain record from upstream dns server
-func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
+func (s *DnsServer) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
 	address, err := s.getResolveServer()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch upstream dns")
@@ -216,7 +214,7 @@ func (s *server) exchange(domain string, qtype uint16, name string) (rr []dns.RR
 }
 
 // Replace fully qualified domain name with short domain name in dns answer
-func (s *server) convertAnswer(name, inClusterName string, actual dns.RR) (rr dns.RR, err error) {
+func (s *DnsServer) convertAnswer(name, inClusterName string, actual dns.RR) (rr dns.RR, err error) {
 	if name != inClusterName {
 		var parts []string
 		parts = append(parts, name)

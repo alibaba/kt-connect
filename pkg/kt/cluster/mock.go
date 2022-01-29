@@ -177,6 +177,21 @@ func (mr *MockKubernetesInterfaceMockRecorder) GetAllDeploymentInNamespace(ctx, 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllDeploymentInNamespace", reflect.TypeOf((*MockKubernetesInterface)(nil).GetAllDeploymentInNamespace), ctx, namespace)
 }
 
+// GetAllNamespaces mocks base method.
+func (m *MockKubernetesInterface) GetAllNamespaces(ctx context.Context) (*v10.NamespaceList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllNamespaces", ctx)
+	ret0, _ := ret[0].(*v10.NamespaceList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllNamespaces indicates an expected call of GetAllNamespaces.
+func (mr *MockKubernetesInterfaceMockRecorder) GetAllNamespaces(ctx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllNamespaces", reflect.TypeOf((*MockKubernetesInterface)(nil).GetAllNamespaces), ctx)
+}
+
 // GetAllServiceInNamespace mocks base method.
 func (m *MockKubernetesInterface) GetAllServiceInNamespace(ctx context.Context, namespace string) (*v10.ServiceList, error) {
 	m.ctrl.T.Helper()
@@ -487,13 +502,13 @@ func (mr *MockKubernetesInterfaceMockRecorder) WaitPodTerminate(ctx, name, names
 }
 
 // WatchService mocks base method.
-func (m *MockKubernetesInterface) WatchService(name, namespace string, f func(*v10.Service)) {
+func (m *MockKubernetesInterface) WatchService(name, namespace string, fAdd, fDel, fMod func(*v10.Service)) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "WatchService", name, namespace, f)
+	m.ctrl.Call(m, "WatchService", name, namespace, fAdd, fDel, fMod)
 }
 
 // WatchService indicates an expected call of WatchService.
-func (mr *MockKubernetesInterfaceMockRecorder) WatchService(name, namespace, f interface{}) *gomock.Call {
+func (mr *MockKubernetesInterfaceMockRecorder) WatchService(name, namespace, fAdd, fDel, fMod interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchService", reflect.TypeOf((*MockKubernetesInterface)(nil).WatchService), name, namespace, f)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchService", reflect.TypeOf((*MockKubernetesInterface)(nil).WatchService), name, namespace, fAdd, fDel, fMod)
 }

@@ -2,8 +2,8 @@ package dns
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"os/exec"
 )

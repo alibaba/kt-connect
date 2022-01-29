@@ -14,9 +14,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// SSHChannel ssh channel
-type SSHChannel struct{}
-
 type SocksLogger struct {}
 
 func (s SocksLogger) Println(v ...interface{}) {
@@ -24,7 +21,7 @@ func (s SocksLogger) Println(v ...interface{}) {
 }
 
 // StartSocks5Proxy start socks5 proxy
-func (c *SSHChannel) StartSocks5Proxy(privateKey string, sshAddress, socks5Address string) (err error) {
+func (c *Cli) StartSocks5Proxy(privateKey string, sshAddress, socks5Address string) (err error) {
 	conn, err := connection(privateKey, sshAddress)
 	if err != nil {
 		return err
@@ -41,7 +38,7 @@ func (c *SSHChannel) StartSocks5Proxy(privateKey string, sshAddress, socks5Addre
 }
 
 // RunScript run the script on remote host.
-func (c *SSHChannel) RunScript(privateKey string, sshAddress, script string) (result string, err error) {
+func (c *Cli) RunScript(privateKey string, sshAddress, script string) (result string, err error) {
 	conn, err := connection(privateKey, sshAddress)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
@@ -68,7 +65,7 @@ func (c *SSHChannel) RunScript(privateKey string, sshAddress, script string) (re
 }
 
 // ForwardRemoteToLocal forward remote request to local
-func (c *SSHChannel) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
+func (c *Cli) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint, localEndpoint string) (err error) {
 	conn, err := connection(privateKey, sshAddress)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to create ssh tunnel")

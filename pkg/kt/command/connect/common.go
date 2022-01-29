@@ -6,6 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/dns"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -22,7 +23,10 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 		opt.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), opt.Namespace,
 			dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain)
 	} else if opt.ConnectOptions.DnsMode == common.DnsModePodDns {
-		return cli.Exec().DnsConfig().SetDnsServer(cli.Kubernetes(), []string{shadowPodIp}, opt.Debug)
+		return dns.Ins().SetDnsServer(cli.Kubernetes(), []string{shadowPodIp}, opt.Debug)
+	} else if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+		go dns.SetupLocalDns(shadowPodIp)
+		return dns.Ins().SetDnsServer(cli.Kubernetes(), []string{common.Localhost}, opt.Debug)
 	}
 	return nil
 }
