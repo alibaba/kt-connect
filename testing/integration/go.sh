@@ -4,6 +4,7 @@ NS="kt-integration-test"
 SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.5"
 ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v0.2.5"
 DOCKER_HOST="ubuntu@192.168.64.2"
+DNS_MODE="hosts"
 CONNECT_MODE="tun2socks"
 EXCHANGE_MODE="scale"
 MESH_MODE="auto"
@@ -153,10 +154,9 @@ function prepare_cluster() {
 function test_ktctl_connect() {
   # Test connect
   if [ "${DOCKER_HOST}" == "" ]; then
-    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --dnsMode ${DNS_MODE} >/tmp/kt-it-connect.log 2>&1 &
   else
-    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --excludeIps ${DOCKER_HOST#*@} \
-      >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --dnsMode ${DNS_MODE} --excludeIps ${DOCKER_HOST#*@} >/tmp/kt-it-connect.log 2>&1 &
   fi
   wait_for_pod kt-connect 1
   check_job connect
@@ -212,7 +212,7 @@ function test_ktctl_mesh() {
   check_pid_file mesh
 
   verify "without-header" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect demo v1"
-  verify "with-header" "KT-VERSION:ci" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
+  verify "with-header" "VERSION:ci" "http://tomcat.${NS}.svc.cluster.local:8080" "kt-connect local v2"
   success "ktctl mesh test passed"
 }
 
