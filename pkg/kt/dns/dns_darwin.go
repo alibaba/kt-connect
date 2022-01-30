@@ -37,7 +37,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 
 		preferredDnsInfo := strings.Split(dnsServers[0], ":")
 		dnsIp := preferredDnsInfo[0]
-		dnsPort := strconv.Itoa(common.RemoteDnsPort)
+		dnsPort := strconv.Itoa(common.StandardDnsPort)
 		if len(preferredDnsInfo) > 1 {
 			dnsPort = preferredDnsInfo[1]
 		}

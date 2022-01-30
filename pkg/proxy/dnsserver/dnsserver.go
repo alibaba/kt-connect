@@ -25,7 +25,7 @@ func Start() {
 	for _, domain := range config.Search {
 		log.Info().Msgf("Load search %s", domain)
 	}
-	err := common.SetupDnsServer(&DnsServer{config}, common.RemoteDnsPort, os.Getenv(common.EnvVarDnsProtocol))
+	err := common.SetupDnsServer(&DnsServer{config}, common.StandardDnsPort, os.Getenv(common.EnvVarDnsProtocol))
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to start dns server")
 	}
@@ -73,7 +73,7 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 	rr = make([]dns.RR, 0)
 	domainsToLookup := s.fetchAllPossibleDomains(name)
 	for _, domain := range domainsToLookup {
-		r, err := s.exchange(domain, qtype, name)
+		r, err := s.lookup(domain, qtype, name)
 		if err == nil {
 			rr = r
 			break
@@ -155,7 +155,7 @@ func (s *DnsServer) getResolveServer() (address string, err error) {
 }
 
 // Look for domain record from upstream dns server
-func (s *DnsServer) exchange(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
+func (s *DnsServer) lookup(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
 	address, err := s.getResolveServer()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch upstream dns")

@@ -20,7 +20,7 @@ func SetupLocalDns(upstreamIp string, dnsPort int) error {
 	}()
 	go func() {
 		success <-common.SetupDnsServer(&DnsServer{
-			upstreamAddr: fmt.Sprintf("%s:%d", upstreamIp, common.RemoteDnsPort),
+			upstreamAddr: fmt.Sprintf("%s:%d", upstreamIp, common.StandardDnsPort),
 		}, dnsPort, "udp")
 	}()
 	return <-success
