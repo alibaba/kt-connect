@@ -30,7 +30,9 @@ func SetupLocalDns(upstreamIp string, dnsPort int) error {
 func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg := (&dns.Msg{}).SetReply(req)
 	msg.Authoritative = true
-	res, err := common.NsLookup(req.Question[0].Name, req.Question[0].Qtype, "tcp", s.upstreamAddr)
+	domain := req.Question[0].Name
+	log.Debug().Msgf("Looking up domain %s", domain)
+	res, err := common.NsLookup(domain, req.Question[0].Qtype, "tcp", s.upstreamAddr)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to lookup %s", req.Question[0].Name)
 		return

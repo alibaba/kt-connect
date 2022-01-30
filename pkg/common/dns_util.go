@@ -3,11 +3,13 @@ package common
 import (
 	"fmt"
 	"github.com/miekg/dns"
+	"github.com/rs/zerolog/log"
 	"strconv"
 )
 
 // SetupDnsServer start dns server on specified port
 func SetupDnsServer(dnsHandler dns.Handler, port int, net string) error {
+	log.Info().Msgf("Creating %s dns on port %d", net, port)
 	srv := &dns.Server{
 		Addr: ":" + strconv.Itoa(port),
 		Net: net,

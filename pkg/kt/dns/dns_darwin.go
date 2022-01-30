@@ -22,7 +22,7 @@ const (
 )
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, isDebug bool) error {
+func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDebug bool) error {
 	dnsSignal := make(chan error)
 	if err := util.CreateDirIfNotExist(resolverDir); err != nil {
 		log.Error().Err(err).Msgf("Failed to create resolver dir")
@@ -35,7 +35,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 			return
 		}
 
-		preferredDnsInfo := strings.Split(dnsServers[0], ":")
+		preferredDnsInfo := strings.Split(dnsServer, ":")
 		dnsIp := preferredDnsInfo[0]
 		dnsPort := strconv.Itoa(common.StandardDnsPort)
 		if len(preferredDnsInfo) > 1 {

@@ -20,7 +20,7 @@ const (
 )
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, isDebug bool) error {
+func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDebug bool) error {
 	dnsSignal := make(chan error)
 	go func() {
 		f, err := os.Open(util.ResolvConf)
@@ -32,7 +32,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 
 		var buf bytes.Buffer
 
-		sample := fmt.Sprintf("%s %s ", util.FieldNameserver, strings.Split(dnsServers[0], ":")[0])
+		sample := fmt.Sprintf("%s %s ", util.FieldNameserver, strings.Split(dnsServer, ":")[0])
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -52,10 +52,8 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 		}
 
 		// Add nameserver and comment to resolv.conf
-		for _, nameserver := range dnsServers {
-			nameserverIp := strings.Split(nameserver, ":")[0]
-			buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserverIp, commentKtAdded))
-		}
+		nameserverIp := strings.Split(dnsServer, ":")[0]
+		buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserverIp, commentKtAdded))
 
 		stat, _ := f.Stat()
 		dnsSignal <-ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
