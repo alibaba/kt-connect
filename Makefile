@@ -31,29 +31,30 @@ check:
 	go vet ./pkg/... ./cmd/...
 
 # build ktctl
-build-ktctl:
+ktctl:
 	GOARCH=amd64 GOOS=linux go build -o "artifacts/ktctl/ktctl-linux" ./cmd/ktctl
 	GOARCH=amd64 GOOS=darwin go build -o "artifacts/ktctl/ktctl-darwin" ./cmd/ktctl
 	GOARCH=amd64 GOOS=windows go build -o "artifacts/ktctl/ktctl-windows" ./cmd/ktctl
 
 # build this image before shadow
-build-shadow-base:
+shadow-base:
 	docker build -t $(PREFIX)/$(SHADOW_BASE_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile_base .
 
 # build shadow
-build-shadow:
+shadow:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-linux-amd64 cmd/shadow/main.go
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile .
 
-# build router
-build-router:
-	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
-	docker build -t $(PREFIX)/$(ROUTER_IMAGE):$(TAG) -f build/docker/router/Dockerfile .
-
 # dlv for debug
-build-shadow-dlv:
+shadow-dlv:
 	make build-shadow TAG=latest
 	scripts/build-shadow-dlv
 
+# build router
+router:
+	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
+	docker build -t $(PREFIX)/$(ROUTER_IMAGE):$(TAG) -f build/docker/router/Dockerfile .
+
+# clean up workspace
 clean:
 	rm -fr artifacts dist
