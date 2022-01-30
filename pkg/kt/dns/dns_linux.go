@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 )
@@ -20,45 +24,22 @@ const (
 )
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDebug bool) error {
+func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) error {
 	dnsSignal := make(chan error)
 	go func() {
-		f, err := os.Open(util.ResolvConf)
-		if err != nil {
-			dnsSignal <-err
-			return
+		if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+			dnsSignal <-setupIptables(opt)
+		} else {
+			dnsSignal <-setupResolvConf(dnsServer)
 		}
-		defer f.Close()
 
-		var buf bytes.Buffer
-
-		sample := fmt.Sprintf("%s %s ", util.FieldNameserver, strings.Split(dnsServer, ":")[0])
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.HasPrefix(line, sample) {
-				// required dns server already been added
-				dnsSignal <-nil
-				return
-			} else if strings.HasPrefix(line, util.FieldNameserver) {
-				buf.WriteString("#")
-				buf.WriteString(line)
-				buf.WriteString(commentKtRemoved)
-				buf.WriteString("\n")
+		defer func() {
+			if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+				restoreIptables()
 			} else {
-				buf.WriteString(line)
-				buf.WriteString("\n")
+				restoreResolvConf()
 			}
-		}
-
-		// Add nameserver and comment to resolv.conf
-		nameserverIp := strings.Split(dnsServer, ":")[0]
-		buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserverIp, commentKtAdded))
-
-		stat, _ := f.Stat()
-		dnsSignal <-ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
-
-		defer s.RestoreDnsServer()
+		}()
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		<-sigCh
@@ -68,6 +49,68 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDe
 
 // RestoreDnsServer remove the nameservers added by ktctl
 func (s *Cli) RestoreDnsServer() {
+	restoreResolvConf()
+	restoreIptables()
+}
+
+func setupResolvConf(dnsServer string) error {
+	f, err := os.Open(util.ResolvConf)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	var buf bytes.Buffer
+
+	sample := fmt.Sprintf("%s %s ", util.FieldNameserver, strings.Split(dnsServer, ":")[0])
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, sample) {
+			// required dns server already been added
+			return nil
+		} else if strings.HasPrefix(line, util.FieldNameserver) {
+			buf.WriteString("#")
+			buf.WriteString(line)
+			buf.WriteString(commentKtRemoved)
+			buf.WriteString("\n")
+		} else {
+			buf.WriteString(line)
+			buf.WriteString("\n")
+		}
+	}
+
+	// Add nameserver and comment to resolv.conf
+	nameserverIp := strings.Split(dnsServer, ":")[0]
+	buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserverIp, commentKtAdded))
+
+	stat, _ := f.Stat()
+	return ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
+}
+
+func setupIptables(opt *options.DaemonOptions) error {
+	// run command: iptables --table nat --insert OUTPUT --proto udp --dport 53 --jump REDIRECT --to-ports 10053
+	if err := util.RunAndWait(exec.Command("iptables",
+		"--table",
+		"nat",
+		"--insert",
+		"OUTPUT",
+		"--proto",
+		"udp",
+		"--dport",
+		strconv.Itoa(common.StandardDnsPort),
+		"--jump",
+		"REDIRECT",
+		"--to-ports",
+		strconv.Itoa(common.AlternativeDnsPort),
+	), opt.Debug); err != nil {
+		log.Error().Msgf("Failed to use local dns server")
+		return err
+	}
+	return nil
+}
+
+func restoreResolvConf() {
 	f, err := os.Open(util.ResolvConf)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to open resolve.conf during restoring")
@@ -96,5 +139,29 @@ func (s *Cli) RestoreDnsServer() {
 	stat, _ := f.Stat()
 	if err = ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode()); err != nil {
 		log.Error().Err(err).Msgf("Failed to write resolve.conf during restoring")
+	}
+}
+
+func restoreIptables() {
+	for {
+		// run command: iptables --table nat --delete OUTPUT --proto udp --dport 53 --jump REDIRECT --to-ports 10053
+		err := util.RunAndWait(exec.Command("iptables",
+			"--table",
+			"nat",
+			"--delete",
+			"OUTPUT",
+			"--proto",
+			"udp",
+			"--dport",
+			strconv.Itoa(common.StandardDnsPort),
+			"--jump",
+			"REDIRECT",
+			"--to-ports",
+			strconv.Itoa(common.AlternativeDnsPort),
+		), false)
+		if err != nil {
+			// no more rule left
+			break
+		}
 	}
 }

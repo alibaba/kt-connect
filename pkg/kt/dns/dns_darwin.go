@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -22,7 +23,7 @@ const (
 )
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDebug bool) error {
+func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) error {
 	dnsSignal := make(chan error)
 	if err := util.CreateDirIfNotExist(resolverDir); err != nil {
 		log.Error().Err(err).Msgf("Failed to create resolver dir")

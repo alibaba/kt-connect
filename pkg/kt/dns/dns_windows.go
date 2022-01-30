@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
@@ -11,7 +12,7 @@ import (
 )
 
 // SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDebug bool) (err error) {
+func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) (err error) {
 	// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
 	if err = util.RunAndWait(exec.Command("netsh",
 		"interface",
@@ -21,7 +22,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, isDe
 		fmt.Sprintf("name=%s", common.TunNameWin),
 		"source=static",
 		fmt.Sprintf("address=%s", strings.Split(dnsServer, ":")[0]),
-	), isDebug); err != nil {
+	), opt.Debug); err != nil {
 		log.Error().Msgf("Failed to set dns server of tun device")
 		return err
 	}
