@@ -83,4 +83,8 @@ const (
 	TunNameLinux = "kt0"
 	// TunNameMac tun device name in MacOS
 	TunNameMac = "utun"
+	// RemoteDnsPort remote dns port
+	RemoteDnsPort = 53
+	// DefaultDnsPort default local dns port
+	DefaultDnsPort = 10053
 )

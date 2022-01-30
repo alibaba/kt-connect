@@ -25,7 +25,10 @@ func Start() {
 	for _, domain := range config.Search {
 		log.Info().Msgf("Load search %s", domain)
 	}
-	common.SetupDnsServer(&DnsServer{config}, 53, os.Getenv(common.EnvVarDnsProtocol))
+	err := common.SetupDnsServer(&DnsServer{config}, common.RemoteDnsPort, os.Getenv(common.EnvVarDnsProtocol))
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to start dns server")
+	}
 }
 
 // ServeDNS query DNS record

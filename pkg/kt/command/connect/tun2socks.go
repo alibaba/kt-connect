@@ -72,7 +72,7 @@ func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
 func startSocks5Connection(options *options.DaemonOptions, privateKey string) error {
 	var success = make(chan error)
 	go func() {
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 		success <-nil
 	}()
 	go func() {

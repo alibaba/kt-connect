@@ -3,22 +3,18 @@ package common
 import (
 	"fmt"
 	"github.com/miekg/dns"
-	"github.com/rs/zerolog/log"
 	"strconv"
 )
 
 // SetupDnsServer start dns server on specified port
-func SetupDnsServer(dnsHandler dns.Handler, port int, net string) {
+func SetupDnsServer(dnsHandler dns.Handler, port int, net string) error {
 	srv := &dns.Server{
 		Addr: ":" + strconv.Itoa(port),
 		Net: net,
 		Handler: dnsHandler,
 	}
-	err := srv.ListenAndServe()
-	if err != nil {
-		log.Error().Err(err).Msgf("Failed to start dns server")
-		panic(err.Error())
-	}
+	// process will hang at here
+	return srv.ListenAndServe()
 }
 
 // NsLookup query domain record, dnsServerAddr use '<ip>:<port>' format

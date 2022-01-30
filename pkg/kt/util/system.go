@@ -51,13 +51,14 @@ func KubeConfig() string {
 }
 
 // CreateDirIfNotExist create dir
-func CreateDirIfNotExist(dir string) {
+func CreateDirIfNotExist(dir string) error {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
+	return nil
 }
 
 // WritePidFile write pid to file

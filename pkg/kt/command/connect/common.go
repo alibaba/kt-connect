@@ -25,8 +25,13 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 	} else if opt.ConnectOptions.DnsMode == common.DnsModePodDns {
 		return dns.Ins().SetDnsServer(cli.Kubernetes(), []string{shadowPodIp}, opt.Debug)
 	} else if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
-		go dns.SetupLocalDns(shadowPodIp)
-		return dns.Ins().SetDnsServer(cli.Kubernetes(), []string{common.Localhost}, opt.Debug)
+		if err := dns.SetupLocalDns(shadowPodIp, common.DefaultDnsPort); err != nil {
+			log.Error().Err(err).Msgf("Failed to setup local dns server")
+			return err
+		}
+		return dns.Ins().SetDnsServer(cli.Kubernetes(), []string{
+			fmt.Sprintf("%s:%d", common.Localhost, common.DefaultDnsPort),
+		}, opt.Debug)
 	}
 	return nil
 }
