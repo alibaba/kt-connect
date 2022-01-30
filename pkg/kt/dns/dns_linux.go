@@ -32,7 +32,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 
 		var buf bytes.Buffer
 
-		sample := fmt.Sprintf("%s %s ", util.FieldNameserver, dnsServers[0])
+		sample := fmt.Sprintf("%s %s ", util.FieldNameserver, strings.Split(dnsServers[0], ":")[0])
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -53,7 +53,8 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 
 		// Add nameserver and comment to resolv.conf
 		for _, nameserver := range dnsServers {
-			buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserver, commentKtAdded))
+			nameserverIp := strings.Split(nameserver, ":")[0]
+			buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserverIp, commentKtAdded))
 		}
 
 		stat, _ := f.Stat()

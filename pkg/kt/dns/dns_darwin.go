@@ -35,11 +35,11 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServers []string, i
 			return
 		}
 
-		preferedDnsInfo := strings.Split(dnsServers[0], ":")
-		dnsIp := preferedDnsInfo[0]
+		preferredDnsInfo := strings.Split(dnsServers[0], ":")
+		dnsIp := preferredDnsInfo[0]
 		dnsPort := strconv.Itoa(common.RemoteDnsPort)
-		if len(preferedDnsInfo) > 1 {
-			dnsPort = preferedDnsInfo[1]
+		if len(preferredDnsInfo) > 1 {
+			dnsPort = preferredDnsInfo[1]
 		}
 
 		// TODO: read domain suffix from option

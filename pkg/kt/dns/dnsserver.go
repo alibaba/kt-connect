@@ -32,7 +32,7 @@ func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg.Authoritative = true
 	res, err := common.NsLookup(req.Question[0].Name, req.Question[0].Qtype, "tcp", s.upstreamAddr)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to lookup  %s", req.Question[0].Name)
+		log.Warn().Err(err).Msgf("Failed to lookup %s", req.Question[0].Name)
 		return
 	}
 	msg.Answer = res.Answer
