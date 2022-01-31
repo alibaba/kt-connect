@@ -71,12 +71,12 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(name string) string {
-	return fmt.Sprintf("%s/pk/%s%s", KtHome, name, common.PostfixRsaKey)
+	return fmt.Sprintf("%s/pk/%s%s", common.KtHome, name, common.PostfixRsaKey)
 }
 
 // CleanRsaKeys ...
 func CleanRsaKeys() {
-	dir := fmt.Sprintf("%s/pk/", KtHome)
+	dir := fmt.Sprintf("%s/pk/", common.KtHome)
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), common.PostfixRsaKey) {

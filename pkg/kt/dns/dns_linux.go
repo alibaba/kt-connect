@@ -54,7 +54,7 @@ func (s *Cli) RestoreDnsServer() {
 }
 
 func setupResolvConf(dnsServer string) error {
-	f, err := os.Open(util.ResolvConf)
+	f, err := os.Open(common.ResolvConf)
 	if err != nil {
 		return err
 	}
@@ -62,14 +62,14 @@ func setupResolvConf(dnsServer string) error {
 
 	var buf bytes.Buffer
 
-	sample := fmt.Sprintf("%s %s ", util.FieldNameserver, strings.Split(dnsServer, ":")[0])
+	sample := fmt.Sprintf("%s %s ", common.FieldNameserver, strings.Split(dnsServer, ":")[0])
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, sample) {
 			// required dns server already been added
 			return nil
-		} else if strings.HasPrefix(line, util.FieldNameserver) {
+		} else if strings.HasPrefix(line, common.FieldNameserver) {
 			buf.WriteString("#")
 			buf.WriteString(line)
 			buf.WriteString(commentKtRemoved)
@@ -82,10 +82,10 @@ func setupResolvConf(dnsServer string) error {
 
 	// Add nameserver and comment to resolv.conf
 	nameserverIp := strings.Split(dnsServer, ":")[0]
-	buf.WriteString(fmt.Sprintf("%s %s%s\n", util.FieldNameserver, nameserverIp, commentKtAdded))
+	buf.WriteString(fmt.Sprintf("%s %s%s\n", common.FieldNameserver, nameserverIp, commentKtAdded))
 
 	stat, _ := f.Stat()
-	return ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode())
+	return ioutil.WriteFile(common.ResolvConf, buf.Bytes(), stat.Mode())
 }
 
 func setupIptables(opt *options.DaemonOptions) error {
@@ -111,7 +111,7 @@ func setupIptables(opt *options.DaemonOptions) error {
 }
 
 func restoreResolvConf() {
-	f, err := os.Open(util.ResolvConf)
+	f, err := os.Open(common.ResolvConf)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to open resolve.conf during restoring")
 		return
@@ -137,7 +137,7 @@ func restoreResolvConf() {
 	}
 
 	stat, _ := f.Stat()
-	if err = ioutil.WriteFile(util.ResolvConf, buf.Bytes(), stat.Mode()); err != nil {
+	if err = ioutil.WriteFile(common.ResolvConf, buf.Bytes(), stat.Mode()); err != nil {
 		log.Error().Err(err).Msgf("Failed to write resolve.conf during restoring")
 	}
 }

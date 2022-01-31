@@ -110,8 +110,8 @@ func NewDaemonOptions(version string) *DaemonOptions {
 		KubeConfig: util.KubeConfig(),
 		RuntimeOptions: &RuntimeOptions{
 			Version:  version,
-			UserHome: util.UserHome,
-			AppHome:  util.KtHome,
+			UserHome: common.UserHome,
+			AppHome:  common.KtHome,
 		},
 		ConnectOptions:  &ConnectOptions{},
 		ExchangeOptions: &ExchangeOptions{},

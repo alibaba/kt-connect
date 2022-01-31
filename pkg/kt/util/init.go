@@ -1,6 +1,8 @@
 package util
 
+import "github.com/alibaba/kt-connect/pkg/common"
+
 func init() {
-	CreateDirIfNotExist(KtHome)
-	FixFileOwner(KtHome)
+	CreateDirIfNotExist(common.KtHome)
+	FixFileOwner(common.KtHome)
 }

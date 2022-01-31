@@ -3,7 +3,6 @@ package dnsserver
 import (
 	"errors"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
 	"net"
@@ -18,7 +17,7 @@ type DnsServer struct {
 
 // Start setup dns server
 func Start() {
-	config, _ := dns.ClientConfigFromFile(util.ResolvConf)
+	config, _ := dns.ClientConfigFromFile(common.ResolvConf)
 	for _, server := range config.Servers {
 		log.Info().Msgf("Load nameserver %s", server)
 	}

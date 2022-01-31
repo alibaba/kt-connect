@@ -93,7 +93,7 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 
 func getEnvs(opt *options.ConnectOptions) map[string]string {
 	envs := make(map[string]string)
-	localDomains := util.GetLocalDomains()
+	localDomains := dns.GetLocalDomains()
 	if localDomains != "" {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains

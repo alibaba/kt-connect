@@ -3,6 +3,7 @@ package util
 import (
 	"bufio"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
@@ -137,7 +138,7 @@ func updateHostsFile(lines []string) error {
 			continue
 		}
 		continualEmptyLine = l == ""
-		fmt.Fprintf(w, "%s%s", l, eol)
+		fmt.Fprintf(w, "%s%s", l, common.Eol)
 	}
 
 	err = w.Flush()
@@ -149,7 +150,7 @@ func updateHostsFile(lines []string) error {
 
 func getHostsPath() string {
 	if os.Getenv("HOSTS_PATH") == "" {
-		return os.ExpandEnv(filepath.FromSlash(hostsFilePath))
+		return os.ExpandEnv(filepath.FromSlash(common.HostsFilePath))
 	} else {
 		return os.Getenv("HOSTS_PATH")
 	}

@@ -33,3 +33,13 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt 
 func (s *Cli) RestoreDnsServer() {
 	// Windows dns config is set on device, so explicit removal is unnecessary
 }
+
+// GetLocalDomains ...
+func GetLocalDomains() string {
+	return ""
+}
+
+// GetDnsServer get dns server of the default interface
+func GetDnsServer() string {
+	return ""
+}

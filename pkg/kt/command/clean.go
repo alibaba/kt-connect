@@ -104,11 +104,11 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 }
 
 func (action *Action) cleanPidFiles() {
-	files, _ := ioutil.ReadDir(util.KtHome)
+	files, _ := ioutil.ReadDir(common.KtHome)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".pid") && !util.IsProcessExist(action.toPid(f.Name())) {
 			log.Info().Msgf("Removing pid file %s", f.Name())
-			if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
+			if err := os.Remove(fmt.Sprintf("%s/%s", common.KtHome, f.Name())); err != nil {
 				log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
 			}
 		}
