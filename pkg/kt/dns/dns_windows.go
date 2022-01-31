@@ -14,7 +14,7 @@ import (
 // SetDnsServer set dns server records
 func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) (err error) {
 	// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
-	if err = util.RunAndWait(exec.Command("netsh",
+	if _, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",
 		"ip",
 		"set",
@@ -22,7 +22,7 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt 
 		fmt.Sprintf("name=%s", common.TunNameWin),
 		"source=static",
 		fmt.Sprintf("address=%s", strings.Split(dnsServer, ":")[0]),
-	), opt.Debug); err != nil {
+	)); err != nil {
 		log.Error().Msgf("Failed to set dns server of tun device")
 		return err
 	}

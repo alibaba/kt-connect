@@ -22,7 +22,7 @@ func (s *Cli) CheckContext() (err error) {
 }
 
 // SetRoute let specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
+func (s *Cli) SetRoute(ipRange []string) error {
 	var lastErr error
 	for i, r := range ipRange {
 		ip, mask, err := toIpAndMask(r)
@@ -32,7 +32,7 @@ func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 		}
 		if i == 0 {
 			// run command: netsh interface ip set address KtConnectTunnel static 172.20.0.1 255.255.0.0
-			err = util.RunAndWait(exec.Command("netsh",
+			_, _, err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
 				"set",
@@ -41,10 +41,10 @@ func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 				"static",
 				tunIp,
 				mask,
-			), isDebug)
+			))
 		} else {
 			// run command: netsh interface ip add address KtConnectTunnel 172.21.0.1 255.255.0.0
-			err = util.RunAndWait(exec.Command("netsh",
+			_, _, err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ip",
 				"add",
@@ -52,7 +52,7 @@ func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 				s.GetName(),
 				tunIp,
 				mask,
-			), isDebug)
+			))
 		}
 		if err != nil {
 			log.Warn().Msgf("Failed to add ip addr %s to tun device", tunIp)
@@ -60,13 +60,13 @@ func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 			continue
 		}
 		// run command: route add 172.20.0.0 mask 255.255.0.0 172.20.0.1
-		err = util.RunAndWait(exec.Command("route",
+		_, _, err = util.RunAndWait(exec.Command("route",
 			"add",
 			ip,
 			"mask",
 			mask,
 			tunIp,
-		), isDebug)
+		))
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
 			lastErr = err

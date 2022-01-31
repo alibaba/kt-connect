@@ -90,7 +90,7 @@ func setupResolvConf(dnsServer string) error {
 
 func setupIptables(opt *options.DaemonOptions) error {
 	// run command: iptables --table nat --insert OUTPUT --proto udp --dport 53 --jump REDIRECT --to-ports 10053
-	if err := util.RunAndWait(exec.Command("iptables",
+	if _, _, err := util.RunAndWait(exec.Command("iptables",
 		"--table",
 		"nat",
 		"--insert",
@@ -103,7 +103,7 @@ func setupIptables(opt *options.DaemonOptions) error {
 		"REDIRECT",
 		"--to-ports",
 		strconv.Itoa(common.AlternativeDnsPort),
-	), opt.Debug); err != nil {
+	)); err != nil {
 		log.Error().Msgf("Failed to use local dns server")
 		return err
 	}
@@ -145,7 +145,7 @@ func restoreResolvConf() {
 func restoreIptables() {
 	for {
 		// run command: iptables --table nat --delete OUTPUT --proto udp --dport 53 --jump REDIRECT --to-ports 10053
-		err := util.RunAndWait(exec.Command("iptables",
+		_, _, err := util.RunAndWait(exec.Command("iptables",
 			"--table",
 			"nat",
 			"--delete",
@@ -158,7 +158,7 @@ func restoreIptables() {
 			"REDIRECT",
 			"--to-ports",
 			strconv.Itoa(common.AlternativeDnsPort),
-		), false)
+		))
 		if err != nil {
 			// no more rule left
 			break

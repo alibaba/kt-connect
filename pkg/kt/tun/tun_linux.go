@@ -14,15 +14,15 @@ func (s *Cli) CheckContext() error {
 }
 
 // SetRoute let specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
+func (s *Cli) SetRoute(ipRange []string) error {
 	// run command: ip link set dev kt0 up
-	err := util.RunAndWait(exec.Command("ip",
+	_, _, err := util.RunAndWait(exec.Command("ip",
 		"link",
 		"set",
 		"dev",
 		s.GetName(),
 		"up",
-	), isDebug)
+	))
 	if err != nil {
 		log.Error().Msgf("Failed to set tun device up")
 		return err
@@ -30,13 +30,13 @@ func (s *Cli) SetRoute(ipRange []string, isDebug bool) error {
 	var lastErr error
 	for _, r := range ipRange {
 		// run command: ip route add 10.96.0.0/16 dev kt0
-		err = util.RunAndWait(exec.Command("ip",
+		_, _, err = util.RunAndWait(exec.Command("ip",
 			"route",
 			"add",
 			r,
 			"dev",
 			s.GetName(),
-		), isDebug)
+		))
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
 			lastErr = err

@@ -1,10 +1,11 @@
 package util
 
 import (
+	"bytes"
 	"context"
 	"io"
-	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -15,33 +16,43 @@ type CMDContext struct {
 	Ctx     context.Context
 	Cmd     *exec.Cmd
 	Name    string
-	IsDebug bool
 	Stop    chan struct{} // notify parent current Cmd occur error
 }
 
 // RunAndWait run cmd
-func RunAndWait(cmd *exec.Cmd, isDebug bool) error {
+func RunAndWait(cmd *exec.Cmd) (string, string, error) {
 	ctx := &CMDContext{
 		Cmd:     cmd,
 		Name:    cmd.Path,
-		IsDebug: isDebug,
 	}
-	if err := runCmd(ctx); err != nil {
-		return err
+	outbuf, errbuf, err := runCmd(ctx)
+	if err != nil {
+		return outbuf.String(), errbuf.String(), err
 	}
-	return cmd.Wait()
+	err = cmd.Wait()
+	return outbuf.String(), errbuf.String(), err
 }
 
 // BackgroundRun run cmd in background with context
 func BackgroundRun(cmdCtx *CMDContext) error {
-	if err := runCmd(cmdCtx); err != nil {
+	outbuf, errbuf, err := runCmd(cmdCtx)
+	if err != nil {
 		return err
 	}
 	go func() {
-		if err := cmdCtx.Cmd.Wait(); err != nil {
-			log.Info().Msgf("Background process %s exit abnormally: %s", cmdCtx.Name, err.Error())
+		err = cmdCtx.Cmd.Wait()
+		stdout := strings.TrimSpace(outbuf.String())
+		stderr := strings.TrimSpace(errbuf.String())
+		if len(stdout) > 0 {
+			log.Debug().Msgf("[STDOUT] %s", stdout)
 		}
-		log.Info().Msgf("Finished %s with context", cmdCtx.Name)
+		if len(stderr) > 0 {
+			log.Debug().Msgf("[STDERR] %s", stderr)
+		}
+		if err != nil {
+			log.Info().Msgf("Background task %s exit abnormally: %s", cmdCtx.Name, err.Error())
+		}
+		log.Info().Msgf("Task %s completed", cmdCtx.Name)
 	}()
 	return nil
 }
@@ -51,23 +62,24 @@ func CanRun(cmd *exec.Cmd) bool {
 	return cmd.Run() == nil
 }
 
-func runCmd(cmdCtx *CMDContext) error {
-	var err error
+func runCmd(cmdCtx *CMDContext) (*bytes.Buffer, *bytes.Buffer, error) {
 	cmd := cmdCtx.Cmd
-	log.Debug().Msgf("Child, name = %s, cmd.Args = %+v", cmdCtx.Name, cmd.Args)
+	log.Debug().Msgf("Task name = %s, cmd.Args = %+v", cmdCtx.Name, cmd.Args)
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
-	if cmdCtx.IsDebug && stdout != nil && stderr != nil {
-		go io.Copy(os.Stdout, stdout)
-		go io.Copy(os.Stderr, stderr)
+	outbuf := bytes.NewBufferString("")
+	errbuf := bytes.NewBufferString("")
+	if stdout != nil && stderr != nil {
+		go io.Copy(outbuf, stdout)
+		go io.Copy(errbuf, stderr)
 	}
 
-	if err = cmd.Start(); err != nil {
-		return err
+	if err := cmd.Start(); err != nil {
+		return outbuf, errbuf, err
 	}
 
-	time.Sleep(time.Duration(100) * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	pid := cmd.Process.Pid
 	log.Debug().Msgf("Start %s at pid: %d", cmdCtx.Name, pid)
 	// will kill the process when parent cancel
@@ -77,10 +89,10 @@ func runCmd(cmdCtx *CMDContext) error {
 			case <-cmdCtx.Ctx.Done():
 				err2 := cmd.Process.Kill()
 				if err2 != nil {
-					log.Debug().Msgf("Process %d competed", pid)
+					log.Debug().Msgf("Task %s(%d) killed", cmdCtx.Name, pid)
 				}
 			}
 		}
 	}()
-	return nil
+	return outbuf, errbuf, nil
 }

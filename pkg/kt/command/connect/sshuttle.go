@@ -11,7 +11,7 @@ import (
 )
 
 func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
-	checkSshuttleInstalled(options.Debug)
+	checkSshuttleInstalled()
 
 	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
 	if err != nil {
@@ -42,9 +42,9 @@ func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
 	return setupDns(cli, options, podIP)
 }
 
-func checkSshuttleInstalled(isDebug bool) {
+func checkSshuttleInstalled() {
 	if !util.CanRun(sshuttle.Ins().Version()) {
-		err := util.RunAndWait(sshuttle.Ins().Install(), isDebug)
+		_, _, err := util.RunAndWait(sshuttle.Ins().Install())
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed find or install sshuttle")
 		}
@@ -56,7 +56,6 @@ func startVPNConnection(rootCtx context.Context, opt *options.ConnectOptions, re
 		Ctx:  rootCtx,
 		Cmd:  sshuttle.Ins().Connect(opt, req),
 		Name: "vpn(sshuttle)",
-		IsDebug: true,
 		Stop: req.Stop,
 	})
 	return err

@@ -4,7 +4,7 @@ package tun
 type Tunnel interface {
 	CheckContext() error
 	ToSocks(sockAddr string, isDebug bool) error
-	SetRoute(ipRange []string, isDebug bool) error
+	SetRoute(ipRange []string) error
 	GetName() string
 }
 
