@@ -97,7 +97,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 			log.Debug().Msg("Cleaning up hosts file ...")
 			util.DropHosts()
 			log.Debug().Msg("Cleaning DNS configuration ...")
-			dns.Ins().RestoreDnsServer()
+			dns.Ins().RestoreNameServer()
 		}
 	}
 	return nil

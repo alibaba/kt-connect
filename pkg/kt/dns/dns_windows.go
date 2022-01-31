@@ -8,11 +8,12 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
-// SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) (err error) {
+// SetNameServer set dns server records
+func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) (err error) {
 	// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
 	if _, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",
@@ -29,8 +30,8 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt 
 	return nil
 }
 
-// RestoreDnsServer ...
-func (s *Cli) RestoreDnsServer() {
+// RestoreNameServer ...
+func (s *Cli) RestoreNameServer() {
 	// Windows dns config is set on device, so explicit removal is unnecessary
 }
 
@@ -39,7 +40,19 @@ func GetLocalDomains() string {
 	return ""
 }
 
-// GetDnsServer get dns server of the default interface
-func GetDnsServer() string {
-	return ""
+// GetNameServer get dns server of the default interface
+func GetNameServer() string {
+	// run command: netsh interface ip show dnsservers
+	if out, _, err := util.RunAndWait(exec.Command("netsh",
+		"interface",
+		"ip",
+		"show",
+		"dnsservers",
+	)); err != nil {
+		log.Error().Msgf("Failed to get dns server")
+		return ""
+	} else {
+		r, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")
+		return r.FindString(out)
+	}
 }

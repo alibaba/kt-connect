@@ -23,8 +23,8 @@ const (
 	commentKtRemoved = " # Removed by KtConnect"
 )
 
-// SetDnsServer set dns server records
-func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) error {
+// SetNameServer set dns server records
+func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) error {
 	dnsSignal := make(chan error)
 	go func() {
 		if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
@@ -47,8 +47,8 @@ func (s *Cli) SetDnsServer(k cluster.KubernetesInterface, dnsServer string, opt 
 	return <-dnsSignal
 }
 
-// RestoreDnsServer remove the nameservers added by ktctl
-func (s *Cli) RestoreDnsServer() {
+// RestoreNameServer remove the nameservers added by ktctl
+func (s *Cli) RestoreNameServer() {
 	restoreResolvConf()
 	restoreIptables()
 }

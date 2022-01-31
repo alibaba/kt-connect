@@ -9,7 +9,8 @@ import (
 )
 
 type DnsServer struct {
-	upstreamAddr string
+	clusterDnsAddr string
+	upstreamDnsAddr string
 }
 
 func SetupLocalDns(upstreamIp string, dnsPort int) error {
@@ -20,7 +21,8 @@ func SetupLocalDns(upstreamIp string, dnsPort int) error {
 	}()
 	go func() {
 		success <-common.SetupDnsServer(&DnsServer{
-			upstreamAddr: fmt.Sprintf("%s:%d", upstreamIp, common.StandardDnsPort),
+			clusterDnsAddr: fmt.Sprintf("%s:%d", upstreamIp, common.StandardDnsPort),
+			upstreamDnsAddr: GetNameServer(),
 		}, dnsPort, "udp")
 	}()
 	return <-success
@@ -32,7 +34,7 @@ func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg.Authoritative = true
 	domain := req.Question[0].Name
 	log.Debug().Msgf("Looking up domain %s", domain)
-	res, err := common.NsLookup(domain, req.Question[0].Qtype, "tcp", s.upstreamAddr)
+	res, err := common.NsLookup(domain, req.Question[0].Qtype, "tcp", s.clusterDnsAddr)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Failed to lookup %s", req.Question[0].Name)
 		return

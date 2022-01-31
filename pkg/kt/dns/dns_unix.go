@@ -34,8 +34,8 @@ func GetLocalDomains() string {
 	return strings.Join(localDomains, ",")
 }
 
-// GetDnsServer get primary dns server
-func GetDnsServer() string {
+// GetNameServer get primary dns server
+func GetNameServer() string {
 	f, err := os.Open(common.ResolvConf)
 	if err != nil {
 		return ""
