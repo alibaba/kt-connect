@@ -22,7 +22,7 @@ func SetupLocalDns(upstreamIp string, dnsPort int) error {
 	go func() {
 		success <-common.SetupDnsServer(&DnsServer{
 			clusterDnsAddr: fmt.Sprintf("%s:%d", upstreamIp, common.StandardDnsPort),
-			upstreamDnsAddr: GetNameServer(),
+			upstreamDnsAddr: fmt.Sprintf("%s:%d", GetNameServer(), common.StandardDnsPort),
 		}, dnsPort, "udp")
 	}()
 	return <-success
@@ -36,10 +36,17 @@ func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	log.Debug().Msgf("Looking up domain %s", domain)
 	res, err := common.NsLookup(domain, req.Question[0].Qtype, "tcp", s.clusterDnsAddr)
 	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to lookup %s", req.Question[0].Name)
-		return
+		log.Warn().Err(err).Msgf("Failed to lookup %s in cluster dns (%s)", domain, s.clusterDnsAddr)
+	} else if len(res.Answer) > 0 {
+		msg.Answer = res.Answer
+	} else {
+		res, err = common.NsLookup(domain, req.Question[0].Qtype, "udp", s.upstreamDnsAddr)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to lookup %s in upstream dns (%s)", domain, s.upstreamDnsAddr)
+		} else if len(res.Answer) > 0 {
+			msg.Answer = res.Answer
+		}
 	}
-	msg.Answer = res.Answer
 	if err = w.WriteMsg(msg); err != nil {
 		log.Warn().Err(err).Msgf("Failed to reply dns request")
 	}
