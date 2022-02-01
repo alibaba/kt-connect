@@ -25,9 +25,10 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	))
 	if err != nil {
 		log.Error().Msgf("Failed to set tun device up")
-		return err
+		return AllRouteFailError{err}
 	}
 	var lastErr error
+	anyRouteOk := false
 	for _, r := range ipRange {
 		// run command: ip route add 10.96.0.0/16 dev kt0
 		_, _, err = util.RunAndWait(exec.Command("ip",
@@ -40,7 +41,12 @@ func (s *Cli) SetRoute(ipRange []string) error {
 		if err != nil {
 			log.Warn().Msgf("Failed to set route %s to tun device", r)
 			lastErr = err
+		} else {
+			anyRouteOk = true
 		}
+	}
+	if !anyRouteOk {
+		return AllRouteFailError{lastErr}
 	}
 	return lastErr
 }

@@ -73,6 +73,14 @@ func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
 
 	err = tun.Ins().SetRoute(cidrs)
 	if err != nil {
+		if tun.IsAllRouteFailError(err) {
+			if strings.Contains(err.(tun.AllRouteFailError).OriginalError().Error(), "exit status") {
+				log.Warn().Msgf(err.Error())
+			} else {
+				log.Warn().Err(err.(tun.AllRouteFailError).OriginalError()).Msgf(err.Error())
+			}
+			return err
+		}
 		if strings.Contains(err.Error(), "exit status") {
 			log.Warn().Msgf("Some route rule is not setup properly")
 		} else {
