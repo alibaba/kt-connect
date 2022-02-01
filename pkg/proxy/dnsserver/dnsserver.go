@@ -34,11 +34,8 @@ func Start() {
 func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg := (&dns.Msg{}).SetReply(req)
 	msg.Authoritative = true
-	// Stuff must be in the answer section
-	for _, a := range s.query(req) {
-		log.Info().Msgf("Answer: %v", a)
-		msg.Answer = append(msg.Answer, a)
-	}
+	msg.Answer = s.query(req)
+	log.Info().Msgf("Answer: %v", msg.Answer)
 
 	if err := w.WriteMsg(msg); err != nil {
 		log.Error().Err(err).Msgf("Failed to response")
@@ -52,12 +49,14 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 		return
 	}
 
-	qtype := req.Question[0].Qtype
 	name := req.Question[0].Name
-	if !strings.HasSuffix(name, ".") {
-		// This should never happen, just in case
-		name = name + "."
+	qtype := req.Question[0].Qtype
+	answer := common.ReadCache(name, qtype)
+	if len(answer) > 0 {
+		log.Debug().Msgf("Found domain %s in cache", name)
+		return answer
 	}
+
 	localDomains := os.Getenv(common.EnvVarLocalDomains)
 	if localDomains != "" {
 		for _, d := range strings.Split(localDomains, ",") {
@@ -74,6 +73,7 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 	for _, domain := range domainsToLookup {
 		r, err := s.lookup(domain, qtype, name)
 		if err == nil {
+			common.WriteCache(name, qtype, r)
 			rr = r
 			break
 		}
@@ -160,7 +160,7 @@ func (s *DnsServer) lookup(domain string, qtype uint16, name string) (rr []dns.R
 		log.Error().Err(err).Msgf("Failed to fetch upstream dns")
 		return
 	}
-	log.Info().Msgf("Resolving domain %s via upstream %s", domain, address)
+	log.Debug().Msgf("Resolving domain %s via upstream %s", domain, address)
 
 	res, err := common.NsLookup(domain, qtype, "udp", address)
 	if err != nil {

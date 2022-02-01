@@ -5,7 +5,18 @@ import (
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
 	"strconv"
+	"sync"
+	"time"
 )
+
+type NsEntry struct {
+	answer []dns.RR
+	timestamp int64
+}
+
+// domain to ip cache
+var nsCache = sync.Map{}
+const nsExpire = 60
 
 // SetupDnsServer start dns server on specified port
 func SetupDnsServer(dnsHandler dns.Handler, port int, net string) error {
@@ -36,4 +47,25 @@ func NsLookup(domain string, qtype uint16, net, dnsServerAddr string) (*dns.Msg,
 		return nil, fmt.Errorf("response code %d", res.Rcode)
 	}
 	return res, nil
+}
+
+// ReadCache fetch from cache
+func ReadCache(domain string, qtype uint16) []dns.RR {
+	if record, ok := nsCache.Load(getCacheKey(domain, qtype)); ok && notExpired(record.(NsEntry).timestamp) {
+		return record.(NsEntry).answer
+	}
+	return []dns.RR{}
+}
+
+// WriteCache record to cache
+func WriteCache(domain string, qtype uint16, answer []dns.RR) {
+	nsCache.Store(getCacheKey(domain, qtype), NsEntry{answer, time.Now().Unix()})
+}
+
+func notExpired(timestamp int64) bool {
+	return time.Now().Unix() - timestamp < nsExpire
+}
+
+func getCacheKey(domain string, qtype uint16) string {
+	return fmt.Sprintf("%s:%d", domain, qtype)
 }
