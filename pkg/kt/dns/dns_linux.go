@@ -27,19 +27,20 @@ const (
 func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) error {
 	dnsSignal := make(chan error)
 	go func() {
-		if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
-			dnsSignal <-setupIptables(opt)
-		} else {
-			dnsSignal <-setupResolvConf(dnsServer)
-		}
-
 		defer func() {
+			restoreResolvConf()
 			if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
 				restoreIptables()
-			} else {
-				restoreResolvConf()
 			}
 		}()
+		if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+			if err := setupIptables(opt); err != nil {
+				dnsSignal <-err
+				return
+			}
+		}
+		dnsSignal <-setupResolvConf(common.VirtualDnsAddress)
+
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		<-sigCh
@@ -89,7 +90,7 @@ func setupResolvConf(dnsServer string) error {
 }
 
 func setupIptables(opt *options.DaemonOptions) error {
-	// run command: iptables --table nat --insert OUTPUT --proto udp --dport 53 --jump REDIRECT --to-ports 10053
+	// run command: iptables --table nat --insert OUTPUT --proto udp --dest 127.0.0.1/32 --dport 53 --jump REDIRECT --to-ports 10053
 	if _, _, err := util.RunAndWait(exec.Command("iptables",
 		"--table",
 		"nat",
@@ -97,6 +98,8 @@ func setupIptables(opt *options.DaemonOptions) error {
 		"OUTPUT",
 		"--proto",
 		"udp",
+		"--dest",
+		fmt.Sprintf("%s/32", common.VirtualDnsAddress),
 		"--dport",
 		strconv.Itoa(common.StandardDnsPort),
 		"--jump",
@@ -144,7 +147,7 @@ func restoreResolvConf() {
 
 func restoreIptables() {
 	for {
-		// run command: iptables --table nat --delete OUTPUT --proto udp --dport 53 --jump REDIRECT --to-ports 10053
+		// run command: iptables --table nat --delete OUTPUT --proto udp --dest 127.0.0.1/32 --dport 53 --jump REDIRECT --to-ports 10053
 		_, _, err := util.RunAndWait(exec.Command("iptables",
 			"--table",
 			"nat",
@@ -152,6 +155,8 @@ func restoreIptables() {
 			"OUTPUT",
 			"--proto",
 			"udp",
+			"--dest",
+			fmt.Sprintf("%s/32", common.VirtualDnsAddress),
 			"--dport",
 			strconv.Itoa(common.StandardDnsPort),
 			"--jump",

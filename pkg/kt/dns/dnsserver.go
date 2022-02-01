@@ -3,7 +3,6 @@ package dns
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
 	"time"
@@ -42,12 +41,14 @@ func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 func query(req *dns.Msg, clusterDnsAddr, upstreamDnsAddr string) []dns.RR {
 	domain := req.Question[0].Name
 	qtype := req.Question[0].Qtype
-	res, err := common.NsLookup(domain, qtype, "tcp", clusterDnsAddr)
+
 	answer := common.ReadCache(domain, qtype)
 	if answer != nil {
 		log.Debug().Msgf("Found domain %s (%d) in cache", domain, qtype)
 		return answer
 	}
+
+	res, err := common.NsLookup(domain, qtype, "tcp", clusterDnsAddr)
 	if err != nil && !common.IsDomainNotExist(err) {
 		log.Warn().Err(err).Msgf("Failed to lookup %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
 	} else if res != nil && len(res.Answer) > 0 {
@@ -55,11 +56,7 @@ func query(req *dns.Msg, clusterDnsAddr, upstreamDnsAddr string) []dns.RR {
 		common.WriteCache(domain, qtype, res.Answer)
 		return res.Answer
 	} else {
-		protocol := "udp"
-		if util.IsLinux() {
-			protocol = "tcp"
-		}
-		res, err = common.NsLookup(domain, qtype, protocol, upstreamDnsAddr)
+		res, err = common.NsLookup(domain, qtype, "udp", upstreamDnsAddr)
 		if err != nil {
 			if common.IsDomainNotExist(err) {
 				log.Debug().Msgf(err.Error())
