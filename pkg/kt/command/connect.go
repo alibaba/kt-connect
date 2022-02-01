@@ -51,7 +51,8 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	} else if options.ConnectOptions.Mode == common.ConnectModeShuttle {
 		err = connect.BySshuttle(cli, options)
 	} else {
-		err = fmt.Errorf("invalid connect mode: '%s'", options.ConnectOptions.Mode)
+		err = fmt.Errorf("invalid connect mode: '%s', supportted mode are %s, %s", options.ConnectOptions.Mode,
+			common.ConnectModeTun2Socks, common.ConnectModeShuttle)
 	}
 	if err != nil {
 		return err
