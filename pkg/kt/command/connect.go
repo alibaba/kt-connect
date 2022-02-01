@@ -37,6 +37,9 @@ func NewConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, acti
 
 // Connect connect vpn to kubernetes cluster
 func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
+	if err := checkOptions(options); err != nil {
+		return err
+	}
 	if pid := util.GetDaemonRunning(common.ComponentConnect); pid > 0 {
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
@@ -73,3 +76,9 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	return nil
 }
 
+func checkOptions(opts *options.DaemonOptions) error {
+	if opts.ConnectOptions.Mode == common.ConnectModeTun2Socks && opts.ConnectOptions.DnsMode == common.DnsModePodDns {
+		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", common.DnsModePodDns, common.ConnectModeTun2Socks)
+	}
+	return nil
+}
