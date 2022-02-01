@@ -54,7 +54,7 @@ func ReadCache(domain string, qtype uint16) []dns.RR {
 	if record, ok := nsCache.Load(getCacheKey(domain, qtype)); ok && notExpired(record.(NsEntry).timestamp) {
 		return record.(NsEntry).answer
 	}
-	return []dns.RR{}
+	return nil
 }
 
 // WriteCache record to cache
