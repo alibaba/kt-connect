@@ -29,6 +29,8 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
 		}
+		// must setup name server before change dns config
+		// otherwise the upstream name server address will be incorrect in linux
 		if err := dns.SetupLocalDns(shadowPodIp, dnsPort); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err

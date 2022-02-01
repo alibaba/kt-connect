@@ -89,6 +89,4 @@ const (
 	StandardDnsPort = 53
 	// AlternativeDnsPort alternative port for local dns
 	AlternativeDnsPort = 10053
-	// VirtualDnsAddress a fake dns address
-	VirtualDnsAddress = "10.0.0.0"
 )

@@ -5,9 +5,15 @@ package dns
 import (
 	"bufio"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
 	"os"
 	"strings"
 )
+
+// listen address of systemd-resolved
+const resolvedAddr = "127.0.0.53"
+const resolvedConf = "/run/systemd/resolve/resolv.conf"
 
 // GetLocalDomains get domain search postfixes
 func GetLocalDomains() string {
@@ -36,7 +42,16 @@ func GetLocalDomains() string {
 
 // GetNameServer get primary dns server
 func GetNameServer() string {
-	f, err := os.Open(common.ResolvConf)
+	ns := fetchNameServerInConf(common.ResolvConf)
+	if util.IsLinux() && ns == resolvedAddr {
+		log.Debug().Msgf("Using systemd-resolved")
+		return fetchNameServerInConf(resolvedConf)
+	}
+	return ns
+}
+
+func fetchNameServerInConf(resolvConf string) string {
+	f, err := os.Open(resolvConf)
 	if err != nil {
 		return ""
 	}

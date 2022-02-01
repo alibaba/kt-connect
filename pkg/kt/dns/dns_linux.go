@@ -39,7 +39,7 @@ func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string, opt
 				return
 			}
 		}
-		dnsSignal <-setupResolvConf(common.VirtualDnsAddress)
+		dnsSignal <-setupResolvConf(dnsServer)
 
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
@@ -99,7 +99,7 @@ func setupIptables(opt *options.DaemonOptions) error {
 		"--proto",
 		"udp",
 		"--dest",
-		fmt.Sprintf("%s/32", common.VirtualDnsAddress),
+		fmt.Sprintf("%s/32", common.Localhost),
 		"--dport",
 		strconv.Itoa(common.StandardDnsPort),
 		"--jump",
@@ -156,7 +156,7 @@ func restoreIptables() {
 			"--proto",
 			"udp",
 			"--dest",
-			fmt.Sprintf("%s/32", common.VirtualDnsAddress),
+			fmt.Sprintf("%s/32", common.Localhost),
 			"--dport",
 			strconv.Itoa(common.StandardDnsPort),
 			"--jump",
