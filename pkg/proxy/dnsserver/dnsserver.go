@@ -53,7 +53,7 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 	qtype := req.Question[0].Qtype
 	answer := common.ReadCache(name, qtype)
 	if answer != nil {
-		log.Debug().Msgf("Found domain %s in cache", name)
+		log.Debug().Msgf("Found domain %s (%d) in cache", name, qtype)
 		return answer
 	}
 
@@ -66,18 +66,18 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 			}
 		}
 	}
-	log.Info().Msgf("Looking up %s", name)
+	log.Info().Msgf("Looking up %s (%d)", name, qtype)
 
 	rr = make([]dns.RR, 0)
 	domainsToLookup := s.fetchAllPossibleDomains(name)
 	for _, domain := range domainsToLookup {
 		r, err := s.lookup(domain, qtype, name)
 		if err == nil {
-			common.WriteCache(name, qtype, r)
 			rr = r
 			break
 		}
 	}
+	common.WriteCache(name, qtype, rr)
 	return
 }
 
@@ -89,7 +89,7 @@ func (s *DnsServer) fetchAllPossibleDomains(name string) []string {
 	switch count {
 	case 0:
 		// invalid domain, dns name always ends with a '.'
-		log.Warn().Msgf("Received invalid domain query: " + name)
+		log.Warn().Msgf("Received invalid domain query %s", name)
 	case 1:
 		if len(domainSuffixes) > 0 {
 			// service name
@@ -160,14 +160,14 @@ func (s *DnsServer) lookup(domain string, qtype uint16, name string) (rr []dns.R
 		log.Error().Err(err).Msgf("Failed to fetch upstream dns")
 		return
 	}
-	log.Debug().Msgf("Resolving domain %s via upstream %s", domain, address)
+	log.Debug().Msgf("Resolving domain %s (%d) via upstream %s", domain, qtype, address)
 
 	res, err := common.NsLookup(domain, qtype, "udp", address)
 	if err != nil {
 		if common.IsDomainNotExist(err) {
 			log.Debug().Msgf(err.Error())
 		} else {
-			log.Warn().Err(err).Msgf("Failed to answer name %s (type %d) query for %s", name, qtype, domain)
+			log.Warn().Err(err).Msgf("Failed to answer name %s (%d) query for %s", name, qtype, domain)
 		}
 		return
 	}
