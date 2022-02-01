@@ -76,14 +76,14 @@ func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string
 	return hosts
 }
 
-func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.DaemonOptions) (string, string, *util.SSHCredential, error) {
+func getOrCreateShadow(kubernetes cluster.KubernetesInterface, opt *options.DaemonOptions) (string, string, *util.SSHCredential, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
-	if options.ConnectOptions.SharedShadow {
+	if opt.ConnectOptions.SharedShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
 	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
-		shadowPodName, options, getLabels(shadowPodName), make(map[string]string), getEnvs(options.ConnectOptions))
+		shadowPodName, opt, getLabels(shadowPodName), make(map[string]string), getEnvs(opt))
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -91,17 +91,22 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, options *options.
 	return endPointIP, podName, credential, nil
 }
 
-func getEnvs(opt *options.ConnectOptions) map[string]string {
+func getEnvs(opt *options.DaemonOptions) map[string]string {
 	envs := make(map[string]string)
 	localDomains := dns.GetLocalDomains()
 	if localDomains != "" {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
-	if opt.DnsMode == common.DnsModeLocalDns {
+	if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
 		envs[common.EnvVarDnsProtocol] = "tcp"
 	} else {
 		envs[common.EnvVarDnsProtocol] = "udp"
+	}
+	if opt.Debug {
+		envs[common.EnvVarLogLevel] = "debug"
+	} else {
+		envs[common.EnvVarLogLevel] = "info"
 	}
 	return envs
 }

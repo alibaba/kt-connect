@@ -164,12 +164,19 @@ func (s *DnsServer) lookup(domain string, qtype uint16, name string) (rr []dns.R
 
 	res, err := common.NsLookup(domain, qtype, "udp", address)
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to answer name %s after %d query for %s", name, qtype, domain)
+		if common.IsDomainNotExist(err) {
+			log.Debug().Msgf(err.Error())
+		} else {
+			log.Warn().Err(err).Msgf("Failed to answer name %s (type %d) query for %s", name, qtype, domain)
+		}
 		return
 	}
 
+	if len(res.Answer) == 0 {
+		log.Debug().Msgf("Empty answer")
+	}
 	for _, item := range res.Answer {
-		log.Info().Msgf("Response: %s", item.String())
+		log.Debug().Msgf("Response: %s", item.String())
 		r, errInLoop := s.convertAnswer(name, domain, item)
 		if errInLoop != nil {
 			err = errInLoop

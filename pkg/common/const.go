@@ -24,6 +24,8 @@ const (
 	EnvVarLocalDomains = "LOCAL_DOMAIN"
 	// EnvVarDnsProtocol environment variable for shadow pod dns protocol
 	EnvVarDnsProtocol = "DNS_PROTOCOL"
+	// EnvVarLogLevel environment variable for shadow pod log level
+	EnvVarLogLevel = "LOG_LEVEL"
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
 	// KtName label used for wait shadow pod ready
