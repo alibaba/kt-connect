@@ -44,6 +44,9 @@ func recoverGlobalHostsAndProxy(opts *options.DaemonOptions) {
 }
 
 func cleanLocalFiles(opts *options.DaemonOptions) {
+	if opts.RuntimeOptions.Component == "" {
+		return
+	}
 	pidFile := fmt.Sprintf("%s/%s-%d.pid", common.KtHome, opts.RuntimeOptions.Component, os.Getpid())
 	if err := os.Remove(pidFile); os.IsNotExist(err) {
 		log.Debug().Msgf("Pid file %s not exist", pidFile)

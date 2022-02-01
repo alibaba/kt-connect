@@ -42,7 +42,7 @@ func NsLookup(domain string, qtype uint16, net, dnsServerAddr string) (*dns.Msg,
 		return nil, err
 	}
 	if res.Rcode == dns.RcodeNameError {
-		return nil, DomainNotExistError{domain}
+		return nil, DomainNotExistError{name: domain, qtype: qtype}
 	} else if res.Rcode != dns.RcodeSuccess {
 		return nil, fmt.Errorf("response code %d", res.Rcode)
 	}

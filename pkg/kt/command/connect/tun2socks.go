@@ -15,24 +15,25 @@ import (
 	"time"
 )
 
-func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
-	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
+func ByTun2Socks(cli kt.CliInterface, opt *options.DaemonOptions) error {
+	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), opt)
 	if err != nil {
 		return err
 	}
+	go activePodRoute(cli, opt, podName)
 
-	_, _, err = tunnel.ForwardSSHTunnelToLocal(options, podName, options.ConnectOptions.SSHPort)
+	_, _, err = tunnel.ForwardSSHTunnelToLocal(opt, podName, opt.ConnectOptions.SSHPort)
 	if err != nil {
 		return err
 	}
-	if err = startSocks5Connection(options, credential.PrivateKeyPath); err != nil {
+	if err = startSocks5Connection(opt, credential.PrivateKeyPath); err != nil {
 		return err
 	}
 
-	if options.ConnectOptions.DisableTunDevice {
-		showSetupSocksMessage(options.ConnectOptions.SocksPort)
-		if strings.HasPrefix(options.ConnectOptions.DnsMode, common.DnsModeHosts) {
-			return setupDns(cli, options, podIP)
+	if opt.ConnectOptions.DisableTunDevice {
+		showSetupSocksMessage(opt.ConnectOptions.SocksPort)
+		if strings.HasPrefix(opt.ConnectOptions.DnsMode, common.DnsModeHosts) {
+			return setupDns(cli, opt, podIP)
 		} else {
 			return nil
 		}
@@ -40,19 +41,27 @@ func ByTun2Socks(cli kt.CliInterface, options *options.DaemonOptions) error {
 		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
-		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", options.ConnectOptions.SocksPort)
-		if err = tun.Ins().ToSocks(socksAddr, options.Debug); err != nil {
+		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.ConnectOptions.SocksPort)
+		if err = tun.Ins().ToSocks(socksAddr, opt.Debug); err != nil {
 			return err
 		}
 		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
 
-		if !options.ConnectOptions.DisableTunRoute {
-			if err = setupTunRoute(cli, options); err != nil {
+		if !opt.ConnectOptions.DisableTunRoute {
+			if err = setupTunRoute(cli, opt); err != nil {
 				return err
 			}
 			log.Info().Msgf("Route to tun device completed")
 		}
-		return setupDns(cli, options, podIP)
+		return setupDns(cli, opt, podIP)
+	}
+}
+
+func activePodRoute(cli kt.CliInterface, opt *options.DaemonOptions, podName string) {
+	_, stderr, _ := cli.Kubernetes().ExecInPod(common.DefaultContainer, podName, opt.Namespace, *opt.RuntimeOptions,
+		"nslookup", "kubernetes.default.svc")
+	if stderr != "" {
+		log.Debug().Msgf("Pod route not ready, %s", stderr)
 	}
 }
 
