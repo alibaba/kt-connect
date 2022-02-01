@@ -40,6 +40,9 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 			return err
 		}
 		return dns.Ins().SetNameServer(cli.Kubernetes(), fmt.Sprintf("%s:%d", common.Localhost, dnsPort), opt)
+	} else {
+		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.ConnectOptions.DnsMode,
+			common.DnsModeLocalDns, common.DnsModePodDns, common.DnsModeHosts)
 	}
 	return nil
 }
