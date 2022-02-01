@@ -1,4 +1,4 @@
-package util
+package dns
 
 import (
 	"github.com/stretchr/testify/require"

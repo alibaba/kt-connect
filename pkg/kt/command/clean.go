@@ -95,7 +95,7 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		util.CleanRsaKeys()
 		if util.GetDaemonRunning(common.ComponentConnect) < 0 {
 			log.Debug().Msg("Cleaning up hosts file ...")
-			util.DropHosts()
+			dns.DropHosts()
 			log.Debug().Msg("Cleaning DNS configuration ...")
 			dns.Ins().RestoreNameServer()
 		}

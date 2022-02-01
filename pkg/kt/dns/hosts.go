@@ -1,9 +1,10 @@
-package util
+package dns
 
 import (
 	"bufio"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
@@ -12,7 +13,7 @@ import (
 const ktHostsEscapeBegin = "# Kt Hosts Begin"
 const ktHostsEscapeEnd = "# Kt Hosts End"
 
-// DropHosts ...
+// DropHosts remove hosts domain record added by kt
 func DropHosts() {
 	lines, err := loadHostsFile()
 	if err != nil {
@@ -34,27 +35,25 @@ func DropHosts() {
 	}
 }
 
-// DumpHosts DumpToHosts
-func DumpHosts(hostsMap map[string]string) bool {
+// DumpHosts dump service domain to hosts file
+func DumpHosts(hostsMap map[string]string) error {
 	lines, err := loadHostsFile()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to load hosts file")
-		return false
+		return err
 	}
 	linesBeforeDump, err := dropHosts(lines)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to parse hosts file")
-		return false
+		return err
 	}
-	err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap)))
-	if err != nil {
+	if err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap))); err != nil {
 		log.Warn().Msgf("Unable to update hosts file, you may need %s permission.", getAdminUserName())
 		log.Debug().Msg(err.Error())
-		return false
-	} else {
-		log.Info().Msg("Dump hosts successful")
-		return true
+		return err
 	}
+	log.Info().Msg("Dump hosts successful")
+	return nil
 }
 
 func dropHosts(rawLines []string) ([]string, error) {
@@ -157,7 +156,7 @@ func getHostsPath() string {
 }
 
 func getAdminUserName() string {
-	if IsWindows() {
+	if util.IsWindows() {
 		return "administrator"
 	}
 	return "root"

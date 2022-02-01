@@ -74,8 +74,6 @@ type RuntimeOptions struct {
 	Replicas int32
 	// Service exposed service name
 	Service string
-	// Dump2Host whether dump2host enabled
-	Dump2Host bool
 	// RestConfig kubectl config
 	RestConfig *rest.Config
 }

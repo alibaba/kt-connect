@@ -7,6 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/dns"
 	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -37,9 +38,9 @@ func CleanupWorkspace(cli kt.CliInterface, opts *options.DaemonOptions) {
 }
 
 func recoverGlobalHostsAndProxy(opts *options.DaemonOptions) {
-	if opts.RuntimeOptions.Dump2Host {
+	if strings.HasPrefix(opts.ConnectOptions.DnsMode, common.DnsModeHosts) || opts.ConnectOptions.DnsMode == common.DnsModeLocalDns {
 		log.Debug().Msg("Dropping hosts records ...")
-		util.DropHosts()
+		dns.DropHosts()
 	}
 }
 

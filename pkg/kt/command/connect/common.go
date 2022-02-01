@@ -20,11 +20,15 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 		if len(opt.ConnectOptions.DnsMode) > pos + 1 && opt.ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.ConnectOptions.DnsMode[pos+1:]
 		}
-		opt.RuntimeOptions.Dump2Host = setupDump2Host(cli.Kubernetes(), opt.Namespace,
-			dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain)
+		if err := dumpToHost(cli.Kubernetes(), opt.Namespace, dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain); err != nil {
+			return err
+		}
 	} else if opt.ConnectOptions.DnsMode == common.DnsModePodDns {
 		return dns.Ins().SetNameServer(cli.Kubernetes(), shadowPodIp, opt)
 	} else if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+		if err := dumpCurrentNamespaceToHost(cli.Kubernetes(), opt.Namespace); err != nil {
+			return err
+		}
 		dnsPort := common.AlternativeDnsPort
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
@@ -40,7 +44,7 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 	return nil
 }
 
-func setupDump2Host(k cluster.KubernetesInterface, currentNamespace, targetNamespaces, clusterDomain string) bool {
+func dumpToHost(k cluster.KubernetesInterface, currentNamespace, targetNamespaces, clusterDomain string) error {
 	namespacesToDump := []string{currentNamespace}
 	if targetNamespaces != "" {
 		namespacesToDump = []string{}
@@ -64,7 +68,21 @@ func setupDump2Host(k cluster.KubernetesInterface, currentNamespace, targetNames
 			hosts[svc+"."+namespace+".svc."+clusterDomain] = ip
 		}
 	}
-	return util.DumpHosts(hosts)
+	return dns.DumpHosts(hosts)
+}
+
+func dumpCurrentNamespaceToHost(k cluster.KubernetesInterface, currentNamespace string) error {
+	hosts := map[string]string{}
+	log.Debug().Msgf("Search service in %s namespace ...", currentNamespace)
+	host := getServiceHosts(k, currentNamespace)
+	for svc, ip := range host {
+		if ip == "" || ip == "None" {
+			continue
+		}
+		log.Debug().Msgf("Service found: %s.%s %s", svc, currentNamespace, ip)
+		hosts[svc] = ip
+	}
+	return dns.DumpHosts(hosts)
 }
 
 func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string]string {
