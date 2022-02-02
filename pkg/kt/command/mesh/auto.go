@@ -22,12 +22,16 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 		return err
 	}
 
-	// Lock service to avoid conflict
+	// Lock service to avoid conflict, must be first step
 	err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0)
 	if err != nil {
 		return err
 	}
 	defer general.UnlockService(ctx, k, svc.Name, opts.Namespace)
+
+	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" && svc.Spec.Selector[common.KtRole] == common.RoleExchangeShadow {
+		return fmt.Errorf("another user is exchanging service '%s', cannot apply mesh", svc.Name)
+	}
 
 	// Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
