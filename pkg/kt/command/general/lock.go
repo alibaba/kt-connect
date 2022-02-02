@@ -7,19 +7,20 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	coreV1 "k8s.io/api/core/v1"
 	"time"
 )
 
 // LockTimeout 5 minutes
 const LockTimeout = 5 * 60
 
-func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) error {
+func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) (*coreV1.Service, error) {
 	if times > 10 {
-		return fmt.Errorf("failed to obtain kt lock of service %s, please try again later", serviceName)
+		return nil, fmt.Errorf("failed to obtain kt lock of service %s, please try again later", serviceName)
 	}
 	svc, err := k.GetService(ctx, serviceName, namespace)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if svc.Annotations == nil {
@@ -37,7 +38,7 @@ func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName
 		}
 	}
 	log.Info().Msgf("Service %s locked", serviceName)
-	return nil
+	return svc, nil
 }
 
 func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string) {

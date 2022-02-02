@@ -139,10 +139,12 @@ func RecoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, 
 		var selector map[string]string
 		if svc.Annotations == nil {
 			log.Warn().Msgf("No annotation found in service %s, skipping", svcName)
+			return
 		}
 		originSelector, ok := svc.Annotations[common.KtSelector]
 		if !ok {
 			log.Warn().Msgf("No selector annotation found in service %s, skipping", svcName)
+			return
 		}
 		err = json.Unmarshal([]byte(originSelector), &selector)
 		if err != nil {

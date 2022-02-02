@@ -20,7 +20,8 @@ func BySelector(ctx context.Context, k cluster.KubernetesInterface, resourceName
 	}
 
 	// Lock service to avoid conflict, must be first step
-	if err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0); err != nil {
+	svc, err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0);
+	if err != nil {
 		return err
 	}
 	defer general.UnlockService(ctx, k, svc.Name, opts.Namespace)

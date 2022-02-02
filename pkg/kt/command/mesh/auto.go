@@ -23,7 +23,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	}
 
 	// Lock service to avoid conflict, must be first step
-	err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0)
+	svc, err = general.LockService(ctx, k, svc.Name, opts.Namespace, 0)
 	if err != nil {
 		return err
 	}
