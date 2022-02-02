@@ -72,6 +72,10 @@ func cleanLocalFiles(opts *options.DaemonOptions) {
 }
 
 func recoverExchangedTarget(ctx context.Context, opts *options.DaemonOptions, k cluster.KubernetesInterface) {
+	if opts.RuntimeOptions.Origin == "" {
+		// process exit before target exchanged
+		return
+	}
 	if opts.ExchangeOptions.Mode == common.ExchangeModeScale {
 		log.Info().Msgf("Recovering origin deployment %s", opts.RuntimeOptions.Origin)
 		err := k.ScaleTo(ctx, opts.RuntimeOptions.Origin, opts.Namespace, &opts.RuntimeOptions.Replicas)

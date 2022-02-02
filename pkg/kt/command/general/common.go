@@ -95,51 +95,6 @@ func ParseResourceName(resourceName string) (string, string, error) {
 	return resourceType, name, nil
 }
 
-func LockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string, times int) error {
-	if times > 10 {
-		return fmt.Errorf("failed to obtain kt lock of service %s, please try again later", serviceName)
-	}
-	svc, err := k.GetService(ctx, serviceName, namespace)
-	if err != nil {
-		return err
-	}
-
-	if svc.Annotations == nil {
-		svc.Annotations = make(map[string]string)
-	}
-	if _, ok := svc.Annotations[common.KtLock]; ok {
-		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
-		time.Sleep(3 * time.Second)
-		return LockService(ctx, k, serviceName, namespace, times + 1)
-	} else {
-		svc.Annotations[common.KtLock] = util.GetTimestamp()
-		if svc, err = k.UpdateService(ctx, svc); err != nil {
-			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
-			return LockService(ctx, k, serviceName, namespace, times + 1)
-		}
-	}
-	log.Info().Msgf("Service %s locked", serviceName)
-	return nil
-}
-
-func UnlockService(ctx context.Context, k cluster.KubernetesInterface, serviceName, namespace string) {
-	svc, err := k.GetService(ctx, serviceName, namespace)
-	if err != nil {
-		log.Warn().Err(err).Msgf("Failed to get service %s for unlock", serviceName)
-		return
-	}
-	if _, ok := svc.Annotations[common.KtLock]; ok {
-		delete(svc.Annotations, common.KtLock)
-		if _, err = k.UpdateService(ctx, svc); err != nil {
-			log.Warn().Err(err).Msgf("Failed to unlock service %s", serviceName)
-		} else {
-			log.Info().Msgf("Service %s unlocked", serviceName)
-		}
-	} else {
-		log.Info().Msgf("Service %s doesn't have lock", serviceName)
-	}
-}
-
 func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string, selector map[string]string) error {
 	svc, err := k.GetService(ctx, svcName, namespace)
 	if err != nil {

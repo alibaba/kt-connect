@@ -30,8 +30,6 @@ type ResourceToClean struct {
 	ServicesToUnlock   []string
 }
 
-const SecondsOfFiveMinutes = 5 * 60
-
 // NewCleanCommand return new connect command
 func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
 	return urfave.Command{
@@ -116,8 +114,8 @@ func (action *Action) cleanPidFiles() {
 }
 
 func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
-	lastHeartBeat, err := strconv.ParseInt(pod.Annotations[common.KtLastHeartBeat], 10, 64)
-	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	lastHeartBeat := util.ParseTimestamp(pod.Annotations[common.KtLastHeartBeat])
+	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
 		if pod.DeletionTimestamp == nil {
 			resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
@@ -141,15 +139,15 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus 
 }
 
 func (action *Action) analysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
-	lastHeartBeat, err := strconv.ParseInt(cf.Annotations[common.KtLastHeartBeat], 10, 64)
-	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	lastHeartBeat := util.ParseTimestamp(cf.Annotations[common.KtLastHeartBeat])
+	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, cf.Name)
 	}
 }
 
 func (action *Action) analysisExpiredServices(svc coreV1.Service, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
-	lastHeartBeat, err := strconv.ParseInt(svc.Annotations[common.KtLastHeartBeat], 10, 64)
-	if err == nil && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	lastHeartBeat := util.ParseTimestamp(svc.Annotations[common.KtLastHeartBeat])
+	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, svc.Name)
 	}
 }
@@ -159,11 +157,8 @@ func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *Res
 		if svc.Annotations == nil {
 			continue
 		}
-		if lock, ok := svc.Annotations[common.KtLock]; ok {
-			lockTime, err := strconv.ParseInt(lock, 10, 64)
-			if err == nil && time.Now().Unix() - lockTime > SecondsOfFiveMinutes {
-				resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
-			}
+		if lock, ok := svc.Annotations[common.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) > general.LockTimeout {
+			resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 		}
 	}
 }

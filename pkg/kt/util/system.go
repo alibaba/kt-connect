@@ -111,9 +111,18 @@ func FixFileOwner(path string) {
 	_ = os.Chown(path, uid, gid)
 }
 
-// GetTimestamp get current time stamp
+// GetTimestamp get current timestamp
 func GetTimestamp() string {
 	return strconv.FormatInt(time.Now().Unix(), 10)
+}
+
+// ParseTimestamp parse timestamp to unix time
+func ParseTimestamp(timestamp string) int64 {
+	unixTime, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return -1
+	}
+	return unixTime
 }
 
 // GetLocalUserName get current username
