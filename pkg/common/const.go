@@ -28,8 +28,8 @@ const (
 	EnvVarLogLevel = "LOG_LEVEL"
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
-	// KtName label used for wait shadow pod ready
-	KtName = "kt-name"
+	// KtTarget label used for service selecting shadow or route pod
+	KtTarget = "kt-target"
 	// KtRole label used for auto mesh roles
 	KtRole = "kt-role"
 	// KtConfig annotation used for clean up context

@@ -138,7 +138,6 @@ func getLabels(workload string) map[string]string {
 	labels := map[string]string{
 		common.ControlBy: common.KubernetesTool,
 		common.KtRole:    common.RoleConnectShadow,
-		common.KtName:    workload,
 	}
 	return labels
 }

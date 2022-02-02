@@ -20,7 +20,7 @@ func Expose(ctx context.Context, serviceName string, cli kt.CliInterface, option
 	labels := map[string]string{
 		common.ControlBy: common.KubernetesTool,
 		common.KtRole:    common.RolePreviewShadow,
-		common.KtName:    shadowPodName,
+		common.KtTarget:  util.RandomString(20),
 	}
 	annotations := map[string]string{
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),

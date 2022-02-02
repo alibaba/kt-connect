@@ -41,7 +41,7 @@ func BySelector(ctx context.Context, k cluster.KubernetesInterface, resourceName
 	shadowName := svc.Name + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleExchangeShadow,
-		common.KtName: shadowName,
+		common.KtTarget: util.RandomString(20),
 	}
 	if err = general.CreateShadowAndInbound(ctx, k, shadowName, opts.ExchangeOptions.Expose, shadowLabels, map[string]string{}, opts); err != nil {
 		return err

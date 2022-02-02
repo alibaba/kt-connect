@@ -223,7 +223,6 @@ func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[s
 	generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
 
 	annotations := map[string]string{common.KtLastHeartBeat: util.GetTimestamp()}
-	labels[common.KtName] = sshcm
 	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
 	util.SetupConfigMapHeartBeat(ctx, cli, sshcm)
 

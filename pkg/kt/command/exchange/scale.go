@@ -28,7 +28,7 @@ func ByScale(resourceName string, cli kt.CliInterface, opts *options.DaemonOptio
 
 	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opts.Namespace)
 	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, opts.ExchangeOptions.Expose,
-		getExchangeLabels(shadowPodName, app), getExchangeAnnotation(opts), opts); err != nil {
+		getExchangeLabels(app), getExchangeAnnotation(opts), opts); err != nil {
 		return err
 	}
 
@@ -47,10 +47,9 @@ func getExchangeAnnotation(opts *options.DaemonOptions) map[string]string {
 	}
 }
 
-func getExchangeLabels(workload string, origin *appV1.Deployment) map[string]string {
+func getExchangeLabels(origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
-		common.KtRole:    common.RoleExchangeShadow,
-		common.KtName:    workload,
+		common.KtRole: common.RoleExchangeShadow,
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {

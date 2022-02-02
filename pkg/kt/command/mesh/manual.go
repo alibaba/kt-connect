@@ -18,7 +18,7 @@ func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName
 
 	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
 	shadowPodName := app.Name + common.MeshPodInfix + meshVersion
-	labels := getMeshLabels(shadowPodName, meshKey, meshVersion, app)
+	labels := getMeshLabels(meshKey, meshVersion, app)
 	annotations := make(map[string]string)
 	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, opts.MeshOptions.Expose, labels, annotations, opts); err != nil {
 		return err
@@ -29,7 +29,7 @@ func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName
 	return nil
 }
 
-func getMeshLabels(workload, meshKey, meshVersion string, app *appV1.Deployment) map[string]string {
+func getMeshLabels(meshKey, meshVersion string, app *appV1.Deployment) map[string]string {
 	labels := map[string]string{}
 	if app != nil {
 		for k, v := range app.Spec.Selector.MatchLabels {
@@ -37,7 +37,6 @@ func getMeshLabels(workload, meshKey, meshVersion string, app *appV1.Deployment)
 		}
 	}
 	labels[common.KtRole] = common.RoleMeshShadow
-	labels[common.KtName] = workload
 	labels[meshKey] = meshVersion
 	return labels
 }

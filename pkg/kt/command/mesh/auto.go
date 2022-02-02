@@ -56,9 +56,10 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 
 	// Create shadow service
 	shadowName := svc.Name + common.MeshPodInfix + meshVersion
+	targetMark := util.RandomString(20)
 	shadowLabels := map[string]string{
 		common.KtRole: common.RoleMeshShadow,
-		common.KtName: shadowName,
+		common.KtTarget: targetMark,
 	}
 	if err = createShadowService(ctx, k, shadowName, ports, shadowLabels, opts); err != nil {
 		return err
@@ -69,7 +70,7 @@ func AutoMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName s
 	routerPodName := svc.Name + common.RouterPodSuffix
 	routerLabels := map[string]string{
 		common.KtRole: common.RoleRouter,
-		common.KtName: routerPodName,
+		common.KtTarget: targetMark,
 	}
 	if err = createRouter(ctx, k, routerPodName, svc.Name, ports, routerLabels, versionMark, opts); err != nil {
 		return err

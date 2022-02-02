@@ -96,8 +96,6 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 }
 
 func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (*coreV1.Pod, error) {
-	metaAndSpec.Meta.Labels[common.KtName] = metaAndSpec.Meta.Name
-
 	err := k.CreateShadowPod(ctx, metaAndSpec, sshcm, options)
 	if err != nil {
 		return nil, err
