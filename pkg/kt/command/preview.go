@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -19,7 +18,7 @@ import (
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
+func NewPreviewCommand(action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "preview",
 		Usage: "expose a local service to kubernetes cluster",
@@ -38,14 +37,14 @@ func NewPreviewCommand(cli kt.CliInterface, action ActionInterface) urfave.Comma
 			if len(opt.Get().PreviewOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
-			return action.Preview(c.Args().First(), cli)
+			return action.Preview(c.Args().First())
 		},
 	}
 }
 
 // Preview create a new service in cluster
-func (action *Action) Preview(serviceName string, cli kt.CliInterface) error {
-	ch, err := general.SetupProcess(cli, common.ComponentPreview)
+func (action *Action) Preview(serviceName string) error {
+	ch, err := general.SetupProcess(common.ComponentPreview)
 	if err != nil {
 		return err
 	}
@@ -54,14 +53,14 @@ func (action *Action) Preview(serviceName string, cli kt.CliInterface) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if err = preview.Expose(context.TODO(), serviceName, cli); err != nil {
+	if err = preview.Expose(context.TODO(), serviceName); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli)
+		general.CleanupWorkspace()
 		os.Exit(0)
 	}()
 

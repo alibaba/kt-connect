@@ -22,14 +22,14 @@ const (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string) error {
+func (s *Cli) SetNameServer(dnsServer string) error {
 	dnsSignal := make(chan error)
 	if err := util.CreateDirIfNotExist(resolverDir); err != nil {
 		log.Error().Err(err).Msgf("Failed to create resolver dir")
 		return err
 	}
 	go func() {
-		namespaces, err := k.GetAllNamespaces(context.TODO())
+		namespaces, err := cluster.Ins().GetAllNamespaces(context.TODO())
 		if err != nil {
 			dnsSignal <-err
 			return

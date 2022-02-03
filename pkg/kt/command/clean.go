@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/dns"
@@ -31,7 +30,7 @@ type ResourceToClean struct {
 }
 
 // NewCleanCommand return new connect command
-func NewCleanCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
+func NewCleanCommand(action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "clean",
 		Usage: "delete unavailing shadow pods from kubernetes cluster",
@@ -44,17 +43,17 @@ func NewCleanCommand(cli kt.CliInterface, action ActionInterface) urfave.Command
 			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
-			return action.Clean(cli)
+			return action.Clean()
 		},
 	}
 }
 
 //Clean delete unavailing shadow pods
-func (action *Action) Clean(cli kt.CliInterface) error {
+func (action *Action) Clean() error {
 	action.cleanPidFiles()
 	ctx := context.Background()
 
-	pods, cfs, svcs, err := cluster.GetKtResources(ctx, cli.Kubernetes(), opt.Get().Namespace)
+	pods, cfs, svcs, err := cluster.GetKtResources(ctx, opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -76,7 +75,7 @@ func (action *Action) Clean(cli kt.CliInterface) error {
 	for _, svc := range svcs {
 		action.analysisExpiredServices(svc, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
-	svcList, err := cli.Kubernetes().GetAllServiceInNamespace(ctx, opt.Get().Namespace)
+	svcList, err := cluster.Ins().GetAllServiceInNamespace(ctx, opt.Get().Namespace)
 	action.analysisLocked(svcList.Items, &resourceToClean)
 	if isEmpty(resourceToClean) {
 		log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
@@ -84,7 +83,7 @@ func (action *Action) Clean(cli kt.CliInterface) error {
 		if opt.Get().CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
 		} else {
-			action.cleanResource(ctx, resourceToClean, cli.Kubernetes(), opt.Get().Namespace)
+			action.cleanResource(ctx, resourceToClean, opt.Get().Namespace)
 		}
 	}
 
@@ -163,44 +162,44 @@ func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *Res
 	}
 }
 
-func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, k cluster.KubernetesInterface, namespace string) {
+func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, namespace string) {
 	log.Info().Msgf("Deleting %d unavailing kt pods", len(r.PodsToDelete))
 	for _, name := range r.PodsToDelete {
-		err := k.RemovePod(ctx, name, namespace)
+		err := cluster.Ins().RemovePod(ctx, name, namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to delete pods %s", name)
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
-		err := k.RemoveConfigMap(ctx, name, namespace)
+		err := cluster.Ins().RemoveConfigMap(ctx, name, namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to delete config map %s", name)
 		}
 	}
 	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
-		err := k.ScaleTo(ctx, name, namespace, &replica)
+		err := cluster.Ins().ScaleTo(ctx, name, namespace, &replica)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
-		err := k.RemoveService(ctx, name, namespace)
+		err := cluster.Ins().RemoveService(ctx, name, namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to delete service %s", name)
 		}
 	}
 	log.Info().Msgf("Recovering %d meshed services", len(r.ServicesToRecover))
 	for _, name := range r.ServicesToRecover {
-		general.RecoverOriginalService(ctx, k, name, namespace)
+		general.RecoverOriginalService(ctx, name, namespace)
 	}
 	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
 	for _, name := range r.ServicesToUnlock {
-		if app, err := k.GetService(ctx, name, namespace); err == nil {
+		if app, err := cluster.Ins().GetService(ctx, name, namespace); err == nil {
 			delete(app.Annotations, common.KtLock)
-			_, err = k.UpdateService(ctx, app)
+			_, err = cluster.Ins().UpdateService(ctx, app)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to lock service %s", name)
 			}

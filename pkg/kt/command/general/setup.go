@@ -3,7 +3,6 @@ package general
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -18,22 +17,22 @@ import (
 )
 
 // SetupProcess write pid file and print setup message
-func SetupProcess(cli kt.CliInterface, componentName string) (chan os.Signal, error) {
+func SetupProcess(componentName string) (chan os.Signal, error) {
 	opt.Get().RuntimeOptions.Component = componentName
 	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeOptions.Version, os.Getpid(), runtime.GOOS)
-	ch := setupCloseHandler(cli)
+	ch := setupCloseHandler()
 	err := util.WritePidFile(componentName, ch)
 	return ch, err
 }
 
 // SetupCloseHandler registry close handler
-func setupCloseHandler(cli kt.CliInterface) (ch chan os.Signal) {
+func setupCloseHandler() (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-ch
 		log.Info().Msgf("Process is gonna close")
-		CleanupWorkspace(cli)
+		CleanupWorkspace()
 		os.Exit(0)
 	}()
 	return

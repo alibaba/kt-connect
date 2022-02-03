@@ -15,12 +15,12 @@ import (
 	"time"
 )
 
-func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, shadowPodName, portsToExpose string,
+func CreateShadowAndInbound(ctx context.Context, shadowPodName, portsToExpose string,
 	labels, annotations map[string]string) error {
 
 	podLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, k, shadowPodName, podLabels, annotations, envs)
+	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, shadowPodName, podLabels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 	return nil
 }
 
-func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface, resourceName, namespace string) (*coreV1.Service, error) {
+func GetServiceByResourceName(ctx context.Context, resourceName, namespace string) (*coreV1.Service, error) {
 	resourceType, name, err := ParseResourceName(resourceName)
 	if err != nil {
 		return nil, err
@@ -41,21 +41,21 @@ func GetServiceByResourceName(ctx context.Context, k cluster.KubernetesInterface
 	case "deploy":
 		fallthrough
 	case "deployment":
-		app, err2 := k.GetDeployment(ctx, name, namespace)
+		app, err2 := cluster.Ins().GetDeployment(ctx, name, namespace)
 		if err2 != nil {
 			return nil, err2
 		}
-		return getServiceByDeployment(ctx, k, app, namespace)
+		return getServiceByDeployment(ctx, app, namespace)
 	case "svc":
 		fallthrough
 	case "service":
-		return k.GetService(ctx, name, namespace)
+		return cluster.Ins().GetService(ctx, name, namespace)
 	default:
 		return nil, fmt.Errorf("invalid resource type: %s", resourceType)
 	}
 }
 
-func GetDeploymentByResourceName(ctx context.Context, k cluster.KubernetesInterface, resourceName, namespace string) (*appV1.Deployment, error) {
+func GetDeploymentByResourceName(ctx context.Context, resourceName, namespace string) (*appV1.Deployment, error) {
 	resourceType, name, err := ParseResourceName(resourceName)
 	if err != nil {
 		return nil, err
@@ -65,15 +65,15 @@ func GetDeploymentByResourceName(ctx context.Context, k cluster.KubernetesInterf
 	case "deploy":
 		fallthrough
 	case "deployment":
-		return k.GetDeployment(ctx, name, namespace)
+		return cluster.Ins().GetDeployment(ctx, name, namespace)
 	case "svc":
 		fallthrough
 	case "service":
-		svc, err2 := k.GetService(ctx, name, namespace)
+		svc, err2 := cluster.Ins().GetService(ctx, name, namespace)
 		if err2 != nil {
 			return nil, err2
 		}
-		return getDeploymentByService(ctx, k, svc, namespace)
+		return getDeploymentByService(ctx, svc, namespace)
 	default:
 		return nil, fmt.Errorf("invalid resource type: %s", resourceType)
 	}
@@ -94,8 +94,8 @@ func ParseResourceName(resourceName string) (string, string, error) {
 	return resourceType, name, nil
 }
 
-func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string, selector map[string]string) error {
-	svc, err := k.GetService(ctx, svcName, namespace)
+func UpdateServiceSelector(ctx context.Context, svcName, namespace string, selector map[string]string) error {
+	svc, err := cluster.Ins().GetService(ctx, svcName, namespace)
 	if err != nil {
 		return err
 	}
@@ -121,22 +121,22 @@ func UpdateServiceSelector(ctx context.Context, k cluster.KubernetesInterface, s
 
 	if isServiceChanged(svc, selector, marshaledSelector) {
 		svc.Spec.Selector = selector
-		if _, err = k.UpdateService(ctx, svc); err != nil {
+		if _, err = cluster.Ins().UpdateService(ctx, svc); err != nil {
 			return err
 		}
 	}
 
-	go k.WatchService(svcName, namespace, nil, nil, func(newSvc *coreV1.Service) {
+	go cluster.Ins().WatchService(svcName, namespace, nil, nil, func(newSvc *coreV1.Service) {
 		if !isServiceChanged(newSvc, selector, marshaledSelector) {
 			return
 		}
 		log.Debug().Msgf("Change in service %s detected", svcName)
 		time.Sleep(util.RandomSeconds(1, 10))
-		if svc, err = k.GetService(ctx, svcName, namespace); err == nil {
+		if svc, err = cluster.Ins().GetService(ctx, svcName, namespace); err == nil {
 			if isServiceChanged(svc, selector, marshaledSelector) {
 				svc.Spec.Selector = selector
 				util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
-				if _, err = k.UpdateService(ctx, svc); err != nil {
+				if _, err = cluster.Ins().UpdateService(ctx, svc); err != nil {
 					log.Error().Err(err).Msgf("Failed to recover service %s", svcName)
 				} else {
 					log.Info().Msgf("Service %s recovered", svcName)
@@ -151,9 +151,9 @@ func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaled
 	return !util.MapEquals(svc.Spec.Selector, selector) || svc.Annotations == nil || svc.Annotations[common.KtSelector] != marshaledSelector
 }
 
-func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, app *appV1.Deployment,
+func getServiceByDeployment(ctx context.Context, app *appV1.Deployment,
 	namespace string) (*coreV1.Service, error) {
-	svcList, err := k.GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, namespace)
+	svcList, err := cluster.Ins().GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, namespace)
 	if err != nil {
 		return nil, err
 	} else if len(svcList) == 0 {
@@ -171,13 +171,13 @@ func getServiceByDeployment(ctx context.Context, k cluster.KubernetesInterface, 
 	}
 	svc := svcList[0]
 	if strings.HasSuffix(svc.Name, common.OriginServiceSuffix) {
-		return k.GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), namespace)
+		return cluster.Ins().GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), namespace)
 	}
 	return &svc, nil
 }
 
-func getDeploymentByService(ctx context.Context, k cluster.KubernetesInterface, svc *coreV1.Service, namespace string) (*appV1.Deployment, error) {
-	apps, err := k.GetAllDeploymentInNamespace(ctx, namespace)
+func getDeploymentByService(ctx context.Context, svc *coreV1.Service, namespace string) (*appV1.Deployment, error) {
+	apps, err := cluster.Ins().GetAllDeploymentInNamespace(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}

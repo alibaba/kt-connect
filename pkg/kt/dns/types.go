@@ -1,10 +1,8 @@
 package dns
 
-import "github.com/alibaba/kt-connect/pkg/kt/cluster"
-
 // DnsConfig ...
 type DnsConfig interface {
-	SetNameServer(k cluster.KubernetesInterface, dnsServers []string, isDebug bool) error
+	SetNameServer(dnsServers []string, isDebug bool) error
 	RestoreNameServer()
 }
 

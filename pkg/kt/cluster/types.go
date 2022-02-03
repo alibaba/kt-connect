@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -53,4 +54,17 @@ type KubernetesInterface interface {
 type Kubernetes struct {
 	KubeConfig string
 	Clientset kubernetes.Interface
+}
+
+// Cli the singleton type
+var instance *Kubernetes
+
+// Ins get singleton instance
+func Ins() *Kubernetes {
+	if instance == nil {
+		instance = &Kubernetes{
+			Clientset: opt.Get().RuntimeOptions.Clientset,
+		}
+	}
+	return instance
 }

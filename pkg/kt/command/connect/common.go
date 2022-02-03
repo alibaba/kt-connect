@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/dns"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -13,20 +12,20 @@ import (
 	"strings"
 )
 
-func setupDns(cli kt.CliInterface, shadowPodIp string) error {
+func setupDns(shadowPodIp string) error {
 	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) {
 		dump2HostsNamespaces := ""
 		pos := len(common.DnsModeHosts)
 		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
 		}
-		if err := dumpToHost(cli.Kubernetes(), opt.Get().Namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
+		if err := dumpToHost(opt.Get().Namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
 			return err
 		}
 	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
-		return dns.Ins().SetNameServer(cli.Kubernetes(), shadowPodIp)
+		return dns.Ins().SetNameServer(shadowPodIp)
 	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
-		if err := dumpCurrentNamespaceToHost(cli.Kubernetes(), opt.Get().Namespace); err != nil {
+		if err := dumpCurrentNamespaceToHost(opt.Get().Namespace); err != nil {
 			return err
 		}
 		dnsPort := common.AlternativeDnsPort
@@ -39,7 +38,7 @@ func setupDns(cli kt.CliInterface, shadowPodIp string) error {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
-		return dns.Ins().SetNameServer(cli.Kubernetes(), fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
+		return dns.Ins().SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
 		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().ConnectOptions.DnsMode,
 			common.DnsModeLocalDns, common.DnsModePodDns, common.DnsModeHosts)
@@ -47,7 +46,7 @@ func setupDns(cli kt.CliInterface, shadowPodIp string) error {
 	return nil
 }
 
-func dumpToHost(k cluster.KubernetesInterface, currentNamespace, targetNamespaces, clusterDomain string) error {
+func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error {
 	namespacesToDump := []string{currentNamespace}
 	if targetNamespaces != "" {
 		namespacesToDump = []string{}
@@ -58,7 +57,7 @@ func dumpToHost(k cluster.KubernetesInterface, currentNamespace, targetNamespace
 	hosts := map[string]string{}
 	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
-		host := getServiceHosts(k, namespace)
+		host := getServiceHosts(namespace)
 		for svc, ip := range host {
 			if ip == "" || ip == "None" {
 				continue
@@ -74,10 +73,10 @@ func dumpToHost(k cluster.KubernetesInterface, currentNamespace, targetNamespace
 	return dns.DumpHosts(hosts)
 }
 
-func dumpCurrentNamespaceToHost(k cluster.KubernetesInterface, currentNamespace string) error {
+func dumpCurrentNamespaceToHost(currentNamespace string) error {
 	hosts := map[string]string{}
 	log.Debug().Msgf("Search service in %s namespace ...", currentNamespace)
-	host := getServiceHosts(k, currentNamespace)
+	host := getServiceHosts(currentNamespace)
 	for svc, ip := range host {
 		if ip == "" || ip == "None" {
 			continue
@@ -88,9 +87,9 @@ func dumpCurrentNamespaceToHost(k cluster.KubernetesInterface, currentNamespace 
 	return dns.DumpHosts(hosts)
 }
 
-func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string]string {
+func getServiceHosts(namespace string) map[string]string {
 	hosts := map[string]string{}
-	services, err := k.GetAllServiceInNamespace(context.TODO(), namespace)
+	services, err := cluster.Ins().GetAllServiceInNamespace(context.TODO(), namespace)
 	if err == nil {
 		for _, service := range services.Items {
 			hosts[service.Name] = service.Spec.ClusterIP
@@ -99,13 +98,13 @@ func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string
 	return hosts
 }
 
-func getOrCreateShadow(kubernetes cluster.KubernetesInterface) (string, string, *util.SSHCredential, error) {
+func getOrCreateShadow() (string, string, *util.SSHCredential, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
 	if opt.Get().ConnectOptions.SharedShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
-	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
+	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(),
 		shadowPodName, getLabels(), make(map[string]string), getEnvs())
 	if err != nil {
 		return "", "", nil, err

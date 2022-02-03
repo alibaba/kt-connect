@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -19,18 +18,18 @@ import (
 	"time"
 )
 
-func ByEphemeralContainer(resourceName string, cli kt.CliInterface) error {
+func ByEphemeralContainer(resourceName string) error {
 	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23, and it can NOT work with istio.")
 
 	ctx := context.Background()
-	pods, err := getPodsOfResource(ctx, cli.Kubernetes(), resourceName, opt.Get().Namespace)
+	pods, err := getPodsOfResource(ctx, resourceName, opt.Get().Namespace)
 
 	for _, pod := range pods {
 		if pod.Status.Phase != coreV1.PodRunning {
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		privateKey, err2 := createEphemeralContainer(ctx, cli.Kubernetes(), common.KtExchangeContainer, pod.Name)
+		privateKey, err2 := createEphemeralContainer(ctx, common.KtExchangeContainer, pod.Name)
 		if err2 != nil {
 			return err2
 		}
@@ -51,7 +50,7 @@ func ByEphemeralContainer(resourceName string, cli kt.CliInterface) error {
 }
 
 
-func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, resourceName, namespace string) ([]coreV1.Pod, error) {
+func getPodsOfResource(ctx context.Context, resourceName, namespace string) ([]coreV1.Pod, error) {
 	resourceType, name, err := general.ParseResourceName(resourceName)
 	if err != nil {
 		return nil, err
@@ -59,7 +58,7 @@ func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, res
 
 	switch resourceType {
 	case "pod":
-		pod, err := k8s.GetPod(ctx, name, namespace)
+		pod, err := cluster.Ins().GetPod(ctx, name, namespace)
 		if err != nil {
 			return nil, err
 		} else {
@@ -68,35 +67,35 @@ func getPodsOfResource(ctx context.Context, k8s cluster.KubernetesInterface, res
 	case "svc":
 		fallthrough
 	case "service":
-		return getPodsOfService(ctx, k8s, name, namespace)
+		return getPodsOfService(ctx, name, namespace)
 	}
 	return nil, fmt.Errorf("invalid resource type: %s", resourceType)
 }
 
-func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serviceName, namespace string) ([]coreV1.Pod, error) {
-	svc, err := k8s.GetService(ctx, serviceName, namespace)
+func getPodsOfService(ctx context.Context, serviceName, namespace string) ([]coreV1.Pod, error) {
+	svc, err := cluster.Ins().GetService(ctx, serviceName, namespace)
 	if err != nil {
 		return nil, err
 	}
-	pods, err := k8s.GetPodsByLabel(ctx, svc.Spec.Selector, namespace)
+	pods, err := cluster.Ins().GetPodsByLabel(ctx, svc.Spec.Selector, namespace)
 	if err != nil {
 		return nil, err
 	}
 	return pods.Items, nil
 }
 
-func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string) (string, error) {
+func createEphemeralContainer(ctx context.Context, containerName, podName string) (string, error) {
 	log.Info().Msgf("Adding ephemeral container for pod %s", podName)
 
 	envs := make(map[string]string)
-	privateKey, err := k8s.AddEphemeralContainer(ctx, containerName, podName, envs)
+	privateKey, err := cluster.Ins().AddEphemeralContainer(ctx, containerName, podName, envs)
 	if err != nil {
 		return "", err
 	}
 
 	for i := 0; i < 10; i++ {
 		log.Info().Msgf("Waiting for ephemeral container %s to be ready", containerName)
-		ready, err2 := isEphemeralContainerReady(ctx, k8s, containerName, podName, opt.Get().Namespace)
+		ready, err2 := isEphemeralContainerReady(ctx, containerName, podName, opt.Get().Namespace)
 		if err2 != nil {
 			return "", err2
 		} else if ready {
@@ -107,8 +106,8 @@ func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterfa
 	return privateKey, nil
 }
 
-func isEphemeralContainerReady(ctx context.Context, k8s cluster.KubernetesInterface, podName, containerName, namespace string) (bool, error) {
-	pod, err := k8s.GetPod(ctx, podName, namespace)
+func isEphemeralContainerReady(ctx context.Context, podName, containerName, namespace string) (bool, error) {
+	pod, err := cluster.Ins().GetPod(ctx, podName, namespace)
 	if err != nil {
 		return false, err
 	}

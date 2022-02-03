@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -17,7 +16,7 @@ import (
 )
 
 // NewConnectCommand return new connect command
-func NewConnectCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
+func NewConnectCommand(action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "connect",
 		Usage: "create a network tunnel to kubernetes cluster",
@@ -30,13 +29,13 @@ func NewConnectCommand(cli kt.CliInterface, action ActionInterface) urfave.Comma
 			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
-			return action.Connect(cli)
+			return action.Connect()
 		},
 	}
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(cli kt.CliInterface) error {
+func (action *Action) Connect() error {
 	if err := checkOptions(); err != nil {
 		return err
 	}
@@ -44,15 +43,15 @@ func (action *Action) Connect(cli kt.CliInterface) error {
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
-	ch, err := general.SetupProcess(cli, common.ComponentConnect)
+	ch, err := general.SetupProcess(common.ComponentConnect)
 	if err != nil {
 		return err
 	}
 
 	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks {
-		err = connect.ByTun2Socks(cli)
+		err = connect.ByTun2Socks()
 	} else if opt.Get().ConnectOptions.Mode == common.ConnectModeShuttle {
-		err = connect.BySshuttle(cli)
+		err = connect.BySshuttle()
 	} else {
 		err = fmt.Errorf("invalid connect mode: '%s', supportted mode are %s, %s", opt.Get().ConnectOptions.Mode,
 			common.ConnectModeTun2Socks, common.ConnectModeShuttle)
@@ -66,7 +65,7 @@ func (action *Action) Connect(cli kt.CliInterface) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli)
+		general.CleanupWorkspace()
 		os.Exit(0)
 	}()
 	s := <-ch

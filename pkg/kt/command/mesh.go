@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/mesh"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -19,7 +18,7 @@ import (
 )
 
 // NewMeshCommand return new mesh command
-func NewMeshCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
+func NewMeshCommand(action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "mesh",
 		Usage: "redirect marked requests of specified kubernetes service to local",
@@ -40,14 +39,14 @@ func NewMeshCommand(cli kt.CliInterface, action ActionInterface) urfave.Command 
 				return errors.New("--expose is required")
 			}
 
-			return action.Mesh(c.Args().First(), cli)
+			return action.Mesh(c.Args().First())
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(resourceName string, cli kt.CliInterface) error {
-	ch, err := general.SetupProcess(cli, common.ComponentMesh)
+func (action *Action) Mesh(resourceName string) error {
+	ch, err := general.SetupProcess(common.ComponentMesh)
 	if err != nil {
 		return err
 	}
@@ -58,9 +57,9 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface) error {
 
 	ctx := context.Background()
 	if opt.Get().MeshOptions.Mode == common.MeshModeManual {
-		err = mesh.ManualMesh(ctx, cli.Kubernetes(), resourceName)
+		err = mesh.ManualMesh(ctx, resourceName)
 	} else if opt.Get().MeshOptions.Mode == common.MeshModeAuto {
-		err = mesh.AutoMesh(ctx, cli.Kubernetes(), resourceName)
+		err = mesh.AutoMesh(ctx, resourceName)
 	} else {
 		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.Mode,
 			common.MeshModeAuto, common.MeshModeManual)
@@ -73,7 +72,7 @@ func (action *Action) Mesh(resourceName string, cli kt.CliInterface) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli)
+		general.CleanupWorkspace()
 		os.Exit(0)
 	}()
 

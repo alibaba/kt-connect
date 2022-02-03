@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
@@ -14,7 +13,7 @@ import (
 )
 
 // Expose create a new service in cluster
-func Expose(ctx context.Context, serviceName string, cli kt.CliInterface) error {
+func Expose(ctx context.Context, serviceName string) error {
 	version := strings.ToLower(util.RandomString(5))
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
@@ -26,15 +25,14 @@ func Expose(ctx context.Context, serviceName string, cli kt.CliInterface) error 
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
-	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations, cli.Kubernetes())
+	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations)
 }
 
 // exposeLocalService create shadow and expose service if need
-func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string,
-	kubernetes cluster.KubernetesInterface) error {
+func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string) error {
 
 	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, kubernetes, shadowPodName, labels, annotations, envs)
+	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, shadowPodName, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -49,7 +47,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 		}
 		ports[localPort] = remotePort
 	}
-	if _, err = kubernetes.CreateService(ctx, &cluster.SvcMetaAndSpec{
+	if _, err = cluster.Ins().CreateService(ctx, &cluster.SvcMetaAndSpec{
 		Meta: &cluster.ResourceMeta{
 			Name: serviceName,
 			Namespace: opt.Get().Namespace,

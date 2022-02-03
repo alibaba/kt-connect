@@ -2,7 +2,7 @@ package connect
 
 import (
 	"context"
-	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
@@ -10,15 +10,15 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func BySshuttle(cli kt.CliInterface) error {
+func BySshuttle() error {
 	checkSshuttleInstalled()
 
-	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes())
+	podIP, podName, credential, err := getOrCreateShadow()
 	if err != nil {
 		return err
 	}
 
-	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), opt.Get().Namespace)
+	cidrs, err := cluster.Ins().ClusterCidrs(context.TODO(), opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func BySshuttle(cli kt.CliInterface) error {
 		return err
 	}
 
-	return setupDns(cli, podIP)
+	return setupDns(podIP)
 }
 
 func checkSshuttleInstalled() {

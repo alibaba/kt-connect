@@ -4,13 +4,6 @@ SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 ROUTER_IMAGE	  =  kt-connect-router
 
-# generate mock
-generate-mock:
-	echo "generate mocks"
-	mockgen -source=pkg/kt/cluster/types.go -destination=pkg/kt/cluster/mock.go -package=cluster
-	mockgen -source=pkg/kt/command/types.go -destination=pkg/kt/command/mock.go -package=command
-	mockgen -source=pkg/kt/types.go -destination=pkg/kt/mock.go -package=kt
-
 # run mod tidy
 mod:
 	go mod tidy -compat=1.17

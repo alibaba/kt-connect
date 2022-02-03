@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -31,26 +30,25 @@ func main() {
 	app.Authors = general.NewCliAuthor()
 	app.Flags = general.AppFlags(opt.Get(), version)
 
-	context := &kt.Cli{}
 	action := command.Action{}
 
-	app.Commands = newCommands(context, &action)
+	app.Commands = newCommands(&action)
 	app.ExitErrHandler = func(context *cli.Context, err error) {
 		log.Error().Err(err).Msgf("Failed to start")
 	}
 	if err := app.Run(os.Args); err != nil {
-		general.CleanupWorkspace(context)
+		general.CleanupWorkspace()
 		os.Exit(-1)
 	}
 }
 
 // NewCommands return new Connect Action
-func newCommands(kt kt.CliInterface, action command.ActionInterface) []cli.Command {
+func newCommands(action command.ActionInterface) []cli.Command {
 	return []cli.Command{
-		command.NewConnectCommand(kt, action),
-		command.NewExchangeCommand(kt, action),
-		command.NewMeshCommand(kt, action),
-		command.NewPreviewCommand(kt, action),
-		command.NewCleanCommand(kt, action),
+		command.NewConnectCommand(action),
+		command.NewExchangeCommand(action),
+		command.NewMeshCommand(action),
+		command.NewPreviewCommand(action),
+		command.NewCleanCommand(action),
 	}
 }

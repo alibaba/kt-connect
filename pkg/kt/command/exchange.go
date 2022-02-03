@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/exchange"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -19,7 +18,7 @@ import (
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
+func NewExchangeCommand(action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "exchange",
 		Usage: "redirect all requests of specified kubernetes service to local",
@@ -40,14 +39,14 @@ func NewExchangeCommand(cli kt.CliInterface, action ActionInterface) urfave.Comm
 				return errors.New("--expose is required")
 			}
 
-			return action.Exchange(c.Args().First(), cli)
+			return action.Exchange(c.Args().First())
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(resourceName string, cli kt.CliInterface) error {
-	ch, err := general.SetupProcess(cli, common.ComponentExchange)
+func (action *Action) Exchange(resourceName string) error {
+	ch, err := general.SetupProcess(common.ComponentExchange)
 	if err != nil {
 		return err
 	}
@@ -57,11 +56,11 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface) error {
 	}
 
 	if opt.Get().ExchangeOptions.Mode == common.ExchangeModeScale {
-		err = exchange.ByScale(resourceName, cli)
+		err = exchange.ByScale(resourceName)
 	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
-		err = exchange.ByEphemeralContainer(resourceName, cli)
+		err = exchange.ByEphemeralContainer(resourceName)
 	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
-		err = exchange.BySelector(context.TODO(), cli.Kubernetes(), resourceName)
+		err = exchange.BySelector(context.TODO(), resourceName)
 	} else {
 		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
 			common.ExchangeModeSelector, common.ExchangeModeScale, common.ExchangeModeEphemeral)
@@ -74,7 +73,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli)
+		general.CleanupWorkspace()
 		os.Exit(0)
 	}()
 	s := <-ch

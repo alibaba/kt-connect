@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
+	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
@@ -15,12 +15,12 @@ import (
 	"time"
 )
 
-func ByTun2Socks(cli kt.CliInterface) error {
-	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes())
+func ByTun2Socks() error {
+	podIP, podName, credential, err := getOrCreateShadow()
 	if err != nil {
 		return err
 	}
-	go activePodRoute(cli, podName)
+	go activePodRoute(podName)
 
 	_, _, err = transmission.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
 	if err != nil {
@@ -33,7 +33,7 @@ func ByTun2Socks(cli kt.CliInterface) error {
 	if opt.Get().ConnectOptions.DisableTunDevice {
 		showSetupSocksMessage(opt.Get().ConnectOptions.SocksPort)
 		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) {
-			return setupDns(cli, podIP)
+			return setupDns(podIP)
 		} else {
 			return nil
 		}
@@ -48,25 +48,25 @@ func ByTun2Socks(cli kt.CliInterface) error {
 		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
 
 		if !opt.Get().ConnectOptions.DisableTunRoute {
-			if err = setupTunRoute(cli); err != nil {
+			if err = setupTunRoute(); err != nil {
 				return err
 			}
 			log.Info().Msgf("Route to tun device completed")
 		}
-		return setupDns(cli, podIP)
+		return setupDns(podIP)
 	}
 }
 
-func activePodRoute(cli kt.CliInterface, podName string) {
-	_, stderr, _ := cli.Kubernetes().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
+func activePodRoute(podName string) {
+	_, stderr, _ := cluster.Ins().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
 		"nslookup", "kubernetes.default.svc")
 	if stderr != "" {
 		log.Debug().Msgf("Pod route not ready, %s", stderr)
 	}
 }
 
-func setupTunRoute(cli kt.CliInterface) error {
-	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), opt.Get().Namespace)
+func setupTunRoute() error {
+	cidrs, err := cluster.Ins().ClusterCidrs(context.TODO(), opt.Get().Namespace)
 	if err != nil {
 		return err
 	}

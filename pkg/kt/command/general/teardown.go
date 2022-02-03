@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/dns"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -19,7 +18,7 @@ import (
 )
 
 // CleanupWorkspace clean workspace
-func CleanupWorkspace(cli kt.CliInterface) {
+func CleanupWorkspace() {
 	log.Info().Msgf("Cleaning workspace")
 	cleanLocalFiles()
 	if opt.Get().RuntimeOptions.Component == common.ComponentConnect {
@@ -27,14 +26,13 @@ func CleanupWorkspace(cli kt.CliInterface) {
 	}
 
 	ctx := context.Background()
-	k8s := cli.Kubernetes()
 	if opt.Get().RuntimeOptions.Component == common.ComponentExchange {
-		recoverExchangedTarget(ctx, k8s)
+		recoverExchangedTarget(ctx)
 	} else if opt.Get().RuntimeOptions.Component == common.ComponentMesh {
-		recoverAutoMeshRoute(ctx, k8s)
+		recoverAutoMeshRoute(ctx)
 	}
-	cleanService(ctx, k8s)
-	cleanShadowPodAndConfigMap(ctx, k8s)
+	cleanService(ctx)
+	cleanShadowPodAndConfigMap(ctx)
 }
 
 func recoverGlobalHostsAndProxy() {
@@ -71,14 +69,14 @@ func cleanLocalFiles() {
 	}
 }
 
-func recoverExchangedTarget(ctx context.Context, k cluster.KubernetesInterface) {
+func recoverExchangedTarget(ctx context.Context) {
 	if opt.Get().RuntimeOptions.Origin == "" {
 		// process exit before target exchanged
 		return
 	}
 	if opt.Get().ExchangeOptions.Mode == common.ExchangeModeScale {
 		log.Info().Msgf("Recovering origin deployment %s", opt.Get().RuntimeOptions.Origin)
-		err := k.ScaleTo(ctx, opt.Get().RuntimeOptions.Origin, opt.Get().Namespace, &opt.Get().RuntimeOptions.Replicas)
+		err := cluster.Ins().ScaleTo(ctx, opt.Get().RuntimeOptions.Origin, opt.Get().Namespace, &opt.Get().RuntimeOptions.Replicas)
 		if err != nil {
 			log.Error().Err(err).Msgf("Scale deployment %s to %d failed",
 				opt.Get().RuntimeOptions.Origin, opt.Get().RuntimeOptions.Replicas)
@@ -87,28 +85,28 @@ func recoverExchangedTarget(ctx context.Context, k cluster.KubernetesInterface) 
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 		go func() {
-			waitDeploymentRecoverComplete(ctx, k)
+			waitDeploymentRecoverComplete(ctx)
 			ch <- os.Interrupt
 		}()
 		_ = <-ch
 	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
-		RecoverOriginalService(ctx, k, opt.Get().RuntimeOptions.Origin, opt.Get().Namespace)
+		RecoverOriginalService(ctx, opt.Get().RuntimeOptions.Origin, opt.Get().Namespace)
 	}
 }
 
-func recoverAutoMeshRoute(ctx context.Context, k cluster.KubernetesInterface) {
+func recoverAutoMeshRoute(ctx context.Context) {
 	if opt.Get().RuntimeOptions.Router != "" {
-		routerPod, err := k.GetPod(ctx, opt.Get().RuntimeOptions.Router, opt.Get().Namespace)
+		routerPod, err := cluster.Ins().GetPod(ctx, opt.Get().RuntimeOptions.Router, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
 			return
 		}
-		if shouldDelRouter, err2 := k.DecreaseRef(ctx, opt.Get().RuntimeOptions.Router, opt.Get().Namespace); err2 != nil {
+		if shouldDelRouter, err2 := cluster.Ins().DecreaseRef(ctx, opt.Get().RuntimeOptions.Router, opt.Get().Namespace); err2 != nil {
 			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opt.Get().RuntimeOptions.Shadow)
 		} else if shouldDelRouter {
-			recoverService(ctx, k, routerPod.Annotations[common.KtConfig])
+			recoverService(ctx, routerPod.Annotations[common.KtConfig])
 		} else {
-			stdout, stderr, err3 := k.ExecInPod(common.DefaultContainer, opt.Get().RuntimeOptions.Router, opt.Get().Namespace,
+			stdout, stderr, err3 := cluster.Ins().ExecInPod(common.DefaultContainer, opt.Get().RuntimeOptions.Router, opt.Get().Namespace,
 				common.RouterBin, "remove", opt.Get().RuntimeOptions.Mesh)
 			log.Debug().Msgf("Stdout: %s", stdout)
 			log.Debug().Msgf("Stderr: %s", stderr)
@@ -119,20 +117,20 @@ func recoverAutoMeshRoute(ctx context.Context, k cluster.KubernetesInterface) {
 	}
 }
 
-func recoverService(ctx context.Context, k cluster.KubernetesInterface, routerConfig string) {
+func recoverService(ctx context.Context, routerConfig string) {
 	config := util.String2Map(routerConfig)
 	svcName := config["service"]
-	RecoverOriginalService(ctx, k, svcName, opt.Get().Namespace)
+	RecoverOriginalService(ctx, svcName, opt.Get().Namespace)
 
 	originSvcName := svcName + common.OriginServiceSuffix
-	if err := k.RemoveService(ctx, originSvcName, opt.Get().Namespace); err != nil {
+	if err := cluster.Ins().RemoveService(ctx, originSvcName, opt.Get().Namespace); err != nil {
 		log.Error().Err(err).Msgf("Failed to remove origin service %s", originSvcName)
 	}
 	log.Info().Msgf("Substitution service %s removed", originSvcName)
 }
 
-func RecoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, svcName, namespace string) {
-	if svc, err := k.GetService(ctx, svcName, namespace); err != nil {
+func RecoverOriginalService(ctx context.Context, svcName, namespace string) {
+	if svc, err := cluster.Ins().GetService(ctx, svcName, namespace); err != nil {
 		log.Error().Err(err).Msgf("Original service %s not found", svcName)
 		return
 	} else {
@@ -153,18 +151,18 @@ func RecoverOriginalService(ctx context.Context, k cluster.KubernetesInterface, 
 		}
 		svc.Spec.Selector = selector
 		delete(svc.Annotations, common.KtSelector)
-		if _, err = k.UpdateService(ctx, svc); err != nil {
+		if _, err = cluster.Ins().UpdateService(ctx, svc); err != nil {
 			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
 		}
 	}
 	log.Info().Msgf("Original service %s recovered", svcName)
 }
 
-func waitDeploymentRecoverComplete(ctx context.Context, k cluster.KubernetesInterface) {
+func waitDeploymentRecoverComplete(ctx context.Context) {
 	ok := false
 	counts := opt.Get().ExchangeOptions.RecoverWaitTime / 5
 	for i := 0; i < counts; i++ {
-		deployment, err := k.GetDeployment(ctx, opt.Get().RuntimeOptions.Origin, opt.Get().Namespace)
+		deployment, err := cluster.Ins().GetDeployment(ctx, opt.Get().RuntimeOptions.Origin, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Cannot fetch original deployment %s", opt.Get().RuntimeOptions.Origin)
 			break
@@ -181,22 +179,22 @@ func waitDeploymentRecoverComplete(ctx context.Context, k cluster.KubernetesInte
 	}
 }
 
-func cleanService(ctx context.Context, k cluster.KubernetesInterface) {
+func cleanService(ctx context.Context) {
 	if opt.Get().RuntimeOptions.Service != "" {
 		log.Info().Msgf("Cleaning service %s", opt.Get().RuntimeOptions.Service)
-		err := k.RemoveService(ctx, opt.Get().RuntimeOptions.Service, opt.Get().Namespace)
+		err := cluster.Ins().RemoveService(ctx, opt.Get().RuntimeOptions.Service, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Delete service %s failed", opt.Get().RuntimeOptions.Service)
 		}
 	}
 }
 
-func cleanShadowPodAndConfigMap(ctx context.Context, k cluster.KubernetesInterface) {
+func cleanShadowPodAndConfigMap(ctx context.Context) {
 	var err error
 	if opt.Get().RuntimeOptions.Shadow != "" {
 		shouldDelWithShared := false
 		if opt.Get().ConnectOptions.SharedShadow {
-			shouldDelWithShared, err = k.DecreaseRef(ctx, opt.Get().RuntimeOptions.Shadow, opt.Get().Namespace)
+			shouldDelWithShared, err = cluster.Ins().DecreaseRef(ctx, opt.Get().RuntimeOptions.Shadow, opt.Get().Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opt.Get().RuntimeOptions.Shadow)
 			}
@@ -204,7 +202,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context, k cluster.KubernetesInterfa
 		if shouldDelWithShared || !opt.Get().ConnectOptions.SharedShadow {
 			for _, sshcm := range strings.Split(opt.Get().RuntimeOptions.Shadow, ",") {
 				log.Info().Msgf("Cleaning configmap %s", sshcm)
-				err = k.RemoveConfigMap(ctx, sshcm, opt.Get().Namespace)
+				err = cluster.Ins().RemoveConfigMap(ctx, sshcm, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
 				}
@@ -213,7 +211,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context, k cluster.KubernetesInterfa
 		if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
 			for _, shadow := range strings.Split(opt.Get().RuntimeOptions.Shadow, ",") {
 				log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
-				err = k.RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opt.Get().Namespace)
+				err = cluster.Ins().RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
 				}
@@ -221,7 +219,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context, k cluster.KubernetesInterfa
 		} else {
 			for _, shadow := range strings.Split(opt.Get().RuntimeOptions.Shadow, ",") {
 				log.Info().Msgf("Cleaning shadow pod %s", shadow)
-				err = k.RemovePod(ctx, shadow, opt.Get().Namespace)
+				err = cluster.Ins().RemovePod(ctx, shadow, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
 				}

@@ -1,16 +1,12 @@
 package command
 
-import (
-	"github.com/alibaba/kt-connect/pkg/kt"
-)
-
 // ActionInterface all action defined
 type ActionInterface interface {
-	Connect(cli kt.CliInterface) error
-	Preview(serviceName string, cli kt.CliInterface) error
-	Exchange(resourceName string, cli kt.CliInterface) error
-	Mesh(deploymentName string, cli kt.CliInterface) error
-	Clean(cli kt.CliInterface) error
+	Connect() error
+	Preview(serviceName string) error
+	Exchange(resourceName string) error
+	Mesh(deploymentName string) error
+	Clean() error
 }
 
 // Action cmd action

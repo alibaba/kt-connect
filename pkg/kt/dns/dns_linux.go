@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -24,7 +23,7 @@ const (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string) error {
+func (s *Cli) SetNameServer(dnsServer string) error {
 	dnsSignal := make(chan error)
 	go func() {
 		defer func() {
