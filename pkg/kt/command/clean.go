@@ -103,10 +103,15 @@ func (action *Action) Clean() error {
 func (action *Action) cleanPidFiles() {
 	files, _ := ioutil.ReadDir(common.KtHome)
 	for _, f := range files {
-		if strings.HasSuffix(f.Name(), ".pid") && !util.IsProcessExist(action.toPid(f.Name())) {
-			log.Info().Msgf("Removing pid file %s", f.Name())
-			if err := os.Remove(fmt.Sprintf("%s/%s", common.KtHome, f.Name())); err != nil {
-				log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
+		if strings.HasSuffix(f.Name(), ".pid") {
+			component, pid := action.parseComponentAndPid(f.Name())
+			if util.IsProcessExist(pid) {
+				log.Debug().Msgf("Find kt %s instance with pid %d", component, pid)
+			} else {
+				log.Info().Msgf("Removing remnant pid file %s", f.Name())
+				if err := os.Remove(fmt.Sprintf("%s/%s", common.KtHome, f.Name())); err != nil {
+					log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
+				}
 			}
 		}
 	}
@@ -208,17 +213,18 @@ func (action *Action) cleanResource(ctx context.Context, r ResourceToClean, name
 	log.Info().Msg("Done")
 }
 
-func (action *Action) toPid(pidFileName string) int {
+func (action *Action) parseComponentAndPid(pidFileName string) (string, int) {
 	startPos := strings.LastIndex(pidFileName, "-")
 	endPos := strings.Index(pidFileName, ".")
 	if startPos > 0 && endPos > startPos {
+		component := pidFileName[0 : startPos]
 		pid, err := strconv.Atoi(pidFileName[startPos+1 : endPos])
 		if err != nil {
-			return -1
+			return "", -1
 		}
-		return pid
+		return component, pid
 	}
-	return -1
+	return "", -1
 }
 
 func (action *Action) printResourceToClean(r ResourceToClean) {

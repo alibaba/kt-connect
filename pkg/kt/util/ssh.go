@@ -84,6 +84,8 @@ func CleanRsaKeys() {
 			err := os.Remove(rsaKey)
 			if err != nil {
 				log.Debug().Msgf("Failed to remove rsa key file: %s", rsaKey)
+			} else {
+				log.Info().Msgf("Unused rsa key %s removed", f.Name())
 			}
 		}
 	}

@@ -61,7 +61,7 @@ func activePodRoute(podName string) {
 	_, stderr, _ := cluster.Ins().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
 		"nslookup", "kubernetes.default.svc")
 	if stderr != "" {
-		log.Debug().Msgf("Pod route not ready, %s", stderr)
+		log.Warn().Msgf("Pod route not ready yet, %s", stderr)
 	}
 }
 
