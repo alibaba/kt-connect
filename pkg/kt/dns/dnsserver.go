@@ -71,6 +71,8 @@ func query(req *dns.Msg, clusterDnsAddr, upstreamDnsAddr string) []dns.RR {
 			log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
 		}
 	}
-	common.WriteCache(domain, qtype, []dns.RR{})
+	if err == nil || common.IsDomainNotExist(err) {
+		common.WriteCache(domain, qtype, []dns.RR{})
+	}
 	return []dns.RR{}
 }
