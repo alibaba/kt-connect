@@ -9,7 +9,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
+	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
@@ -38,7 +38,7 @@ func ByEphemeralContainer(resourceName string, cli kt.CliInterface) error {
 		// record data
 		opt.Get().RuntimeOptions.Shadow = util.Append(opt.Get().RuntimeOptions.Shadow, pod.Name)
 
-		localSSHPort, err2 := tunnel.ForwardPodToLocal(opt.Get().ExchangeOptions.Expose, pod.Name, privateKey)
+		localSSHPort, err2 := transmission.ForwardPodToLocal(opt.Get().ExchangeOptions.Expose, pod.Name, privateKey)
 		if err2 != nil {
 			return err2
 		}
@@ -153,7 +153,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 			return err2
 		}
 		var wg sync.WaitGroup
-		tunnel.ExposeLocalPort(&wg, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
+		transmission.ExposeLocalPort(&wg, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
 		wg.Done()
 	}
 

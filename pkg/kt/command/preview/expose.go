@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
+	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -64,7 +64,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	}
 	opt.Get().RuntimeOptions.Service = serviceName
 
-	if _, err = tunnel.ForwardPodToLocal(opt.Get().PreviewOptions.Expose, podName, credential.PrivateKeyPath); err != nil {
+	if _, err = transmission.ForwardPodToLocal(opt.Get().PreviewOptions.Expose, podName, credential.PrivateKeyPath); err != nil {
 		return err
 	}
 

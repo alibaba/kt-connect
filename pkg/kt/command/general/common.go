@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
+	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
@@ -25,7 +25,7 @@ func CreateShadowAndInbound(ctx context.Context, k cluster.KubernetesInterface, 
 		return err
 	}
 
-	if _, err = tunnel.ForwardPodToLocal(portsToExpose, podName, credential.PrivateKeyPath); err != nil {
+	if _, err = transmission.ForwardPodToLocal(portsToExpose, podName, credential.PrivateKeyPath); err != nil {
 		return err
 	}
 	return nil

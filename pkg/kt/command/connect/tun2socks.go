@@ -7,8 +7,8 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
+	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/tun"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -22,7 +22,7 @@ func ByTun2Socks(cli kt.CliInterface) error {
 	}
 	go activePodRoute(cli, podName)
 
-	_, _, err = tunnel.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
+	_, _, err = transmission.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
 	if err != nil {
 		return err
 	}

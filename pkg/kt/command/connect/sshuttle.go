@@ -5,7 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshuttle"
-	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
+	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
@@ -23,7 +23,7 @@ func BySshuttle(cli kt.CliInterface) error {
 		return err
 	}
 
-	stop, rootCtx, err := tunnel.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
+	stop, rootCtx, err := transmission.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
 	if err != nil {
 		return err
 	}

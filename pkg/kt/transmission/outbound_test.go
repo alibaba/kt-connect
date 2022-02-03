@@ -1,4 +1,4 @@
-package portforward
+package transmission
 
 import (
 	"net/url"
