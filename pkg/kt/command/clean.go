@@ -57,7 +57,7 @@ func (action *Action) Clean() error {
 	if err != nil {
 		return err
 	}
-	log.Debug().Msgf("Found %d kt pods", len(pods))
+	log.Debug().Msgf("Find %d kt pods", len(pods))
 	resourceToClean := ResourceToClean{
 		PodsToDelete: make([]string, 0),
 		ServicesToDelete: make([]string, 0),
@@ -228,27 +228,27 @@ func (action *Action) parseComponentAndPid(pidFileName string) (string, int) {
 }
 
 func (action *Action) printResourceToClean(r ResourceToClean) {
-	log.Info().Msgf("Found %d unavailing pods to delete:", len(r.PodsToDelete))
+	log.Info().Msgf("Find %d unavailing pods to delete:", len(r.PodsToDelete))
 	for _, name := range r.PodsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Found %d unavailing config maps to delete:", len(r.ConfigMapsToDelete))
+	log.Info().Msgf("Find %d unavailing config maps to delete:", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Found %d exchanged deployments to recover:", len(r.DeploymentsToScale))
+	log.Info().Msgf("Find %d exchanged deployments to recover:", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		log.Info().Msgf(" * %s -> %d", name, replica)
 	}
-	log.Info().Msgf("Found %d unavailing service to delete:", len(r.ServicesToDelete))
+	log.Info().Msgf("Find %d unavailing service to delete:", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Found %d meshed service to recover:", len(r.ServicesToRecover))
+	log.Info().Msgf("Find %d meshed service to recover:", len(r.ServicesToRecover))
 	for _, name := range r.ServicesToRecover {
 		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Found %d locked services to recover:", len(r.ServicesToUnlock))
+	log.Info().Msgf("Find %d locked services to recover:", len(r.ServicesToUnlock))
 	for _, name := range r.ServicesToUnlock {
 		log.Info().Msgf(" * %s", name)
 	}
