@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
+	"strings"
 )
 
 // NewExchangeCommand return new exchange command
@@ -67,6 +68,10 @@ func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
 	if err != nil {
 		return err
 	}
+	resourceType, realName := toTypeAndName(resourceName)
+	log.Info().Msg("---------------------------------------------------------------")
+	log.Info().Msgf(" Now all request to %s '%s' will be redirected to local", resourceType, realName)
+	log.Info().Msg("---------------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
@@ -77,4 +82,13 @@ func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return nil
+}
+
+func toTypeAndName(name string) (string, string) {
+	parts := strings.Split(name, "/")
+	if len(parts) > 1 {
+		return parts[0], parts[1]
+	} else {
+		return "service", parts[0]
+	}
 }
