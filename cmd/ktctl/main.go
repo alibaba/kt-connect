@@ -11,6 +11,8 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 var (
@@ -25,6 +27,7 @@ func init() {
 func main() {
 	// this line must go first
 	opt.Get().RuntimeStore.Version = version
+	ch := setupCloseHandler()
 
 	app := cli.NewApp()
 	app.Name = "KtConnect"
@@ -32,23 +35,33 @@ func main() {
 	app.Version = version
 	app.Authors = general.NewCliAuthor()
 	app.Flags = general.AppFlags(opt.Get())
-	app.Commands = newCommands(&command.Action{})
+	app.Commands = newCommands(ch)
+	// must overwrite default error handler to perform graceful exit
 	app.ExitErrHandler = func(context *cli.Context, err error) {
 		log.Error().Err(err).Msgf("Failed to start")
-	}
-	if err := app.Run(os.Args); err != nil {
 		general.CleanupWorkspace()
-		os.Exit(-1)
+		os.Exit(1)
 	}
+	// process will hang here
+	_ = app.Run(os.Args)
+	general.CleanupWorkspace()
 }
 
 // NewCommands return new Connect Action
-func newCommands(action command.ActionInterface) []cli.Command {
+func newCommands(ch chan os.Signal) []cli.Command {
+	action := &command.Action{}
 	return []cli.Command{
-		command.NewConnectCommand(action),
-		command.NewExchangeCommand(action),
-		command.NewMeshCommand(action),
-		command.NewPreviewCommand(action),
+		command.NewConnectCommand(action, ch),
+		command.NewExchangeCommand(action, ch),
+		command.NewMeshCommand(action, ch),
+		command.NewPreviewCommand(action, ch),
 		command.NewCleanCommand(action),
 	}
+}
+
+// setupCloseHandler registry close handler
+func setupCloseHandler() (ch chan os.Signal) {
+	ch = make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
+	return ch
 }

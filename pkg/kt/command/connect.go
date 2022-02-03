@@ -12,11 +12,10 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
-	"time"
 )
 
 // NewConnectCommand return new connect command
-func NewConnectCommand(action ActionInterface) urfave.Command {
+func NewConnectCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
 	return urfave.Command{
 		Name:  "connect",
 		Usage: "create a network tunnel to kubernetes cluster",
@@ -29,13 +28,13 @@ func NewConnectCommand(action ActionInterface) urfave.Command {
 			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
-			return action.Connect()
+			return action.Connect(ch)
 		},
 	}
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect() error {
+func (action *Action) Connect(ch chan os.Signal) error {
 	if err := checkOptions(); err != nil {
 		return err
 	}
@@ -43,7 +42,7 @@ func (action *Action) Connect() error {
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
-	ch, err := general.SetupProcess(common.ComponentConnect)
+	err := general.SetupProcess(common.ComponentConnect, ch)
 	if err != nil {
 		return err
 	}
@@ -65,13 +64,10 @@ func (action *Action) Connect() error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace()
-		os.Exit(0)
+		ch <-os.Interrupt
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
-	// when process interrupt by signal, wait a while for resource clean up
-	time.Sleep(1 * time.Second)
 	return nil
 }
 

@@ -14,11 +14,10 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
-	"time"
 )
 
 // NewMeshCommand return new mesh command
-func NewMeshCommand(action ActionInterface) urfave.Command {
+func NewMeshCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
 	return urfave.Command{
 		Name:  "mesh",
 		Usage: "redirect marked requests of specified kubernetes service to local",
@@ -39,14 +38,14 @@ func NewMeshCommand(action ActionInterface) urfave.Command {
 				return errors.New("--expose is required")
 			}
 
-			return action.Mesh(c.Args().First())
+			return action.Mesh(c.Args().First(), ch)
 		},
 	}
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(resourceName string) error {
-	ch, err := general.SetupProcess(common.ComponentMesh)
+func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
+	err := general.SetupProcess(common.ComponentMesh, ch)
 	if err != nil {
 		return err
 	}
@@ -72,14 +71,11 @@ func (action *Action) Mesh(resourceName string) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace()
-		os.Exit(0)
+		ch <-os.Interrupt
 	}()
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
-	// when process interrupt by signal, wait a while for resource clean up
-	time.Sleep(1 * time.Second)
 	return nil
 }
 

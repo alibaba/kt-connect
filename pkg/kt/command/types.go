@@ -1,11 +1,13 @@
 package command
 
+import "os"
+
 // ActionInterface all action defined
 type ActionInterface interface {
-	Connect() error
-	Preview(serviceName string) error
-	Exchange(resourceName string) error
-	Mesh(deploymentName string) error
+	Connect(ch chan os.Signal) error
+	Preview(serviceName string, ch chan os.Signal) error
+	Exchange(resourceName string, ch chan os.Signal) error
+	Mesh(deploymentName string, ch chan os.Signal) error
 	Clean() error
 }
 

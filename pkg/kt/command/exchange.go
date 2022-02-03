@@ -14,11 +14,10 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
-	"time"
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(action ActionInterface) urfave.Command {
+func NewExchangeCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
 	return urfave.Command{
 		Name:  "exchange",
 		Usage: "redirect all requests of specified kubernetes service to local",
@@ -39,14 +38,14 @@ func NewExchangeCommand(action ActionInterface) urfave.Command {
 				return errors.New("--expose is required")
 			}
 
-			return action.Exchange(c.Args().First())
+			return action.Exchange(c.Args().First(), ch)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(resourceName string) error {
-	ch, err := general.SetupProcess(common.ComponentExchange)
+func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
+	err := general.SetupProcess(common.ComponentExchange, ch)
 	if err != nil {
 		return err
 	}
@@ -73,12 +72,9 @@ func (action *Action) Exchange(resourceName string) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace()
-		os.Exit(0)
+		ch <-os.Interrupt
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
-	// when process interrupt by signal, wait a while for resource clean up
-	time.Sleep(1 * time.Second)
 	return nil
 }

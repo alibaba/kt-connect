@@ -10,32 +10,15 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"os"
-	"os/signal"
 	"runtime"
 	"strings"
-	"syscall"
 )
 
 // SetupProcess write pid file and print setup message
-func SetupProcess(componentName string) (chan os.Signal, error) {
+func SetupProcess(componentName string, ch chan os.Signal) error {
 	opt.Get().RuntimeStore.Component = componentName
 	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS)
-	ch := setupCloseHandler()
-	err := util.WritePidFile(componentName, ch)
-	return ch, err
-}
-
-// SetupCloseHandler registry close handler
-func setupCloseHandler() (ch chan os.Signal) {
-	ch = make(chan os.Signal)
-	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
-	go func() {
-		<-ch
-		log.Info().Msgf("Process is gonna close")
-		CleanupWorkspace()
-		os.Exit(0)
-	}()
-	return
+	return util.WritePidFile(componentName, ch)
 }
 
 // validateKubeOpts support like '-n default | --kubeconfig=/path/to/kubeconfig'

@@ -14,11 +14,10 @@ import (
 	"github.com/rs/zerolog/log"
 	urfave "github.com/urfave/cli"
 	"os"
-	"time"
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(action ActionInterface) urfave.Command {
+func NewPreviewCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
 	return urfave.Command{
 		Name:  "preview",
 		Usage: "expose a local service to kubernetes cluster",
@@ -37,14 +36,14 @@ func NewPreviewCommand(action ActionInterface) urfave.Command {
 			if len(opt.Get().PreviewOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
-			return action.Preview(c.Args().First())
+			return action.Preview(c.Args().First(), ch)
 		},
 	}
 }
 
 // Preview create a new service in cluster
-func (action *Action) Preview(serviceName string) error {
-	ch, err := general.SetupProcess(common.ComponentPreview)
+func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
+	err := general.SetupProcess(common.ComponentPreview, ch)
 	if err != nil {
 		return err
 	}
@@ -60,13 +59,10 @@ func (action *Action) Preview(serviceName string) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace()
-		os.Exit(0)
+		ch <-os.Interrupt
 	}()
 
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
-	// when process interrupt by signal, wait a while for resource clean up
-	time.Sleep(1 * time.Second)
 	return nil
 }
