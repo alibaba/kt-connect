@@ -60,7 +60,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	}); err != nil {
 		return err
 	}
-	opt.Get().RuntimeOptions.Service = serviceName
+	opt.Get().RuntimeStore.Service = serviceName
 
 	if _, err = transmission.ForwardPodToLocal(opt.Get().PreviewOptions.Expose, podName, credential.PrivateKeyPath); err != nil {
 		return err

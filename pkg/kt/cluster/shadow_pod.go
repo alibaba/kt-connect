@@ -33,7 +33,7 @@ func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, en
 	string, string, *util.SSHCredential, error) {
 
 	// record context data
-	opt.Get().RuntimeOptions.Shadow = name
+	opt.Get().RuntimeStore.Shadow = name
 
 	// extra labels must be applied after origin labels
 	for key, val := range util.String2Map(opt.Get().WithLabels) {
@@ -54,7 +54,7 @@ func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, en
 		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
-	if opt.Get().RuntimeOptions.Component == common.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
+	if opt.Get().RuntimeStore.Component == common.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
 		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, &resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", nil, err2

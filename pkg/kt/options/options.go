@@ -80,8 +80,8 @@ type RuntimeOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	RuntimeOptions      *RuntimeOptions
-	PreviewOptions      *PreviewOptions
+	RuntimeStore   *RuntimeOptions
+	PreviewOptions *PreviewOptions
 	ConnectOptions      *ConnectOptions
 	ExchangeOptions     *ExchangeOptions
 	MeshOptions         *MeshOptions
@@ -109,7 +109,7 @@ func Get() *DaemonOptions {
 		opt = &DaemonOptions{
 			Namespace:  common.DefaultNamespace,
 			KubeConfig: util.KubeConfig(),
-			RuntimeOptions: &RuntimeOptions{
+			RuntimeStore: &RuntimeOptions{
 				UserHome: common.UserHome,
 				AppHome:  common.KtHome,
 			},

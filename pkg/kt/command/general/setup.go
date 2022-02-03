@@ -18,8 +18,8 @@ import (
 
 // SetupProcess write pid file and print setup message
 func SetupProcess(componentName string) (chan os.Signal, error) {
-	opt.Get().RuntimeOptions.Component = componentName
-	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeOptions.Version, os.Getpid(), runtime.GOOS)
+	opt.Get().RuntimeStore.Component = componentName
+	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS)
 	ch := setupCloseHandler()
 	err := util.WritePidFile(componentName, ch)
 	return ch, err
@@ -93,8 +93,8 @@ func CombineKubeOpts() error {
 	if err != nil {
 		return err
 	}
-	opt.Get().RuntimeOptions.Clientset = clientSet
-	opt.Get().RuntimeOptions.RestConfig = restConfig
+	opt.Get().RuntimeStore.Clientset = clientSet
+	opt.Get().RuntimeStore.RestConfig = restConfig
 
 	return nil
 }

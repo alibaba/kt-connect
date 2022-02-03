@@ -23,16 +23,16 @@ func init() {
 }
 
 func main() {
+	// this line must go first
+	opt.Get().RuntimeStore.Version = version
+
 	app := cli.NewApp()
 	app.Name = "KtConnect"
 	app.Usage = ""
 	app.Version = version
 	app.Authors = general.NewCliAuthor()
-	app.Flags = general.AppFlags(opt.Get(), version)
-
-	action := command.Action{}
-
-	app.Commands = newCommands(&action)
+	app.Flags = general.AppFlags(opt.Get())
+	app.Commands = newCommands(&command.Action{})
 	app.ExitErrHandler = func(context *cli.Context, err error) {
 		log.Error().Err(err).Msgf("Failed to start")
 	}

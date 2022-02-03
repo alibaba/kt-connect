@@ -46,10 +46,10 @@ func ForwardSSHTunnelToLocal(podName string, localPort int) (chan struct{}, cont
 func portForward(podName string, remotePort, localPort int, stop chan struct{}) error {
 	ready := make(chan struct{})
 	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", opt.Get().Namespace, podName)
-	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Get().RuntimeOptions.RestConfig.Host)
-	apiUrl, err := parseReqHost(opt.Get().RuntimeOptions.RestConfig.Host, apiPath)
+	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Get().RuntimeStore.RestConfig.Host)
+	apiUrl, err := parseReqHost(opt.Get().RuntimeStore.RestConfig.Host, apiPath)
 
-	transport, upgrader, err := spdy.RoundTripperFor(opt.Get().RuntimeOptions.RestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(opt.Get().RuntimeStore.RestConfig)
 	if err != nil {
 		return err
 	}

@@ -36,7 +36,7 @@ func AutoMesh(ctx context.Context, resourceName string) error {
 	// Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opt.Get().MeshOptions.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
-	opt.Get().RuntimeOptions.Mesh = versionMark
+	opt.Get().RuntimeStore.Mesh = versionMark
 
 	ports := make(map[int]int)
 	for _, p := range svc.Spec.Ports {
@@ -131,7 +131,7 @@ func createShadowService(ctx context.Context, shadowSvcName string, ports map[in
 		return err
 	}
 
-	opt.Get().RuntimeOptions.Service = shadowSvcName
+	opt.Get().RuntimeStore.Service = shadowSvcName
 	log.Info().Msgf("Service %s created", shadowSvcName)
 	return nil
 }
@@ -183,7 +183,7 @@ func createRouter(ctx context.Context, routerPodName string, svcName string,
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")
-	opt.Get().RuntimeOptions.Router = routerPodName
+	opt.Get().RuntimeStore.Router = routerPodName
 	return nil
 }
 

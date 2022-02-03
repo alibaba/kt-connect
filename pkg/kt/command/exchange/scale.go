@@ -21,8 +21,8 @@ func ByScale(resourceName string) error {
 	}
 
 	// record context inorder to remove after command exit
-	opt.Get().RuntimeOptions.Origin = resourceName
-	opt.Get().RuntimeOptions.Replicas = *app.Spec.Replicas
+	opt.Get().RuntimeStore.Origin = resourceName
+	opt.Get().RuntimeStore.Replicas = *app.Spec.Replicas
 
 	shadowPodName := resourceName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
@@ -43,7 +43,7 @@ func ByScale(resourceName string) error {
 func getExchangeAnnotation() map[string]string {
 	return map[string]string{
 		common.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
-			opt.Get().RuntimeOptions.Origin, opt.Get().RuntimeOptions.Replicas),
+			opt.Get().RuntimeStore.Origin, opt.Get().RuntimeStore.Replicas),
 	}
 }
 

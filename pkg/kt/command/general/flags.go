@@ -8,7 +8,7 @@ import (
 )
 
 // AppFlags return app flags
-func AppFlags(options *opt.DaemonOptions, version string) []cli.Flag {
+func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
@@ -30,7 +30,7 @@ func AppFlags(options *opt.DaemonOptions, version string) []cli.Flag {
 		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Customize shadow image",
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + version,
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + options.RuntimeStore.Version,
 			Destination: &options.Image,
 		},
 		cli.StringFlag{
@@ -195,7 +195,7 @@ func MeshActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Name:        "routerImage",
 			Usage:       "(auto method only) Customize router image",
 			Destination: &options.MeshOptions.RouterImage,
-			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + options.RuntimeOptions.Version,
+			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + options.RuntimeStore.Version,
 		},
 	}
 }
