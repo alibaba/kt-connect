@@ -1,9 +1,9 @@
-package tunnel
+package portforward
 
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -12,7 +12,7 @@ import (
 )
 
 // ForwardPodToLocal mapping pod port to local port
-func ForwardPodToLocal(exposePorts, podName, privateKey string, opt *options.DaemonOptions) (int, error) {
+func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
 	localSSHPort := util.GetRandomSSHPort()
 	if localSSHPort < 0 {
@@ -20,12 +20,12 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string, opt *options.Dae
 	}
 
 	// port forward pod 22 -> local <random port>
-	_, _, err := ForwardSSHTunnelToLocal(opt, podName, localSSHPort)
+	_, _, err := ForwardSSHTunnelToLocal(podName, localSSHPort)
 	if err != nil {
 		return -1, err
 	}
 
-	if opt.ExchangeOptions.Mode != common.ExchangeModeEphemeral {
+	if opt.Get().ExchangeOptions.Mode != common.ExchangeModeEphemeral {
 		// remote forward pod -> local via ssh
 		var wg sync.WaitGroup
 		// supports multi port pairs

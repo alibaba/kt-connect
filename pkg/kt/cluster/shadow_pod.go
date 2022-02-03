@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
@@ -29,23 +29,23 @@ func GetKtResources(ctx context.Context, k KubernetesInterface, namespace string
 }
 
 // GetOrCreateShadow create shadow
-func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, options *options.DaemonOptions, labels, annotations, envs map[string]string) (
+func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, labels, annotations, envs map[string]string) (
 	string, string, *util.SSHCredential, error) {
 
 	// record context data
-	options.RuntimeOptions.Shadow = name
+	opt.Get().RuntimeOptions.Shadow = name
 
 	// extra labels must be applied after origin labels
-	for key, val := range util.String2Map(options.WithLabels) {
+	for key, val := range util.String2Map(opt.Get().WithLabels) {
 		labels[key] = val
 	}
-	for key, val := range util.String2Map(options.WithAnnotations) {
+	for key, val := range util.String2Map(opt.Get().WithAnnotations) {
 		annotations[key] = val
 	}
 	annotations[common.KtUser] = util.GetLocalUserName()
 	resourceMeta := ResourceMeta{
 		Name:        name,
-		Namespace:   options.Namespace,
+		Namespace:   opt.Get().Namespace,
 		Labels:      labels,
 		Annotations: annotations,
 	}
@@ -54,7 +54,7 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
-	if options.RuntimeOptions.Component == common.ComponentConnect && options.ConnectOptions.SharedShadow {
+	if opt.Get().RuntimeOptions.Component == common.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
 		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, k, &resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", nil, err2
@@ -67,13 +67,13 @@ func GetOrCreateShadow(ctx context.Context, k KubernetesInterface, name string, 
 
 	podMeta := PodMetaAndSpec{
 		Meta:  &resourceMeta,
-		Image: options.Image,
+		Image: opt.Get().Image,
 		Envs:  envs,
 	}
-	return createShadow(ctx, k, &podMeta, &sshKeyMeta, options)
+	return createShadow(ctx, k, &podMeta, &sshKeyMeta)
 }
 
-func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta, options *options.DaemonOptions) (
+func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
 	podIP string, podName string, credential *util.SSHCredential, err error) {
 
 	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
@@ -87,7 +87,7 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 	}
 	log.Info().Msgf("Successful create config map %v", configMap.Name)
 
-	pod, err := createAndGetPod(ctx, k, metaAndSpec, sshKeyMeta.SshConfigMapName, options)
+	pod, err := createAndGetPod(ctx, k, metaAndSpec, sshKeyMeta.SshConfigMapName)
 	if err != nil {
 		return
 	}
@@ -95,15 +95,15 @@ func createShadow(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMe
 	return
 }
 
-func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) (*coreV1.Pod, error) {
-	err := k.CreateShadowPod(ctx, metaAndSpec, sshcm, options)
+func createAndGetPod(ctx context.Context, k KubernetesInterface, metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
+	err := k.CreateShadowPod(ctx, metaAndSpec, sshcm)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 
-	return k.WaitPodReady(ctx, metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, options.PodCreationWaitTime)
+	return k.WaitPodReady(ctx, metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
 }
 
 func tryGetExistingShadowRelatedObjs(ctx context.Context, k KubernetesInterface, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {

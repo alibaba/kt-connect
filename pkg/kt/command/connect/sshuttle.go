@@ -3,43 +3,43 @@ package connect
 import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshuttle"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 )
 
-func BySshuttle(cli kt.CliInterface, options *options.DaemonOptions) error {
+func BySshuttle(cli kt.CliInterface) error {
 	checkSshuttleInstalled()
 
-	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), options)
+	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes())
 	if err != nil {
 		return err
 	}
 
-	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
+	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
 
-	stop, rootCtx, err := tunnel.ForwardSSHTunnelToLocal(options, podName, options.ConnectOptions.SSHPort)
+	stop, rootCtx, err := tunnel.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
 	if err != nil {
 		return err
 	}
 
-	if err = startVPNConnection(rootCtx, options.ConnectOptions, &sshuttle.SSHVPNRequest{
+	if err = startVPNConnection(rootCtx, &sshuttle.SSHVPNRequest{
 		RemoteSSHHost:          credential.RemoteHost,
 		RemoteSSHPKPath:        credential.PrivateKeyPath,
 		RemoteDNSServerAddress: podIP,
 		CustomCIDR:             cidrs,
 		Stop:                   stop,
-		Debug:                  options.Debug,
+		Debug:                  opt.Get().Debug,
 	}); err != nil {
 		return err
 	}
 
-	return setupDns(cli, options, podIP)
+	return setupDns(cli, podIP)
 }
 
 func checkSshuttleInstalled() {
@@ -51,10 +51,10 @@ func checkSshuttleInstalled() {
 	}
 }
 
-func startVPNConnection(rootCtx context.Context, opt *options.ConnectOptions, req *sshuttle.SSHVPNRequest) (err error) {
+func startVPNConnection(rootCtx context.Context, req *sshuttle.SSHVPNRequest) (err error) {
 	err = util.BackgroundRun(&util.CMDContext{
 		Ctx:  rootCtx,
-		Cmd:  sshuttle.Ins().Connect(opt, req),
+		Cmd:  sshuttle.Ins().Connect(req),
 		Name: "vpn(sshuttle)",
 		Stop: req.Stop,
 	})

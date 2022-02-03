@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/tun"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
@@ -15,25 +15,25 @@ import (
 	"time"
 )
 
-func ByTun2Socks(cli kt.CliInterface, opt *options.DaemonOptions) error {
-	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes(), opt)
+func ByTun2Socks(cli kt.CliInterface) error {
+	podIP, podName, credential, err := getOrCreateShadow(cli.Kubernetes())
 	if err != nil {
 		return err
 	}
-	go activePodRoute(cli, opt, podName)
+	go activePodRoute(cli, podName)
 
-	_, _, err = tunnel.ForwardSSHTunnelToLocal(opt, podName, opt.ConnectOptions.SSHPort)
+	_, _, err = tunnel.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
 	if err != nil {
 		return err
 	}
-	if err = startSocks5Connection(opt, credential.PrivateKeyPath); err != nil {
+	if err = startSocks5Connection(credential.PrivateKeyPath); err != nil {
 		return err
 	}
 
-	if opt.ConnectOptions.DisableTunDevice {
-		showSetupSocksMessage(opt.ConnectOptions.SocksPort)
-		if strings.HasPrefix(opt.ConnectOptions.DnsMode, common.DnsModeHosts) {
-			return setupDns(cli, opt, podIP)
+	if opt.Get().ConnectOptions.DisableTunDevice {
+		showSetupSocksMessage(opt.Get().ConnectOptions.SocksPort)
+		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) {
+			return setupDns(cli, podIP)
 		} else {
 			return nil
 		}
@@ -41,32 +41,32 @@ func ByTun2Socks(cli kt.CliInterface, opt *options.DaemonOptions) error {
 		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
-		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.ConnectOptions.SocksPort)
-		if err = tun.Ins().ToSocks(socksAddr, opt.Debug); err != nil {
+		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort)
+		if err = tun.Ins().ToSocks(socksAddr, opt.Get().Debug); err != nil {
 			return err
 		}
 		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
 
-		if !opt.ConnectOptions.DisableTunRoute {
-			if err = setupTunRoute(cli, opt); err != nil {
+		if !opt.Get().ConnectOptions.DisableTunRoute {
+			if err = setupTunRoute(cli); err != nil {
 				return err
 			}
 			log.Info().Msgf("Route to tun device completed")
 		}
-		return setupDns(cli, opt, podIP)
+		return setupDns(cli, podIP)
 	}
 }
 
-func activePodRoute(cli kt.CliInterface, opt *options.DaemonOptions, podName string) {
-	_, stderr, _ := cli.Kubernetes().ExecInPod(common.DefaultContainer, podName, opt.Namespace, *opt.RuntimeOptions,
+func activePodRoute(cli kt.CliInterface, podName string) {
+	_, stderr, _ := cli.Kubernetes().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
 		"nslookup", "kubernetes.default.svc")
 	if stderr != "" {
 		log.Debug().Msgf("Pod route not ready, %s", stderr)
 	}
 }
 
-func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
-	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), options.Namespace, options.ConnectOptions)
+func setupTunRoute(cli kt.CliInterface) error {
+	cidrs, err := cli.Kubernetes().ClusterCidrs(context.TODO(), opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func setupTunRoute(cli kt.CliInterface, options *options.DaemonOptions) error {
 	return nil
 }
 
-func startSocks5Connection(options *options.DaemonOptions, privateKey string) error {
+func startSocks5Connection(privateKey string) error {
 	var success = make(chan error)
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -100,8 +100,8 @@ func startSocks5Connection(options *options.DaemonOptions, privateKey string) er
 		// will hang here if not error happen
 		success <-sshchannel.Ins().StartSocks5Proxy(
 			privateKey,
-			fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SSHPort),
-			fmt.Sprintf("127.0.0.1:%d", options.ConnectOptions.SocksPort),
+			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SSHPort),
+			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort),
 		)
 	}()
 	return <-success

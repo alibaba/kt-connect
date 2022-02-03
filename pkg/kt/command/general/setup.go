@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
@@ -18,22 +18,22 @@ import (
 )
 
 // SetupProcess write pid file and print setup message
-func SetupProcess(cli kt.CliInterface, options *options.DaemonOptions, componentName string) (chan os.Signal, error) {
-	options.RuntimeOptions.Component = componentName
-	log.Info().Msgf("KtConnect %s start at %d (%s)", options.RuntimeOptions.Version, os.Getpid(), runtime.GOOS)
-	ch := setupCloseHandler(cli, options)
+func SetupProcess(cli kt.CliInterface, componentName string) (chan os.Signal, error) {
+	opt.Get().RuntimeOptions.Component = componentName
+	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeOptions.Version, os.Getpid(), runtime.GOOS)
+	ch := setupCloseHandler(cli)
 	err := util.WritePidFile(componentName, ch)
 	return ch, err
 }
 
 // SetupCloseHandler registry close handler
-func setupCloseHandler(cli kt.CliInterface, options *options.DaemonOptions) (ch chan os.Signal) {
+func setupCloseHandler(cli kt.CliInterface) (ch chan os.Signal) {
 	ch = make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-ch
 		log.Info().Msgf("Process is gonna close")
-		CleanupWorkspace(cli, options)
+		CleanupWorkspace(cli)
 		os.Exit(0)
 	}()
 	return
@@ -56,29 +56,29 @@ func validateKubeOpts(opts []string) error {
 }
 
 // CombineKubeOpts set default options of kubectl if not assign
-func CombineKubeOpts(options *options.DaemonOptions) error {
-	config, err := clientcmd.LoadFromFile(options.KubeConfig)
+func CombineKubeOpts() error {
+	config, err := clientcmd.LoadFromFile(opt.Get().KubeConfig)
 	if err != nil {
 		return err
 	}
-	if len(options.KubeContext) > 0 {
+	if len(opt.Get().KubeContext) > 0 {
 		found := false
 		for name, _ := range config.Contexts {
-			if name == options.KubeContext {
+			if name == opt.Get().KubeContext {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", options.KubeContext)
+			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", opt.Get().KubeContext)
 		}
-		config.CurrentContext = options.KubeContext
+		config.CurrentContext = opt.Get().KubeContext
 	}
-	if len(options.Namespace) == 0 {
+	if len(opt.Get().Namespace) == 0 {
 		if len(config.Contexts[config.CurrentContext].Namespace) > 0 {
-			options.Namespace = config.Contexts[config.CurrentContext].Namespace
+			opt.Get().Namespace = config.Contexts[config.CurrentContext].Namespace
 		} else {
-			options.Namespace = common.DefaultNamespace
+			opt.Get().Namespace = common.DefaultNamespace
 		}
 	}
 	kubeconfigGetter := func() clientcmd.KubeconfigGetter {
@@ -94,8 +94,8 @@ func CombineKubeOpts(options *options.DaemonOptions) error {
 	if err != nil {
 		return err
 	}
-	options.RuntimeOptions.Clientset = clientSet
-	options.RuntimeOptions.RestConfig = restConfig
+	opt.Get().RuntimeOptions.Clientset = clientSet
+	opt.Get().RuntimeOptions.RestConfig = restConfig
 
 	return nil
 }

@@ -7,26 +7,26 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/dns"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strings"
 )
 
-func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp string) error {
-	if strings.HasPrefix(opt.ConnectOptions.DnsMode, common.DnsModeHosts) {
+func setupDns(cli kt.CliInterface, shadowPodIp string) error {
+	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) {
 		dump2HostsNamespaces := ""
 		pos := len(common.DnsModeHosts)
-		if len(opt.ConnectOptions.DnsMode) > pos + 1 && opt.ConnectOptions.DnsMode[pos:pos+1] == ":" {
-			dump2HostsNamespaces = opt.ConnectOptions.DnsMode[pos+1:]
+		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
+			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
 		}
-		if err := dumpToHost(cli.Kubernetes(), opt.Namespace, dump2HostsNamespaces, opt.ConnectOptions.ClusterDomain); err != nil {
+		if err := dumpToHost(cli.Kubernetes(), opt.Get().Namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
 			return err
 		}
-	} else if opt.ConnectOptions.DnsMode == common.DnsModePodDns {
-		return dns.Ins().SetNameServer(cli.Kubernetes(), shadowPodIp, opt)
-	} else if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
-		if err := dumpCurrentNamespaceToHost(cli.Kubernetes(), opt.Namespace); err != nil {
+	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
+		return dns.Ins().SetNameServer(cli.Kubernetes(), shadowPodIp)
+	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+		if err := dumpCurrentNamespaceToHost(cli.Kubernetes(), opt.Get().Namespace); err != nil {
 			return err
 		}
 		dnsPort := common.AlternativeDnsPort
@@ -39,9 +39,9 @@ func setupDns(cli kt.CliInterface, opt *options.DaemonOptions, shadowPodIp strin
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
-		return dns.Ins().SetNameServer(cli.Kubernetes(), fmt.Sprintf("%s:%d", common.Localhost, dnsPort), opt)
+		return dns.Ins().SetNameServer(cli.Kubernetes(), fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
-		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.ConnectOptions.DnsMode,
+		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().ConnectOptions.DnsMode,
 			common.DnsModeLocalDns, common.DnsModePodDns, common.DnsModeHosts)
 	}
 	return nil
@@ -99,14 +99,14 @@ func getServiceHosts(k cluster.KubernetesInterface, namespace string) map[string
 	return hosts
 }
 
-func getOrCreateShadow(kubernetes cluster.KubernetesInterface, opt *options.DaemonOptions) (string, string, *util.SSHCredential, error) {
+func getOrCreateShadow(kubernetes cluster.KubernetesInterface) (string, string, *util.SSHCredential, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
-	if opt.ConnectOptions.SharedShadow {
+	if opt.Get().ConnectOptions.SharedShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
 	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(), kubernetes,
-		shadowPodName, opt, getLabels(shadowPodName), make(map[string]string), getEnvs(opt))
+		shadowPodName, getLabels(), make(map[string]string), getEnvs())
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -114,19 +114,19 @@ func getOrCreateShadow(kubernetes cluster.KubernetesInterface, opt *options.Daem
 	return endPointIP, podName, credential, nil
 }
 
-func getEnvs(opt *options.DaemonOptions) map[string]string {
+func getEnvs() map[string]string {
 	envs := make(map[string]string)
 	localDomains := dns.GetLocalDomains()
 	if localDomains != "" {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
-	if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+	if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
 		envs[common.EnvVarDnsProtocol] = "tcp"
 	} else {
 		envs[common.EnvVarDnsProtocol] = "udp"
 	}
-	if opt.Debug {
+	if opt.Get().Debug {
 		envs[common.EnvVarLogLevel] = "debug"
 	} else {
 		envs[common.EnvVarLogLevel] = "info"
@@ -134,7 +134,7 @@ func getEnvs(opt *options.DaemonOptions) map[string]string {
 	return envs
 }
 
-func getLabels(workload string) map[string]string {
+func getLabels() map[string]string {
 	labels := map[string]string{
 		common.ControlBy: common.KubernetesTool,
 		common.KtRole:    common.RoleConnectShadow,

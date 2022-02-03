@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
@@ -141,8 +141,8 @@ func (k *Kubernetes) GetPodsByLabel(ctx context.Context, labels map[string]strin
 
 // AddEphemeralContainer add ephemeral container to specified pod
 func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName string, name string,
-	options *options.DaemonOptions, envs map[string]string) (string, error) {
-	pod, err := k.GetPod(ctx, name, options.Namespace)
+	envs map[string]string) (string, error) {
+	pod, err := k.GetPod(ctx, name, opt.Get().Namespace)
 	if err != nil {
 		return "", err
 	}
@@ -152,7 +152,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 	if err != nil {
 		return "", err
 	}
-	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, map[string]string{}, name, options.Namespace, generator)
+	configMap, err2 := k.CreateConfigMapWithSshKey(ctx, map[string]string{}, name, opt.Get().Namespace, generator)
 
 	if err2 != nil {
 		return "", errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
@@ -165,7 +165,7 @@ func (k *Kubernetes) AddEphemeralContainer(ctx context.Context, containerName st
 	ec := coreV1.EphemeralContainer{
 		EphemeralContainerCommon: coreV1.EphemeralContainerCommon{
 			Name:  containerName,
-			Image: options.Image,
+			Image: opt.Get().Image,
 			Env: []coreV1.EnvVar{
 				{Name: common.SshAuthPrivateKey, Value: privateKey},
 			},
@@ -191,7 +191,7 @@ func (k *Kubernetes) RemoveEphemeralContainer(ctx context.Context, _, podName st
 	return k.RemovePod(ctx, podName, namespace)
 }
 
-func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, opts options.RuntimeOptions, cmd ...string) (string, string, error) {
+func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error) {
 	req := k.Clientset.CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(podName).
@@ -209,7 +209,7 @@ func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, opts op
 
 	var stdout, stderr bytes.Buffer
 	log.Debug().Msgf("Execute command %v in %s:%s", cmd, podName, containerName)
-	err := execute("POST", req.URL(), opts.RestConfig, nil, &stdout, &stderr, false)
+	err := execute("POST", req.URL(), opt.Get().RuntimeOptions.RestConfig, nil, &stdout, &stderr, false)
 	stdoutMsg := util.RemoveColor(strings.TrimSpace(stdout.String()))
 	stderrMsg := util.RemoveColor(strings.TrimSpace(stderr.String()))
 	rawErrMsg := util.ExtractErrorMessage(stderrMsg)
@@ -241,10 +241,10 @@ func (k *Kubernetes) CreateConfigMapWithSshKey(ctx context.Context, labels map[s
 }
 
 // CreateShadowPod create shadow pod
-func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error {
+func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string) error {
 	cli := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace)
 	util.SetupPodHeartBeat(ctx, cli, metaAndSpec.Meta.Name)
-	pod := createPod(metaAndSpec, options)
+	pod := createPod(metaAndSpec)
 	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
 		{
 			Name:      "ssh-public-key",
@@ -261,10 +261,10 @@ func (k *Kubernetes) CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAn
 }
 
 // CreatePod create pod
-func (k *Kubernetes) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error {
+func (k *Kubernetes) CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec) error {
 	cli := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace)
 	util.SetupPodHeartBeat(ctx, cli, metaAndSpec.Meta.Name)
-	pod := createPod(metaAndSpec, options)
+	pod := createPod(metaAndSpec)
 	if _, err := cli.Create(ctx, pod, metav1.CreateOptions{}); err != nil {
 		return err
 	}
@@ -280,8 +280,8 @@ func (k *Kubernetes) CreateService(ctx context.Context, metaAndSpec *SvcMetaAndS
 }
 
 // ClusterCidrs get cluster Cidrs
-func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *options.ConnectOptions) (cidrs []string, err error) {
-	if !opt.DisablePodIp {
+func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string) (cidrs []string, err error) {
+	if !opt.Get().ConnectOptions.DisablePodIp {
 		cidrs, err = getPodCidrs(ctx, k.Clientset, namespace)
 		if err != nil {
 			return
@@ -296,9 +296,9 @@ func (k *Kubernetes) ClusterCidrs(ctx context.Context, namespace string, opt *op
 	cidrs = append(cidrs, serviceCidr...)
 	log.Debug().Msgf("Service CIDR is %v", serviceCidr)
 
-	if opt.IncludeIps != "" {
-		for _, ipRange := range strings.Split(opt.IncludeIps, ",") {
-			if opt.Mode == common.ConnectModeTun2Socks && isSingleIp(ipRange) {
+	if opt.Get().ConnectOptions.IncludeIps != "" {
+		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.IncludeIps, ",") {
+			if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks && isSingleIp(ipRange) {
 				log.Warn().Msgf("Includes single IP '%s' is not allow in %s mode", ipRange, common.ConnectModeTun2Socks)
 			} else {
 				cidrs = append(cidrs, ipRange)

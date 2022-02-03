@@ -8,7 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
@@ -19,49 +19,49 @@ import (
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+func NewPreviewCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "preview",
 		Usage: "expose a local service to kubernetes cluster",
 		UsageText: "ktctl preview <service-name> [command options]",
-		Flags: general.PreviewActionFlag(options),
+		Flags: general.PreviewActionFlag(opt.Get()),
 		Action: func(c *urfave.Context) error {
-			if options.Debug {
+			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := general.CombineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
 			if len(c.Args()) == 0 {
 				return errors.New("an service name must be specified")
 			}
-			if len(options.PreviewOptions.Expose) == 0 {
+			if len(opt.Get().PreviewOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
-			return action.Preview(c.Args().First(), cli, options)
+			return action.Preview(c.Args().First(), cli)
 		},
 	}
 }
 
 // Preview create a new service in cluster
-func (action *Action) Preview(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch, err := general.SetupProcess(cli, options, common.ComponentPreview)
+func (action *Action) Preview(serviceName string, cli kt.CliInterface) error {
+	ch, err := general.SetupProcess(cli, common.ComponentPreview)
 	if err != nil {
 		return err
 	}
 
-	if port := util.FindBrokenPort(options.PreviewOptions.Expose); port != "" {
+	if port := util.FindBrokenPort(opt.Get().PreviewOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if err = preview.Expose(context.TODO(), serviceName, cli, options); err != nil {
+	if err = preview.Expose(context.TODO(), serviceName, cli); err != nil {
 		return err
 	}
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli)
 		os.Exit(0)
 	}()
 

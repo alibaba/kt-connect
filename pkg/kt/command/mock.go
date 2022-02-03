@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	kt "github.com/alibaba/kt-connect/pkg/kt"
-	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,71 +35,71 @@ func (m *MockActionInterface) EXPECT() *MockActionInterfaceMockRecorder {
 }
 
 // Clean mocks base method.
-func (m *MockActionInterface) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Clean(cli kt.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Clean", cli, options)
+	ret := m.ctrl.Call(m, "Clean", cli)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Clean indicates an expected call of Clean.
-func (mr *MockActionInterfaceMockRecorder) Clean(cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Clean(cli interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clean", reflect.TypeOf((*MockActionInterface)(nil).Clean), cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clean", reflect.TypeOf((*MockActionInterface)(nil).Clean), cli)
 }
 
 // Connect mocks base method.
-func (m *MockActionInterface) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Connect(cli kt.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Connect", cli, options)
+	ret := m.ctrl.Call(m, "Connect", cli)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Connect indicates an expected call of Connect.
-func (mr *MockActionInterfaceMockRecorder) Connect(cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Connect(cli interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockActionInterface)(nil).Connect), cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockActionInterface)(nil).Connect), cli)
 }
 
 // Exchange mocks base method.
-func (m *MockActionInterface) Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Exchange(resourceName string, cli kt.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Exchange", resourceName, cli, options)
+	ret := m.ctrl.Call(m, "Exchange", resourceName, cli)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Exchange indicates an expected call of Exchange.
-func (mr *MockActionInterfaceMockRecorder) Exchange(resourceName, cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Exchange(resourceName, cli interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exchange", reflect.TypeOf((*MockActionInterface)(nil).Exchange), resourceName, cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exchange", reflect.TypeOf((*MockActionInterface)(nil).Exchange), resourceName, cli)
 }
 
 // Mesh mocks base method.
-func (m *MockActionInterface) Mesh(deploymentName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Mesh(deploymentName string, cli kt.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Mesh", deploymentName, cli, options)
+	ret := m.ctrl.Call(m, "Mesh", deploymentName, cli)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Mesh indicates an expected call of Mesh.
-func (mr *MockActionInterfaceMockRecorder) Mesh(deploymentName, cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Mesh(deploymentName, cli interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mesh", reflect.TypeOf((*MockActionInterface)(nil).Mesh), deploymentName, cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mesh", reflect.TypeOf((*MockActionInterface)(nil).Mesh), deploymentName, cli)
 }
 
 // Preview mocks base method.
-func (m *MockActionInterface) Preview(serviceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func (m *MockActionInterface) Preview(serviceName string, cli kt.CliInterface) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Preview", serviceName, cli, options)
+	ret := m.ctrl.Call(m, "Preview", serviceName, cli)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Preview indicates an expected call of Preview.
-func (mr *MockActionInterfaceMockRecorder) Preview(serviceName, cli, options interface{}) *gomock.Call {
+func (mr *MockActionInterfaceMockRecorder) Preview(serviceName, cli interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Preview", reflect.TypeOf((*MockActionInterface)(nil).Preview), serviceName, cli, options)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Preview", reflect.TypeOf((*MockActionInterface)(nil).Preview), serviceName, cli)
 }

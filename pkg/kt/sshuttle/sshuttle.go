@@ -3,7 +3,7 @@ package sshuttle
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"io"
 	"os"
 	"os/exec"
@@ -26,9 +26,9 @@ func (s *Cli) Install() *exec.Cmd {
 }
 
 // Connect ssh-based vpn connect
-func (s *Cli) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
+func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	var args []string
-	if opt.DnsMode == common.DnsModePodDns {
+	if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
 		args = append(args, "--dns", "--to-ns", req.RemoteDNSServerAddress)
 	}
 	if req.Debug {
@@ -36,10 +36,10 @@ func (s *Cli) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", req.RemoteSSHPKPath)
-	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, opt.SSHPort)
+	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, opt.Get().ConnectOptions.SSHPort)
 	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", req.RemoteSSHHost)
-	if opt.ExcludeIps != "" {
-		for _, ip := range strings.Split(opt.ExcludeIps, ",") {
+	if opt.Get().ConnectOptions.ExcludeIps != "" {
+		for _, ip := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {
 			args = append(args, "--exclude", ip)
 		}
 	}

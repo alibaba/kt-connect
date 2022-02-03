@@ -2,7 +2,7 @@ package kt
 
 import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 )
 
 // CliInterface ...
@@ -11,13 +11,11 @@ type CliInterface interface {
 }
 
 // Cli ...
-type Cli struct {
-	Options *options.DaemonOptions
-}
+type Cli struct {}
 
 // Kubernetes ...
 func (c *Cli) Kubernetes() cluster.KubernetesInterface {
 	return &cluster.Kubernetes{
-		Clientset: c.Options.RuntimeOptions.Clientset,
+		Clientset: opt.Get().RuntimeOptions.Clientset,
 	}
 }

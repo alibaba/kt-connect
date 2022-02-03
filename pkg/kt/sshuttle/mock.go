@@ -8,7 +8,6 @@ import (
 	exec "os/exec"
 	reflect "reflect"
 
-	options "github.com/alibaba/kt-connect/pkg/kt/options"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,9 +35,9 @@ func (m *MockSshuttle) EXPECT() *MockSshuttleMockRecorder {
 }
 
 // Connect mocks base method.
-func (m *MockSshuttle) Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd {
+func (m *MockSshuttle) Connect(req *SSHVPNRequest) *exec.Cmd {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Connect", opt, req)
+	ret := m.ctrl.Call(m, "Connect", req)
 	ret0, _ := ret[0].(*exec.Cmd)
 	return ret0
 }

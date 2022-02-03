@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
@@ -13,7 +12,7 @@ import (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) (err error) {
+func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string) (err error) {
 	// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
 	if _, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",

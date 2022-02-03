@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -24,17 +24,17 @@ const (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string, opt *options.DaemonOptions) error {
+func (s *Cli) SetNameServer(k cluster.KubernetesInterface, dnsServer string) error {
 	dnsSignal := make(chan error)
 	go func() {
 		defer func() {
 			restoreResolvConf()
-			if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
+			if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
 				restoreIptables()
 			}
 		}()
-		if opt.ConnectOptions.DnsMode == common.DnsModeLocalDns {
-			if err := setupIptables(opt); err != nil {
+		if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+			if err := setupIptables(); err != nil {
 				dnsSignal <-err
 				return
 			}
@@ -89,7 +89,7 @@ func setupResolvConf(dnsServer string) error {
 	return ioutil.WriteFile(common.ResolvConf, buf.Bytes(), stat.Mode())
 }
 
-func setupIptables(opt *options.DaemonOptions) error {
+func setupIptables() error {
 	// run command: iptables --table nat --insert OUTPUT --proto udp --dest 127.0.0.1/32 --dport 53 --jump REDIRECT --to-ports 10053
 	if _, _, err := util.RunAndWait(exec.Command("iptables",
 		"--table",

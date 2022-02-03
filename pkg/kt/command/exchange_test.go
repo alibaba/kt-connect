@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/urfave/cli"
 )
 
@@ -40,9 +40,8 @@ func Test_exchangeCommand(t *testing.T) {
 
 		context := cli.NewContext(app, set, nil)
 
-		opts := options.NewDaemonOptions("test")
-		opts.Debug = true
-		command := NewExchangeCommand(fakeKtCli, opts, mockAction)
+		opt.Get().Debug = true
+		command := NewExchangeCommand(fakeKtCli, mockAction)
 		err := command.Run(context)
 
 		if c.expectedErr != nil {

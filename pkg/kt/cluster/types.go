@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"context"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
@@ -11,8 +10,8 @@ import (
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
-	CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) error
-	CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string, options *options.DaemonOptions) error
+	CreatePod(ctx context.Context, metaAndSpec *PodMetaAndSpec) error
+	CreateShadowPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string) error
 	GetPod(ctx context.Context, name string, namespace string) (*coreV1.Pod, error)
 	GetPodsByLabel(ctx context.Context, labels map[string]string, namespace string) (*coreV1.PodList, error)
 	UpdatePod(ctx context.Context, pod *coreV1.Pod) (*coreV1.Pod, error)
@@ -20,9 +19,9 @@ type KubernetesInterface interface {
 	WaitPodTerminate(ctx context.Context, name, namespace string) (*coreV1.Pod, error)
 	IncreaseRef(ctx context.Context, name ,namespace string) error
 	DecreaseRef(ctx context.Context, name, namespace string) (bool, error)
-	AddEphemeralContainer(ctx context.Context, containerName, podName string, options *options.DaemonOptions, envs map[string]string) (string, error)
+	AddEphemeralContainer(ctx context.Context, containerName, podName string, envs map[string]string) (string, error)
 	RemoveEphemeralContainer(ctx context.Context, containerName, podName string, namespace string) error
-	ExecInPod(containerName, podName, namespace string, opts options.RuntimeOptions, cmd ...string) (string, string, error)
+	ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error)
 	RemovePod(ctx context.Context, name, namespace string) error
 
 	GetDeployment(ctx context.Context, name string, namespace string) (*appV1.Deployment, error)
@@ -47,7 +46,7 @@ type KubernetesInterface interface {
 	RemoveConfigMap(ctx context.Context, name, namespace string) (err error)
 
 	GetAllNamespaces(ctx context.Context) (*coreV1.NamespaceList, error)
-	ClusterCidrs(ctx context.Context, namespace string, connectOptions *options.ConnectOptions) (cidrs []string, err error)
+	ClusterCidrs(ctx context.Context, namespace string) (cidrs []string, err error)
 }
 
 // Kubernetes implements KubernetesInterface

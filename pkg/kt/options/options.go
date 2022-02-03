@@ -101,20 +101,24 @@ type DaemonOptions struct {
 	KubeContext         string
 }
 
-// NewDaemonOptions return new cli default options
-func NewDaemonOptions(version string) *DaemonOptions {
-	return &DaemonOptions{
-		Namespace:  common.DefaultNamespace,
-		KubeConfig: util.KubeConfig(),
-		RuntimeOptions: &RuntimeOptions{
-			Version:  version,
-			UserHome: common.UserHome,
-			AppHome:  common.KtHome,
-		},
-		ConnectOptions:  &ConnectOptions{},
-		ExchangeOptions: &ExchangeOptions{},
-		MeshOptions:     &MeshOptions{},
-		PreviewOptions:  &PreviewOptions{},
-		CleanOptions:    &CleanOptions{},
+var opt *DaemonOptions
+
+// Get fetch options instance
+func Get() *DaemonOptions {
+	if opt == nil {
+		opt = &DaemonOptions{
+			Namespace:  common.DefaultNamespace,
+			KubeConfig: util.KubeConfig(),
+			RuntimeOptions: &RuntimeOptions{
+				UserHome: common.UserHome,
+				AppHome:  common.KtHome,
+			},
+			ConnectOptions:  &ConnectOptions{},
+			ExchangeOptions: &ExchangeOptions{},
+			MeshOptions:     &MeshOptions{},
+			PreviewOptions:  &PreviewOptions{},
+			CleanOptions:    &CleanOptions{},
+		}
 	}
+	return opt
 }

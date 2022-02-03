@@ -5,22 +5,22 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 )
 
-func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string, opts *options.DaemonOptions) error {
-	app, err := general.GetDeploymentByResourceName(ctx, k, resourceName, opts.Namespace)
+func ManualMesh(ctx context.Context, k cluster.KubernetesInterface, resourceName string) error {
+	app, err := general.GetDeploymentByResourceName(ctx, k, resourceName, opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
 
-	meshKey, meshVersion := getVersion(opts.MeshOptions.VersionMark)
+	meshKey, meshVersion := getVersion(opt.Get().MeshOptions.VersionMark)
 	shadowPodName := app.Name + common.MeshPodInfix + meshVersion
 	labels := getMeshLabels(meshKey, meshVersion, app)
 	annotations := make(map[string]string)
-	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, opts.MeshOptions.Expose, labels, annotations, opts); err != nil {
+	if err = general.CreateShadowAndInbound(ctx, k, shadowPodName, opt.Get().MeshOptions.Expose, labels, annotations); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")

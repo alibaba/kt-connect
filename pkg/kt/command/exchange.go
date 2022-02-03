@@ -8,7 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/exchange"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
@@ -19,51 +19,51 @@ import (
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+func NewExchangeCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "exchange",
 		Usage: "redirect all requests of specified kubernetes service to local",
 		UsageText: "ktctl exchange <service-name> [command options]",
-		Flags: general.ExchangeActionFlag(options),
+		Flags: general.ExchangeActionFlag(opt.Get()),
 		Action: func(c *urfave.Context) error {
-			if options.Debug {
+			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := general.CombineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
 
 			if len(c.Args()) == 0 {
 				return errors.New("name of resource to exchange is required")
 			}
-			if len(options.ExchangeOptions.Expose) == 0 {
+			if len(opt.Get().ExchangeOptions.Expose) == 0 {
 				return errors.New("--expose is required")
 			}
 
-			return action.Exchange(c.Args().First(), cli, options)
+			return action.Exchange(c.Args().First(), cli)
 		},
 	}
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
-	ch, err := general.SetupProcess(cli, options, common.ComponentExchange)
+func (action *Action) Exchange(resourceName string, cli kt.CliInterface) error {
+	ch, err := general.SetupProcess(cli, common.ComponentExchange)
 	if err != nil {
 		return err
 	}
 
-	if port := util.FindBrokenPort(options.ExchangeOptions.Expose); port != "" {
+	if port := util.FindBrokenPort(opt.Get().ExchangeOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if options.ExchangeOptions.Mode == common.ExchangeModeScale {
-		err = exchange.ByScale(resourceName, cli, options)
-	} else if options.ExchangeOptions.Mode == common.ExchangeModeEphemeral {
-		err = exchange.ByEphemeralContainer(resourceName, cli, options)
-	} else if options.ExchangeOptions.Mode == common.ExchangeModeSelector {
-		err = exchange.BySelector(context.TODO(), cli.Kubernetes(), resourceName, options)
+	if opt.Get().ExchangeOptions.Mode == common.ExchangeModeScale {
+		err = exchange.ByScale(resourceName, cli)
+	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
+		err = exchange.ByEphemeralContainer(resourceName, cli)
+	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
+		err = exchange.BySelector(context.TODO(), cli.Kubernetes(), resourceName)
 	} else {
-		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", options.ExchangeOptions.Mode,
+		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
 			common.ExchangeModeSelector, common.ExchangeModeScale, common.ExchangeModeEphemeral)
 	}
 	if err != nil {
@@ -74,7 +74,7 @@ func (action *Action) Exchange(resourceName string, cli kt.CliInterface, options
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli)
 		os.Exit(0)
 	}()
 	s := <-ch

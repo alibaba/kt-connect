@@ -7,7 +7,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/tunnel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -19,30 +19,30 @@ import (
 	"time"
 )
 
-func ByEphemeralContainer(resourceName string, cli kt.CliInterface, options *options.DaemonOptions) error {
+func ByEphemeralContainer(resourceName string, cli kt.CliInterface) error {
 	log.Warn().Msgf("Experimental feature. It just works on kubernetes above v1.23, and it can NOT work with istio.")
 
 	ctx := context.Background()
-	pods, err := getPodsOfResource(ctx, cli.Kubernetes(), resourceName, options.Namespace)
+	pods, err := getPodsOfResource(ctx, cli.Kubernetes(), resourceName, opt.Get().Namespace)
 
 	for _, pod := range pods {
 		if pod.Status.Phase != coreV1.PodRunning {
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		privateKey, err2 := createEphemeralContainer(ctx, cli.Kubernetes(), common.KtExchangeContainer, pod.Name, options)
+		privateKey, err2 := createEphemeralContainer(ctx, cli.Kubernetes(), common.KtExchangeContainer, pod.Name)
 		if err2 != nil {
 			return err2
 		}
 
 		// record data
-		options.RuntimeOptions.Shadow = util.Append(options.RuntimeOptions.Shadow, pod.Name)
+		opt.Get().RuntimeOptions.Shadow = util.Append(opt.Get().RuntimeOptions.Shadow, pod.Name)
 
-		localSSHPort, err2 := tunnel.ForwardPodToLocal(options.ExchangeOptions.Expose, pod.Name, privateKey, options)
+		localSSHPort, err2 := tunnel.ForwardPodToLocal(opt.Get().ExchangeOptions.Expose, pod.Name, privateKey)
 		if err2 != nil {
 			return err2
 		}
-		err = exchangeWithEphemeralContainer(options.ExchangeOptions.Expose, localSSHPort, privateKey)
+		err = exchangeWithEphemeralContainer(opt.Get().ExchangeOptions.Expose, localSSHPort, privateKey)
 		if err != nil {
 			return err
 		}
@@ -85,18 +85,18 @@ func getPodsOfService(ctx context.Context, k8s cluster.KubernetesInterface, serv
 	return pods.Items, nil
 }
 
-func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string, options *options.DaemonOptions) (string, error) {
+func createEphemeralContainer(ctx context.Context, k8s cluster.KubernetesInterface, containerName, podName string) (string, error) {
 	log.Info().Msgf("Adding ephemeral container for pod %s", podName)
 
 	envs := make(map[string]string)
-	privateKey, err := k8s.AddEphemeralContainer(ctx, containerName, podName, options, envs)
+	privateKey, err := k8s.AddEphemeralContainer(ctx, containerName, podName, envs)
 	if err != nil {
 		return "", err
 	}
 
 	for i := 0; i < 10; i++ {
 		log.Info().Msgf("Waiting for ephemeral container %s to be ready", containerName)
-		ready, err2 := isEphemeralContainerReady(ctx, k8s, containerName, podName, options.Namespace)
+		ready, err2 := isEphemeralContainerReady(ctx, k8s, containerName, podName, opt.Get().Namespace)
 		if err2 != nil {
 			return "", err2
 		} else if ready {

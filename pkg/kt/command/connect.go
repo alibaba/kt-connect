@@ -6,7 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
@@ -17,44 +17,44 @@ import (
 )
 
 // NewConnectCommand return new connect command
-func NewConnectCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+func NewConnectCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "connect",
 		Usage: "create a network tunnel to kubernetes cluster",
 		UsageText: "ktctl connect [command options]",
-		Flags: general.ConnectActionFlag(options),
+		Flags: general.ConnectActionFlag(opt.Get()),
 		Action: func(c *urfave.Context) error {
-			if options.Debug {
+			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := general.CombineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
-			return action.Connect(cli, options)
+			return action.Connect(cli)
 		},
 	}
 }
 
 // Connect connect vpn to kubernetes cluster
-func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOptions) error {
-	if err := checkOptions(options); err != nil {
+func (action *Action) Connect(cli kt.CliInterface) error {
+	if err := checkOptions(); err != nil {
 		return err
 	}
 	if pid := util.GetDaemonRunning(common.ComponentConnect); pid > 0 {
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
-	ch, err := general.SetupProcess(cli, options, common.ComponentConnect)
+	ch, err := general.SetupProcess(cli, common.ComponentConnect)
 	if err != nil {
 		return err
 	}
 
-	if options.ConnectOptions.Mode == common.ConnectModeTun2Socks {
-		err = connect.ByTun2Socks(cli, options)
-	} else if options.ConnectOptions.Mode == common.ConnectModeShuttle {
-		err = connect.BySshuttle(cli, options)
+	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks {
+		err = connect.ByTun2Socks(cli)
+	} else if opt.Get().ConnectOptions.Mode == common.ConnectModeShuttle {
+		err = connect.BySshuttle(cli)
 	} else {
-		err = fmt.Errorf("invalid connect mode: '%s', supportted mode are %s, %s", options.ConnectOptions.Mode,
+		err = fmt.Errorf("invalid connect mode: '%s', supportted mode are %s, %s", opt.Get().ConnectOptions.Mode,
 			common.ConnectModeTun2Socks, common.ConnectModeShuttle)
 	}
 	if err != nil {
@@ -66,7 +66,7 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		general.CleanupWorkspace(cli, options)
+		general.CleanupWorkspace(cli)
 		os.Exit(0)
 	}()
 	s := <-ch
@@ -76,8 +76,8 @@ func (action *Action) Connect(cli kt.CliInterface, options *options.DaemonOption
 	return nil
 }
 
-func checkOptions(opts *options.DaemonOptions) error {
-	if opts.ConnectOptions.Mode == common.ConnectModeTun2Socks && opts.ConnectOptions.DnsMode == common.DnsModePodDns {
+func checkOptions() error {
+	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks && opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
 		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", common.DnsModePodDns, common.ConnectModeTun2Socks)
 	}
 	return nil

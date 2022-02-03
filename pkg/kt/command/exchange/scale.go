@@ -6,44 +6,44 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	"strings"
 )
 
-func ByScale(resourceName string, cli kt.CliInterface, opts *options.DaemonOptions) error {
+func ByScale(resourceName string, cli kt.CliInterface) error {
 	ctx := context.Background()
-	app, err := general.GetDeploymentByResourceName(ctx, cli.Kubernetes(), resourceName, opts.Namespace)
+	app, err := general.GetDeploymentByResourceName(ctx, cli.Kubernetes(), resourceName, opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
 
 	// record context inorder to remove after command exit
-	opts.RuntimeOptions.Origin = resourceName
-	opts.RuntimeOptions.Replicas = *app.Spec.Replicas
+	opt.Get().RuntimeOptions.Origin = resourceName
+	opt.Get().RuntimeOptions.Replicas = *app.Spec.Replicas
 
 	shadowPodName := resourceName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
-	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opts.Namespace)
-	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, opts.ExchangeOptions.Expose,
-		getExchangeLabels(app), getExchangeAnnotation(opts), opts); err != nil {
+	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Namespace)
+	if err = general.CreateShadowAndInbound(ctx, cli.Kubernetes(), shadowPodName, opt.Get().ExchangeOptions.Expose,
+		getExchangeLabels(app), getExchangeAnnotation()); err != nil {
 		return err
 	}
 
 	down := int32(0)
-	if err = cli.Kubernetes().ScaleTo(ctx, resourceName, opts.Namespace, &down); err != nil {
+	if err = cli.Kubernetes().ScaleTo(ctx, resourceName, opt.Get().Namespace, &down); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func getExchangeAnnotation(opts *options.DaemonOptions) map[string]string {
+func getExchangeAnnotation() map[string]string {
 	return map[string]string{
 		common.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
-			opts.RuntimeOptions.Origin, opts.RuntimeOptions.Replicas),
+			opt.Get().RuntimeOptions.Origin, opt.Get().RuntimeOptions.Replicas),
 	}
 }
 

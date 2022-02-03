@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -236,13 +236,13 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	return service
 }
 
-func createContainer(image string, args []string, envs map[string]string, options *options.DaemonOptions) coreV1.Container {
+func createContainer(image string, args []string, envs map[string]string) coreV1.Container {
 	var envVar []coreV1.EnvVar
 	for k, v := range envs {
 		envVar = append(envVar, coreV1.EnvVar{Name: k, Value: v})
 	}
 	var pullPolicy coreV1.PullPolicy
-	if options.AlwaysUpdateShadow {
+	if opt.Get().AlwaysUpdateShadow {
 		pullPolicy = "Always"
 	} else {
 		pullPolicy = "IfNotPresent"
@@ -263,7 +263,7 @@ func createContainer(image string, args []string, envs map[string]string, option
 	}
 }
 
-func createPod(metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) *coreV1.Pod {
+func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 	var args []string
 	namespace := metaAndSpec.Meta.Namespace
 	name := metaAndSpec.Meta.Name
@@ -282,19 +282,19 @@ func createPod(metaAndSpec *PodMetaAndSpec, options *options.DaemonOptions) *cor
 			Annotations: annotations,
 		},
 		Spec: coreV1.PodSpec{
-			ServiceAccountName: options.ServiceAccount,
+			ServiceAccountName: opt.Get().ServiceAccount,
 			Containers: []coreV1.Container{
-				createContainer(image, args, envs, options),
+				createContainer(image, args, envs),
 			},
 		},
 	}
 
-	if options.ImagePullSecret != "" {
-		addImagePullSecret(pod, options.ImagePullSecret)
+	if opt.Get().ImagePullSecret != "" {
+		addImagePullSecret(pod, opt.Get().ImagePullSecret)
 	}
 
-	if options.NodeSelector != "" {
-		pod.Spec.NodeSelector = util.String2Map(options.NodeSelector)
+	if opt.Get().NodeSelector != "" {
+		pod.Spec.NodeSelector = util.String2Map(opt.Get().NodeSelector)
 	}
 
 	return pod

@@ -1,7 +1,6 @@
 package sshuttle
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/options"
 	"os/exec"
 )
 
@@ -9,7 +8,7 @@ import (
 type Sshuttle interface {
 	Version() *exec.Cmd
 	Install() *exec.Cmd
-	Connect(opt *options.ConnectOptions, req *SSHVPNRequest) *exec.Cmd
+	Connect(req *SSHVPNRequest) *exec.Cmd
 }
 
 // SSHVPNRequest ...

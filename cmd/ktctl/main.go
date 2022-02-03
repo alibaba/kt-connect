@@ -24,35 +24,33 @@ func init() {
 }
 
 func main() {
-	options := opt.NewDaemonOptions(version)
-
 	app := cli.NewApp()
 	app.Name = "KtConnect"
 	app.Usage = ""
 	app.Version = version
 	app.Authors = general.NewCliAuthor()
-	app.Flags = general.AppFlags(options, version)
+	app.Flags = general.AppFlags(opt.Get(), version)
 
-	context := &kt.Cli{Options: options}
+	context := &kt.Cli{}
 	action := command.Action{}
 
-	app.Commands = newCommands(context, &action, options)
+	app.Commands = newCommands(context, &action)
 	app.ExitErrHandler = func(context *cli.Context, err error) {
 		log.Error().Err(err).Msgf("Failed to start")
 	}
 	if err := app.Run(os.Args); err != nil {
-		general.CleanupWorkspace(context, options)
+		general.CleanupWorkspace(context)
 		os.Exit(-1)
 	}
 }
 
 // NewCommands return new Connect Action
-func newCommands(kt kt.CliInterface, action command.ActionInterface, options *opt.DaemonOptions) []cli.Command {
+func newCommands(kt kt.CliInterface, action command.ActionInterface) []cli.Command {
 	return []cli.Command{
-		command.NewConnectCommand(kt, options, action),
-		command.NewExchangeCommand(kt, options, action),
-		command.NewMeshCommand(kt, options, action),
-		command.NewPreviewCommand(kt, options, action),
-		command.NewCleanCommand(kt, options, action),
+		command.NewConnectCommand(kt, action),
+		command.NewExchangeCommand(kt, action),
+		command.NewMeshCommand(kt, action),
+		command.NewPreviewCommand(kt, action),
+		command.NewCleanCommand(kt, action),
 	}
 }

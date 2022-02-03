@@ -8,7 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/dns"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -31,30 +31,30 @@ type ResourceToClean struct {
 }
 
 // NewCleanCommand return new connect command
-func NewCleanCommand(cli kt.CliInterface, options *options.DaemonOptions, action ActionInterface) urfave.Command {
+func NewCleanCommand(cli kt.CliInterface, action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "clean",
 		Usage: "delete unavailing shadow pods from kubernetes cluster",
 		UsageText: "ktctl clean [command options]",
-		Flags: general.CleanActionFlag(options),
+		Flags: general.CleanActionFlag(opt.Get()),
 		Action: func(c *urfave.Context) error {
-			if options.Debug {
+			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
-			if err := general.CombineKubeOpts(options); err != nil {
+			if err := general.CombineKubeOpts(); err != nil {
 				return err
 			}
-			return action.Clean(cli, options)
+			return action.Clean(cli)
 		},
 	}
 }
 
 //Clean delete unavailing shadow pods
-func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions) error {
+func (action *Action) Clean(cli kt.CliInterface) error {
 	action.cleanPidFiles()
 	ctx := context.Background()
 
-	pods, cfs, svcs, err := cluster.GetKtResources(ctx, cli.Kubernetes(), options.Namespace)
+	pods, cfs, svcs, err := cluster.GetKtResources(ctx, cli.Kubernetes(), opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -68,27 +68,27 @@ func (action *Action) Clean(cli kt.CliInterface, options *options.DaemonOptions)
 		ServicesToUnlock: make([]string, 0),
 	}
 	for _, pod := range pods {
-		action.analysisExpiredPods(pod, options.CleanOptions.ThresholdInMinus, &resourceToClean)
+		action.analysisExpiredPods(pod, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
 	for _, cf := range cfs {
-		action.analysisExpiredConfigmaps(cf, options.CleanOptions.ThresholdInMinus, &resourceToClean)
+		action.analysisExpiredConfigmaps(cf, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
 	for _, svc := range svcs {
-		action.analysisExpiredServices(svc, options.CleanOptions.ThresholdInMinus, &resourceToClean)
+		action.analysisExpiredServices(svc, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
-	svcList, err := cli.Kubernetes().GetAllServiceInNamespace(ctx, options.Namespace)
+	svcList, err := cli.Kubernetes().GetAllServiceInNamespace(ctx, opt.Get().Namespace)
 	action.analysisLocked(svcList.Items, &resourceToClean)
 	if isEmpty(resourceToClean) {
 		log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
 	} else {
-		if options.CleanOptions.DryRun {
+		if opt.Get().CleanOptions.DryRun {
 			action.printResourceToClean(resourceToClean)
 		} else {
-			action.cleanResource(ctx, resourceToClean, cli.Kubernetes(), options.Namespace)
+			action.cleanResource(ctx, resourceToClean, cli.Kubernetes(), opt.Get().Namespace)
 		}
 	}
 
-	if !options.CleanOptions.DryRun {
+	if !opt.Get().CleanOptions.DryRun {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
 		util.CleanRsaKeys()
 		if util.GetDaemonRunning(common.ComponentConnect) < 0 {

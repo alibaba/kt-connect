@@ -2,13 +2,13 @@ package general
 
 import (
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
 )
 
 // AppFlags return app flags
-func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
+func AppFlags(options *opt.DaemonOptions, version string) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "namespace,n",
@@ -86,7 +86,7 @@ func AppFlags(options *options.DaemonOptions, version string) []cli.Flag {
 }
 
 // ConnectActionFlag ...
-func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
+func ConnectActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "mode",
@@ -151,7 +151,7 @@ func ConnectActionFlag(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
-func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
+func ExchangeActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "mode",
@@ -173,7 +173,7 @@ func ExchangeActionFlag(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
-func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
+func MeshActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "mode",
@@ -200,7 +200,7 @@ func MeshActionFlag(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
-func PreviewActionFlag(options *options.DaemonOptions) []cli.Flag {
+func PreviewActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.StringFlag{
 			Name:        "expose",
@@ -215,7 +215,7 @@ func PreviewActionFlag(options *options.DaemonOptions) []cli.Flag {
 	}
 }
 
-func CleanActionFlag(options *options.DaemonOptions) []cli.Flag {
+func CleanActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.BoolFlag{
 			Name:        "dryRun",
