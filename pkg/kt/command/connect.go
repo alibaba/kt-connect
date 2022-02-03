@@ -33,9 +33,9 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) urfave.Command
 	}
 }
 
-// Connect connect vpn to kubernetes cluster
+// Connect setup vpn to kubernetes cluster
 func (action *Action) Connect(ch chan os.Signal) error {
-	if err := checkOptions(); err != nil {
+	if err := checkPermissionAndOptions(); err != nil {
 		return err
 	}
 	if pid := util.GetDaemonRunning(common.ComponentConnect); pid > 0 {
@@ -71,7 +71,13 @@ func (action *Action) Connect(ch chan os.Signal) error {
 	return nil
 }
 
-func checkOptions() error {
+func checkPermissionAndOptions() error {
+	if !util.IsRunAsAdmin() {
+		if util.IsWindows() {
+			return fmt.Errorf("please re-run connect command as Administrator")
+		}
+		return fmt.Errorf("please re-run connect command with 'sudo'")
+	}
 	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks && opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
 		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", common.DnsModePodDns, common.ConnectModeTun2Socks)
 	}

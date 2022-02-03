@@ -11,7 +11,6 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"os"
 	"runtime"
-	"strings"
 )
 
 // SetupProcess write pid file and print setup message
@@ -19,22 +18,6 @@ func SetupProcess(componentName string, ch chan os.Signal) error {
 	opt.Get().RuntimeStore.Component = componentName
 	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS)
 	return util.WritePidFile(componentName, ch)
-}
-
-// validateKubeOpts support like '-n default | --kubeconfig=/path/to/kubeconfig'
-func validateKubeOpts(opts []string) error {
-	errMsg := "Kubectl option %s invalid, check it by 'kubectl options'"
-	for _, opt := range opts {
-		// validate like '--kubeconfig=/path/to/kube/config'
-		if strings.Contains(opt, "=") && len(strings.Fields(opt)) != 1 {
-			return fmt.Errorf(errMsg, opt)
-		}
-		// validate like '-n default'
-		if strings.Contains(opt, " ") && len(strings.Fields(opt)) != 2 {
-			return fmt.Errorf(errMsg, opt)
-		}
-	}
-	return nil
 }
 
 // CombineKubeOpts set default options of kubectl if not assign
