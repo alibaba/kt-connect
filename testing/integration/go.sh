@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 NS="kt-integration-test"
-SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.2.5"
-ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v0.2.5"
+SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:vdev"
+ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:vdev"
 DOCKER_HOST="ubuntu@192.168.64.2"
 DNS_MODE="localDNS"
 CONNECT_MODE="tun2socks"
@@ -116,7 +116,7 @@ function verify() {
       return
     fi
     log "retry times: ${c}"
-    sleep 3
+    sleep 5
   done
   fail "failed to access ${target}, got: ${res}"
 }
@@ -194,7 +194,7 @@ function prepare_local() {
 
 function test_ktctl_exchange() {
   # Test exchange
-  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange tomcat --mode ${EXCHANGE_MODE} --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
+  ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f exchange deployment/tomcat --mode ${EXCHANGE_MODE} --expose 8080 >/tmp/kt-it-exchange.log 2>&1 &
   wait_for_pod tomcat-kt-exchange 1
   check_job exchange
   check_pid_file exchange

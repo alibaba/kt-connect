@@ -21,10 +21,10 @@ func ByScale(resourceName string) error {
 	}
 
 	// record context inorder to remove after command exit
-	opt.Get().RuntimeStore.Origin = resourceName
+	opt.Get().RuntimeStore.Origin = app.Name
 	opt.Get().RuntimeStore.Replicas = *app.Spec.Replicas
 
-	shadowPodName := resourceName + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
+	shadowPodName := app.Name + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Namespace)
 	if err = general.CreateShadowAndInbound(ctx, shadowPodName, opt.Get().ExchangeOptions.Expose,
@@ -33,7 +33,7 @@ func ByScale(resourceName string) error {
 	}
 
 	down := int32(0)
-	if err = cluster.Ins().ScaleTo(ctx, resourceName, opt.Get().Namespace, &down); err != nil {
+	if err = cluster.Ins().ScaleTo(ctx, app.Name, opt.Get().Namespace, &down); err != nil {
 		return err
 	}
 
