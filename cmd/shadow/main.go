@@ -9,9 +9,12 @@ import (
 )
 
 func init() {
-	level, _ := zerolog.ParseLevel(os.Getenv(common.EnvVarLogLevel))
-	zerolog.SetGlobalLevel(level)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	if level, err := zerolog.ParseLevel(os.Getenv(common.EnvVarLogLevel)); err != nil {
+		log.Error().Err(err).Msgf("Failed to parse log level")
+	} else {
+		zerolog.SetGlobalLevel(level)
+	}
 }
 
 func main() {

@@ -21,11 +21,11 @@ const (
 	SshPort               = 22
 
 	// EnvVarLocalDomains environment variable for local domain config
-	EnvVarLocalDomains = "LOCAL_DOMAIN"
+	EnvVarLocalDomains = "KT_LOCAL_DOMAIN"
 	// EnvVarDnsProtocol environment variable for shadow pod dns protocol
-	EnvVarDnsProtocol = "DNS_PROTOCOL"
+	EnvVarDnsProtocol = "KT_DNS_PROTOCOL"
 	// EnvVarLogLevel environment variable for shadow pod log level
-	EnvVarLogLevel = "LOG_LEVEL"
+	EnvVarLogLevel = "KT_LOG_LEVEL"
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"
 	// KtTarget label used for service selecting shadow or route pod
