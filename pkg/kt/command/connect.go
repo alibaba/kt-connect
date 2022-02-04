@@ -58,7 +58,9 @@ func (action *Action) Connect(ch chan os.Signal) error {
 	if err != nil {
 		return err
 	}
-	log.Info().Msgf("All looks good, now you can access to resources in the kubernetes cluster")
+	log.Info().Msg("---------------------------------------------------------------")
+	log.Info().Msgf(" All looks good, now you can access to resources in the kubernetes cluster")
+	log.Info().Msg("---------------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {

@@ -55,6 +55,10 @@ func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
 	if err = preview.Expose(context.TODO(), serviceName); err != nil {
 		return err
 	}
+	log.Info().Msg("---------------------------------------------------------------")
+	log.Info().Msgf(" Now you can access your local service in cluster by name '%s'", serviceName)
+	log.Info().Msg("---------------------------------------------------------------")
+
 	// watch background process, clean the workspace and exit if background process occur exception
 	go func() {
 		<-process.Interrupt()
