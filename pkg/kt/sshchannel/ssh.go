@@ -141,17 +141,11 @@ func connection(privateKey string, address string) (*ssh.Client, error) {
 
 func handleClient(client net.Conn, remote net.Conn) {
 	done := make(chan int)
-	defer func() {
-		if r := recover(); r != nil {
-			log.Error().Msgf("Ssh tunnel broken: %v", r)
-			done<-1
-		}
-	}()
 
 	// Start remote -> local data transfer
 	go func() {
-		_, err := io.Copy(client, remote)
-		if err != nil {
+		defer handleBrokenTunnel(done)
+		if _, err := io.Copy(client, remote); err != nil {
 			log.Error().Err(err).Msgf("Error while copy remote->local")
 		}
 		done<-1
@@ -159,8 +153,8 @@ func handleClient(client net.Conn, remote net.Conn) {
 
 	// Start local -> remote data transfer
 	go func() {
-		_, err := io.Copy(remote, client)
-		if err != nil {
+		defer handleBrokenTunnel(done)
+		if _, err := io.Copy(remote, client); err != nil {
 			log.Error().Err(err).Msgf("Error while copy local->remote")
 		}
 		done<-1
@@ -174,5 +168,12 @@ func handleClient(client net.Conn, remote net.Conn) {
 	err = client.Close()
 	if err != nil {
 		log.Error().Err(err).Msgf("Close local connection failed")
+	}
+}
+
+func handleBrokenTunnel(done chan int) {
+	if r := recover(); r != nil {
+		log.Error().Msgf("Ssh tunnel broken: %v", r)
+		done<-1
 	}
 }
