@@ -9,16 +9,25 @@ CONNECT_MODE="tun2socks"
 EXCHANGE_MODE="scale"
 MESH_MODE="auto"
 declare -i RETRY_TIMES=10
+CLEANUP_ONLY="N"
+KEEP_PROOF="N"
+
+# Print usage
+function usage() {
+  echo "go.sh [--keep-proof] [--cleanup-only]"
+}
 
 # Log
 function log() {
-    printf "\e[34m>>\e[0m ${*}\n"
+  printf "\e[34m>>\e[0m ${*}\n"
 }
 
 # Exit with error
 function fail() {
   error "${@}"
-  cleanup
+  if [ "${KEEP_PROOF}" != "Y" ]; then
+    cleanup
+  fi
   exit 1
 }
 
@@ -36,10 +45,7 @@ function success() {
 # Clean everything up
 function cleanup() {
   log "cleaning up ..."
-  for i in `jobs -l | grep '^\[[0-9]\]' | cut -c 1-30 | grep -o ' [0-9]\+ ' | awk {'print $1'}`; do
-    log "killing process ${i}"
-    sudo kill -15 ${i};
-  done
+  rm -f ${HOME}/.ktctl/*.pid
   if [ "${DOCKER_HOST}" != "" ]; then
     PID=`ps aux | grep 'CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
     if [ "${PID}" != "" ]; then
@@ -83,15 +89,15 @@ function wait_for_pod() {
 
 # Check if background job running
 function check_job() {
-    declare -i count=`jobs | grep "${1}" | wc -l`
-    if [ ${count} -ne 1 ]; then fail "failed to setup ${1} job"; fi
+  declare -i count=`jobs | grep "${1}" | wc -l`
+  if [ ${count} -ne 1 ]; then fail "failed to setup ${1} job"; fi
 }
 
 # Check if ktctl pid file exists
 function check_pid_file() {
-    pidFile=`ls -t ${HOME}/.ktctl/${1}-*.pid | head -1`
-    pid=`cat ${pidFile}`
-    log "ktctl ${1} pid: ${pid}"
+  pidFile=`ls -t ${HOME}/.ktctl/${1}-*.pid | head -1`
+  pid=`cat ${pidFile}`
+  log "ktctl ${1} pid: ${pid}"
 }
 
 # Verify access specified url with result
@@ -223,15 +229,30 @@ function test_ktctl_preview() {
   check_job preview
   check_pid_file preview
 
+  sleep 3
   verify "service-domain" "http://tomcat-preview.${NS}.svc.cluster.local:8080" "kt-connect local v2"
   success "ktctl preview test passed"
 }
 
-prepare_cluster
-test_ktctl_connect
-prepare_local
-test_ktctl_mesh
-test_ktctl_exchange
-test_ktctl_preview
-cleanup
-success "all tests done"
+if [ "${1}" = "--help" ]; then
+  usage
+  exit 0
+elif [ "${1}" = "--cleanup-only" ]; then
+  CLEANUP_ONLY="Y"
+elif [ "${1}" = "--keep-proof" ]; then
+  KEEP_PROOF="Y"
+fi
+
+if [ "${CLEANUP_ONLY}" = "Y" ]; then
+  cleanup
+  success "cleanup done"
+else
+  prepare_cluster
+  test_ktctl_connect
+  prepare_local
+  test_ktctl_mesh
+  test_ktctl_exchange
+  test_ktctl_preview
+  cleanup
+  success "all tests done"
+fi
