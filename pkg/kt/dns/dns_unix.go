@@ -4,6 +4,7 @@ package dns
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -59,7 +60,7 @@ func fetchNameServerInConf(resolvConf string) string {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	pattern, _ := regexp.Compile("^%s[ \t]+[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")
+	pattern, _ := regexp.Compile(fmt.Sprintf("^%s[ \t]+[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", common.FieldNameserver))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if pattern.MatchString(line) {

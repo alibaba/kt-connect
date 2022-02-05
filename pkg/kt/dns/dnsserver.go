@@ -13,16 +13,18 @@ type DnsServer struct {
 	upstreamDnsAddr string
 }
 
-func SetupLocalDns(upstreamIp string, dnsPort int) error {
+func SetupLocalDns(shadowPodIp string, dnsPort int) error {
 	var success = make(chan error)
 	go func() {
 		time.Sleep(1 * time.Second)
 		success <-nil
 	}()
 	go func() {
+		nameserver := GetNameServer()
+		log.Debug().Msgf("Setup local DNS with shadow pod %s and upstream %s", shadowPodIp, nameserver)
 		success <-common.SetupDnsServer(&DnsServer{
-			clusterDnsAddr: fmt.Sprintf("%s:%d", upstreamIp, common.StandardDnsPort),
-			upstreamDnsAddr: fmt.Sprintf("%s:%d", GetNameServer(), common.StandardDnsPort),
+			clusterDnsAddr: fmt.Sprintf("%s:%d", shadowPodIp, common.StandardDnsPort),
+			upstreamDnsAddr: fmt.Sprintf("%s:%d", nameserver, common.StandardDnsPort),
 		}, dnsPort, "udp")
 	}()
 	return <-success
