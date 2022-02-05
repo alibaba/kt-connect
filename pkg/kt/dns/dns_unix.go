@@ -8,6 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -58,9 +59,10 @@ func fetchNameServerInConf(resolvConf string) string {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	pattern, _ := regexp.Compile("^%s[ \t]+[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, common.FieldNameserver) {
+		if pattern.MatchString(line) {
 			return strings.TrimSpace(strings.TrimPrefix(line, common.FieldNameserver))
 		}
 	}
