@@ -52,7 +52,6 @@ type KubernetesInterface interface {
 
 // Kubernetes implements KubernetesInterface
 type Kubernetes struct {
-	KubeConfig string
 	Clientset kubernetes.Interface
 }
 

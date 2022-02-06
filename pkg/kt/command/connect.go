@@ -76,9 +76,9 @@ func (action *Action) Connect(ch chan os.Signal) error {
 func checkPermissionAndOptions() error {
 	if !util.IsRunAsAdmin() {
 		if util.IsWindows() {
-			return fmt.Errorf("please re-run connect command as Administrator")
+			return fmt.Errorf("permission declined, please re-run connect command as Administrator")
 		}
-		return fmt.Errorf("please re-run connect command with 'sudo'")
+		return fmt.Errorf("permission declined, please re-run connect command with 'sudo'")
 	}
 	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks && opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
 		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", common.DnsModePodDns, common.ConnectModeTun2Socks)

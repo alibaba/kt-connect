@@ -15,7 +15,7 @@ func Test_toPid(t *testing.T) {
 		t.Errorf("unmatch %d", pid)
 	}
 	component, pid = action.parseComponentAndPid("abc")
-	if "connect" != component || -1 != pid {
+	if "" != component || -1 != pid {
 		t.Errorf("unmatch %d", pid)
 	}
 }

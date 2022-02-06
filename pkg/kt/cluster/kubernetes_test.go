@@ -3,11 +3,13 @@ package cluster
 import (
 	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	appv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -48,6 +50,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
+			opt.Get().ConnectOptions.IncludeIps = strings.Join(tt.args.extraIps, ",")
 			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
