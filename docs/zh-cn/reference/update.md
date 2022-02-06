@@ -3,11 +3,43 @@
 
 KtConnect的不兼容版本升级参考
 
+# 0.2.x → 0.3.x
+
+#### ① 各子命令的`--method`参数统一改为`--mode`
+
+同时重命名了部分子命令的运行模式，如Connect的`vpn`模式改为`sshuttle`模式，功能保持一致。
+
+#### ② `ktctl connect`命令的`--cidr`参数更名为`--includeIps`，`--dump2hosts`参数被`--dnsMode`参数替代
+
+`--includeIps`参数与`--excludeIps`参数相匹配，更直观的反映该参数功能。
+
+`--dnsMode`参数的`hosts`模式替代了`--dump2hosts`的功能，同时该参数提供了更丰富的域名解析方式选择。
+
+#### ③ `ktctl provide`命令更名为`ktctl preview`
+
+"预览(preview)"服务比"提供(provide)"服务与该命令的使用场景更匹配。
+
+#### ④ Exchange和Mesh默认指定service
+
+原先的Exchange命令默认是指定Deployment名称（`scale`模式）或Pod名称（`ephemeral`模式），但命令实际的直观效果是替换了相应Service的流量，直接指定Service名称在思维方式上更加符合直觉。
+
+同时该命令依然兼容指定deployment/pod，使用如`ktctl exchange --mode scale deployment/tomcat`或`ktctl exchange --mode ephemeral pod/tomcat`格式即可。
+
+#### ⑤ 默认mesh标签从kt-version改为version
+
+原先的`kt-version`标签与Istio的惯例路由标签不符，导致规则配置不便，因此改为更符合普遍通用的`version`标签。
+
+#### ⑥ 移除`ktctl dashboard`命令和`kubectl`命令插件
+
+由于实际使用场景较少，Dashboard命令和Kubectl插件已不再维护。
+
+---
+
 # 0.1.x → 0.2.x
 
 #### ① Kubernetes最低兼容版本提高到`1.16`
 
-不再支持`1.15`以及之前版本的Kubernetes集群
+不再支持`1.15`以及之前版本的Kubernetes集群。
 
 #### ② 使用shadow pod代替shadow deployment
 
@@ -30,6 +62,8 @@ KtConnect现在能够自动根据用户是否具有全局权限，自动适配�
 #### ⑥ 移除`ktctl check`命令
 
 KtConnect现在会在执行相关命令时自动检测并尝试安装缺失的组件，不再需要手工执行检查。
+
+---
 
 # 0.0.x → 0.1.x
 

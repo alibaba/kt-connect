@@ -1,6 +1,20 @@
 更新日志
 ---
 
+### 0.3.0
+
+> 发布时间：待定
+
+- `connect`命令支持`tun2socks`模式
+- `connect`命令支持本地DNS，支持同时解析集群服务域名和本地内/外网域名
+- `connect`命令支持在所有系统下访问Headless Service
+- `exchange`命令默认采用`selector`模式
+- `mesh`命令默认采用`auto`模式
+- `exchange`和`mesh`统一使用Service作为目标
+- 废弃`dashboard`命令
+- 废弃kubectl插件
+- 修复命令行参数有效性校验
+
 ### 0.2.5
 
 > 发布时间：2021-12-30

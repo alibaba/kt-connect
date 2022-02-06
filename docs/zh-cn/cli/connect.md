@@ -1,40 +1,27 @@
-## 命令: ktctl connect
+Ktctl Connect
+---
 
-从本地连接到集群
+用于从本地连接到集群。子命令参数如下：
 
-### 示例
-
-```
-ktctl --debug --namespace=default connect --method=socks5
-```
-
-### 常用参数
-
-```
---method           与集群建立虚拟连接的方式，可选值有 'vpn'（仅Linux/Mac）、'tun'（仅Linux）、'socks' 和 'socks5'
---shareShadow      与其他开发者共用代理Pod
---sshPort          指定用于本地SSH映射的端口（默认值：2222）
---dump2hosts       使用本地Hosts文件访问Service域名，并指定需要访问的Namespace列表，用逗号分隔
---clusterDomain    指定集群的域名尾缀（默认值：cluster.local）
---disablePodIp     （仅用于vpn模式）禁用Pod IP访问
---excludeIps       （仅用于vpn模式）将指定IP段指定为非集群网段，用逗号分隔
---cidr             （仅用于vpn模式）增加Pod IP段范围，用逗号分隔
---disableDNS       （仅用于vpn和tun模式）禁用DNS代理
---tunName          （仅用于tun模式）指定本地tun设备名称（默认值：tun0）
---tunCidr          （仅用于tun模式）指定本地tun设备网段（默认值：10.1.1.0/30）
---proxyAddr        （仅用于socks5模式）指定Socks5代理监听的地址（默认值：127.0.0.1）
---proxyPort        （仅用于socks5模式）指定Socks5代理监听的端口（默认值：2223）
---jvmrc            （仅用于Windows系统）生成IDEA插件使用的jvmrc文件
---setupGlobalProxy （仅用于Windows系统）自动配置系统全局代理
+```text
+--mode value           与集群建立虚拟连接的方式，可选值为 "tun2socks"（默认）和 "sshuttle"（仅限Linux/Mac）
+--dnsMode value        指定解析集群服务域名的方式，可选值为 "localDNS"（默认），"podDNS"（仅用于sshuttle模式）和 "hosts"
+--shareShadow          使用在同Namespace下共享的Shadow Pod
+--sshPort value        指定用于本地SSH映射的端口（默认值为2222）
+--clusterDomain value  指定集群的域名尾缀（默认值为"cluster.local"）
+--disablePodIp         禁用Pod IP访问，只能访问服务的Cluster IP或服务域名
+--includeIps value     将指定IP段指定为集群网段，多个IP段用逗号分隔，IP段格式如 '172.2.0.0/16'
+--excludeIps value     （仅用于`sshuttle`模式）将指定IP段指定为非集群网段，多个IP段用逗号分隔，可指定单个IP如 '192.168.64.2' 或IP段如 '192.168.64.0/24'
+--disableTunDevice     （仅用于`stun2socks`模式）仅创建Socks5代理，不创建本地tun设备
+--disableTunRoute      （仅用于`stun2socks`模式）仅创建tun设备，不自动设置本地路由规则
+--proxyPort value      （仅用于`stun2socks`模式）指定Socks5代理监听的端口（默认值为2223）
 ```
 
-### 从父命令集成的参数
+关键参数说明：
 
-```
---namespace value, -n value   目标Namespace名称 (默认值：default)
---kubeconfig value, -c value  使用的Kubernetes集群配置文件 (默认值：~/.kube/config，若存在KUBECONFIG变量则从该变量读取)
---image value, -i value       指定使用的代理镜像 (默认值：registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:<当前版本>)
---debug, -d                   开启调试日志
---label value, -l value       为代理Pod增加额外标签，例如 'label1=val1,label2=val2'
---forceUpdate                 创建代理Pod时强制更新最新镜像版本
-```
+- `--mode`提供了两种连接集群的方式。除非由于特定原因无法使用默认的`tun2socks`模式或需要排除某些IP段的路由，否则不建议修改此参数。
+- `--dnsMode`提供了三种解析集群服务域名的方式。
+ `localDNS`模式将在本地启动一个临时的域名解析服务，它既能解析集群的服务域名，也能解析本地环境的其他内/外网域名；
+ `podDNS`模式仅能解析集群的服务域名，
+ `hosts`模式用于限定本地只允许访问指定Namespace的服务域名，可通过`hosts:<namespaces>`格式指定可访问的Namespace列表，逗号分隔，如`--dnsMode hosts:default,dev,test`，默认只能访问Shadow Pod所在Namespace的服务。
+- `--shareShadow`参数允许所有在同一个Namespace下工作的开发者共用一个Shadow Pod，这种方式能够在一定程度上节约集群资源，但在Shadow Pod偶然发生崩溃时，会同时影响到所有开发者。

@@ -1,6 +1,6 @@
 ![logo](media/logo.png)
 
-# KtConnect<small>0.2.5</small>
+# KtConnect<small>0.3.0-beta2</small>
 
 > 面向Kubernetes的本地开发者辅助工具
 

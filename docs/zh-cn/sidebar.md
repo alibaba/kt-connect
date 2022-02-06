@@ -1,25 +1,24 @@
-- 入门
-  - [快速开始](zh-cn/quickstart.md)
-  - [下载](zh-cn/downloads.md)
+- 使用指南
+  - [快速开始](zh-cn/guide/quickstart.md)
+  - [下载](zh-cn/guide/downloads.md)
 
-- 指南
-  - [本地联调测试](zh-cn/guide/localdev.md)
-  - [Mesh最佳实践](zh-cn/guide/mesh.md)
-  - [使用DNS服务](zh-cn/guide/how-to-use-dns.md)
-
-- Cli参考
+- 命令参数
+  - [全局参数](zh-cn/cli/global.md)
   - [ktctl connect](zh-cn/cli/connect.md)
   - [ktctl exchange](zh-cn/cli/exchange.md)
   - [ktctl mesh](zh-cn/cli/mesh.md)
   - [ktctl preview](zh-cn/cli/preview.md)
   - [ktctl clean](zh-cn/cli/clean.md)
 
-- 问题排查：
-  - [connect](zh-cn/troubleshoot.md)
-  - [FAQ](zh-cn/faq.md)
-
-- [版本日志](zh-cn/changelog.md)
-- [升级说明](zh-cn/update.md)
-- [开发计划](zh-cn/todo.md)
+- 技术参考
+  - [Connect原理](zh-cn/reference/connect.md)
+  - [Exchange原理](zh-cn/reference/exchange.md)
+  - [Mesh原理](zh-cn/reference/mesh.md)
+  - [Preview原理](zh-cn/reference/preview.md)
+  - [Manual Mesh示例](zh-cn/reference/manual_mesh.md)
+  - [常见问题](zh-cn/reference/faq.md)
+  - [版本日志](zh-cn/reference/changelog.md)
+  - [升级说明](zh-cn/reference/update.md)
+  - [开发计划](zh-cn/reference/todo.md)
 
 <!-- - [Need Help](es-us/needhelp.md) -->
