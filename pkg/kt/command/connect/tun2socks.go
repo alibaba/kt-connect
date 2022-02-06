@@ -58,9 +58,10 @@ func ByTun2Socks() error {
 }
 
 func activePodRoute(podName string) {
-	_, stderr, _ := cluster.Ins().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
+	stdout, stderr, err := cluster.Ins().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
 		"nslookup", "-vc", "kubernetes.default.svc")
-	if stderr != "" {
+	log.Debug().Msgf("Active DNS %s", strings.TrimSpace(strings.Split(stdout, "\n")[0]))
+	if stderr != "" || err != nil {
 		log.Warn().Msgf("Pod route not ready yet, %s", stderr)
 	}
 }
