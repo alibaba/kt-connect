@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/golang/mock v1.6.0
 	github.com/miekg/dns v1.1.45
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.23.0
@@ -13,6 +12,7 @@ require (
 	github.com/wzshiming/socks5 v0.4.0
 	github.com/xjasonlyu/tun2socks/v2 v2.3.3
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
+	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
 	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
@@ -52,7 +52,6 @@ require (
 	golang.org/x/mod v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
 	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1 // indirect
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
 	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
 	golang.org/x/text v0.3.6 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
