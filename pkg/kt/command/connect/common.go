@@ -57,12 +57,8 @@ func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error 
 	hosts := map[string]string{}
 	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
-		host := getServiceHosts(namespace)
-		for svc, ip := range host {
-			if ip == "" || ip == "None" {
-				continue
-			}
-			log.Debug().Msgf("Service found: %s.%s %s", svc, namespace, ip)
+		svcToIp := getServiceHosts(namespace)
+		for svc, ip := range svcToIp {
 			if namespace == currentNamespace {
 				hosts[svc] = ip
 			}
@@ -74,17 +70,8 @@ func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error 
 }
 
 func dumpCurrentNamespaceToHost(currentNamespace string) error {
-	hosts := map[string]string{}
 	log.Debug().Msgf("Search service in %s namespace ...", currentNamespace)
-	host := getServiceHosts(currentNamespace)
-	for svc, ip := range host {
-		if ip == "" || ip == "None" {
-			continue
-		}
-		log.Debug().Msgf("Service found: %s.%s %s", svc, currentNamespace, ip)
-		hosts[svc] = ip
-	}
-	return dns.DumpHosts(hosts)
+	return dns.DumpHosts(getServiceHosts(currentNamespace))
 }
 
 func getServiceHosts(namespace string) map[string]string {
@@ -92,7 +79,18 @@ func getServiceHosts(namespace string) map[string]string {
 	services, err := cluster.Ins().GetAllServiceInNamespace(context.TODO(), namespace)
 	if err == nil {
 		for _, service := range services.Items {
-			hosts[service.Name] = service.Spec.ClusterIP
+			ip := service.Spec.ClusterIP
+			if ip == "" || ip == "None" {
+				pods, err2 := cluster.Ins().GetPodsByLabel(context.TODO(), service.Spec.Selector, namespace)
+				if err2 != nil || len(pods.Items) == 0 {
+					continue
+				}
+				ip = pods.Items[0].Status.PodIP
+				log.Debug().Msgf("Headless service found: %s.%s %s", service.Name, namespace, ip)
+			} else {
+				log.Debug().Msgf("Service found: %s.%s %s", service.Name, namespace, ip)
+			}
+			hosts[service.Name] = ip
 		}
 	}
 	return hosts
