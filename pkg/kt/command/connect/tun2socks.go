@@ -16,7 +16,7 @@ import (
 )
 
 func ByTun2Socks() error {
-	podIP, podName, credential, err := getOrCreateShadow()
+	podIP, podName, privateKeyPath, err := getOrCreateShadow()
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func ByTun2Socks() error {
 	if err != nil {
 		return err
 	}
-	if err = startSocks5Connection(credential.PrivateKeyPath); err != nil {
+	if err = startSocks5Connection(privateKeyPath); err != nil {
 		return err
 	}
 

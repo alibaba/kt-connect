@@ -20,12 +20,12 @@ func CreateShadowAndInbound(ctx context.Context, shadowPodName, portsToExpose st
 
 	podLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, shadowPodName, podLabels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(ctx, shadowPodName, podLabels, annotations, envs)
 	if err != nil {
 		return err
 	}
 
-	if _, err = transmission.ForwardPodToLocal(portsToExpose, podName, credential.PrivateKeyPath); err != nil {
+	if _, err = transmission.ForwardPodToLocal(portsToExpose, podName, privateKeyPath); err != nil {
 		return err
 	}
 	return nil

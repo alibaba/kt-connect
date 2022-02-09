@@ -32,7 +32,7 @@ func Expose(ctx context.Context, serviceName string) error {
 func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string) error {
 
 	envs := make(map[string]string)
-	_, podName, credential, err := cluster.GetOrCreateShadow(ctx, shadowPodName, labels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(ctx, shadowPodName, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 	}
 	opt.Get().RuntimeStore.Service = serviceName
 
-	if _, err = transmission.ForwardPodToLocal(opt.Get().PreviewOptions.Expose, podName, credential.PrivateKeyPath); err != nil {
+	if _, err = transmission.ForwardPodToLocal(opt.Get().PreviewOptions.Expose, podName, privateKeyPath); err != nil {
 		return err
 	}
 

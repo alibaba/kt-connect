@@ -2,6 +2,7 @@ package connect
 
 import (
 	"context"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/sshuttle"
@@ -13,7 +14,7 @@ import (
 func BySshuttle() error {
 	checkSshuttleInstalled()
 
-	podIP, podName, credential, err := getOrCreateShadow()
+	podIP, podName, privateKeyPath, err := getOrCreateShadow()
 	if err != nil {
 		return err
 	}
@@ -29,8 +30,8 @@ func BySshuttle() error {
 	}
 
 	if err = startVPNConnection(rootCtx, &sshuttle.SSHVPNRequest{
-		RemoteSSHHost:          credential.RemoteHost,
-		RemoteSSHPKPath:        credential.PrivateKeyPath,
+		RemoteSSHHost:          common.Localhost,
+		RemoteSSHPKPath:        privateKeyPath,
 		RemoteDNSServerAddress: podIP,
 		CustomCIDR:             cidrs,
 		Stop:                   stop,

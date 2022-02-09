@@ -16,13 +16,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// SSHCredential ssh info
-type SSHCredential struct {
-	RemoteHost     string
-	Port           string
-	PrivateKeyPath string
-}
-
 // SSHGenerator ssh key pair generator
 type SSHGenerator struct {
 	PrivateKey, PublicKey []byte
@@ -35,14 +28,6 @@ func NewSSHGenerator(privateKey string, publicKey string, privateKeyPath string)
 		PrivateKey:     []byte(privateKey),
 		PublicKey:      []byte(publicKey),
 		PrivateKeyPath: privateKeyPath,
-	}
-}
-
-// NewDefaultSSHCredential ...
-func NewDefaultSSHCredential() *SSHCredential {
-	return &SSHCredential{
-		Port:       "2222",
-		RemoteHost: common.Localhost,
 	}
 }
 

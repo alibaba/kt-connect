@@ -30,7 +30,7 @@ func GetKtResources(ctx context.Context, namespace string) ([]coreV1.Pod, []core
 
 // GetOrCreateShadow create shadow
 func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, envs map[string]string) (
-	string, string, *util.SSHCredential, error) {
+	string, string, string, error) {
 
 	// record context data
 	opt.Get().RuntimeStore.Shadow = name
@@ -57,7 +57,7 @@ func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, en
 	if opt.Get().RuntimeStore.Component == common.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
 		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, &resourceMeta, &sshKeyMeta)
 		if err2 != nil {
-			return "", "", nil, err2
+			return "", "", "", err2
 		}
 		if pod != nil && generator != nil {
 			podIP, podName, credential := shadowResult(pod, generator)
@@ -74,7 +74,7 @@ func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, en
 }
 
 func createShadow(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
-	podIP string, podName string, credential *util.SSHCredential, err error) {
+	podIP string, podName string, privateKeyPath string, err error) {
 
 	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
 	if err != nil {
@@ -91,7 +91,7 @@ func createShadow(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshKeyMeta *
 	if err != nil {
 		return
 	}
-	podIP, podName, credential = shadowResult(pod, generator)
+	podIP, podName, privateKeyPath = shadowResult(pod, generator)
 	return
 }
 
@@ -155,10 +155,8 @@ func getShadowPod(ctx context.Context, resourceMeta *ResourceMeta) (pod *coreV1.
 	return
 }
 
-func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, *util.SSHCredential) {
+func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, string) {
 	podIP := pod.Status.PodIP
 	podName := pod.Name
-	credential := util.NewDefaultSSHCredential()
-	credential.PrivateKeyPath = generator.PrivateKeyPath
-	return podIP, podName, credential
+	return podIP, podName, generator.PrivateKeyPath
 }

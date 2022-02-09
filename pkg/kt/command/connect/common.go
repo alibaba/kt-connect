@@ -96,19 +96,19 @@ func getServiceHosts(namespace string) map[string]string {
 	return hosts
 }
 
-func getOrCreateShadow() (string, string, *util.SSHCredential, error) {
+func getOrCreateShadow() (string, string, string, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
 	if opt.Get().ConnectOptions.SharedShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
-	endPointIP, podName, credential, err := cluster.GetOrCreateShadow(context.TODO(),
+	endPointIP, podName, privateKeyPath, err := cluster.GetOrCreateShadow(context.TODO(),
 		shadowPodName, getLabels(), make(map[string]string), getEnvs())
 	if err != nil {
-		return "", "", nil, err
+		return "", "", "", err
 	}
 
-	return endPointIP, podName, credential, nil
+	return endPointIP, podName, privateKeyPath, nil
 }
 
 func getEnvs() map[string]string {
