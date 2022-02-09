@@ -22,11 +22,15 @@ func ByTun2Socks() error {
 	}
 	go activePodRoute(podName)
 
-	_, _, err = transmission.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
+	localSshPort, err := util.GetRandomSSHPort()
 	if err != nil {
 		return err
 	}
-	if err = startSocks5Connection(privateKeyPath); err != nil {
+	_, _, err = transmission.ForwardSSHTunnelToLocal(podName, localSshPort)
+	if err != nil {
+		return err
+	}
+	if err = startSocks5Connection(privateKeyPath, localSshPort); err != nil {
 		return err
 	}
 
@@ -91,7 +95,7 @@ func setupTunRoute() error {
 	return nil
 }
 
-func startSocks5Connection(privateKey string) error {
+func startSocks5Connection(privateKey string, localSshPort int) error {
 	var success = make(chan error)
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -101,7 +105,7 @@ func startSocks5Connection(privateKey string) error {
 		// will hang here if not error happen
 		success <-sshchannel.Ins().StartSocks5Proxy(
 			privateKey,
-			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SSHPort),
+			fmt.Sprintf("127.0.0.1:%d", localSshPort),
 			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort),
 		)
 	}()

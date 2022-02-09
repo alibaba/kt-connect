@@ -11,18 +11,19 @@ import (
 )
 
 // GetRandomSSHPort get pod random ssh port
-func GetRandomSSHPort() int {
-	for i := 0; i < 10; i++ {
+func GetRandomSSHPort() (int, error) {
+	for i := 0; i < 20; i++ {
 		port := RandomPort()
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
 		if err == nil {
-			log.Debug().Msgf("port %d not available", port)
+			log.Debug().Msgf("Port %d not available", port)
 			_ = conn.Close()
 		} else {
-			return port
+			log.Debug().Msgf("Using port %d for ssh", port)
+			return port, nil
 		}
 	}
-	return -1
+	return -1, fmt.Errorf("failed to find an available port for ssh forward")
 }
 
 // ParsePortMapping parse <port> or <localPort>:<removePort> parameter

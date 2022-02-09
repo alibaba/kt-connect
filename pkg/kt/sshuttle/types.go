@@ -13,6 +13,7 @@ type Sshuttle interface {
 
 // SSHVPNRequest ...
 type SSHVPNRequest struct {
+	LocalSshPort           int
 	RemoteSSHHost          string
 	RemoteSSHPKPath        string
 	RemoteDNSServerAddress string

@@ -24,12 +24,17 @@ func BySshuttle() error {
 		return err
 	}
 
-	stop, rootCtx, err := transmission.ForwardSSHTunnelToLocal(podName, opt.Get().ConnectOptions.SSHPort)
+	localSshPort, err := util.GetRandomSSHPort()
+	if err != nil {
+		return err
+	}
+	stop, rootCtx, err := transmission.ForwardSSHTunnelToLocal(podName, localSshPort)
 	if err != nil {
 		return err
 	}
 
 	if err = startVPNConnection(rootCtx, &sshuttle.SSHVPNRequest{
+		LocalSshPort:           localSshPort,
 		RemoteSSHHost:          common.Localhost,
 		RemoteSSHPKPath:        privateKeyPath,
 		RemoteDNSServerAddress: podIP,
@@ -53,11 +58,10 @@ func checkSshuttleInstalled() {
 }
 
 func startVPNConnection(rootCtx context.Context, req *sshuttle.SSHVPNRequest) (err error) {
-	err = util.BackgroundRun(&util.CMDContext{
+	return util.BackgroundRun(&util.CMDContext{
 		Ctx:  rootCtx,
 		Cmd:  sshuttle.Ins().Connect(req),
 		Name: "vpn(sshuttle)",
 		Stop: req.Stop,
 	})
-	return err
 }

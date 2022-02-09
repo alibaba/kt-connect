@@ -36,7 +36,7 @@ func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", req.RemoteSSHPKPath)
-	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, opt.Get().ConnectOptions.SSHPort)
+	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, req.LocalSshPort)
 	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", req.RemoteSSHHost)
 	if opt.Get().ConnectOptions.ExcludeIps != "" {
 		for _, ip := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {

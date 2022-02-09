@@ -105,12 +105,6 @@ func ConnectActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Usage:       "Use shared shadow pod",
 			Destination: &options.ConnectOptions.SharedShadow,
 		},
-		cli.IntFlag{
-			Name:        "sshPort",
-			Usage:       "Specify the local port used for SSH port-forward to shadow pod",
-			Destination: &options.ConnectOptions.SSHPort,
-			Value:       2222,
-		},
 		cli.StringFlag{
 			Name:        "clusterDomain",
 			Usage:       "The cluster domain provided to kubernetes api-server",

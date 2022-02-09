@@ -14,7 +14,6 @@ type ConnectOptions struct {
 	DisablePodIp         bool
 	DisableTunDevice     bool
 	DisableTunRoute      bool
-	SSHPort              int
 	SocksPort            int
 	IncludeIps           string
 	ExcludeIps           string
