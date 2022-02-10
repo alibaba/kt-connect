@@ -11,10 +11,7 @@
   - [ktctl clean](zh-cn/cli/clean.md)
 
 - 技术参考
-  - [Connect原理](zh-cn/reference/connect.md)
-  - [Exchange原理](zh-cn/reference/exchange.md)
-  - [Mesh原理](zh-cn/reference/mesh.md)
-  - [Preview原理](zh-cn/reference/preview.md)
+  - [技术原理](zh-cn/reference/mechanism.md)
   - [Manual Mesh示例](zh-cn/reference/manual_mesh.md)
   - [常见问题](zh-cn/reference/faq.md)
   - [版本日志](zh-cn/reference/changelog.md)

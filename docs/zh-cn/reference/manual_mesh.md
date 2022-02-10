@@ -1,7 +1,7 @@
 基于Ktctl Mesh和服务网格的开发测试示例
 ---
 
-在本示例中，我们将在集群中部署服务（Tomcat:7）并通过Istio Gateway访问，在确保原有链路可正常访问的情况下通过`kt mesh`加入本地联调端点。最后修改Istio路由规则，让只有满足特定规则的流量转发到本地的待调试服务（Tomcat:8）。
+在本示例中，我们将在集群中部署服务（Tomcat:7）并通过Istio Gateway访问，在确保原有链路可正常访问的情况下通过`ktctl mesh`加入本地联调端点。最后修改Istio路由规则，让只有满足特定规则的流量转发到本地的待调试服务（Tomcat:8）。
 
 ### 准备实例应用程序
 
@@ -34,7 +34,7 @@ spec:
 status:
   loadBalancer: {}
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -154,19 +154,12 @@ $ docker run -itd -p 8080:8080 tomcat:8
 添加本地联调端点：
 
 ```bash
-$ ktctl --n mesh-demo mesh tomcat --expose 8080
-2019/06/20 11:39:58 'KtConnect' not runing, you can only access local app from cluster
-2019/06/20 11:39:59 Deploying proxy deployment tomcat-kt-ngzlj in namespace mesh-demo
-2019/06/20 11:40:01 Pod status is Pending
-2019/06/20 11:40:03 Pod status is Running
-2019/06/20 11:40:03 Success deploy proxy deployment tomcat-kt-ngzlj in namespace mesh-demo
-2019/06/20 11:40:03 -----------------------------------------------------------
-2019/06/20 11:40:03 |    Mesh Version 'ngzlj' You can update Istio rule       |
-2019/06/20 11:40:03 -----------------------------------------------------------
-2019/06/20 11:40:05 exchange port forward to local start at pid: 63226
-SSH Remote port-forward POD 172.16.1.63 22 to 127.0.0.1:2263 starting
-2019/06/20 11:40:05 ssh remote port-forward exited
-2019/06/20 11:40:07 ssh remote port-forward start at pid: 63227
+$ ktctl -n mesh-demo mesh tomcat --expose 8080
+00:00AM INF KtConnect start at <PID>
+... ...
+--------------------------------------------------------------
+ Now you can update Istio rule by label 'version: ngzlj' 
+--------------------------------------------------------------
 ```
 
 如上所示，这里部署了一个本地端点，并且版本号为`ngzlj`。此时如果访问`http://tomcat.mesh.com`能正常访问tomcat7。
