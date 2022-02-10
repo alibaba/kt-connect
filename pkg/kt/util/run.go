@@ -21,11 +21,10 @@ type CMDContext struct {
 
 // RunAndWait run cmd
 func RunAndWait(cmd *exec.Cmd) (string, string, error) {
-	ctx := &CMDContext{
+	outbuf, errbuf, err := runCmd(&CMDContext{
 		Cmd:     cmd,
 		Name:    cmd.Path,
-	}
-	outbuf, errbuf, err := runCmd(ctx)
+	})
 	if err != nil {
 		return outbuf.String(), errbuf.String(), err
 	}

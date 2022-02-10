@@ -31,13 +31,13 @@ func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
 		args = append(args, "--dns", "--to-ns", req.RemoteDNSServerAddress)
 	}
-	if req.Debug {
+	if opt.Get().Debug {
 		args = append(args, "--verbose")
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", req.RemoteSSHPKPath)
-	remoteAddr := fmt.Sprintf("root@%s:%d", req.RemoteSSHHost, req.LocalSshPort)
-	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", req.RemoteSSHHost)
+	remoteAddr := fmt.Sprintf("root@%s:%d", common.Localhost, req.LocalSshPort)
+	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", common.Localhost)
 	if opt.Get().ConnectOptions.ExcludeIps != "" {
 		for _, ip := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {
 			args = append(args, "--exclude", ip)
@@ -45,7 +45,7 @@ func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	}
 	args = append(args, req.CustomCIDR...)
 	cmd := exec.Command("sshuttle", args...)
-	if !req.Debug {
+	if !opt.Get().Debug {
 		stdoutPipe, _ := cmd.StdoutPipe()
 		stderrPipe, _ := cmd.StderrPipe()
 		if stdoutPipe != nil && stderrPipe != nil {

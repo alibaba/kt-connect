@@ -16,12 +16,12 @@ const ResourceHeartBeatIntervalMinus = 5
 const portForwardHeartBeatIntervalSec = 60
 
 // SetupPodHeartBeat setup heartbeat watcher for deployment
-func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name string) {
+func SetupPodHeartBeat(client coreV1.PodInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat pod %s ticked at %s", name, formattedTime())
-			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
+			_, err := client.Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to update pod heart beat")
 				return
@@ -31,12 +31,12 @@ func SetupPodHeartBeat(ctx context.Context, client coreV1.PodInterface, name str
 }
 
 // SetupServiceHeartBeat setup heartbeat watcher for service
-func SetupServiceHeartBeat(ctx context.Context, client coreV1.ServiceInterface, name string) {
+func SetupServiceHeartBeat(client coreV1.ServiceInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat service %s ticked at %s", name, formattedTime())
-			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
+			_, err := client.Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to update service heart beat")
 				return
@@ -46,12 +46,12 @@ func SetupServiceHeartBeat(ctx context.Context, client coreV1.ServiceInterface, 
 }
 
 // SetupConfigMapHeartBeat setup heartbeat watcher for config map
-func SetupConfigMapHeartBeat(ctx context.Context, client coreV1.ConfigMapInterface, name string) {
+func SetupConfigMapHeartBeat(client coreV1.ConfigMapInterface, name string) {
 	ticker := time.NewTicker(time.Minute * ResourceHeartBeatIntervalMinus - RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
-			_, err := client.Patch(ctx, name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
+			_, err := client.Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{})
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to update config map heart beat")
 				return

@@ -1,17 +1,15 @@
 package cluster
 
 import (
-	"context"
 	"github.com/stretchr/testify/require"
-	"reflect"
-	"strconv"
-	"testing"
-
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 	testclient "k8s.io/client-go/kubernetes/fake"
+	"reflect"
+	"strconv"
+	"testing"
 )
 
 func Test_getPodCidrs(t *testing.T) {
@@ -46,7 +44,7 @@ func Test_getPodCidrs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := testclient.NewSimpleClientset(tt.objs...)
-			gotCidrs, err := getPodCidrs(context.TODO(), client, "default")
+			gotCidrs, err := getPodCidrs(client, "default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getPodCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -78,7 +76,7 @@ func Test_getServiceCidr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			client := testclient.NewSimpleClientset(tt.objs...)
-			gotCidr, err := getServiceCidr(context.TODO(), client, "default")
+			gotCidr, err := getServiceCidr(client, "default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getServiceCidr() error = %v, wantErr %v", err, tt.wantErr)
 				return

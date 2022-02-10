@@ -2,10 +2,9 @@ package connect
 
 import (
 	"context"
-	"github.com/alibaba/kt-connect/pkg/common"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshuttle"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -19,7 +18,7 @@ func BySshuttle() error {
 		return err
 	}
 
-	cidrs, err := cluster.Ins().ClusterCidrs(context.TODO(), opt.Get().Namespace)
+	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -28,20 +27,17 @@ func BySshuttle() error {
 	if err != nil {
 		return err
 	}
-	stop, rootCtx, err := transmission.ForwardSSHTunnelToLocal(podName, localSshPort)
+	stop, err := transmission.ForwardSSHTunnelToLocal(podName, localSshPort)
 	if err != nil {
 		return err
 	}
 
-	if err = startVPNConnection(rootCtx, &sshuttle.SSHVPNRequest{
+	if err = startVPNConnection(&sshuttle.SSHVPNRequest{
 		LocalSshPort:           localSshPort,
-		RemoteSSHHost:          common.Localhost,
 		RemoteSSHPKPath:        privateKeyPath,
 		RemoteDNSServerAddress: podIP,
 		CustomCIDR:             cidrs,
-		Stop:                   stop,
-		Debug:                  opt.Get().Debug,
-	}); err != nil {
+	}, stop); err != nil {
 		return err
 	}
 
@@ -57,11 +53,11 @@ func checkSshuttleInstalled() {
 	}
 }
 
-func startVPNConnection(rootCtx context.Context, req *sshuttle.SSHVPNRequest) (err error) {
+func startVPNConnection(req *sshuttle.SSHVPNRequest, stop chan struct{}) (err error) {
 	return util.BackgroundRun(&util.CMDContext{
-		Ctx:  rootCtx,
+		Ctx:  context.Background(),
 		Cmd:  sshuttle.Ins().Connect(req),
 		Name: "vpn(sshuttle)",
-		Stop: req.Stop,
+		Stop: stop,
 	})
 }

@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
@@ -60,7 +59,7 @@ func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
 	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName)
 	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
-		err = exchange.BySelector(context.TODO(), resourceName)
+		err = exchange.BySelector(resourceName)
 	} else {
 		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
 			common.ExchangeModeSelector, common.ExchangeModeScale, common.ExchangeModeEphemeral)

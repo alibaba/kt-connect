@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
@@ -54,11 +53,10 @@ func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	ctx := context.Background()
 	if opt.Get().MeshOptions.Mode == common.MeshModeManual {
-		err = mesh.ManualMesh(ctx, resourceName)
+		err = mesh.ManualMesh(resourceName)
 	} else if opt.Get().MeshOptions.Mode == common.MeshModeAuto {
-		err = mesh.AutoMesh(ctx, resourceName)
+		err = mesh.AutoMesh(resourceName)
 	} else {
 		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.Mode,
 			common.MeshModeAuto, common.MeshModeManual)

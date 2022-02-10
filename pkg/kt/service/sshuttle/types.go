@@ -14,12 +14,9 @@ type Sshuttle interface {
 // SSHVPNRequest ...
 type SSHVPNRequest struct {
 	LocalSshPort           int
-	RemoteSSHHost          string
 	RemoteSSHPKPath        string
 	RemoteDNSServerAddress string
 	CustomCIDR             []string
-	Stop                   chan struct{}
-	Debug                  bool
 }
 
 // Cli the singleton type
@@ -27,7 +24,7 @@ type Cli struct {}
 var instance *Cli
 
 // Ins get singleton instance
-func Ins() *Cli {
+func Ins() Sshuttle {
 	if instance == nil {
 		instance = &Cli{}
 	}

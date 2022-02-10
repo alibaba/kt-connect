@@ -2,7 +2,7 @@ package dns
 
 // DnsConfig ...
 type DnsConfig interface {
-	SetNameServer(dnsServers []string, isDebug bool) error
+	SetNameServer(dnsServer string) error
 	RestoreNameServer()
 }
 
@@ -11,7 +11,7 @@ type Cli struct {}
 var instance *Cli
 
 // Ins get singleton instance
-func Ins() *Cli {
+func Ins() DnsConfig {
 	if instance == nil {
 		instance = &Cli{}
 	}

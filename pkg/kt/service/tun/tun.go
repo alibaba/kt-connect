@@ -2,6 +2,7 @@ package tun
 
 import (
 	"fmt"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog/log"
 	"github.com/xjasonlyu/tun2socks/v2/engine"
 	"os"
@@ -10,10 +11,10 @@ import (
 )
 
 // ToSocks create a tun and connect to socks endpoint
-func (s *Cli) ToSocks(sockAddr string, isDebug bool) error {
+func (s *Cli) ToSocks(sockAddr string) error {
 	tunSignal := make(chan error)
 	logLevel := "warning"
-	if isDebug {
+	if opt.Get().Debug {
 		logLevel = "debug"
 	}
 	go func() {

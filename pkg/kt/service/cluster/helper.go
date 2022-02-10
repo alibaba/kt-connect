@@ -29,9 +29,9 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 	return
 }
 
-func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
+func getPodCidrs(k kubernetes.Interface, namespace string) ([]string, error) {
 	var cidrs []string
-	if nodeList, err := k.CoreV1().Nodes().List(ctx, metav1.ListOptions{}); err != nil {
+	if nodeList, err := k.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{}); err != nil {
 		// Usually cause by the local kube config has not enough permission
 		log.Debug().Err(err).Msgf("Failed to read node information of cluster")
 	} else {
@@ -44,7 +44,7 @@ func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace string) 
 
 	if len(cidrs) == 0 {
 		log.Info().Msgf("No PodCIDR available, fetching with pod samples")
-		ipRanges, err := getPodCidrByInstance(ctx, k, namespace)
+		ipRanges, err := getPodCidrByInstance(k, namespace)
 		if err != nil {
 			return nil, err
 		}
@@ -56,10 +56,10 @@ func getPodCidrs(ctx context.Context, k kubernetes.Interface, namespace string) 
 	return cidrs, nil
 }
 
-func getPodCidrByInstance(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
-	podList, err := k.CoreV1().Pods("").List(ctx, metav1.ListOptions{Limit: 1000})
+func getPodCidrByInstance(k kubernetes.Interface, namespace string) ([]string, error) {
+	podList, err := k.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
 	if err != nil {
-		podList, err = k.CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{Limit: 1000})
+		podList, err = k.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
 	}
 
 	var ips []string
@@ -72,8 +72,8 @@ func getPodCidrByInstance(ctx context.Context, k kubernetes.Interface, namespace
 	return calculateMinimalIpRange(ips), nil
 }
 
-func getServiceCidr(ctx context.Context, k kubernetes.Interface, namespace string) ([]string, error) {
-	serviceList, err := fetchServiceList(ctx, k, namespace)
+func getServiceCidr(k kubernetes.Interface, namespace string) ([]string, error) {
+	serviceList, err := fetchServiceList(k, namespace)
 	if err != nil {
 		return []string{}, err
 	}
@@ -89,10 +89,10 @@ func getServiceCidr(ctx context.Context, k kubernetes.Interface, namespace strin
 }
 
 // fetchServiceList try list service at cluster scope. fallback to namespace scope
-func fetchServiceList(ctx context.Context, k kubernetes.Interface, namespace string) (*coreV1.ServiceList, error) {
-	serviceList, err := k.CoreV1().Services("").List(ctx, metav1.ListOptions{Limit: 1000})
+func fetchServiceList(k kubernetes.Interface, namespace string) (*coreV1.ServiceList, error) {
+	serviceList, err := k.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
 	if err != nil {
-		return k.CoreV1().Services(namespace).List(ctx, metav1.ListOptions{Limit: 1000})
+		return k.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
 	}
 	return serviceList, err
 }

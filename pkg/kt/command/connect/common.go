@@ -1,12 +1,11 @@
 package connect
 
 import (
-	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	cluster2 "github.com/alibaba/kt-connect/pkg/kt/service/cluster"
-	dns2 "github.com/alibaba/kt-connect/pkg/kt/service/dns"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -23,7 +22,7 @@ func setupDns(shadowPodIp string) error {
 			return err
 		}
 	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
-		return dns2.Ins().SetNameServer(shadowPodIp)
+		return dns.Ins().SetNameServer(shadowPodIp)
 	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
 		if err := dumpCurrentNamespaceToHost(opt.Get().Namespace); err != nil {
 			return err
@@ -34,11 +33,11 @@ func setupDns(shadowPodIp string) error {
 		}
 		// must setup name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux
-		if err := dns2.SetupLocalDns(shadowPodIp, dnsPort); err != nil {
+		if err := dns.SetupLocalDns(shadowPodIp, dnsPort); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
-		return dns2.Ins().SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
+		return dns.Ins().SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
 		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().ConnectOptions.DnsMode,
 			common.DnsModeLocalDns, common.DnsModePodDns, common.DnsModeHosts)
@@ -66,22 +65,22 @@ func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error 
 			hosts[svc+"."+namespace+".svc."+clusterDomain] = ip
 		}
 	}
-	return dns2.DumpHosts(hosts)
+	return dns.DumpHosts(hosts)
 }
 
 func dumpCurrentNamespaceToHost(currentNamespace string) error {
 	log.Debug().Msgf("Search service in %s namespace ...", currentNamespace)
-	return dns2.DumpHosts(getServiceHosts(currentNamespace))
+	return dns.DumpHosts(getServiceHosts(currentNamespace))
 }
 
 func getServiceHosts(namespace string) map[string]string {
 	hosts := map[string]string{}
-	services, err := cluster2.Ins().GetAllServiceInNamespace(context.TODO(), namespace)
+	services, err := cluster.Ins().GetAllServiceInNamespace(namespace)
 	if err == nil {
 		for _, service := range services.Items {
 			ip := service.Spec.ClusterIP
 			if ip == "" || ip == "None" {
-				pods, err2 := cluster2.Ins().GetPodsByLabel(context.TODO(), service.Spec.Selector, namespace)
+				pods, err2 := cluster.Ins().GetPodsByLabel(service.Spec.Selector, namespace)
 				if err2 != nil || len(pods.Items) == 0 {
 					continue
 				}
@@ -102,8 +101,7 @@ func getOrCreateShadow() (string, string, string, error) {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
-	endPointIP, podName, privateKeyPath, err := cluster2.GetOrCreateShadow(context.TODO(),
-		shadowPodName, getLabels(), make(map[string]string), getEnvs())
+	endPointIP, podName, privateKeyPath, err := cluster.GetOrCreateShadow(shadowPodName, getLabels(), make(map[string]string), getEnvs())
 	if err != nil {
 		return "", "", "", err
 	}
@@ -113,7 +111,7 @@ func getOrCreateShadow() (string, string, string, error) {
 
 func getEnvs() map[string]string {
 	envs := make(map[string]string)
-	localDomains := dns2.GetLocalDomains()
+	localDomains := dns.GetLocalDomains()
 	if localDomains != "" {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains

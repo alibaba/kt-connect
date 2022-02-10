@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	appv1 "k8s.io/api/apps/v1"
@@ -51,7 +50,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 			opt.Get().ConnectOptions.IncludeIps = strings.Join(tt.args.extraIps, ",")
-			gotCidrs, err := k.ClusterCidrs(context.TODO(), "default")
+			gotCidrs, err := k.ClusterCidrs("default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -95,7 +94,7 @@ func TestKubernetes_CreateService(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(),
 			}
-			_, err := k.CreateService(context.TODO(), &SvcMetaAndSpec{
+			_, err := k.CreateService(&SvcMetaAndSpec{
 				Meta: &ResourceMeta{
 					Name: tt.args.name,
 					Namespace: tt.args.namespace,
@@ -149,7 +148,7 @@ func TestKubernetes_ScaleTo(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			if err := k.ScaleTo(context.TODO(), tt.args.deployment, tt.args.namespace, &tt.args.replicas); (err != nil) != tt.wantErr {
+			if err := k.ScaleTo(tt.args.deployment, tt.args.namespace, &tt.args.replicas); (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ScaleTo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

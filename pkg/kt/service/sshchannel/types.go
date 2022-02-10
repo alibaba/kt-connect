@@ -12,7 +12,7 @@ type Cli struct {}
 var instance *Cli
 
 // Ins get singleton instance
-func Ins() *Cli {
+func Ins() Channel {
 	if instance == nil {
 		instance = &Cli{}
 	}

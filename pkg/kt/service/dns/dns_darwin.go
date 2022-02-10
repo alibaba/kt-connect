@@ -1,7 +1,6 @@
 package dns
 
 import (
-	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -29,7 +28,7 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 		return err
 	}
 	go func() {
-		namespaces, err := cluster.Ins().GetAllNamespaces(context.TODO())
+		namespaces, err := cluster.Ins().GetAllNamespaces()
 		if err != nil {
 			dnsSignal <-err
 			return

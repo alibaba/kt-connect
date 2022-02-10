@@ -1,13 +1,12 @@
 package connect
 
 import (
-	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
-	tun2 "github.com/alibaba/kt-connect/pkg/kt/service/tun"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/service/tun"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -26,8 +25,7 @@ func ByTun2Socks() error {
 	if err != nil {
 		return err
 	}
-	_, _, err = transmission.ForwardSSHTunnelToLocal(podName, localSshPort)
-	if err != nil {
+	if _, err = transmission.ForwardSSHTunnelToLocal(podName, localSshPort); err != nil {
 		return err
 	}
 	if err = startSocks5Connection(privateKeyPath, localSshPort); err != nil {
@@ -42,14 +40,14 @@ func ByTun2Socks() error {
 			return nil
 		}
 	} else {
-		if err = tun2.Ins().CheckContext(); err != nil {
+		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
 		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort)
-		if err = tun2.Ins().ToSocks(socksAddr, opt.Get().Debug); err != nil {
+		if err = tun.Ins().ToSocks(socksAddr); err != nil {
 			return err
 		}
-		log.Info().Msgf("Tun device %s is ready", tun2.Ins().GetName())
+		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
 
 		if !opt.Get().ConnectOptions.DisableTunRoute {
 			if err = setupTunRoute(); err != nil {
@@ -71,18 +69,18 @@ func activePodRoute(podName string) {
 }
 
 func setupTunRoute() error {
-	cidrs, err := cluster.Ins().ClusterCidrs(context.TODO(), opt.Get().Namespace)
+	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
 
-	err = tun2.Ins().SetRoute(cidrs)
+	err = tun.Ins().SetRoute(cidrs)
 	if err != nil {
-		if tun2.IsAllRouteFailError(err) {
-			if strings.Contains(err.(tun2.AllRouteFailError).OriginalError().Error(), "exit status") {
+		if tun.IsAllRouteFailError(err) {
+			if strings.Contains(err.(tun.AllRouteFailError).OriginalError().Error(), "exit status") {
 				log.Warn().Msgf(err.Error())
 			} else {
-				log.Warn().Err(err.(tun2.AllRouteFailError).OriginalError()).Msgf(err.Error())
+				log.Warn().Err(err.(tun.AllRouteFailError).OriginalError()).Msgf(err.Error())
 			}
 			return err
 		}

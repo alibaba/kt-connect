@@ -3,7 +3,7 @@ package tun
 // Tunnel ...
 type Tunnel interface {
 	CheckContext() error
-	ToSocks(sockAddr string, isDebug bool) error
+	ToSocks(sockAddr string) error
 	SetRoute(ipRange []string) error
 	GetName() string
 }
@@ -13,7 +13,7 @@ type Cli struct {}
 var instance *Cli
 
 // Ins get singleton instance
-func Ins() *Cli {
+func Ins() Tunnel {
 	if instance == nil {
 		instance = &Cli{}
 	}

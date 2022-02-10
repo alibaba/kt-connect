@@ -1,7 +1,6 @@
 package cluster
 
 import (
-	"context"
 	"errors"
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -12,16 +11,16 @@ import (
 )
 
 // GetKtResources fetch all kt pods and deployments
-func GetKtResources(ctx context.Context, namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error) {
-	pods, err := Ins().GetPodsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+func GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error) {
+	pods, err := Ins().GetPodsByLabel(map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	configmaps, err := Ins().GetConfigMapsByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	configmaps, err := Ins().GetConfigMapsByLabel(map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	services, err := Ins().GetServicesByLabel(ctx, map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	services, err := Ins().GetServicesByLabel(map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -29,7 +28,7 @@ func GetKtResources(ctx context.Context, namespace string) ([]coreV1.Pod, []core
 }
 
 // GetOrCreateShadow create shadow
-func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, envs map[string]string) (
+func GetOrCreateShadow(name string, labels, annotations, envs map[string]string) (
 	string, string, string, error) {
 
 	// record context data
@@ -55,7 +54,7 @@ func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, en
 	}
 
 	if opt.Get().RuntimeStore.Component == common.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
-		pod, generator, err2 := tryGetExistingShadowRelatedObjs(ctx, &resourceMeta, &sshKeyMeta)
+		pod, generator, err2 := tryGetExistingShadowRelatedObjs(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
 		}
@@ -70,10 +69,10 @@ func GetOrCreateShadow(ctx context.Context, name string, labels, annotations, en
 		Image: opt.Get().Image,
 		Envs:  envs,
 	}
-	return createShadow(ctx, &podMeta, &sshKeyMeta)
+	return createShadow(&podMeta, &sshKeyMeta)
 }
 
-func createShadow(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
+func createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
 	podIP string, podName string, privateKeyPath string, err error) {
 
 	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
@@ -81,13 +80,13 @@ func createShadow(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshKeyMeta *
 		return
 	}
 
-	configMap, err := Ins().CreateConfigMapWithSshKey(ctx, metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
+	configMap, err := Ins().CreateConfigMapWithSshKey(metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
 	if err != nil {
 		return
 	}
 	log.Info().Msgf("Successful create config map %v", configMap.Name)
 
-	pod, err := createAndGetPod(ctx, metaAndSpec, sshKeyMeta.SshConfigMapName)
+	pod, err := createAndGetPod(metaAndSpec, sshKeyMeta.SshConfigMapName)
 	if err != nil {
 		return
 	}
@@ -95,30 +94,30 @@ func createShadow(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshKeyMeta *
 	return
 }
 
-func createAndGetPod(ctx context.Context, metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
-	err := Ins().CreateShadowPod(ctx, metaAndSpec, sshcm)
+func createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
+	err := Ins().CreateShadowPod(metaAndSpec, sshcm)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 
-	return Ins().WaitPodReady(ctx, metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+	return Ins().WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
 }
 
-func tryGetExistingShadowRelatedObjs(ctx context.Context, resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
-	pod, ignorableErr := Ins().GetPod(ctx, resourceMeta.Name, resourceMeta.Namespace);
+func tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
+	pod, ignorableErr := Ins().GetPod(resourceMeta.Name, resourceMeta.Namespace);
 	if ignorableErr != nil {
 		return nil, nil, nil
 	}
 
-	configMap, err := Ins().GetConfigMap(ctx, sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
+	configMap, err := Ins().GetConfigMap(sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			if pod.DeletionTimestamp == nil {
 				log.Error().Msgf("Found shadow Pod without ConfigMap. Please delete the pod '%s'", resourceMeta.Name)
 			} else {
-				_, err = Ins().WaitPodTerminate(ctx, resourceMeta.Name, resourceMeta.Namespace)
+				_, err = Ins().WaitPodTerminate(resourceMeta.Name, resourceMeta.Namespace)
 				if k8sErrors.IsNotFound(err) {
 					// Pod already terminated
 					return nil, nil, nil
@@ -134,18 +133,18 @@ func tryGetExistingShadowRelatedObjs(ctx context.Context, resourceMeta *Resource
 		return nil, nil, err
 	}
 
-	pod, err = getShadowPod(ctx, resourceMeta)
+	pod, err = getShadowPod(resourceMeta)
 	return pod, generator, err
 }
 
-func getShadowPod(ctx context.Context, resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
-	podList, err := Ins().GetPodsByLabel(ctx, resourceMeta.Labels, resourceMeta.Namespace)
+func getShadowPod(resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
+	podList, err := Ins().GetPodsByLabel(resourceMeta.Labels, resourceMeta.Namespace)
 	if err != nil {
 		return
 	}
 	if len(podList.Items) == 1 {
 		log.Info().Msgf("Found shadow daemon pod, reuse it")
-		if err = Ins().IncreaseRef(ctx, resourceMeta.Name, resourceMeta.Namespace); err != nil {
+		if err = Ins().IncreaseRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
 			return
 		}
 		return &(podList.Items[0]), nil

@@ -1,11 +1,10 @@
 package preview
 
 import (
-	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	cluster2 "github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -13,7 +12,7 @@ import (
 )
 
 // Expose create a new service in cluster
-func Expose(ctx context.Context, serviceName string) error {
+func Expose(serviceName string) error {
 	version := strings.ToLower(util.RandomString(5))
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
@@ -25,14 +24,14 @@ func Expose(ctx context.Context, serviceName string) error {
 		common.KtConfig: fmt.Sprintf("service=%s", serviceName),
 	}
 
-	return exposeLocalService(ctx, serviceName, shadowPodName, labels, annotations)
+	return exposeLocalService(serviceName, shadowPodName, labels, annotations)
 }
 
 // exposeLocalService create shadow and expose service if need
-func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string) error {
+func exposeLocalService(serviceName, shadowPodName string, labels, annotations map[string]string) error {
 
 	envs := make(map[string]string)
-	_, podName, privateKeyPath, err := cluster2.GetOrCreateShadow(ctx, shadowPodName, labels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(shadowPodName, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -47,8 +46,8 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 		}
 		ports[localPort] = remotePort
 	}
-	if _, err = cluster2.Ins().CreateService(ctx, &cluster2.SvcMetaAndSpec{
-		Meta: &cluster2.ResourceMeta{
+	if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
+		Meta: &cluster.ResourceMeta{
 			Name: serviceName,
 			Namespace: opt.Get().Namespace,
 			Labels: map[string]string{},

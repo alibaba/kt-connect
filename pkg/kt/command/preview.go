@@ -1,7 +1,6 @@
 package command
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
@@ -52,7 +51,7 @@ func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if err = preview.Expose(context.TODO(), serviceName); err != nil {
+	if err = preview.Expose(serviceName); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")

@@ -1,12 +1,11 @@
 package exchange
 
 import (
-	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
-	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
@@ -14,8 +13,7 @@ import (
 )
 
 func ByScale(resourceName string) error {
-	ctx := context.Background()
-	app, err := general.GetDeploymentByResourceName(ctx, resourceName, opt.Get().Namespace)
+	app, err := general.GetDeploymentByResourceName(resourceName, opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -27,13 +25,13 @@ func ByScale(resourceName string) error {
 	shadowPodName := app.Name + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Namespace)
-	if err = general.CreateShadowAndInbound(ctx, shadowPodName, opt.Get().ExchangeOptions.Expose,
+	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().ExchangeOptions.Expose,
 		getExchangeLabels(app), getExchangeAnnotation()); err != nil {
 		return err
 	}
 
 	down := int32(0)
-	if err = cluster.Ins().ScaleTo(ctx, app.Name, opt.Get().Namespace, &down); err != nil {
+	if err = cluster.Ins().ScaleTo(app.Name, opt.Get().Namespace, &down); err != nil {
 		return err
 	}
 

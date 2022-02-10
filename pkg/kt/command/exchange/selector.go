@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
@@ -11,19 +10,19 @@ import (
 	"strings"
 )
 
-func BySelector(ctx context.Context, resourceName string) error {
+func BySelector(resourceName string) error {
 	// Get service to exchange
-	svc, err := general.GetServiceByResourceName(ctx, resourceName, opt.Get().Namespace)
+	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
 
 	// Lock service to avoid conflict, must be first step
-	svc, err = general.LockService(ctx, svc.Name, opt.Get().Namespace, 0);
+	svc, err = general.LockService(svc.Name, opt.Get().Namespace, 0);
 	if err != nil {
 		return err
 	}
-	defer general.UnlockService(ctx, svc.Name, opt.Get().Namespace)
+	defer general.UnlockService(svc.Name, opt.Get().Namespace)
 
 	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
 		if svc.Spec.Selector[common.KtRole] == common.RoleExchangeShadow {
@@ -42,13 +41,13 @@ func BySelector(ctx context.Context, resourceName string) error {
 		common.KtRole: common.RoleExchangeShadow,
 		common.KtTarget: util.RandomString(20),
 	}
-	if err = general.CreateShadowAndInbound(ctx, shadowName, opt.Get().ExchangeOptions.Expose, shadowLabels, map[string]string{}); err != nil {
+	if err = general.CreateShadowAndInbound(shadowName, opt.Get().ExchangeOptions.Expose, shadowLabels, map[string]string{}); err != nil {
 		return err
 	}
 
 	// Let target service select shadow pod
 	opt.Get().RuntimeStore.Origin = svc.Name
-	if err = general.UpdateServiceSelector(ctx, svc.Name, opt.Get().Namespace, shadowLabels); err != nil {
+	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Namespace, shadowLabels); err != nil {
 		return err
 	}
 

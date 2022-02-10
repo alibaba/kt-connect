@@ -1,13 +1,12 @@
 package general
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -25,14 +24,13 @@ func CleanupWorkspace() {
 		recoverGlobalHostsAndProxy()
 	}
 
-	ctx := context.Background()
 	if opt.Get().RuntimeStore.Component == common.ComponentExchange {
-		recoverExchangedTarget(ctx)
+		recoverExchangedTarget()
 	} else if opt.Get().RuntimeStore.Component == common.ComponentMesh {
-		recoverAutoMeshRoute(ctx)
+		recoverAutoMeshRoute()
 	}
-	cleanService(ctx)
-	cleanShadowPodAndConfigMap(ctx)
+	cleanService()
+	cleanShadowPodAndConfigMap()
 }
 
 func recoverGlobalHostsAndProxy() {
@@ -69,14 +67,14 @@ func cleanLocalFiles() {
 	}
 }
 
-func recoverExchangedTarget(ctx context.Context) {
+func recoverExchangedTarget() {
 	if opt.Get().RuntimeStore.Origin == "" {
 		// process exit before target exchanged
 		return
 	}
 	if opt.Get().ExchangeOptions.Mode == common.ExchangeModeScale {
 		log.Info().Msgf("Recovering origin deployment %s", opt.Get().RuntimeStore.Origin)
-		err := cluster.Ins().ScaleTo(ctx, opt.Get().RuntimeStore.Origin, opt.Get().Namespace, &opt.Get().RuntimeStore.Replicas)
+		err := cluster.Ins().ScaleTo(opt.Get().RuntimeStore.Origin, opt.Get().Namespace, &opt.Get().RuntimeStore.Replicas)
 		if err != nil {
 			log.Error().Err(err).Msgf("Scale deployment %s to %d failed",
 				opt.Get().RuntimeStore.Origin, opt.Get().RuntimeStore.Replicas)
@@ -85,26 +83,26 @@ func recoverExchangedTarget(ctx context.Context) {
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 		go func() {
-			waitDeploymentRecoverComplete(ctx)
+			waitDeploymentRecoverComplete()
 			ch <- os.Interrupt
 		}()
 		_ = <-ch
 	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
-		RecoverOriginalService(ctx, opt.Get().RuntimeStore.Origin, opt.Get().Namespace)
+		RecoverOriginalService(opt.Get().RuntimeStore.Origin, opt.Get().Namespace)
 	}
 }
 
-func recoverAutoMeshRoute(ctx context.Context) {
+func recoverAutoMeshRoute() {
 	if opt.Get().RuntimeStore.Router != "" {
-		routerPod, err := cluster.Ins().GetPod(ctx, opt.Get().RuntimeStore.Router, opt.Get().Namespace)
+		routerPod, err := cluster.Ins().GetPod(opt.Get().RuntimeStore.Router, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
 			return
 		}
-		if shouldDelRouter, err2 := cluster.Ins().DecreaseRef(ctx, opt.Get().RuntimeStore.Router, opt.Get().Namespace); err2 != nil {
+		if shouldDelRouter, err2 := cluster.Ins().DecreaseRef(opt.Get().RuntimeStore.Router, opt.Get().Namespace); err2 != nil {
 			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opt.Get().RuntimeStore.Shadow)
 		} else if shouldDelRouter {
-			recoverService(ctx, routerPod.Annotations[common.KtConfig])
+			recoverService(routerPod.Annotations[common.KtConfig])
 		} else {
 			stdout, stderr, err3 := cluster.Ins().ExecInPod(common.DefaultContainer, opt.Get().RuntimeStore.Router, opt.Get().Namespace,
 				common.RouterBin, "remove", opt.Get().RuntimeStore.Mesh)
@@ -117,20 +115,20 @@ func recoverAutoMeshRoute(ctx context.Context) {
 	}
 }
 
-func recoverService(ctx context.Context, routerConfig string) {
+func recoverService(routerConfig string) {
 	config := util.String2Map(routerConfig)
 	svcName := config["service"]
-	RecoverOriginalService(ctx, svcName, opt.Get().Namespace)
+	RecoverOriginalService(svcName, opt.Get().Namespace)
 
 	originSvcName := svcName + common.OriginServiceSuffix
-	if err := cluster.Ins().RemoveService(ctx, originSvcName, opt.Get().Namespace); err != nil {
+	if err := cluster.Ins().RemoveService(originSvcName, opt.Get().Namespace); err != nil {
 		log.Error().Err(err).Msgf("Failed to remove origin service %s", originSvcName)
 	}
 	log.Info().Msgf("Substitution service %s removed", originSvcName)
 }
 
-func RecoverOriginalService(ctx context.Context, svcName, namespace string) {
-	if svc, err := cluster.Ins().GetService(ctx, svcName, namespace); err != nil {
+func RecoverOriginalService(svcName, namespace string) {
+	if svc, err := cluster.Ins().GetService(svcName, namespace); err != nil {
 		log.Error().Err(err).Msgf("Original service %s not found", svcName)
 		return
 	} else {
@@ -151,18 +149,18 @@ func RecoverOriginalService(ctx context.Context, svcName, namespace string) {
 		}
 		svc.Spec.Selector = selector
 		delete(svc.Annotations, common.KtSelector)
-		if _, err = cluster.Ins().UpdateService(ctx, svc); err != nil {
+		if _, err = cluster.Ins().UpdateService(svc); err != nil {
 			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
 		}
 	}
 	log.Info().Msgf("Original service %s recovered", svcName)
 }
 
-func waitDeploymentRecoverComplete(ctx context.Context) {
+func waitDeploymentRecoverComplete() {
 	ok := false
 	counts := opt.Get().ExchangeOptions.RecoverWaitTime / 5
 	for i := 0; i < counts; i++ {
-		deployment, err := cluster.Ins().GetDeployment(ctx, opt.Get().RuntimeStore.Origin, opt.Get().Namespace)
+		deployment, err := cluster.Ins().GetDeployment(opt.Get().RuntimeStore.Origin, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Cannot fetch original deployment %s", opt.Get().RuntimeStore.Origin)
 			break
@@ -179,22 +177,22 @@ func waitDeploymentRecoverComplete(ctx context.Context) {
 	}
 }
 
-func cleanService(ctx context.Context) {
+func cleanService() {
 	if opt.Get().RuntimeStore.Service != "" {
 		log.Info().Msgf("Cleaning service %s", opt.Get().RuntimeStore.Service)
-		err := cluster.Ins().RemoveService(ctx, opt.Get().RuntimeStore.Service, opt.Get().Namespace)
+		err := cluster.Ins().RemoveService(opt.Get().RuntimeStore.Service, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Delete service %s failed", opt.Get().RuntimeStore.Service)
 		}
 	}
 }
 
-func cleanShadowPodAndConfigMap(ctx context.Context) {
+func cleanShadowPodAndConfigMap() {
 	var err error
 	if opt.Get().RuntimeStore.Shadow != "" {
 		shouldDelWithShared := false
 		if opt.Get().ConnectOptions.SharedShadow {
-			shouldDelWithShared, err = cluster.Ins().DecreaseRef(ctx, opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
+			shouldDelWithShared, err = cluster.Ins().DecreaseRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opt.Get().RuntimeStore.Shadow)
 			}
@@ -202,7 +200,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context) {
 		if shouldDelWithShared || !opt.Get().ConnectOptions.SharedShadow {
 			for _, sshcm := range strings.Split(opt.Get().RuntimeStore.Shadow, ",") {
 				log.Info().Msgf("Cleaning configmap %s", sshcm)
-				err = cluster.Ins().RemoveConfigMap(ctx, sshcm, opt.Get().Namespace)
+				err = cluster.Ins().RemoveConfigMap(sshcm, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Delete configmap %s failed", sshcm)
 				}
@@ -211,7 +209,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context) {
 		if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
 			for _, shadow := range strings.Split(opt.Get().RuntimeStore.Shadow, ",") {
 				log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
-				err = cluster.Ins().RemoveEphemeralContainer(ctx, common.KtExchangeContainer, shadow, opt.Get().Namespace)
+				err = cluster.Ins().RemoveEphemeralContainer(common.KtExchangeContainer, shadow, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
 				}
@@ -219,7 +217,7 @@ func cleanShadowPodAndConfigMap(ctx context.Context) {
 		} else {
 			for _, shadow := range strings.Split(opt.Get().RuntimeStore.Shadow, ",") {
 				log.Info().Msgf("Cleaning shadow pod %s", shadow)
-				err = cluster.Ins().RemovePod(ctx, shadow, opt.Get().Namespace)
+				err = cluster.Ins().RemovePod(shadow, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
 				}
