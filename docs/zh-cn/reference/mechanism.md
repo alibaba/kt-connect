@@ -23,6 +23,7 @@ Connect命令的两种模式本质大同小异，只是在建立连接的方式�
 
 由于没有tun设备可作为路由表目标，Sshuttle模式利用`iptables`/`ipfwadm`/`nftables`工具（Linux系统）或`pfctl`工具（MacOS系统）来实现让目的地址是集群资源IP的请求发往代理服务。Windows系统中不存在类似`iptables`这样功能强大的路由控制工具，因而该模式尚无法支持Windows系统。
 
+![connect](https://img.alicdn.com/imgextra/i1/O1CN01wyIRRn1OGZKritg22_!!6000000001678-0-tps-2490-908.jpg)
 
 ## Exchange命令
 
@@ -40,6 +41,7 @@ Exchange/Mesh/Preview都使用Shadow Pod作为流量从集群发往本地的代�
 
 当ktctl exchange命令退出时，自动将Service原本的Pod实例扩容回原始数量，使流量恢复正常。
 
+![exchange](https://img.alicdn.com/imgextra/i4/O1CN01oZHLhc1YxIRdf3Oa6_!!6000000003125-0-tps-2486-908.jpg)
 
 ## Mesh命令
 
@@ -59,6 +61,7 @@ Mesh借助Router Pod或服务网格（如Istio）的能力实现按规则重定�
 
 开发者可以通过Pod的版本标识，自行创建服务网格规则，来控制哪些流量应该进入开发者的本地环境。
 
+![mesh](https://img.alicdn.com/imgextra/i4/O1CN01n5oprI1FFo8SbhBiu_!!6000000000458-0-tps-2494-978.jpg)
 
 ## Preview命令
 
@@ -66,6 +69,7 @@ Preview命令只是简单的创建Shadow Pod，并使用用户指定的名称创
 
 当ktctl preview命令退出时，会直接移除相应的Shadow Pod和Shadow Service。
 
+![preview](https://img.alicdn.com/imgextra/i4/O1CN01sEZYfx1RF8wxtPZUg_!!6000000002081-0-tps-2484-878.jpg)
 
 ## Clean命令
 
