@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	cluster2 "github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -32,7 +32,7 @@ func Expose(ctx context.Context, serviceName string) error {
 func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, labels, annotations map[string]string) error {
 
 	envs := make(map[string]string)
-	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(ctx, shadowPodName, labels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster2.GetOrCreateShadow(ctx, shadowPodName, labels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -47,8 +47,8 @@ func exposeLocalService(ctx context.Context, serviceName, shadowPodName string, 
 		}
 		ports[localPort] = remotePort
 	}
-	if _, err = cluster.Ins().CreateService(ctx, &cluster.SvcMetaAndSpec{
-		Meta: &cluster.ResourceMeta{
+	if _, err = cluster2.Ins().CreateService(ctx, &cluster2.SvcMetaAndSpec{
+		Meta: &cluster2.ResourceMeta{
 			Name: serviceName,
 			Namespace: opt.Get().Namespace,
 			Labels: map[string]string{},

@@ -38,7 +38,7 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 				return
 			}
 		}
-		dnsSignal <-setupResolvConf(dnsServer)
+		dnsSignal <- setupResolvConf(dnsServer)
 
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)

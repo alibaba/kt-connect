@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	cluster2 "github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -20,7 +20,7 @@ func CreateShadowAndInbound(ctx context.Context, shadowPodName, portsToExpose st
 
 	podLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	envs := make(map[string]string)
-	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(ctx, shadowPodName, podLabels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster2.GetOrCreateShadow(ctx, shadowPodName, podLabels, annotations, envs)
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func GetServiceByResourceName(ctx context.Context, resourceName, namespace strin
 	case "deploy":
 		fallthrough
 	case "deployment":
-		app, err2 := cluster.Ins().GetDeployment(ctx, name, namespace)
+		app, err2 := cluster2.Ins().GetDeployment(ctx, name, namespace)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -49,7 +49,7 @@ func GetServiceByResourceName(ctx context.Context, resourceName, namespace strin
 	case "svc":
 		fallthrough
 	case "service":
-		return cluster.Ins().GetService(ctx, name, namespace)
+		return cluster2.Ins().GetService(ctx, name, namespace)
 	default:
 		return nil, fmt.Errorf("invalid resource type: %s", resourceType)
 	}
@@ -65,11 +65,11 @@ func GetDeploymentByResourceName(ctx context.Context, resourceName, namespace st
 	case "deploy":
 		fallthrough
 	case "deployment":
-		return cluster.Ins().GetDeployment(ctx, name, namespace)
+		return cluster2.Ins().GetDeployment(ctx, name, namespace)
 	case "svc":
 		fallthrough
 	case "service":
-		svc, err2 := cluster.Ins().GetService(ctx, name, namespace)
+		svc, err2 := cluster2.Ins().GetService(ctx, name, namespace)
 		if err2 != nil {
 			return nil, err2
 		}
@@ -95,7 +95,7 @@ func ParseResourceName(resourceName string) (string, string, error) {
 }
 
 func UpdateServiceSelector(ctx context.Context, svcName, namespace string, selector map[string]string) error {
-	svc, err := cluster.Ins().GetService(ctx, svcName, namespace)
+	svc, err := cluster2.Ins().GetService(ctx, svcName, namespace)
 	if err != nil {
 		return err
 	}
@@ -121,22 +121,22 @@ func UpdateServiceSelector(ctx context.Context, svcName, namespace string, selec
 
 	if isServiceChanged(svc, selector, marshaledSelector) {
 		svc.Spec.Selector = selector
-		if _, err = cluster.Ins().UpdateService(ctx, svc); err != nil {
+		if _, err = cluster2.Ins().UpdateService(ctx, svc); err != nil {
 			return err
 		}
 	}
 
-	go cluster.Ins().WatchService(svcName, namespace, nil, nil, func(newSvc *coreV1.Service) {
+	go cluster2.Ins().WatchService(svcName, namespace, nil, nil, func(newSvc *coreV1.Service) {
 		if !isServiceChanged(newSvc, selector, marshaledSelector) {
 			return
 		}
 		log.Debug().Msgf("Change in service %s detected", svcName)
 		time.Sleep(util.RandomSeconds(1, 10))
-		if svc, err = cluster.Ins().GetService(ctx, svcName, namespace); err == nil {
+		if svc, err = cluster2.Ins().GetService(ctx, svcName, namespace); err == nil {
 			if isServiceChanged(svc, selector, marshaledSelector) {
 				svc.Spec.Selector = selector
 				util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
-				if _, err = cluster.Ins().UpdateService(ctx, svc); err != nil {
+				if _, err = cluster2.Ins().UpdateService(ctx, svc); err != nil {
 					log.Error().Err(err).Msgf("Failed to recover service %s", svcName)
 				} else {
 					log.Info().Msgf("Service %s recovered", svcName)
@@ -153,7 +153,7 @@ func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaled
 
 func getServiceByDeployment(ctx context.Context, app *appV1.Deployment,
 	namespace string) (*coreV1.Service, error) {
-	svcList, err := cluster.Ins().GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, namespace)
+	svcList, err := cluster2.Ins().GetServicesBySelector(ctx, app.Spec.Selector.MatchLabels, namespace)
 	if err != nil {
 		return nil, err
 	} else if len(svcList) == 0 {
@@ -171,13 +171,13 @@ func getServiceByDeployment(ctx context.Context, app *appV1.Deployment,
 	}
 	svc := svcList[0]
 	if strings.HasSuffix(svc.Name, common.OriginServiceSuffix) {
-		return cluster.Ins().GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), namespace)
+		return cluster2.Ins().GetService(ctx, strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), namespace)
 	}
 	return &svc, nil
 }
 
 func getDeploymentByService(ctx context.Context, svc *coreV1.Service, namespace string) (*appV1.Deployment, error) {
-	apps, err := cluster.Ins().GetAllDeploymentInNamespace(ctx, namespace)
+	apps, err := cluster2.Ins().GetAllDeploymentInNamespace(ctx, namespace)
 	if err != nil {
 		return nil, err
 	}

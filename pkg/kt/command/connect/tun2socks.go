@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
+	tun2 "github.com/alibaba/kt-connect/pkg/kt/service/tun"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
-	"github.com/alibaba/kt-connect/pkg/kt/tun"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -42,14 +42,14 @@ func ByTun2Socks() error {
 			return nil
 		}
 	} else {
-		if err = tun.Ins().CheckContext(); err != nil {
+		if err = tun2.Ins().CheckContext(); err != nil {
 			return err
 		}
 		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort)
-		if err = tun.Ins().ToSocks(socksAddr, opt.Get().Debug); err != nil {
+		if err = tun2.Ins().ToSocks(socksAddr, opt.Get().Debug); err != nil {
 			return err
 		}
-		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
+		log.Info().Msgf("Tun device %s is ready", tun2.Ins().GetName())
 
 		if !opt.Get().ConnectOptions.DisableTunRoute {
 			if err = setupTunRoute(); err != nil {
@@ -76,13 +76,13 @@ func setupTunRoute() error {
 		return err
 	}
 
-	err = tun.Ins().SetRoute(cidrs)
+	err = tun2.Ins().SetRoute(cidrs)
 	if err != nil {
-		if tun.IsAllRouteFailError(err) {
-			if strings.Contains(err.(tun.AllRouteFailError).OriginalError().Error(), "exit status") {
+		if tun2.IsAllRouteFailError(err) {
+			if strings.Contains(err.(tun2.AllRouteFailError).OriginalError().Error(), "exit status") {
 				log.Warn().Msgf(err.Error())
 			} else {
-				log.Warn().Err(err.(tun.AllRouteFailError).OriginalError()).Msgf(err.Error())
+				log.Warn().Err(err.(tun2.AllRouteFailError).OriginalError()).Msgf(err.Error())
 			}
 			return err
 		}
@@ -103,7 +103,7 @@ func startSocks5Connection(privateKey string, localSshPort int) error {
 	}()
 	go func() {
 		// will hang here if not error happen
-		success <-sshchannel.Ins().StartSocks5Proxy(
+		success <- sshchannel.Ins().StartSocks5Proxy(
 			privateKey,
 			fmt.Sprintf("127.0.0.1:%d", localSshPort),
 			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort),

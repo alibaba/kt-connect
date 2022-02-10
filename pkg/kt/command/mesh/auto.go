@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	"github.com/alibaba/kt-connect/pkg/kt/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
+	cluster2 "github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -100,7 +100,7 @@ func isNameUsable(ctx context.Context, name, meshVersion string, times int) erro
 		return fmt.Errorf("meshing pod for service %s still terminating, please try again later", name)
 	}
 	shadowName := name + common.MeshPodInfix + meshVersion
-	if pod, err := cluster.Ins().GetPod(ctx, shadowName, opt.Get().Namespace); err == nil {
+	if pod, err := cluster2.Ins().GetPod(ctx, shadowName, opt.Get().Namespace); err == nil {
 		if pod.DeletionTimestamp == nil {
 			msg := fmt.Sprintf("Another user is meshing service '%s' via version '%s'", name, meshVersion)
 			if opt.Get().MeshOptions.VersionMark != "" {
@@ -117,8 +117,8 @@ func isNameUsable(ctx context.Context, name, meshVersion string, times int) erro
 
 func createShadowService(ctx context.Context, shadowSvcName string, ports map[int]int,
 	selectors map[string]string) error {
-	if _, err := cluster.Ins().CreateService(ctx, &cluster.SvcMetaAndSpec{
-		Meta: &cluster.ResourceMeta{
+	if _, err := cluster2.Ins().CreateService(ctx, &cluster2.SvcMetaAndSpec{
+		Meta: &cluster2.ResourceMeta{
 			Name:        shadowSvcName,
 			Namespace:   opt.Get().Namespace,
 			Labels:      map[string]string{},
@@ -139,9 +139,9 @@ func createShadowService(ctx context.Context, shadowSvcName string, ports map[in
 func createRouter(ctx context.Context, routerPodName string, svcName string,
 	ports map[int]int, labels map[string]string, versionMark string) error {
 	routerLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
-	routerPod, err := cluster.Ins().GetPod(ctx, routerPodName, opt.Get().Namespace)
+	routerPod, err := cluster2.Ins().GetPod(ctx, routerPodName, opt.Get().Namespace)
 	if err == nil && routerPod.DeletionTimestamp != nil {
-		routerPod, err = cluster.Ins().WaitPodTerminate(ctx, routerPodName, opt.Get().Namespace)
+		routerPod, err = cluster2.Ins().WaitPodTerminate(ctx, routerPodName, opt.Get().Namespace)
 	}
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
@@ -150,13 +150,13 @@ func createRouter(ctx context.Context, routerPodName string, svcName string,
 		}
 		// Router not exist or just terminated
 		annotations := map[string]string{common.KtRefCount: "1", common.KtConfig: fmt.Sprintf("service=%s", svcName)}
-		if err = cluster.CreateRouterPod(ctx, routerPodName, routerLabels, annotations); err != nil {
+		if err = cluster2.CreateRouterPod(ctx, routerPodName, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}
 		log.Info().Msgf("Router pod is ready")
 
-		stdout, stderr, err2 := cluster.Ins().ExecInPod(common.DefaultContainer, routerPodName, opt.Get().Namespace,
+		stdout, stderr, err2 := cluster2.Ins().ExecInPod(common.DefaultContainer, routerPodName, opt.Get().Namespace,
 			common.RouterBin, "setup", svcName, toPortMapParameter(ports), versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
@@ -168,13 +168,13 @@ func createRouter(ctx context.Context, routerPodName string, svcName string,
 		if _, err = strconv.Atoi(routerPod.Annotations[common.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err
-		} else if err = cluster.Ins().IncreaseRef(ctx, routerPodName, opt.Get().Namespace); err != nil {
+		} else if err = cluster2.Ins().IncreaseRef(ctx, routerPodName, opt.Get().Namespace); err != nil {
 			log.Error().Msgf("Failed to increase router pod ref count")
 			return err
 		}
 		log.Info().Msgf("Router pod already exists")
 
-		stdout, stderr, err2 := cluster.Ins().ExecInPod(common.DefaultContainer, routerPodName, opt.Get().Namespace,
+		stdout, stderr, err2 := cluster2.Ins().ExecInPod(common.DefaultContainer, routerPodName, opt.Get().Namespace,
 			common.RouterBin, "add", versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
@@ -190,13 +190,13 @@ func createRouter(ctx context.Context, routerPodName string, svcName string,
 func createOriginService(ctx context.Context, originSvcName string,
 	ports map[int]int, selectors map[string]string) error {
 
-	_, err := cluster.Ins().GetService(ctx, originSvcName, opt.Get().Namespace)
+	_, err := cluster2.Ins().GetService(ctx, originSvcName, opt.Get().Namespace)
 	if err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		if _, err = cluster.Ins().CreateService(ctx, &cluster.SvcMetaAndSpec{
-			Meta: &cluster.ResourceMeta{
+		if _, err = cluster2.Ins().CreateService(ctx, &cluster2.SvcMetaAndSpec{
+			Meta: &cluster2.ResourceMeta{
 				Name:        originSvcName,
 				Namespace:   opt.Get().Namespace,
 				Labels:      map[string]string{},
