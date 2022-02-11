@@ -1,21 +1,18 @@
-- Getting started
-  - [Quick Start](en-us/quickstart.md)
-  - [Downloads](en-us/downloads.md)
+- Use Guide
+  - [Quick Start](en-us/guide/quickstart.md)
+  - [Downloads](en-us/guide/downloads.md)
 
-- Guide
-  - [Local dev](en-us/guide/localdev.md)
-  - [Mesh best practices](en-us/guide/mesh.md)
+- Cli Parameters
+  - [Global Parameter](en-us/cli/global.md)
+  - [Ktctl Connect](en-us/cli/connect.md)
+  - [Ktctl Exchange](en-us/cli/exchange.md)
+  - [Ktctl Mesh](en-us/cli/mesh.md)
+  - [Ktctl Preview](en-us/cli/preview.md)
+  - [Ktctl Clean](en-us/cli/clean.md)
 
-- Cli References
-  - [ktctl connect](en-us/cli/connect.md)
-  - [ktctl exchange](en-us/cli/exchange.md)
-  - [ktctl mesh](en-us/cli/mesh.md)
-  - [ktctl preview](en-us/cli/preview.md)
-  - [ktctl clean](en-us/cli/clean.md)
+- Tech References
+  - [Tech Mechanism](en-us/reference/mechanism.md)
+  - [Manual Mesh Example](en-us/reference/manual_mesh.md)
+  - [FAQ](en-us/reference/faq.md)
+  - [Changelog](en-us/reference/changelog.md)
 
-- Troubleshot
-  - [connect](en-us/troubleshoot.md)
-  - [FAQ](en-us/faq.md)
-
-- [Changelog](en-us/changelog.md)
-- [TODO](en-us/todo.md)

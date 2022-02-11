@@ -7,7 +7,6 @@ Ktctl Connect
 --mode value           与集群建立虚拟连接的方式，可选值为 "tun2socks"（默认）和 "sshuttle"（仅限Linux/Mac）
 --dnsMode value        指定解析集群服务域名的方式，可选值为 "localDNS"（默认），"podDNS"（仅用于sshuttle模式）和 "hosts"
 --shareShadow          使用在同Namespace下共享的Shadow Pod
---sshPort value        指定用于本地SSH映射的端口（默认值为2222）
 --clusterDomain value  指定集群的域名尾缀（默认值为"cluster.local"）
 --disablePodIp         禁用Pod IP访问，只能访问服务的Cluster IP或服务域名
 --includeIps value     将指定IP段指定为集群网段，多个IP段用逗号分隔，IP段格式如 '172.2.0.0/16'

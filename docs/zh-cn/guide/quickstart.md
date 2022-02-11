@@ -164,7 +164,7 @@ $ ktctl mesh tomcat --expose 8080 --method auto
 00:00AM INF KtConnect start at <PID>
 ... ...
 --------------------------------------------------------------
- Now you can access your service by header 'KT-VERSION: feo3x' 
+ Now you can access your service by header 'VERSION: feo3x'
 --------------------------------------------------------------
 ```
 
@@ -178,7 +178,7 @@ kt-connect demo v1
 若请求包含Mesh命令输出的Header，则流量将自动被本地的服务实例接收。
 
 ```bash
-$ curl -H 'KT-VERSION: feo3x' http://tomcat:8080
+$ curl -H 'VERSION: feo3x' http://tomcat:8080
 kt-connect local v2
 ```
 

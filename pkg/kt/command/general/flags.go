@@ -52,12 +52,12 @@ func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "withLabel,l",
-			Usage:       "Extra labels on proxy pod e.g. 'label1=val1,label2=val2'",
+			Usage:       "Extra labels on shadow pod e.g. 'label1=val1,label2=val2'",
 			Destination: &options.WithLabels,
 		},
 		cli.StringFlag{
 			Name:        "withAnnotation",
-			Usage:       "Extra annotation on proxy pod e.g. 'annotation1=val1,annotation2=val2'",
+			Usage:       "Extra annotation on shadow pod e.g. 'annotation1=val1,annotation2=val2'",
 			Destination: &options.WithAnnotations,
 		},
 		cli.IntFlag{
