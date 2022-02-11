@@ -211,7 +211,7 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 
 	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{
-			Name:       fmt.Sprintf("%s-%d", metaAndSpec.Meta.Name, srcPort),
+			Name:       fmt.Sprintf("kt-%d", srcPort),
 			Port:       int32(srcPort),
 			TargetPort: intstr.FromInt(targetPort),
 		})
