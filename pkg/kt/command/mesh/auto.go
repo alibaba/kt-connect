@@ -1,7 +1,6 @@
 package mesh
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
@@ -50,12 +49,7 @@ func AutoMesh(resourceName string) error {
 	}
 
 	// Create origin service
-	originSvcName := svc.Name + common.OriginServiceSuffix
-	selector, err := getOriginSelector(svc)
-	if err != nil {
-		return err
-	}
-	if err = createOriginService(originSvcName, ports, selector); err != nil {
+	if err = createOriginService(svc, ports); err != nil {
 		return err
 	}
 
@@ -98,18 +92,6 @@ func AutoMesh(resourceName string) error {
 	log.Info().Msgf(" Now you can access your service by header '%s: %s' ", strings.ToUpper(meshKey), meshVersion)
 	log.Info().Msg("---------------------------------------------------------------")
 	return nil
-}
-
-func getOriginSelector(svc *coreV1.Service) (map[string]string, error) {
-	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
-		var selector map[string]string
-		if err := json.Unmarshal([]byte(svc.Annotations[common.KtSelector]), &selector); err != nil {
-			log.Error().Msgf("Service %s has invalid %s annotation", svc.Name, common.KtSelector)
-			return nil, err
-		}
-		return selector, nil
-	}
-	return svc.Spec.Selector, nil
 }
 
 func isNameUsable(name, meshVersion string, times int) error {
@@ -205,11 +187,16 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 	return nil
 }
 
-func createOriginService(originSvcName string, ports map[int]int, selectors map[string]string) error {
+func createOriginService(svc *coreV1.Service, ports map[int]int) error {
+	originSvcName := svc.Name + common.OriginServiceSuffix
 	namespace := opt.Get().Namespace
-	if _, err := cluster.Ins().GetService(originSvcName, namespace); err != nil {
+	if originSvc, err := cluster.Ins().GetService(originSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
+		}
+		if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
+			return fmt.Errorf("service %s should not have %s annotation, please try use 'ktctl clean' to restore it",
+				svc.Name, common.KtSelector)
 		}
 		if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
@@ -220,11 +207,13 @@ func createOriginService(originSvcName string, ports map[int]int, selectors map[
 			},
 			External:  false,
 			Ports:     ports,
-			Selectors: selectors,
+			Selectors: svc.Spec.Selector,
 		}); err != nil {
 			return err
 		}
 		log.Info().Msgf("Service %s created", originSvcName)
+	} else if originSvc.Annotations == nil || originSvc.Annotations[common.ControlBy] != common.KubernetesTool {
+		return fmt.Errorf("service %s exists, but not created by kt", originSvcName)
 	} else {
 		cluster.Ins().UpdateServiceHeartBeat(originSvcName, namespace)
 		log.Info().Msgf("Origin service already exists")
