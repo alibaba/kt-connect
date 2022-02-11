@@ -154,7 +154,7 @@ $ docker run -itd -p 8080:8080 tomcat:8
 添加本地联调端点：
 
 ```bash
-$ ktctl -n mesh-demo mesh tomcat --expose 8080
+$ ktctl -n mesh-demo mesh tomcat --expose 8080 --mode manual
 00:00AM INF KtConnect start at <PID>
 ... ...
 --------------------------------------------------------------

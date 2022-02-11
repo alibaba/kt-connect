@@ -1,19 +1,7 @@
 Mesh： develope with service mesh
 ===========
 
-## Scenarios
-
-The `Connect` and `Exchange'`are suitable for personal exclusive development test environments, in exclusive mode. Developers can coordinate with services in this environment while forwarding requests for specific services in the environment to the local.
-
-The main solution of `Mesh` is that if the team shares a development test environment, how to ensure that each team member can independently perform the joint test on the basis of this 'unique public environment'. In this model, the most immediate benefit is to reduce the investment in infrastructure resources while supporting large-scale collaboration.
-
-`Mesh` is similar to `Exchange`. The difference is that Exchange will completely replace the original application instance, while Mesh creates a new version based on the original instance, thus enabling users to do more based on Service Mesh capabilities. Multiple custom traffic rule definitions. This enables team members to perform local joint testing on a common development test environment.
-
-![logo](../../media/logo-large.png)
-
-## Demo:
-
-In this example, we will deploy Tomcat7 in the cluster and access it through the Istio Gateway to join the local joint endpoint via `kt mesh` while ensuring that the original link is properly accessible. Finally, modify the Istio routing rules so that only traffic that meets certain rules is forwarded to the local debug endpoint (Tomcat8).
+In this example, we will deploy Tomcat7 in the cluster and access it through the Istio Gateway to join the local joint endpoint via `ktctl mesh` while ensuring that the original link is properly accessible. Finally, modify the Istio routing rules so that only traffic that meets certain rules is forwarded to the local debug endpoint (Tomcat8).
 
 ### Prepare Application
 
@@ -48,7 +36,7 @@ spec:
 status:
   loadBalancer: {}
 ---
-apiVersion: apps/v1beta2
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -168,19 +156,12 @@ docker run -itd -p 8080:8080 tomcat:8
 Add a local joint endpoint:
 
 ```
-$ ktctl --n mesh-demo mesh tomcat --expose 8080
-2019/06/20 11:39:58 'KtConnect' not runing, you can only access local app from cluster
-2019/06/20 11:39:59 Deploying proxy deployment tomcat-kt-ngzlj in namespace mesh-demo
-2019/06/20 11:40:01 Pod status is Pending
-2019/06/20 11:40:03 Pod status is Running
-2019/06/20 11:40:03 Success deploy proxy deployment tomcat-kt-ngzlj in namespace mesh-demo
-2019/06/20 11:40:03 -----------------------------------------------------------
-2019/06/20 11:40:03 |    Mesh Version 'ngzlj' You can update Istio rule       |
-2019/06/20 11:40:03 -----------------------------------------------------------
-2019/06/20 11:40:05 exchange port forward to local start at pid: 63226
-SSH Remote port-forward POD 172.16.1.63 22 to 127.0.0.1:2263 starting
-2019/06/20 11:40:05 ssh remote port-forward exited
-2019/06/20 11:40:07 ssh remote port-forward start at pid: 63227
+$ ktctl -n mesh-demo mesh tomcat --expose 8080 --mode manual
+00:00AM INF KtConnect start at <PID>
+... ...
+--------------------------------------------------------------
+ Now you can update Istio rule by label 'version: ngzlj' 
+--------------------------------------------------------------
 ```
 
 As shown above, a local endpoint is deployed here, and the version number is `ngzlj`. At this point, if you visit `http://tomcat.mesh.com`, you can access tomcat7 normally.

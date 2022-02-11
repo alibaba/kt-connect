@@ -1,28 +1,13 @@
-## Command: ktctl preview
+Ktctl Preview
+---
 
-Expose local service to cluster
-
-### Usage
-
-```
-ktctl preview localservice --expose 8080
-```
-
-### Options
+Expose a local service to kubernetes cluster. Available options:
 
 ```
---expose value  The port that exposes
+--expose value  Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80
 --external      If specified, a public, external service is created
 ```
 
-### Global Options
+Key options explanation:
 
-```
---namespace value, -n value   (default: "default")
---kubeconfig value, -c value  (default: env from KUBECONFIG)
---image value, -i value       Custom shadow image (default: "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:stable")
---debug, -d                   debug mode
---label value, -l value       Extra labels on proxy pod e.g. 'label1=val1,label2=val2'
---help, -h                    show help
---version, -v                 print the version
-```
+- `--expose` is a required parameter, and its value should be the same as the port of the locally running service. If you want the created Service to use a different port than the local service, you should use `<LocalPort>:<ExpectedServicePort>` format to specify.

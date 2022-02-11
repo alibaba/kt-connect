@@ -2,8 +2,8 @@
   - [Quick Start](en-us/guide/quickstart.md)
   - [Downloads](en-us/guide/downloads.md)
 
-- Cli Parameters
-  - [Global Parameter](en-us/cli/global.md)
+- Cli References
+  - [Global Options](en-us/cli/global.md)
   - [Ktctl Connect](en-us/cli/connect.md)
   - [Ktctl Exchange](en-us/cli/exchange.md)
   - [Ktctl Mesh](en-us/cli/mesh.md)

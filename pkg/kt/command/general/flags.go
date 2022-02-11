@@ -22,12 +22,6 @@ func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 			Destination: &options.KubeConfig,
 		},
 		cli.StringFlag{
-			Name:        "serviceAccount",
-			Usage:       "Specify ServiceAccount name for shadow pod",
-			Value:       "default",
-			Destination: &options.ServiceAccount,
-		},
-		cli.StringFlag{
 			Name:        "image,i",
 			Usage:       "Customize shadow image",
 			Value:       "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + options.RuntimeStore.Version,
@@ -38,6 +32,12 @@ func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 			Usage:       "Custom image pull secret",
 			Value:       "",
 			Destination: &options.ImagePullSecret,
+		},
+		cli.StringFlag{
+			Name:        "serviceAccount",
+			Usage:       "Specify ServiceAccount name for shadow pod",
+			Value:       "default",
+			Destination: &options.ServiceAccount,
 		},
 		cli.StringFlag{
 			Name:        "nodeSelector",

@@ -13,9 +13,9 @@ $ ktctl --namespace demo connect --includeIps 10.1.0.0/16
 ```text
 --namespace value, -n value   指定目标服务的Kubernetes Namespace（若未指定，则使用本地KubeConfig配置的默认Namespace）
 --kubeconfig value, -c value  指定本地KubeConfig配置文件路径（默认为"/Users/flin/.kube/config"）
---serviceAccount value        指定下载Shadow Pod镜像使用的ServiceAccount（默认为"default"）
---imagePullSecret value       指定下载Shadow Pod镜像使用的Secret
 --image value, -i value       指定Shadow Pod使用的镜像（默认为"registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v0.3.0-beta2"）
+--imagePullSecret value       指定下载Shadow Pod镜像使用的Secret
+--serviceAccount value        指定下载Shadow Pod镜像使用的ServiceAccount（默认为"default"）
 --nodeSelector value          指定运行Shadow Pod的节点选择标签，多个标签使用逗号分隔，例如"disk=ssd,region=hangzhou"
 --debug, -d                   显示调试日志
 --withLabel value, -l value   为Shadow Pod指定额外的标签，多个标签使用逗号分隔，例如"label1=val1,label2=val2"

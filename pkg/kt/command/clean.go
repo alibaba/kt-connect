@@ -32,7 +32,7 @@ type ResourceToClean struct {
 func NewCleanCommand(action ActionInterface) urfave.Command {
 	return urfave.Command{
 		Name:  "clean",
-		Usage: "delete unavailing shadow pods from kubernetes cluster",
+		Usage: "delete unavailing resources created by kt from kubernetes cluster",
 		UsageText: "ktctl clean [command options]",
 		Flags: general.CleanActionFlag(opt.Get()),
 		Action: func(c *urfave.Context) error {
