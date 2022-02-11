@@ -1,6 +1,7 @@
 package mesh
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
@@ -8,6 +9,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"strconv"
 	"strings"
@@ -49,7 +51,11 @@ func AutoMesh(resourceName string) error {
 
 	// Create origin service
 	originSvcName := svc.Name + common.OriginServiceSuffix
-	if err = createOriginService(originSvcName, ports, svc.Spec.Selector); err != nil {
+	selector, err := getOriginSelector(svc)
+	if err != nil {
+		return err
+	}
+	if err = createOriginService(originSvcName, ports, selector); err != nil {
 		return err
 	}
 
@@ -57,7 +63,7 @@ func AutoMesh(resourceName string) error {
 	shadowName := svc.Name + common.MeshPodInfix + meshVersion
 	targetMark := util.RandomString(20)
 	shadowLabels := map[string]string{
-		common.KtRole: common.RoleMeshShadow,
+		common.KtRole:   common.RoleMeshShadow,
 		common.KtTarget: targetMark,
 	}
 	if err = createShadowService(shadowName, ports, shadowLabels); err != nil {
@@ -68,7 +74,7 @@ func AutoMesh(resourceName string) error {
 	// Must after origin service and shadow service, otherwise will cause 'host not found in upstream' error
 	routerPodName := svc.Name + common.RouterPodSuffix
 	routerLabels := map[string]string{
-		common.KtRole: common.RoleRouter,
+		common.KtRole:   common.RoleRouter,
 		common.KtTarget: targetMark,
 	}
 	if err = createRouter(routerPodName, svc.Name, ports, routerLabels, versionMark); err != nil {
@@ -92,6 +98,18 @@ func AutoMesh(resourceName string) error {
 	log.Info().Msgf(" Now you can access your service by header '%s: %s' ", strings.ToUpper(meshKey), meshVersion)
 	log.Info().Msg("---------------------------------------------------------------")
 	return nil
+}
+
+func getOriginSelector(svc *coreV1.Service) (map[string]string, error) {
+	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
+		var selector map[string]string
+		if err := json.Unmarshal([]byte(svc.Annotations[common.KtSelector]), &selector); err != nil {
+			log.Error().Msgf("Service %s has invalid %s annotation", svc.Name, common.KtSelector)
+			return nil, err
+		}
+		return selector, nil
+	}
+	return svc.Spec.Selector, nil
 }
 
 func isNameUsable(name, meshVersion string, times int) error {
@@ -135,9 +153,7 @@ func createShadowService(shadowSvcName string, ports map[int]int,
 	return nil
 }
 
-func createRouter(routerPodName string, svcName string,
-	ports map[int]int, labels map[string]string, versionMark string) error {
-
+func createRouter(routerPodName string, svcName string, ports map[int]int, labels map[string]string, versionMark string) error {
 	namespace := opt.Get().Namespace
 	routerLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
 	routerPod, err := cluster.Ins().GetPod(routerPodName, namespace)
@@ -189,9 +205,7 @@ func createRouter(routerPodName string, svcName string,
 	return nil
 }
 
-func createOriginService(originSvcName string,
-	ports map[int]int, selectors map[string]string) error {
-
+func createOriginService(originSvcName string, ports map[int]int, selectors map[string]string) error {
 	namespace := opt.Get().Namespace
 	if _, err := cluster.Ins().GetService(originSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
