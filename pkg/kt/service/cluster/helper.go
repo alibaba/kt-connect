@@ -349,3 +349,7 @@ func decreaseRef(refCount string) (count string, err error) {
 	count = strconv.Itoa(currentCount - 1)
 	return
 }
+
+func isSingleIp(ipRange string) bool {
+	return !strings.Contains(ipRange, "/") || strings.Split(ipRange,"/")[1] == "32"
+}

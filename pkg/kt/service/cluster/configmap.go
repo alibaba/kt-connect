@@ -1,0 +1,60 @@
+package cluster
+
+import (
+	"context"
+	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
+	coreV1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	labelApi "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+// GetConfigMap get configmap
+func (k *Kubernetes) GetConfigMap(name, namespace string) (*coreV1.ConfigMap, error) {
+	return k.Clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+}
+
+// GetConfigMapsByLabel get deployments by label
+func (k *Kubernetes) GetConfigMapsByLabel(labels map[string]string, namespace string) (pods *coreV1.ConfigMapList, err error) {
+	return k.Clientset.CoreV1().ConfigMaps(namespace).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+	})
+}
+
+func (k *Kubernetes) CreateConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
+	generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
+
+	SetupHeartBeat(sshcm, namespace, k.UpdateConfigMapHeartBeat)
+
+	return k.Clientset.CoreV1().ConfigMaps(namespace).Create(context.TODO(), &coreV1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        sshcm,
+			Namespace:   namespace,
+			Labels:      labels,
+			Annotations: map[string]string{common.KtLastHeartBeat: util.GetTimestamp()},
+		},
+		Data: map[string]string{
+			common.SshAuthKey:        string(generator.PublicKey),
+			common.SshAuthPrivateKey: string(generator.PrivateKey),
+		},
+	}, metav1.CreateOptions{})
+}
+
+// RemoveConfigMap remove ConfigMap instance
+func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
+	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
+	deletePolicy := metav1.DeletePropagationBackground
+	return cli.Delete(context.TODO(), name, metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
+func (k *Kubernetes) UpdateConfigMapHeartBeat(name, namespace string) {
+	log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
+	if _, err := k.Clientset.CoreV1().ConfigMaps(namespace).
+		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
+		log.Warn().Err(err).Msgf("Failed to update config map heart beat")
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io"
@@ -38,7 +39,7 @@ func ForwardSSHTunnelToLocal(podName string, localPort int) (chan struct{}, erro
 	if !util.WaitPortBeReady(opt.Get().PortForwardWaitTime, localPort) {
 		return nil, fmt.Errorf("connect to port-forward failed")
 	}
-	util.SetupPortForwardHeartBeat(localPort)
+	cluster.SetupPortForwardHeartBeat(localPort)
 	return stop, nil
 }
 

@@ -10,19 +10,20 @@ import (
 
 // KubernetesInterface kubernetes interface
 type KubernetesInterface interface {
-	CreatePod(metaAndSpec *PodMetaAndSpec) error
-	CreateShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error
 	GetPod(name string, namespace string) (*coreV1.Pod, error)
 	GetPodsByLabel(labels map[string]string, namespace string) (*coreV1.PodList, error)
+	CreatePod(metaAndSpec *PodMetaAndSpec) error
+	CreateShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error
 	UpdatePod(pod *coreV1.Pod) (*coreV1.Pod, error)
+	RemovePod(name, namespace string) error
+	UpdatePodHeartBeat(name, namespace string)
 	WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error)
 	WaitPodTerminate(name, namespace string) (*coreV1.Pod, error)
-	IncreaseRef(name ,namespace string) error
-	DecreaseRef(name, namespace string) (bool, error)
+	ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error)
 	AddEphemeralContainer(containerName, podName string, envs map[string]string) (string, error)
 	RemoveEphemeralContainer(containerName, podName string, namespace string) error
-	ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error)
-	RemovePod(name, namespace string) error
+	IncreaseRef(name ,namespace string) error
+	DecreaseRef(name, namespace string) (bool, error)
 
 	GetDeployment(name string, namespace string) (*appV1.Deployment, error)
 	GetDeploymentsByLabel(labels map[string]string, namespace string) (*appV1.DeploymentList, error)
@@ -30,20 +31,22 @@ type KubernetesInterface interface {
 	UpdateDeployment(deployment *appV1.Deployment) (*appV1.Deployment, error)
 	ScaleTo(deployment, namespace string, replicas *int32) (err error)
 
-	CreateService(metaAndSpec *SvcMetaAndSpec) (*coreV1.Service, error)
-	UpdateService(svc *coreV1.Service) (*coreV1.Service, error)
 	GetService(name, namespace string) (*coreV1.Service, error)
 	GetServicesBySelector(matchLabels map[string]string, namespace string) ([]coreV1.Service, error)
 	GetAllServiceInNamespace(namespace string) (*coreV1.ServiceList, error)
 	GetServicesByLabel(labels map[string]string, namespace string) (*coreV1.ServiceList, error)
+	CreateService(metaAndSpec *SvcMetaAndSpec) (*coreV1.Service, error)
+	UpdateService(svc *coreV1.Service) (*coreV1.Service, error)
 	RemoveService(name, namespace string) (err error)
+	UpdateServiceHeartBeat(name, namespace string)
 	WatchService(name, namespace string, fAdd, fDel, fMod func(*coreV1.Service))
 
-	CreateConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
-		generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error)
 	GetConfigMap(name, namespace string) (*coreV1.ConfigMap, error)
 	GetConfigMapsByLabel(labels map[string]string, namespace string) (*coreV1.ConfigMapList, error)
+	CreateConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
+		generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error)
 	RemoveConfigMap(name, namespace string) (err error)
+	UpdateConfigMapHeartBeat(name, namespace string)
 
 	GetAllNamespaces() (*coreV1.NamespaceList, error)
 	ClusterCidrs(namespace string) (cidrs []string, err error)

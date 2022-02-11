@@ -3,6 +3,7 @@ package general
 import (
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/urfave/cli"
 )
@@ -220,7 +221,7 @@ func CleanActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Name:        "thresholdInMinus",
 			Usage:       "Length of allowed disconnection time before a unavailing shadow pod be deleted",
 			Destination: &options.CleanOptions.ThresholdInMinus,
-			Value:       util.ResourceHeartBeatIntervalMinus * 3,
+			Value:       cluster.ResourceHeartBeatIntervalMinus * 3,
 		},
 	}
 }
