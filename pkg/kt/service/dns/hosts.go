@@ -2,12 +2,15 @@ package dns
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/gofrs/flock"
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const ktHostsEscapeBegin = "# Kt Hosts Begin"
@@ -28,7 +31,7 @@ func DropHosts() {
 	if len(linesAfterDrop) < len(lines) {
 		err = updateHostsFile(linesAfterDrop)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to update hosts file, you may require %s permission", getAdminUserName())
+			log.Error().Err(err).Msgf("Failed to drop hosts file")
 			return
 		}
 		log.Info().Msgf("Drop hosts successful")
@@ -48,7 +51,7 @@ func DumpHosts(hostsMap map[string]string) error {
 		return err
 	}
 	if err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap))); err != nil {
-		log.Warn().Msgf("Unable to update hosts file, you may need %s permission.", getAdminUserName())
+		log.Warn().Msgf("Failed to dump hosts file")
 		log.Debug().Msg(err.Error())
 		return err
 	}
@@ -125,6 +128,17 @@ func loadHostsFile() ([]string, error) {
 }
 
 func updateHostsFile(lines []string) error {
+	lock := flock.New(fmt.Sprintf("%s/%s", common.KtHome, util.DumpHostsLock))
+	timeoutContext, cancel := context.WithTimeout(context.TODO(), 2 * time.Second)
+	defer cancel()
+	if ok, err := lock.TryLockContext(timeoutContext, 100 * time.Millisecond); !ok {
+		return fmt.Errorf("failed to require hosts lock")
+	} else if err != nil {
+		log.Error().Err(err).Msgf("require hosts file failed with error")
+		return err
+	}
+	defer lock.Unlock()
+
 	file, err := os.Create(getHostsPath())
 	if err != nil {
 		return err
@@ -153,11 +167,4 @@ func getHostsPath() string {
 	} else {
 		return os.Getenv("HOSTS_PATH")
 	}
-}
-
-func getAdminUserName() string {
-	if util.IsWindows() {
-		return "administrator"
-	}
-	return "root"
 }

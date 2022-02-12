@@ -56,6 +56,8 @@ const (
 	PostfixRsaKey = "_id_rsa"
 	// RouterBin path to router executable
 	RouterBin = "/usr/sbin/router"
+	// DumpHostsLock path to lock file for dump hosts
+	DumpHostsLock = "hosts.lock"
 	// SshBitSize ssh bit size
 	SshBitSize = 2048
 	// SshAuthKey auth key name
