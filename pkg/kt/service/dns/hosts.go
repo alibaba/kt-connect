@@ -55,7 +55,7 @@ func DumpHosts(hostsMap map[string]string) error {
 		log.Debug().Msg(err.Error())
 		return err
 	}
-	log.Info().Msg("Dump hosts successful")
+	log.Debug().Msg("Dump hosts successful")
 	return nil
 }
 
@@ -91,7 +91,9 @@ func dumpHosts(hostsMap map[string]string) []string {
 	var lines []string
 	lines = append(lines, ktHostsEscapeBegin)
 	for host, ip := range hostsMap {
-		lines = append(lines, fmt.Sprintf("%s %s", ip, host))
+		if ip != "" {
+			lines = append(lines, fmt.Sprintf("%s %s", ip, host))
+		}
 	}
 	lines = append(lines, ktHostsEscapeEnd)
 	return lines

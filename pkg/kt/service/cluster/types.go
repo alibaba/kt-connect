@@ -18,6 +18,7 @@ type KubernetesInterface interface {
 	UpdatePodHeartBeat(name, namespace string)
 	WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error)
 	WaitPodTerminate(name, namespace string) (*coreV1.Pod, error)
+	WatchPod(name, namespace string, fAdd, fDel, fMod func(*coreV1.Pod))
 	ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error)
 	AddEphemeralContainer(containerName, podName string, envs map[string]string) (string, error)
 	RemoveEphemeralContainer(containerName, podName string, namespace string) error

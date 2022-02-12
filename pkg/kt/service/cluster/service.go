@@ -6,11 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/tools/cache"
-	"time"
 )
 
 // SvcMetaAndSpec ...
@@ -81,43 +78,24 @@ func (k *Kubernetes) UpdateServiceHeartBeat(name, namespace string) {
 
 // WatchService ...
 func (k *Kubernetes) WatchService(name, namespace string, fAdd, fDel, fMod func(*coreV1.Service)) {
-	selector := fields.Nothing()
-	if name != "" {
-		selector = fields.OneTermEqualSelector("metadata.name", name)
-	}
-	watchlist := cache.NewListWatchFromClient(
-		k.Clientset.CoreV1().RESTClient(),
-		string(coreV1.ResourceServices),
-		namespace,
-		selector,
-	)
-	_, controller := cache.NewInformer(
-		watchlist,
-		&coreV1.Service{},
-		0,
-		cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				if fAdd != nil {
-					fAdd(obj.(*coreV1.Service))
-				}
-			},
-			DeleteFunc: func(obj interface{}) {
-				if fDel != nil {
-					fDel(obj.(*coreV1.Service))
-				}
-			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				if fMod != nil {
-					fMod(newObj.(*coreV1.Service))
-				}
-			},
+	k.watchResource(name, namespace, string(coreV1.ResourceServices), &coreV1.Service{},
+		func(obj interface{}) {
+			if fAdd != nil {
+				log.Debug().Msgf("Service %s added", obj.(*coreV1.Service).Name)
+				fAdd(obj.(*coreV1.Service))
+			}
+		},
+		func(obj interface{}) {
+			if fDel != nil {
+				log.Debug().Msgf("Service %s deleted", obj.(*coreV1.Service).Name)
+				fDel(obj.(*coreV1.Service))
+			}
+		},
+		func(obj interface{}) {
+			if fMod != nil {
+				log.Debug().Msgf("Service %s modified", obj.(*coreV1.Service).Name)
+				fMod(obj.(*coreV1.Service))
+			}
 		},
 	)
-
-	stop := make(chan struct{})
-	defer close(stop)
-	go controller.Run(stop)
-	for {
-		time.Sleep(1000 * time.Second)
-	}
 }

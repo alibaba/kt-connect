@@ -8,32 +8,54 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	coreV1 "k8s.io/api/core/v1"
 	"strings"
+	"time"
 )
 
 func setupDns(shadowPodIp string) error {
+	namespace := opt.Get().Namespace
 	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
 		dump2HostsNamespaces := ""
 		pos := len(util.DnsModeHosts)
 		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
 		}
-		if err := dumpToHost(opt.Get().Namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
+		if err := dumpToHost(namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
 			return err
 		}
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
 		return dns.Ins().SetNameServer(shadowPodIp)
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
-		if err := dumpCurrentNamespaceToHost(opt.Get().Namespace); err != nil {
+		headlessPods, err := dumpCurrentNamespaceToHost(namespace)
+		if err != nil {
 			return err
 		}
+		setupTime := time.Now().Unix()
+		go cluster.Ins().WatchService("", namespace,
+			func(svc *coreV1.Service) {
+				// ignore add service event during watch setup
+				if time.Now().Unix() - setupTime > 3 {
+					headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
+				}
+			},
+			func(svc *coreV1.Service) {
+				headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
+			}, nil)
+		go cluster.Ins().WatchPod("", namespace, nil, func(pod *coreV1.Pod) {
+			if util.Contains(pod.Name, headlessPods) {
+				// it may take some time for new pod get assign an ip
+				time.Sleep(5 * time.Second)
+				headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
+			}
+		}, nil)
 		dnsPort := util.AlternativeDnsPort
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
 		}
 		// must setup name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux
-		if err := dns.SetupLocalDns(shadowPodIp, dnsPort); err != nil {
+		if err = dns.SetupLocalDns(shadowPodIp, dnsPort); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
@@ -56,7 +78,7 @@ func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error 
 	hosts := map[string]string{}
 	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
-		svcToIp := getServiceHosts(namespace)
+		svcToIp, _ := getServiceHosts(namespace)
 		for svc, ip := range svcToIp {
 			if namespace == currentNamespace {
 				hosts[svc] = ip
@@ -68,13 +90,15 @@ func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error 
 	return dns.DumpHosts(hosts)
 }
 
-func dumpCurrentNamespaceToHost(currentNamespace string) error {
+func dumpCurrentNamespaceToHost(currentNamespace string) ([]string, error) {
 	log.Debug().Msgf("Search service in %s namespace ...", currentNamespace)
-	return dns.DumpHosts(getServiceHosts(currentNamespace))
+	svcToIp, headlessPods := getServiceHosts(currentNamespace)
+	return headlessPods, dns.DumpHosts(svcToIp)
 }
 
-func getServiceHosts(namespace string) map[string]string {
-	hosts := map[string]string{}
+func getServiceHosts(namespace string) (map[string]string, []string) {
+	hosts := make(map[string]string)
+	podNames := make([]string, 0)
 	services, err := cluster.Ins().GetAllServiceInNamespace(namespace)
 	if err == nil {
 		for _, service := range services.Items {
@@ -84,7 +108,13 @@ func getServiceHosts(namespace string) map[string]string {
 				if err2 != nil || len(pods.Items) == 0 {
 					continue
 				}
-				ip = pods.Items[0].Status.PodIP
+				for _, p := range pods.Items {
+					ip = p.Status.PodIP
+					if ip != "" {
+						podNames = append(podNames, p.Name)
+						break
+					}
+				}
 				log.Debug().Msgf("Headless service found: %s.%s %s", service.Name, namespace, ip)
 			} else {
 				log.Debug().Msgf("Service found: %s.%s %s", service.Name, namespace, ip)
@@ -92,7 +122,7 @@ func getServiceHosts(namespace string) map[string]string {
 			hosts[service.Name] = ip
 		}
 	}
-	return hosts
+	return hosts, podNames
 }
 
 func getOrCreateShadow() (string, string, string, error) {
@@ -101,7 +131,7 @@ func getOrCreateShadow() (string, string, string, error) {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
-	endPointIP, podName, privateKeyPath, err := cluster.GetOrCreateShadow(shadowPodName, getLabels(), make(map[string]string), getEnvs())
+	endPointIP, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, getLabels(), make(map[string]string), getEnvs())
 	if err != nil {
 		return "", "", "", err
 	}
