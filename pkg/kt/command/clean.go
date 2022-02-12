@@ -73,7 +73,7 @@ func (action *Action) Clean() error {
 		action.analysisExpiredServices(svc, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
 	svcList, err := cluster.Ins().GetAllServiceInNamespace(opt.Get().Namespace)
-	action.analysisLocked(svcList.Items, &resourceToClean)
+	action.analysisLockAndOrphanServices(svcList.Items, &resourceToClean)
 	if isEmpty(resourceToClean) {
 		log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
 	} else {
@@ -153,7 +153,7 @@ func (action *Action) analysisExpiredServices(svc coreV1.Service, cleanThreshold
 	}
 }
 
-func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *ResourceToClean) {
+func (action *Action) analysisLockAndOrphanServices(svcs []coreV1.Service, resourceToClean *ResourceToClean) {
 	for _, svc := range svcs {
 		if svc.Annotations == nil {
 			continue
@@ -161,7 +161,16 @@ func (action *Action) analysisLocked(svcs []coreV1.Service, resourceToClean *Res
 		if lock, ok := svc.Annotations[common.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) > general.LockTimeout {
 			resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 		}
+		if svc.Annotations[common.KtSelector] != "" && !isRouterExist(svc.Name, svc.Namespace) {
+			resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, svc.Name)
+		}
 	}
+}
+
+func isRouterExist(svcName, namespace string) bool {
+	routerPodName := svcName + common.RouterPodSuffix
+	_, err := cluster.Ins().GetPod(routerPodName, namespace)
+	return err == nil
 }
 
 func (action *Action) cleanResource(r ResourceToClean, namespace string) {

@@ -113,7 +113,7 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 		marshaledSelector = string(rawSelector)
 		if svc.Annotations == nil {
 			util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
-		} else if _, ok := svc.Annotations[common.KtSelector]; !ok {
+		} else if svc.Annotations[common.KtSelector] == "" {
 			svc.Annotations[common.KtSelector] = marshaledSelector
 		}
 	}
