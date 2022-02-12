@@ -1,9 +1,9 @@
 package mesh
 
 import (
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 )
@@ -15,7 +15,7 @@ func ManualMesh(resourceName string) error {
 	}
 
 	meshKey, meshVersion := getVersion(opt.Get().MeshOptions.VersionMark)
-	shadowPodName := app.Name + common.MeshPodInfix + meshVersion
+	shadowPodName := app.Name + util.MeshPodInfix + meshVersion
 	labels := getMeshLabels(meshKey, meshVersion, app)
 	annotations := make(map[string]string)
 	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().MeshOptions.Expose, labels, annotations); err != nil {
@@ -34,7 +34,7 @@ func getMeshLabels(meshKey, meshVersion string, app *appV1.Deployment) map[strin
 			labels[k] = v
 		}
 	}
-	labels[common.KtRole] = common.RoleMeshShadow
+	labels[util.KtRole] = util.RoleMeshShadow
 	labels[meshKey] = meshVersion
 	return labels
 }

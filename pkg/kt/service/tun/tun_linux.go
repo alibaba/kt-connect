@@ -1,7 +1,6 @@
 package tun
 
 import (
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
@@ -52,5 +51,5 @@ func (s *Cli) SetRoute(ipRange []string) error {
 }
 
 func (s *Cli) GetName() string {
-	return common.TunNameLinux
+	return util.TunNameLinux
 }

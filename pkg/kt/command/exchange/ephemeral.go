@@ -2,7 +2,6 @@ package exchange
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -27,7 +26,7 @@ func ByEphemeralContainer(resourceName string) error {
 			log.Warn().Msgf("Pod %s is not running (%s), will not be exchanged", pod.Name, pod.Status.Phase)
 			continue
 		}
-		privateKey, err2 := createEphemeralContainer(common.KtExchangeContainer, pod.Name)
+		privateKey, err2 := createEphemeralContainer(util.KtExchangeContainer, pod.Name)
 		if err2 != nil {
 			return err2
 		}

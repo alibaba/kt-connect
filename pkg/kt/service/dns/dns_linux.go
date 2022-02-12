@@ -28,11 +28,11 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 	go func() {
 		defer func() {
 			restoreResolvConf()
-			if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+			if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 				restoreIptables()
 			}
 		}()
-		if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+		if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 			if err := setupIptables(); err != nil {
 				dnsSignal <-err
 				return
@@ -104,7 +104,7 @@ func setupIptables() error {
 		"--jump",
 		"REDIRECT",
 		"--to-ports",
-		strconv.Itoa(common.AlternativeDnsPort),
+		strconv.Itoa(util.AlternativeDnsPort),
 	)); err != nil {
 		log.Error().Msgf("Failed to use local dns server")
 		return err
@@ -161,7 +161,7 @@ func restoreIptables() {
 			"--jump",
 			"REDIRECT",
 			"--to-ports",
-			strconv.Itoa(common.AlternativeDnsPort),
+			strconv.Itoa(util.AlternativeDnsPort),
 		))
 		if err != nil {
 			// no more rule left

@@ -2,7 +2,6 @@ package transmission
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -24,7 +23,7 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 		return -1, err
 	}
 
-	if opt.Get().ExchangeOptions.Mode != common.ExchangeModeEphemeral {
+	if opt.Get().ExchangeOptions.Mode != util.ExchangeModeEphemeral {
 		// remote forward pod -> local via ssh
 		var wg sync.WaitGroup
 		// supports multi port pairs

@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/mesh"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -44,7 +43,7 @@ func NewMeshCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
 
 //Mesh exchange kubernetes workload
 func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
-	err := general.SetupProcess(common.ComponentMesh, ch)
+	err := general.SetupProcess(util.ComponentMesh, ch)
 	if err != nil {
 		return err
 	}
@@ -53,13 +52,13 @@ func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if opt.Get().MeshOptions.Mode == common.MeshModeManual {
+	if opt.Get().MeshOptions.Mode == util.MeshModeManual {
 		err = mesh.ManualMesh(resourceName)
-	} else if opt.Get().MeshOptions.Mode == common.MeshModeAuto {
+	} else if opt.Get().MeshOptions.Mode == util.MeshModeAuto {
 		err = mesh.AutoMesh(resourceName)
 	} else {
 		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.Mode,
-			common.MeshModeAuto, common.MeshModeManual)
+			util.MeshModeAuto, util.MeshModeManual)
 	}
 	if err != nil {
 		return err

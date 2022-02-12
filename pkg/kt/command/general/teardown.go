@@ -20,13 +20,13 @@ import (
 func CleanupWorkspace() {
 	log.Info().Msgf("Cleaning workspace")
 	cleanLocalFiles()
-	if opt.Get().RuntimeStore.Component == common.ComponentConnect {
+	if opt.Get().RuntimeStore.Component == util.ComponentConnect {
 		recoverGlobalHostsAndProxy()
 	}
 
-	if opt.Get().RuntimeStore.Component == common.ComponentExchange {
+	if opt.Get().RuntimeStore.Component == util.ComponentExchange {
 		recoverExchangedTarget()
-	} else if opt.Get().RuntimeStore.Component == common.ComponentMesh {
+	} else if opt.Get().RuntimeStore.Component == util.ComponentMesh {
 		recoverAutoMeshRoute()
 	}
 	cleanService()
@@ -34,7 +34,7 @@ func CleanupWorkspace() {
 }
 
 func recoverGlobalHostsAndProxy() {
-	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) || opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) || opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 		log.Debug().Msg("Dropping hosts records ...")
 		dns.DropHosts()
 	}
@@ -72,7 +72,7 @@ func recoverExchangedTarget() {
 		// process exit before target exchanged
 		return
 	}
-	if opt.Get().ExchangeOptions.Mode == common.ExchangeModeScale {
+	if opt.Get().ExchangeOptions.Mode == util.ExchangeModeScale {
 		log.Info().Msgf("Recovering origin deployment %s", opt.Get().RuntimeStore.Origin)
 		err := cluster.Ins().ScaleTo(opt.Get().RuntimeStore.Origin, opt.Get().Namespace, &opt.Get().RuntimeStore.Replicas)
 		if err != nil {
@@ -87,7 +87,7 @@ func recoverExchangedTarget() {
 			ch <- os.Interrupt
 		}()
 		_ = <-ch
-	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
+	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeSelector {
 		RecoverOriginalService(opt.Get().RuntimeStore.Origin, opt.Get().Namespace)
 	}
 }
@@ -102,10 +102,10 @@ func recoverAutoMeshRoute() {
 		if shouldDelRouter, err2 := cluster.Ins().DecreaseRef(opt.Get().RuntimeStore.Router, opt.Get().Namespace); err2 != nil {
 			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opt.Get().RuntimeStore.Shadow)
 		} else if shouldDelRouter {
-			recoverService(routerPod.Annotations[common.KtConfig])
+			recoverService(routerPod.Annotations[util.KtConfig])
 		} else {
-			stdout, stderr, err3 := cluster.Ins().ExecInPod(common.DefaultContainer, opt.Get().RuntimeStore.Router, opt.Get().Namespace,
-				common.RouterBin, "remove", opt.Get().RuntimeStore.Mesh)
+			stdout, stderr, err3 := cluster.Ins().ExecInPod(util.DefaultContainer, opt.Get().RuntimeStore.Router, opt.Get().Namespace,
+				util.RouterBin, "remove", opt.Get().RuntimeStore.Mesh)
 			log.Debug().Msgf("Stdout: %s", stdout)
 			log.Debug().Msgf("Stderr: %s", stderr)
 			if err3 != nil {
@@ -120,7 +120,7 @@ func recoverService(routerConfig string) {
 	svcName := config["service"]
 	RecoverOriginalService(svcName, opt.Get().Namespace)
 
-	stuntmanSvcName := svcName + common.StuntmanServiceSuffix
+	stuntmanSvcName := svcName + util.StuntmanServiceSuffix
 	if err := cluster.Ins().RemoveService(stuntmanSvcName, opt.Get().Namespace); err != nil {
 		log.Error().Err(err).Msgf("Failed to remove stuntman service %s", stuntmanSvcName)
 	}
@@ -137,7 +137,7 @@ func RecoverOriginalService(svcName, namespace string) {
 			log.Warn().Msgf("No annotation found in service %s, skipping", svcName)
 			return
 		}
-		originSelector, ok := svc.Annotations[common.KtSelector]
+		originSelector, ok := svc.Annotations[util.KtSelector]
 		if !ok {
 			log.Warn().Msgf("No selector annotation found in service %s, skipping", svcName)
 			return
@@ -148,7 +148,7 @@ func RecoverOriginalService(svcName, namespace string) {
 			return
 		}
 		svc.Spec.Selector = selector
-		delete(svc.Annotations, common.KtSelector)
+		delete(svc.Annotations, util.KtSelector)
 		if _, err = cluster.Ins().UpdateService(svc); err != nil {
 			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
 		}
@@ -206,10 +206,10 @@ func cleanShadowPodAndConfigMap() {
 				}
 			}
 		}
-		if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
+		if opt.Get().ExchangeOptions.Mode == util.ExchangeModeEphemeral {
 			for _, shadow := range strings.Split(opt.Get().RuntimeStore.Shadow, ",") {
 				log.Info().Msgf("Removing ephemeral container of pod %s", shadow)
-				err = cluster.Ins().RemoveEphemeralContainer(common.KtExchangeContainer, shadow, opt.Get().Namespace)
+				err = cluster.Ins().RemoveEphemeralContainer(util.KtExchangeContainer, shadow, opt.Get().Namespace)
 				if err != nil {
 					log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
 				}

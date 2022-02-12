@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"io"
 	"os"
 	"os/exec"
@@ -28,7 +29,7 @@ func (s *Cli) Install() *exec.Cmd {
 // Connect ssh-based vpn connect
 func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	var args []string
-	if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
+	if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
 		args = append(args, "--dns", "--to-ns", req.RemoteDNSServerAddress)
 	}
 	if opt.Get().Debug {

@@ -2,7 +2,6 @@ package exchange
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -22,7 +21,7 @@ func ByScale(resourceName string) error {
 	opt.Get().RuntimeStore.Origin = app.Name
 	opt.Get().RuntimeStore.Replicas = *app.Spec.Replicas
 
-	shadowPodName := app.Name + common.ExchangePodInfix + strings.ToLower(util.RandomString(5))
+	shadowPodName := app.Name + util.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
 	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Namespace)
 	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().ExchangeOptions.Expose,
@@ -40,14 +39,14 @@ func ByScale(resourceName string) error {
 
 func getExchangeAnnotation() map[string]string {
 	return map[string]string{
-		common.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
+		util.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
 			opt.Get().RuntimeStore.Origin, opt.Get().RuntimeStore.Replicas),
 	}
 }
 
 func getExchangeLabels(origin *appV1.Deployment) map[string]string {
 	labels := map[string]string{
-		common.KtRole: common.RoleExchangeShadow,
+		util.KtRole: util.RoleExchangeShadow,
 	}
 	if origin != nil {
 		for k, v := range origin.Spec.Selector.MatchLabels {

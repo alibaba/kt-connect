@@ -3,7 +3,6 @@ package general
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -17,7 +16,7 @@ import (
 func CreateShadowAndInbound(shadowPodName, portsToExpose string,
 	labels, annotations map[string]string) error {
 
-	podLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
+	podLabels := util.MergeMap(labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 	envs := make(map[string]string)
 	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(shadowPodName, podLabels, annotations, envs)
 	if err != nil {
@@ -102,8 +101,8 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 	// if KtSelector annotation already exist, fetch current value
 	// otherwise you are the first exchange/mesh user to this service, record original selector
 	var marshaledSelector string
-	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
-		marshaledSelector = svc.Annotations[common.KtSelector]
+	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
+		marshaledSelector = svc.Annotations[util.KtSelector]
 	} else {
 		rawSelector, err2 := json.Marshal(svc.Spec.Selector)
 		if err2 != nil {
@@ -112,9 +111,9 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 		}
 		marshaledSelector = string(rawSelector)
 		if svc.Annotations == nil {
-			util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
-		} else if svc.Annotations[common.KtSelector] == "" {
-			svc.Annotations[common.KtSelector] = marshaledSelector
+			util.MapPut(svc.Annotations, util.KtSelector, marshaledSelector)
+		} else if svc.Annotations[util.KtSelector] == "" {
+			svc.Annotations[util.KtSelector] = marshaledSelector
 		}
 	}
 
@@ -134,7 +133,7 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 		if svc, err = cluster.Ins().GetService(svcName, namespace); err == nil {
 			if isServiceChanged(svc, selector, marshaledSelector) {
 				svc.Spec.Selector = selector
-				util.MapPut(svc.Annotations, common.KtSelector, marshaledSelector)
+				util.MapPut(svc.Annotations, util.KtSelector, marshaledSelector)
 				if _, err = cluster.Ins().UpdateService(svc); err != nil {
 					log.Error().Err(err).Msgf("Failed to recover service %s", svcName)
 				} else {
@@ -147,7 +146,7 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 }
 
 func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaledSelector string) bool {
-	return !util.MapEquals(svc.Spec.Selector, selector) || svc.Annotations == nil || svc.Annotations[common.KtSelector] != marshaledSelector
+	return !util.MapEquals(svc.Spec.Selector, selector) || svc.Annotations == nil || svc.Annotations[util.KtSelector] != marshaledSelector
 }
 
 func getServiceByDeployment(app *appV1.Deployment,
@@ -169,8 +168,8 @@ func getServiceByDeployment(app *appV1.Deployment,
 			len(svcList), app.Name, svcNames)
 	}
 	svc := svcList[0]
-	if strings.HasSuffix(svc.Name, common.StuntmanServiceSuffix) {
-		return cluster.Ins().GetService(strings.TrimSuffix(svc.Name, common.StuntmanServiceSuffix), namespace)
+	if strings.HasSuffix(svc.Name, util.StuntmanServiceSuffix) {
+		return cluster.Ins().GetService(strings.TrimSuffix(svc.Name, util.StuntmanServiceSuffix), namespace)
 	}
 	return &svc, nil
 }

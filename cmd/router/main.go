@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/router"
+	"github.com/gofrs/flock"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -21,12 +21,12 @@ const actionAdd = "add"
 const actionRemove = "remove"
 
 func main() {
-	ktLock, err := common.Lock(pathKtLock)
-	if err != nil {
+	fileLock := flock.New(pathKtLock)
+	if err := fileLock.Lock(); err != nil {
 		log.Error().Err(err).Msgf("Unable to fetch route lock")
 		return
 	}
-	defer common.Unlock(ktLock)
+	defer fileLock.Unlock()
 	if len(os.Args) < 3 {
 		usage()
 	} else {

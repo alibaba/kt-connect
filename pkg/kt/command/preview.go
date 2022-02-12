@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -42,7 +41,7 @@ func NewPreviewCommand(action ActionInterface, ch chan os.Signal) urfave.Command
 
 // Preview create a new service in cluster
 func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
-	err := general.SetupProcess(common.ComponentPreview, ch)
+	err := general.SetupProcess(util.ComponentPreview, ch)
 	if err != nil {
 		return err
 	}

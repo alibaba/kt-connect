@@ -22,16 +22,15 @@ import (
 // ForwardSSHTunnelToLocal mapping local port to shadow pod ssh port
 func ForwardSSHTunnelToLocal(podName string, localPort int) (chan struct{}, error) {
 	stop := make(chan struct{})
-	remotePort := common.SshPort
 	_, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
 	go func() {
 		process.Stop(<-stop, cancel)
 	}()
 	go func() {
-		err := portForward(podName, remotePort, localPort, stop)
+		err := portForward(podName, common.StandardSshPort, localPort, stop)
 		if err != nil {
-			log.Error().Err(err).Msgf("Port forward to %d -> %d pod %s interrupted", localPort, remotePort, podName)
+			log.Error().Err(err).Msgf("Port forward to %d -> %d pod %s interrupted", localPort, common.StandardSshPort, podName)
 			stop <- struct{}{}
 		}
 	}()

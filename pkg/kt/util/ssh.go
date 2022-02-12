@@ -33,7 +33,7 @@ func NewSSHGenerator(privateKey string, publicKey string, privateKeyPath string)
 
 // Generate generate SSHGenerator
 func Generate(privateKeyPath string) (*SSHGenerator, error) {
-	privateKey, err := generatePrivateKey(common.SshBitSize)
+	privateKey, err := generatePrivateKey(SshBitSize)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(name string) string {
-	return fmt.Sprintf("%s/pk/%s%s", common.KtHome, name, common.PostfixRsaKey)
+	return fmt.Sprintf("%s/pk/%s%s", common.KtHome, name, PostfixRsaKey)
 }
 
 // CleanRsaKeys ...
@@ -64,7 +64,7 @@ func CleanRsaKeys() {
 	dir := fmt.Sprintf("%s/pk/", common.KtHome)
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
-		if strings.HasSuffix(f.Name(), common.PostfixRsaKey) {
+		if strings.HasSuffix(f.Name(), PostfixRsaKey) {
 			rsaKey := fmt.Sprintf("%s/%s", dir, f.Name())
 			err := os.Remove(rsaKey)
 			if err != nil {

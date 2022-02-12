@@ -87,7 +87,7 @@ func (action *Action) Clean() error {
 	if !opt.Get().CleanOptions.DryRun {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
 		util.CleanRsaKeys()
-		if util.GetDaemonRunning(common.ComponentConnect) < 0 {
+		if util.GetDaemonRunning(util.ComponentConnect) < 0 {
 			log.Debug().Msg("Cleaning up hosts file ...")
 			dns.DropHosts()
 			log.Debug().Msg("Cleaning DNS configuration ...")
@@ -115,21 +115,21 @@ func (action *Action) cleanPidFiles() {
 }
 
 func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
-	lastHeartBeat := util.ParseTimestamp(pod.Annotations[common.KtLastHeartBeat])
+	lastHeartBeat := util.ParseTimestamp(pod.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
 		if pod.DeletionTimestamp == nil {
 			resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
 		}
-		log.Debug().Msgf("   role %s, config: %s", pod.Labels[common.KtRole], pod.Annotations[common.KtConfig])
-		config := util.String2Map(pod.Annotations[common.KtConfig])
-		if pod.Labels[common.KtRole] == common.RoleExchangeShadow {
+		log.Debug().Msgf("   role %s, config: %s", pod.Labels[util.KtRole], pod.Annotations[util.KtConfig])
+		config := util.String2Map(pod.Annotations[util.KtConfig])
+		if pod.Labels[util.KtRole] == util.RoleExchangeShadow {
 			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 			app := config["app"]
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.Labels[common.KtRole] == common.RoleRouter {
+		} else if pod.Labels[util.KtRole] == util.RoleRouter {
 			if service, ok := config["service"]; ok {
 				resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
 			}
@@ -140,14 +140,14 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus 
 }
 
 func (action *Action) analysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
-	lastHeartBeat := util.ParseTimestamp(cf.Annotations[common.KtLastHeartBeat])
+	lastHeartBeat := util.ParseTimestamp(cf.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, cf.Name)
 	}
 }
 
 func (action *Action) analysisExpiredServices(svc coreV1.Service, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
-	lastHeartBeat := util.ParseTimestamp(svc.Annotations[common.KtLastHeartBeat])
+	lastHeartBeat := util.ParseTimestamp(svc.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, svc.Name)
 	}
@@ -158,17 +158,17 @@ func (action *Action) analysisLockAndOrphanServices(svcs []coreV1.Service, resou
 		if svc.Annotations == nil {
 			continue
 		}
-		if lock, ok := svc.Annotations[common.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) > general.LockTimeout {
+		if lock, ok := svc.Annotations[util.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) > general.LockTimeout {
 			resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 		}
-		if svc.Annotations[common.KtSelector] != "" && !isRouterExist(svc.Name, svc.Namespace) {
+		if svc.Annotations[util.KtSelector] != "" && !isRouterExist(svc.Name, svc.Namespace) {
 			resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, svc.Name)
 		}
 	}
 }
 
 func isRouterExist(svcName, namespace string) bool {
-	routerPodName := svcName + common.RouterPodSuffix
+	routerPodName := svcName + util.RouterPodSuffix
 	_, err := cluster.Ins().GetPod(routerPodName, namespace)
 	return err == nil
 }
@@ -209,7 +209,7 @@ func (action *Action) cleanResource(r ResourceToClean, namespace string) {
 	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
 	for _, name := range r.ServicesToUnlock {
 		if app, err := cluster.Ins().GetService(name, namespace); err == nil {
-			delete(app.Annotations, common.KtLock)
+			delete(app.Annotations, util.KtLock)
 			_, err = cluster.Ins().UpdateService(app)
 			if err != nil {
 				log.Error().Err(err).Msgf("Failed to lock service %s", name)

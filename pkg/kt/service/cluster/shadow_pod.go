@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"errors"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -12,15 +11,15 @@ import (
 
 // GetKtResources fetch all kt pods and deployments
 func GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error) {
-	pods, err := Ins().GetPodsByLabel(map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	pods, err := Ins().GetPodsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	configmaps, err := Ins().GetConfigMapsByLabel(map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	configmaps, err := Ins().GetConfigMapsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	services, err := Ins().GetServicesByLabel(map[string]string{common.ControlBy: common.KubernetesTool}, namespace)
+	services, err := Ins().GetServicesByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -41,7 +40,7 @@ func GetOrCreateShadow(name string, labels, annotations, envs map[string]string)
 	for key, val := range util.String2Map(opt.Get().WithAnnotations) {
 		annotations[key] = val
 	}
-	annotations[common.KtUser] = util.GetLocalUserName()
+	annotations[util.KtUser] = util.GetLocalUserName()
 	resourceMeta := ResourceMeta{
 		Name:        name,
 		Namespace:   opt.Get().Namespace,
@@ -53,7 +52,7 @@ func GetOrCreateShadow(name string, labels, annotations, envs map[string]string)
 		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
-	if opt.Get().RuntimeStore.Component == common.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
+	if opt.Get().RuntimeStore.Component == util.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
 		pod, generator, err2 := tryGetExistingShadowRelatedObjs(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
@@ -127,9 +126,9 @@ func tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSH
 		return nil, nil, err
 	}
 
-	generator := util.NewSSHGenerator(configMap.Data[common.SshAuthPrivateKey], configMap.Data[common.SshAuthKey], sshKeyMeta.PrivateKeyPath)
+	generator := util.NewSSHGenerator(configMap.Data[util.SshAuthPrivateKey], configMap.Data[util.SshAuthKey], sshKeyMeta.PrivateKeyPath)
 
-	if err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey])); err != nil {
+	if err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[util.SshAuthPrivateKey])); err != nil {
 		return nil, nil, err
 	}
 

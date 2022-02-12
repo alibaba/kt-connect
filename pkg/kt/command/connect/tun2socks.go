@@ -2,7 +2,6 @@ package connect
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
@@ -34,7 +33,7 @@ func ByTun2Socks() error {
 
 	if opt.Get().ConnectOptions.DisableTunDevice {
 		showSetupSocksMessage(opt.Get().ConnectOptions.SocksPort)
-		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) {
+		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
 			return setupDns(podIP)
 		} else {
 			return nil
@@ -60,7 +59,7 @@ func ByTun2Socks() error {
 }
 
 func activePodRoute(podName string) {
-	stdout, stderr, err := cluster.Ins().ExecInPod(common.DefaultContainer, podName, opt.Get().Namespace,
+	stdout, stderr, err := cluster.Ins().ExecInPod(util.DefaultContainer, podName, opt.Get().Namespace,
 		"nslookup", "-vc", "kubernetes.default.svc")
 	log.Debug().Msgf("Active DNS %s", strings.TrimSpace(strings.Split(stdout, "\n")[0]))
 	if stderr != "" || err != nil {

@@ -2,7 +2,6 @@ package tun
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"net"
@@ -74,17 +73,17 @@ func (s *Cli) GetName() string {
 	if tunName != "" {
 		return tunName
 	}
-	tunName = fmt.Sprintf("%s%d", common.TunNameMac, 9)
+	tunName = fmt.Sprintf("%s%d", util.TunNameMac, 9)
 	if ifaces, err := net.Interfaces(); err == nil {
 		tunN := 0
 		for _, i := range ifaces {
-			if strings.HasPrefix(i.Name, common.TunNameMac) {
-				if num, err2 := strconv.Atoi(strings.TrimPrefix(i.Name, common.TunNameMac)); err2 == nil && num > tunN {
+			if strings.HasPrefix(i.Name, util.TunNameMac) {
+				if num, err2 := strconv.Atoi(strings.TrimPrefix(i.Name, util.TunNameMac)); err2 == nil && num > tunN {
 					tunN = num
 				}
 			}
 		}
-		tunName = fmt.Sprintf("%s%d", common.TunNameMac, tunN + 1)
+		tunName = fmt.Sprintf("%s%d", util.TunNameMac, tunN + 1)
 	}
 	return tunName
 }

@@ -43,5 +43,5 @@ func formattedTime() string {
 
 func resourceHeartbeatPatch() string {
 	return fmt.Sprintf("[ { \"op\" : \"replace\" , \"path\" : \"/metadata/annotations/%s\" , \"value\" : \"%s\" } ]",
-		common.KtLastHeartBeat, util.GetTimestamp())
+		util.KtLastHeartBeat, util.GetTimestamp())
 }

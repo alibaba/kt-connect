@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	"github.com/alibaba/kt-connect/pkg/common"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	testclient "k8s.io/client-go/kubernetes/fake"
 	"testing"
 )
@@ -42,7 +42,7 @@ func TestKubernetes_CreateService(t *testing.T) {
 				Meta: &ResourceMeta{
 					Name: tt.args.name,
 					Namespace: tt.args.namespace,
-					Labels: map[string]string{common.ControlBy: common.KubernetesTool},
+					Labels: map[string]string{util.ControlBy: util.KubernetesToolkit},
 					Annotations: tt.args.annotations,
 				},
 				External: false,

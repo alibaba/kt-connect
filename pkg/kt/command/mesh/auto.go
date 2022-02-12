@@ -2,7 +2,6 @@ package mesh
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -32,7 +31,7 @@ func AutoMesh(resourceName string) error {
 	}
 	defer general.UnlockService(svc.Name, opt.Get().Namespace)
 
-	if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" && svc.Spec.Selector[common.KtRole] == common.RoleExchangeShadow {
+	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" && svc.Spec.Selector[util.KtRole] == util.RoleExchangeShadow {
 		return fmt.Errorf("another user is exchanging service '%s', cannot apply mesh", svc.Name)
 	}
 
@@ -57,11 +56,11 @@ func AutoMesh(resourceName string) error {
 	}
 
 	// Create shadow service
-	shadowName := svc.Name + common.MeshPodInfix + meshVersion
+	shadowName := svc.Name + util.MeshPodInfix + meshVersion
 	targetMark := util.RandomString(20)
 	shadowLabels := map[string]string{
-		common.KtRole:   common.RoleMeshShadow,
-		common.KtTarget: targetMark,
+		util.KtRole:   util.RoleMeshShadow,
+		util.KtTarget: targetMark,
 	}
 	if err = createShadowService(shadowName, ports, shadowLabels); err != nil {
 		return err
@@ -69,10 +68,10 @@ func AutoMesh(resourceName string) error {
 
 	// Create router pod
 	// Must after origin service and shadow service, otherwise will cause 'host not found in upstream' error
-	routerPodName := svc.Name + common.RouterPodSuffix
+	routerPodName := svc.Name + util.RouterPodSuffix
 	routerLabels := map[string]string{
-		common.KtRole:   common.RoleRouter,
-		common.KtTarget: targetMark,
+		util.KtRole:   util.RoleRouter,
+		util.KtTarget: targetMark,
 	}
 	if err = createRouter(routerPodName, svc.Name, ports, routerLabels, versionMark); err != nil {
 		return err
@@ -86,7 +85,7 @@ func AutoMesh(resourceName string) error {
 
 	// Create shadow pod
 	annotations := map[string]string{
-		common.KtConfig: fmt.Sprintf("service=%s", shadowName),
+		util.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
 	if err = general.CreateShadowAndInbound(shadowName, opt.Get().MeshOptions.Expose, shadowLabels, annotations); err != nil {
 		return err
@@ -101,7 +100,7 @@ func isNameUsable(name, meshVersion string, times int) error {
 	if times > 10 {
 		return fmt.Errorf("meshing pod for service %s still terminating, please try again later", name)
 	}
-	shadowName := name + common.MeshPodInfix + meshVersion
+	shadowName := name + util.MeshPodInfix + meshVersion
 	if pod, err := cluster.Ins().GetPod(shadowName, opt.Get().Namespace); err == nil {
 		if pod.DeletionTimestamp == nil {
 			msg := fmt.Sprintf("Another user is meshing service '%s' via version '%s'", name, meshVersion)
@@ -140,7 +139,7 @@ func createShadowService(shadowSvcName string, ports map[int]int,
 
 func createRouter(routerPodName string, svcName string, ports map[int]int, labels map[string]string, versionMark string) error {
 	namespace := opt.Get().Namespace
-	routerLabels := util.MergeMap(labels, map[string]string{common.ControlBy: common.KubernetesTool})
+	routerLabels := util.MergeMap(labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 	routerPod, err := cluster.Ins().GetPod(routerPodName, namespace)
 	if err == nil && routerPod.DeletionTimestamp != nil {
 		routerPod, err = cluster.Ins().WaitPodTerminate(routerPodName, namespace)
@@ -151,15 +150,15 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 			return err
 		}
 		// Router not exist or just terminated
-		annotations := map[string]string{common.KtRefCount: "1", common.KtConfig: fmt.Sprintf("service=%s", svcName)}
+		annotations := map[string]string{util.KtRefCount: "1", util.KtConfig: fmt.Sprintf("service=%s", svcName)}
 		if err = cluster.CreateRouterPod(routerPodName, routerLabels, annotations); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}
 		log.Info().Msgf("Router pod is ready")
 
-		stdout, stderr, err2 := cluster.Ins().ExecInPod(common.DefaultContainer, routerPodName, namespace,
-			common.RouterBin, "setup", svcName, toPortMapParameter(ports), versionMark)
+		stdout, stderr, err2 := cluster.Ins().ExecInPod(util.DefaultContainer, routerPodName, namespace,
+			util.RouterBin, "setup", svcName, toPortMapParameter(ports), versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
@@ -168,7 +167,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 	} else {
 		// Router pod exist
 		cluster.Ins().UpdatePodHeartBeat(routerPodName, namespace)
-		if _, err = strconv.Atoi(routerPod.Annotations[common.KtRefCount]); err != nil {
+		if _, err = strconv.Atoi(routerPod.Annotations[util.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err
 		} else if err = cluster.Ins().IncreaseRef(routerPodName, namespace); err != nil {
@@ -177,8 +176,8 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		}
 		log.Info().Msgf("Router pod already exists")
 
-		stdout, stderr, err2 := cluster.Ins().ExecInPod(common.DefaultContainer, routerPodName, namespace,
-			common.RouterBin, "add", versionMark)
+		stdout, stderr, err2 := cluster.Ins().ExecInPod(util.DefaultContainer, routerPodName, namespace,
+			util.RouterBin, "add", versionMark)
 		log.Debug().Msgf("Stdout: %s", stdout)
 		log.Debug().Msgf("Stderr: %s", stderr)
 		if err2 != nil {
@@ -191,15 +190,15 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 }
 
 func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
-	stuntmanSvcName := svc.Name + common.StuntmanServiceSuffix
+	stuntmanSvcName := svc.Name + util.StuntmanServiceSuffix
 	namespace := opt.Get().Namespace
 	if stuntmanSvc, err := cluster.Ins().GetService(stuntmanSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
-		if svc.Annotations != nil && svc.Annotations[common.KtSelector] != "" {
+		if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
 			return fmt.Errorf("service %s should not have %s annotation, please try use 'ktctl clean' to restore it",
-				svc.Name, common.KtSelector)
+				svc.Name, util.KtSelector)
 		}
 		if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
@@ -215,7 +214,7 @@ func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 			return err
 		}
 		log.Info().Msgf("Service %s created", stuntmanSvcName)
-	} else if stuntmanSvc.Annotations == nil || stuntmanSvc.Annotations[common.ControlBy] != common.KubernetesTool {
+	} else if stuntmanSvc.Annotations == nil || stuntmanSvc.Annotations[util.ControlBy] != util.KubernetesToolkit {
 		return fmt.Errorf("service %s exists, but not created by kt", stuntmanSvcName)
 	} else {
 		cluster.Ins().UpdateServiceHeartBeat(stuntmanSvcName, namespace)

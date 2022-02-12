@@ -3,7 +3,6 @@ package cluster
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -206,8 +205,8 @@ func decToBin(n int) [8]int {
 
 func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
-	util.MapPut(metaAndSpec.Meta.Annotations, common.KtLastHeartBeat, util.GetTimestamp())
-	util.MapPut(metaAndSpec.Meta.Labels, common.ControlBy, common.KubernetesTool)
+	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
 
 	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{
@@ -248,7 +247,7 @@ func createContainer(image string, args []string, envs map[string]string) coreV1
 		pullPolicy = "IfNotPresent"
 	}
 	return coreV1.Container{
-		Name:            common.DefaultContainer,
+		Name:            util.DefaultContainer,
 		Image:           image,
 		ImagePullPolicy: pullPolicy,
 		Args:            args,
@@ -269,8 +268,8 @@ func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 	name := metaAndSpec.Meta.Name
 	labels := metaAndSpec.Meta.Labels
 	annotations := metaAndSpec.Meta.Annotations
-	annotations[common.KtRefCount] = "1"
-	annotations[common.KtLastHeartBeat] = util.GetTimestamp()
+	annotations[util.KtRefCount] = "1"
+	annotations[util.KtLastHeartBeat] = util.GetTimestamp()
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
 
@@ -310,7 +309,7 @@ func getSSHVolume(volume string) coreV1.Volume {
 				},
 				Items: []coreV1.KeyToPath{
 					{
-						Key:  common.SshAuthKey,
+						Key:  util.SshAuthKey,
 						Path: "authorized_keys",
 					},
 				},

@@ -2,7 +2,6 @@ package general
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -25,12 +24,12 @@ func LockService(serviceName, namespace string, times int) (*coreV1.Service, err
 	if svc.Annotations == nil {
 		svc.Annotations = make(map[string]string)
 	}
-	if lock, ok := svc.Annotations[common.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) < LockTimeout {
+	if lock, ok := svc.Annotations[util.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) < LockTimeout {
 		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
 		return LockService(serviceName, namespace, times + 1)
 	} else {
-		svc.Annotations[common.KtLock] = util.GetTimestamp()
+		svc.Annotations[util.KtLock] = util.GetTimestamp()
 		if svc, err = cluster.Ins().UpdateService(svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to lock service %s", serviceName)
 			return LockService(serviceName, namespace, times + 1)
@@ -46,8 +45,8 @@ func UnlockService(serviceName, namespace string) {
 		log.Warn().Err(err).Msgf("Failed to get service %s for unlock", serviceName)
 		return
 	}
-	if _, ok := svc.Annotations[common.KtLock]; ok {
-		delete(svc.Annotations, common.KtLock)
+	if _, ok := svc.Annotations[util.KtLock]; ok {
+		delete(svc.Annotations, util.KtLock)
 		if _, err = cluster.Ins().UpdateService(svc); err != nil {
 			log.Warn().Err(err).Msgf("Failed to unlock service %s", serviceName)
 		} else {

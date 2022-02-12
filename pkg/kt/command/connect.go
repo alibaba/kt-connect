@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -38,22 +37,22 @@ func (action *Action) Connect(ch chan os.Signal) error {
 	if err := checkPermissionAndOptions(); err != nil {
 		return err
 	}
-	if pid := util.GetDaemonRunning(common.ComponentConnect); pid > 0 {
+	if pid := util.GetDaemonRunning(util.ComponentConnect); pid > 0 {
 		return fmt.Errorf("another connect process already running at %d, exiting", pid)
 	}
 
-	err := general.SetupProcess(common.ComponentConnect, ch)
+	err := general.SetupProcess(util.ComponentConnect, ch)
 	if err != nil {
 		return err
 	}
 
-	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks {
+	if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks {
 		err = connect.ByTun2Socks()
-	} else if opt.Get().ConnectOptions.Mode == common.ConnectModeShuttle {
+	} else if opt.Get().ConnectOptions.Mode == util.ConnectModeShuttle {
 		err = connect.BySshuttle()
 	} else {
 		err = fmt.Errorf("invalid connect mode: '%s', supportted mode are %s, %s", opt.Get().ConnectOptions.Mode,
-			common.ConnectModeTun2Socks, common.ConnectModeShuttle)
+			util.ConnectModeTun2Socks, util.ConnectModeShuttle)
 	}
 	if err != nil {
 		return err
@@ -80,8 +79,8 @@ func checkPermissionAndOptions() error {
 		}
 		return fmt.Errorf("permission declined, please re-run connect command with 'sudo'")
 	}
-	if opt.Get().ConnectOptions.Mode == common.ConnectModeTun2Socks && opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
-		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", common.DnsModePodDns, common.ConnectModeTun2Socks)
+	if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks && opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
+		return fmt.Errorf("dns mode '%s' is not available for connect mode '%s'", util.DnsModePodDns, util.ConnectModeTun2Socks)
 	}
 	return nil
 }

@@ -1,7 +1,6 @@
 package general
 
 import (
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -93,13 +92,13 @@ func ConnectActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Name:        "mode",
 			Usage:       "Connect mode 'tun2socks' or 'sshuttle'",
 			Destination: &options.ConnectOptions.Mode,
-			Value:       common.ConnectModeTun2Socks,
+			Value:       util.ConnectModeTun2Socks,
 		},
 		cli.StringFlag{
 			Name:        "dnsMode",
 			Usage:       "Specify how to resolve service domains, can be 'localDNS', 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation",
 			Destination: &options.ConnectOptions.DnsMode,
-			Value: 		 common.DnsModeLocalDns,
+			Value:       util.DnsModeLocalDns,
 		},
 		cli.BoolFlag{
 			Name:        "shareShadow",
@@ -152,7 +151,7 @@ func ExchangeActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Name:        "mode",
 			Usage:       "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)",
 			Destination: &options.ExchangeOptions.Mode,
-			Value:       common.ExchangeModeSelector,
+			Value:       util.ExchangeModeSelector,
 		},
 		cli.StringFlag{
 			Name:        "expose",
@@ -174,7 +173,7 @@ func MeshActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Name:        "mode",
 			Usage:       "Mesh method 'auto' or 'manual'",
 			Destination: &options.MeshOptions.Mode,
-			Value:       common.MeshModeAuto,
+			Value:       util.MeshModeAuto,
 		},
 		cli.StringFlag{
 			Name:        "expose",

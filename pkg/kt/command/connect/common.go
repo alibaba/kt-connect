@@ -12,22 +12,22 @@ import (
 )
 
 func setupDns(shadowPodIp string) error {
-	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, common.DnsModeHosts) {
+	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
 		dump2HostsNamespaces := ""
-		pos := len(common.DnsModeHosts)
+		pos := len(util.DnsModeHosts)
 		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
 		}
 		if err := dumpToHost(opt.Get().Namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
 			return err
 		}
-	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModePodDns {
+	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
 		return dns.Ins().SetNameServer(shadowPodIp)
-	} else if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 		if err := dumpCurrentNamespaceToHost(opt.Get().Namespace); err != nil {
 			return err
 		}
-		dnsPort := common.AlternativeDnsPort
+		dnsPort := util.AlternativeDnsPort
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
 		}
@@ -40,7 +40,7 @@ func setupDns(shadowPodIp string) error {
 		return dns.Ins().SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
 		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().ConnectOptions.DnsMode,
-			common.DnsModeLocalDns, common.DnsModePodDns, common.DnsModeHosts)
+			util.DnsModeLocalDns, util.DnsModePodDns, util.DnsModeHosts)
 	}
 	return nil
 }
@@ -116,7 +116,7 @@ func getEnvs() map[string]string {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
-	if opt.Get().ConnectOptions.DnsMode == common.DnsModeLocalDns {
+	if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 		envs[common.EnvVarDnsProtocol] = "tcp"
 	} else {
 		envs[common.EnvVarDnsProtocol] = "udp"
@@ -131,8 +131,8 @@ func getEnvs() map[string]string {
 
 func getLabels() map[string]string {
 	labels := map[string]string{
-		common.ControlBy: common.KubernetesTool,
-		common.KtRole:    common.RoleConnectShadow,
+		util.ControlBy: util.KubernetesToolkit,
+		util.KtRole:    util.RoleConnectShadow,
 	}
 	return labels
 }

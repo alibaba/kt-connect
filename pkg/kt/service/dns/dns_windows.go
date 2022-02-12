@@ -2,7 +2,6 @@ package dns
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
@@ -18,7 +17,7 @@ func (s *Cli) SetNameServer(dnsServer string) (err error) {
 		"ip",
 		"set",
 		"dnsservers",
-		fmt.Sprintf("name=%s", common.TunNameWin),
+		fmt.Sprintf("name=%s", util.TunNameWin),
 		"source=static",
 		fmt.Sprintf("address=%s", strings.Split(dnsServer, ":")[0]),
 	)); err != nil {

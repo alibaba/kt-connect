@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -69,7 +68,7 @@ func (k *Kubernetes) CreateShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
 		{
 			Name:      "ssh-public-key",
-			MountPath: fmt.Sprintf("/root/%s", common.SshAuthKey),
+			MountPath: fmt.Sprintf("/root/%s", util.SshAuthKey),
 		},
 	}
 	pod.Spec.Volumes = []coreV1.Volume{
@@ -148,16 +147,16 @@ func (k *Kubernetes) AddEphemeralContainer(containerName string, name string,
 		return "", errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
 	}
 
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[common.SshAuthPrivateKey]))
+	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[util.SshAuthPrivateKey]))
 
-	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[common.SshAuthPrivateKey]))
+	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[util.SshAuthPrivateKey]))
 
 	ec := coreV1.EphemeralContainer{
 		EphemeralContainerCommon: coreV1.EphemeralContainerCommon{
 			Name:  containerName,
 			Image: opt.Get().Image,
 			Env: []coreV1.EnvVar{
-				{Name: common.SshAuthPrivateKey, Value: privateKey},
+				{Name: util.SshAuthPrivateKey, Value: privateKey},
 			},
 			SecurityContext: &coreV1.SecurityContext{
 				Capabilities: &coreV1.Capabilities{Add: []coreV1.Capability{"NET_ADMIN"}},
@@ -188,14 +187,14 @@ func (k *Kubernetes) IncreaseRef(name string, namespace string) error {
 		return err
 	}
 	annotations := pod.ObjectMeta.Annotations
-	count, err := strconv.Atoi(annotations[common.KtRefCount])
+	count, err := strconv.Atoi(annotations[util.KtRefCount])
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to parse annotations[%s] of pod %s with value %s",
-			common.KtRefCount, name, annotations[common.KtRefCount])
+			util.KtRefCount, name, annotations[util.KtRefCount])
 		return err
 	}
 
-	pod.Annotations[common.KtRefCount] = strconv.Itoa(count + 1)
+	pod.Annotations[util.KtRefCount] = strconv.Itoa(count + 1)
 
 	_, err = k.Clientset.CoreV1().Pods(namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
 	return err
@@ -207,7 +206,7 @@ func (k *Kubernetes) DecreaseRef(name string, namespace string) (cleanup bool, e
 	if err != nil {
 		return
 	}
-	refCount := pod.Annotations[common.KtRefCount]
+	refCount := pod.Annotations[util.KtRefCount]
 	if refCount == "1" {
 		cleanup = true
 		log.Info().Msgf("Pod %s has only one ref, gonna remove", name)
@@ -260,7 +259,7 @@ func (k *Kubernetes) decreasePodRefByOne(refCount string, pod *coreV1.Pod) (err 
 		return
 	}
 	log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
-	util.MapPut(pod.Annotations, common.KtRefCount, count)
+	util.MapPut(pod.Annotations, util.KtRefCount, count)
 	_, err = k.UpdatePod(pod)
 	return
 }

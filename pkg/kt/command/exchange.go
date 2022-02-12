@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/exchange"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -45,7 +44,7 @@ func NewExchangeCommand(action ActionInterface, ch chan os.Signal) urfave.Comman
 
 //Exchange exchange kubernetes workload
 func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
-	err := general.SetupProcess(common.ComponentExchange, ch)
+	err := general.SetupProcess(util.ComponentExchange, ch)
 	if err != nil {
 		return err
 	}
@@ -54,15 +53,15 @@ func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if opt.Get().ExchangeOptions.Mode == common.ExchangeModeScale {
+	if opt.Get().ExchangeOptions.Mode == util.ExchangeModeScale {
 		err = exchange.ByScale(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeEphemeral {
+	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == common.ExchangeModeSelector {
+	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeSelector {
 		err = exchange.BySelector(resourceName)
 	} else {
 		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
-			common.ExchangeModeSelector, common.ExchangeModeScale, common.ExchangeModeEphemeral)
+			util.ExchangeModeSelector, util.ExchangeModeScale, util.ExchangeModeEphemeral)
 	}
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"context"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
@@ -33,11 +32,11 @@ func (k *Kubernetes) CreateConfigMapWithSshKey(labels map[string]string, sshcm s
 			Name:        sshcm,
 			Namespace:   namespace,
 			Labels:      labels,
-			Annotations: map[string]string{common.KtLastHeartBeat: util.GetTimestamp()},
+			Annotations: map[string]string{util.KtLastHeartBeat: util.GetTimestamp()},
 		},
 		Data: map[string]string{
-			common.SshAuthKey:        string(generator.PublicKey),
-			common.SshAuthPrivateKey: string(generator.PrivateKey),
+			util.SshAuthKey:        string(generator.PublicKey),
+			util.SshAuthPrivateKey: string(generator.PrivateKey),
 		},
 	}, metav1.CreateOptions{})
 }
