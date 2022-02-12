@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	coreV1 "k8s.io/api/core/v1"
 	"net"
 	"strconv"
 	"strings"
@@ -63,9 +64,9 @@ func WaitPortBeReady(waitTime, port int) bool {
 	return false
 }
 
-// FindBrokenPort Check if all ports has process listening to
+// FindBrokenLocalPort Check if all ports has process listening to
 // Return empty string if all ports are listened, otherwise return the first broken port
-func FindBrokenPort(exposePorts string) string {
+func FindBrokenLocalPort(exposePorts string) string {
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
 		localPort := strings.Split(exposePort, ":")[0]
@@ -74,6 +75,27 @@ func FindBrokenPort(exposePorts string) string {
 			_ = conn.Close()
 		} else {
 			return localPort
+		}
+	}
+	return ""
+}
+
+// FindInvalidRemotePort Check if all ports exist in provide service
+func FindInvalidRemotePort(exposePorts string, svcPorts []coreV1.ServicePort) string {
+	validPorts := make([]string, 0)
+	for _, p := range svcPorts {
+		validPorts = append(validPorts, strconv.Itoa(p.TargetPort.IntValue()))
+	}
+
+	portPairs := strings.Split(exposePorts, ",")
+	for _, exposePort := range portPairs {
+		splitPorts := strings.Split(exposePort, ":")
+		remotePort := splitPorts[0]
+		if len(splitPorts) > 1 {
+			remotePort = splitPorts[1]
+		}
+		if !Contains(remotePort, validPorts) {
+			return remotePort
 		}
 	}
 	return ""

@@ -47,7 +47,7 @@ func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
 		return err
 	}
 
-	if port := util.FindBrokenPort(opt.Get().PreviewOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().PreviewOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 

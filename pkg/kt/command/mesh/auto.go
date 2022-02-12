@@ -21,6 +21,9 @@ func AutoMesh(resourceName string) error {
 	if err != nil {
 		return err
 	}
+	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, svc.Spec.Ports); port != "" {
+		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
+	}
 
 	// Lock service to avoid conflict, must be first step
 	svc, err = general.LockService(svc.Name, opt.Get().Namespace, 0)

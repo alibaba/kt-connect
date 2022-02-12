@@ -49,7 +49,7 @@ func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
 		return err
 	}
 
-	if port := util.FindBrokenPort(opt.Get().MeshOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().MeshOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 

@@ -50,7 +50,7 @@ func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
 		return err
 	}
 
-	if port := util.FindBrokenPort(opt.Get().ExchangeOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().ExchangeOptions.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
