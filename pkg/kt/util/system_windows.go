@@ -21,3 +21,7 @@ func IsRunAsAdmin() bool {
 	adm, err := windows.GetCurrentProcessToken().IsMember(sid)
 	return err == nil && adm
 }
+
+func GetAdminUserName() string {
+	return "administrator"
+}

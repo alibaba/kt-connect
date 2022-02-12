@@ -88,10 +88,14 @@ func (action *Action) Clean() error {
 		log.Debug().Msg("Cleaning up unused local rsa keys ...")
 		util.CleanRsaKeys()
 		if util.GetDaemonRunning(util.ComponentConnect) < 0 {
-			log.Debug().Msg("Cleaning up hosts file ...")
-			dns.DropHosts()
-			log.Debug().Msg("Cleaning DNS configuration ...")
-			dns.Ins().RestoreNameServer()
+			if util.IsRunAsAdmin() {
+				log.Debug().Msg("Cleaning up hosts file ...")
+				dns.DropHosts()
+				log.Debug().Msg("Cleaning DNS configuration ...")
+				dns.Ins().RestoreNameServer()
+			} else {
+				log.Info().Msgf("Not %s user, skipping DNS cleanup", util.GetAdminUserName())
+			}
 		}
 	}
 	return nil
