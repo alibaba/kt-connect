@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/mesh"
@@ -30,10 +29,10 @@ func NewMeshCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
 			}
 
 			if len(c.Args()) == 0 {
-				return errors.New("name of deployment to mesh is required")
+				return fmt.Errorf("name of deployment to mesh is required")
 			}
 			if len(opt.Get().MeshOptions.Expose) == 0 {
-				return errors.New("--expose is required")
+				return fmt.Errorf("--expose is required")
 			}
 
 			return action.Mesh(c.Args().First(), ch)

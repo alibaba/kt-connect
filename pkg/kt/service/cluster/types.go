@@ -2,7 +2,6 @@ package cluster
 
 import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -13,9 +12,9 @@ type KubernetesInterface interface {
 	GetPod(name string, namespace string) (*coreV1.Pod, error)
 	GetPodsByLabel(labels map[string]string, namespace string) (*coreV1.PodList, error)
 	CreatePod(metaAndSpec *PodMetaAndSpec) error
-	CreateShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error
 	UpdatePod(pod *coreV1.Pod) (*coreV1.Pod, error)
 	RemovePod(name, namespace string) error
+	GetOrCreateShadow(name string, labels, annotations, envs map[string]string) (string, string, string, error)
 	UpdatePodHeartBeat(name, namespace string)
 	WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error)
 	WaitPodTerminate(name, namespace string) (*coreV1.Pod, error)
@@ -43,11 +42,10 @@ type KubernetesInterface interface {
 
 	GetConfigMap(name, namespace string) (*coreV1.ConfigMap, error)
 	GetConfigMapsByLabel(labels map[string]string, namespace string) (*coreV1.ConfigMapList, error)
-	CreateConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
-		generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error)
 	RemoveConfigMap(name, namespace string) (err error)
 	UpdateConfigMapHeartBeat(name, namespace string)
 
+	GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error)
 	GetAllNamespaces() (*coreV1.NamespaceList, error)
 	ClusterCidrs(namespace string) (cidrs []string, err error)
 }

@@ -50,7 +50,7 @@ func NewCleanCommand(action ActionInterface) urfave.Command {
 //Clean delete unavailing shadow pods
 func (action *Action) Clean() error {
 	action.cleanPidFiles()
-	pods, cfs, svcs, err := cluster.GetKtResources(opt.Get().Namespace)
+	pods, cfs, svcs, err := cluster.Ins().GetKtResources(opt.Get().Namespace)
 	if err != nil {
 		return err
 	}

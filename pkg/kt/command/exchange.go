@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/exchange"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
@@ -31,10 +30,10 @@ func NewExchangeCommand(action ActionInterface, ch chan os.Signal) urfave.Comman
 			}
 
 			if len(c.Args()) == 0 {
-				return errors.New("name of resource to exchange is required")
+				return fmt.Errorf("name of resource to exchange is required")
 			}
 			if len(opt.Get().ExchangeOptions.Expose) == 0 {
-				return errors.New("--expose is required")
+				return fmt.Errorf("--expose is required")
 			}
 
 			return action.Exchange(c.Args().First(), ch)

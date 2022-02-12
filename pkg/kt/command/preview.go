@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
@@ -29,10 +28,10 @@ func NewPreviewCommand(action ActionInterface, ch chan os.Signal) urfave.Command
 				return err
 			}
 			if len(c.Args()) == 0 {
-				return errors.New("an service name must be specified")
+				return fmt.Errorf("an service name must be specified")
 			}
 			if len(opt.Get().PreviewOptions.Expose) == 0 {
-				return errors.New("--expose is required")
+				return fmt.Errorf("--expose is required")
 			}
 			return action.Preview(c.Args().First(), ch)
 		},

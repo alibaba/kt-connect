@@ -18,7 +18,7 @@ func CreateShadowAndInbound(shadowPodName, portsToExpose string,
 
 	podLabels := util.MergeMap(labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 	envs := make(map[string]string)
-	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(shadowPodName, podLabels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, podLabels, annotations, envs)
 	if err != nil {
 		return err
 	}

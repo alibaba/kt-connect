@@ -2,9 +2,7 @@ package cluster
 
 import (
 	"context"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
@@ -24,36 +22,28 @@ type SSHkeyMeta struct {
 	PrivateKeyPath   string
 }
 
-// ClusterCidrs get cluster Cidrs
-func (k *Kubernetes) ClusterCidrs(namespace string) (cidrs []string, err error) {
-	if !opt.Get().ConnectOptions.DisablePodIp {
-		cidrs, err = getPodCidrs(k.Clientset, namespace)
-		if err != nil {
-			return
-		}
-	}
-	log.Debug().Msgf("Pod CIDR is %v", cidrs)
-
-	serviceCidr, err := getServiceCidr(k.Clientset, namespace)
-	if err != nil {
-		return
-	}
-	cidrs = append(cidrs, serviceCidr...)
-	log.Debug().Msgf("Service CIDR is %v", serviceCidr)
-
-	if opt.Get().ConnectOptions.IncludeIps != "" {
-		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.IncludeIps, ",") {
-			if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks && isSingleIp(ipRange) {
-				log.Warn().Msgf("Includes single IP '%s' is not allow in %s mode", ipRange, util.ConnectModeTun2Socks)
-			} else {
-				cidrs = append(cidrs, ipRange)
-			}
-		}
-	}
-	return
-}
-
 // GetAllNamespaces get all namespaces
 func (k *Kubernetes) GetAllNamespaces() (*coreV1.NamespaceList, error) {
 	return k.Clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+}
+
+// GetKtResources fetch all kt pods and deployments
+func (k *Kubernetes) GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error) {
+	pods, err := Ins().GetPodsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	configmaps, err := Ins().GetConfigMapsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	services, err := Ins().GetServicesByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return pods.Items, configmaps.Items, services.Items, nil
+}
+
+func isSingleIp(ipRange string) bool {
+	return !strings.Contains(ipRange, "/") || strings.Split(ipRange,"/")[1] == "32"
 }

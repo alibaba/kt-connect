@@ -3,17 +3,19 @@ package cluster
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
-	"errors"
 	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"io"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -62,26 +64,6 @@ func (k *Kubernetes) RemovePod(name, namespace string) (err error) {
 	})
 }
 
-// CreateShadowPod create shadow pod
-func (k *Kubernetes) CreateShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error {
-	pod := createPod(metaAndSpec)
-	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
-		{
-			Name:      "ssh-public-key",
-			MountPath: fmt.Sprintf("/root/%s", util.SshAuthKey),
-		},
-	}
-	pod.Spec.Volumes = []coreV1.Volume{
-		getSSHVolume(sshcm),
-	}
-	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
-		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
-		return err
-	}
-	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdatePodHeartBeat)
-	return nil
-}
-
 // WaitPodReady ...
 func (k *Kubernetes) WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error) {
 	return k.waitPodReady(name, namespace, timeoutSec, 0)
@@ -126,58 +108,6 @@ func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, cmd ...
 		err = fmt.Errorf(rawErrMsg)
 	}
 	return stdoutMsg, stderrMsg, err
-}
-
-// AddEphemeralContainer add ephemeral container to specified pod
-func (k *Kubernetes) AddEphemeralContainer(containerName string, name string,
-	envs map[string]string) (string, error) {
-	pod, err := k.GetPod(name, opt.Get().Namespace)
-	if err != nil {
-		return "", err
-	}
-
-	privateKeyPath := util.PrivateKeyPath(name)
-	generator, err := util.Generate(privateKeyPath)
-	if err != nil {
-		return "", err
-	}
-	configMap, err2 := k.CreateConfigMapWithSshKey(map[string]string{}, name, opt.Get().Namespace, generator)
-
-	if err2 != nil {
-		return "", errors.New("Found shadow pod but no configMap. Please delete the pod " + pod.Name)
-	}
-
-	err = util.WritePrivateKey(generator.PrivateKeyPath, []byte(configMap.Data[util.SshAuthPrivateKey]))
-
-	privateKey := base64.StdEncoding.EncodeToString([]byte(configMap.Data[util.SshAuthPrivateKey]))
-
-	ec := coreV1.EphemeralContainer{
-		EphemeralContainerCommon: coreV1.EphemeralContainerCommon{
-			Name:  containerName,
-			Image: opt.Get().Image,
-			Env: []coreV1.EnvVar{
-				{Name: util.SshAuthPrivateKey, Value: privateKey},
-			},
-			SecurityContext: &coreV1.SecurityContext{
-				Capabilities: &coreV1.Capabilities{Add: []coreV1.Capability{"NET_ADMIN"}},
-			},
-		},
-	}
-
-	for k, v := range envs {
-		ec.Env = append(ec.Env, coreV1.EnvVar{Name: k, Value: v})
-	}
-
-	pod.Spec.EphemeralContainers = append(pod.Spec.EphemeralContainers, ec)
-
-	pod, err = k.Clientset.CoreV1().Pods(pod.Namespace).UpdateEphemeralContainers(context.TODO(), pod.Name, pod, metav1.UpdateOptions{})
-	return privateKeyPath, err
-}
-
-// RemoveEphemeralContainer remove ephemeral container from specified pod
-func (k *Kubernetes) RemoveEphemeralContainer(_, podName string, namespace string) (err error) {
-	// TODO: implement container removal
-	return k.RemovePod(podName, namespace)
 }
 
 // IncreaseRef increase pod ref count by 1
@@ -261,5 +191,35 @@ func (k *Kubernetes) decreasePodRefByOne(refCount string, pod *coreV1.Pod) (err 
 	log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
 	util.MapPut(pod.Annotations, util.KtRefCount, count)
 	_, err = k.UpdatePod(pod)
+	return
+}
+
+func addImagePullSecret(pod *coreV1.Pod, imagePullSecret string) {
+	pod.Spec.ImagePullSecrets = []coreV1.LocalObjectReference{
+		{
+			Name: imagePullSecret,
+		},
+	}
+}
+
+func execute(method string, url *url.URL, config *restclient.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
+	exec, err := remotecommand.NewSPDYExecutor(config, method, url)
+	if err != nil {
+		return err
+	}
+	return exec.Stream(remotecommand.StreamOptions{
+		Stdin:  stdin,
+		Stdout: stdout,
+		Stderr: stderr,
+		Tty:    tty,
+	})
+}
+
+func decreaseRef(refCount string) (count string, err error) {
+	currentCount, err := strconv.Atoi(refCount)
+	if err != nil {
+		return
+	}
+	count = strconv.Itoa(currentCount - 1)
 	return
 }

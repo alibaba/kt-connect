@@ -22,7 +22,24 @@ func (k *Kubernetes) GetConfigMapsByLabel(labels map[string]string, namespace st
 	})
 }
 
-func (k *Kubernetes) CreateConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
+// RemoveConfigMap remove ConfigMap instance
+func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
+	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
+	deletePolicy := metav1.DeletePropagationBackground
+	return cli.Delete(context.TODO(), name, metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
+func (k *Kubernetes) UpdateConfigMapHeartBeat(name, namespace string) {
+	log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
+	if _, err := k.Clientset.CoreV1().ConfigMaps(namespace).
+		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
+		log.Warn().Err(err).Msgf("Failed to update config map heart beat")
+	}
+}
+
+func (k *Kubernetes) createConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
 	generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
 
 	SetupHeartBeat(sshcm, namespace, k.UpdateConfigMapHeartBeat)
@@ -39,21 +56,4 @@ func (k *Kubernetes) CreateConfigMapWithSshKey(labels map[string]string, sshcm s
 			util.SshAuthPrivateKey: string(generator.PrivateKey),
 		},
 	}, metav1.CreateOptions{})
-}
-
-// RemoveConfigMap remove ConfigMap instance
-func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
-	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
-	deletePolicy := metav1.DeletePropagationBackground
-	return cli.Delete(context.TODO(), name, metav1.DeleteOptions{
-		PropagationPolicy: &deletePolicy,
-	})
-}
-
-func (k *Kubernetes) UpdateConfigMapHeartBeat(name, namespace string) {
-	log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, formattedTime())
-	if _, err := k.Clientset.CoreV1().ConfigMaps(namespace).
-		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
-		log.Warn().Err(err).Msgf("Failed to update config map heart beat")
-	}
 }

@@ -30,7 +30,7 @@ func Expose(serviceName string) error {
 func exposeLocalService(serviceName, shadowPodName string, labels, annotations map[string]string) error {
 
 	envs := make(map[string]string)
-	_, podName, privateKeyPath, err := cluster.GetOrCreateShadow(shadowPodName, labels, annotations, envs)
+	_, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, labels, annotations, envs)
 	if err != nil {
 		return err
 	}

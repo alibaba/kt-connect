@@ -1,7 +1,7 @@
 package dnsserver
 
 import (
-	"errors"
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
@@ -147,7 +147,7 @@ func (s *DnsServer) getSuffixes() (suffixes []string) {
 // Get upstream dns server address
 func (s *DnsServer) getResolveServer() (address string, err error) {
 	if len(s.config.Servers) <= 0 {
-		return "", errors.New("error: no dns server available")
+		return "", fmt.Errorf("error: no dns server available")
 	}
 
 	return net.JoinHostPort(s.config.Servers[0], s.config.Port), nil

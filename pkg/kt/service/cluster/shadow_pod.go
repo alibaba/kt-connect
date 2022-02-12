@@ -1,35 +1,18 @@
 package cluster
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GetKtResources fetch all kt pods and deployments
-func GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error) {
-	pods, err := Ins().GetPodsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	configmaps, err := Ins().GetConfigMapsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	services, err := Ins().GetServicesByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	return pods.Items, configmaps.Items, services.Items, nil
-}
-
 // GetOrCreateShadow create shadow
-func GetOrCreateShadow(name string, labels, annotations, envs map[string]string) (
-	string, string, string, error) {
-
+func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string) (string, string, string, error) {
 	// record context data
 	opt.Get().RuntimeStore.Shadow = name
 
@@ -53,7 +36,7 @@ func GetOrCreateShadow(name string, labels, annotations, envs map[string]string)
 	}
 
 	if opt.Get().RuntimeStore.Component == util.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
-		pod, generator, err2 := tryGetExistingShadowRelatedObjs(&resourceMeta, &sshKeyMeta)
+		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
 		}
@@ -68,10 +51,10 @@ func GetOrCreateShadow(name string, labels, annotations, envs map[string]string)
 		Image: opt.Get().Image,
 		Envs:  envs,
 	}
-	return createShadow(&podMeta, &sshKeyMeta)
+	return k.createShadow(&podMeta, &sshKeyMeta)
 }
 
-func createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
+func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
 	podIP string, podName string, privateKeyPath string, err error) {
 
 	generator, err := util.Generate(sshKeyMeta.PrivateKeyPath)
@@ -79,13 +62,13 @@ func createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
 		return
 	}
 
-	configMap, err := Ins().CreateConfigMapWithSshKey(metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
+	configMap, err := k.createConfigMapWithSshKey(metaAndSpec.Meta.Labels, sshKeyMeta.SshConfigMapName, metaAndSpec.Meta.Namespace, generator)
 	if err != nil {
 		return
 	}
 	log.Info().Msgf("Successful create config map %v", configMap.Name)
 
-	pod, err := createAndGetPod(metaAndSpec, sshKeyMeta.SshConfigMapName)
+	pod, err := k.createAndGetPod(metaAndSpec, sshKeyMeta.SshConfigMapName)
 	if err != nil {
 		return
 	}
@@ -93,30 +76,50 @@ func createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHkeyMeta) (
 	return
 }
 
-func createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
-	err := Ins().CreateShadowPod(metaAndSpec, sshcm)
+func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
+	err := k.createShadowPod(metaAndSpec, sshcm)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 
-	return Ins().WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+	return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
 }
 
-func tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
-	pod, ignorableErr := Ins().GetPod(resourceMeta.Name, resourceMeta.Namespace);
+// createShadowPod create shadow pod
+func (k *Kubernetes) createShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error {
+	pod := createPod(metaAndSpec)
+	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
+		{
+			Name:      "ssh-public-key",
+			MountPath: fmt.Sprintf("/root/%s", util.SshAuthKey),
+		},
+	}
+	pod.Spec.Volumes = []coreV1.Volume{
+		getSSHVolume(sshcm),
+	}
+	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
+		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdatePodHeartBeat)
+	return nil
+}
+
+func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
+	pod, ignorableErr := k.GetPod(resourceMeta.Name, resourceMeta.Namespace);
 	if ignorableErr != nil {
 		return nil, nil, nil
 	}
 
-	configMap, err := Ins().GetConfigMap(sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
+	configMap, err := k.GetConfigMap(sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			if pod.DeletionTimestamp == nil {
 				log.Error().Msgf("Found shadow Pod without ConfigMap. Please delete the pod '%s'", resourceMeta.Name)
 			} else {
-				_, err = Ins().WaitPodTerminate(resourceMeta.Name, resourceMeta.Namespace)
+				_, err = k.WaitPodTerminate(resourceMeta.Name, resourceMeta.Namespace)
 				if k8sErrors.IsNotFound(err) {
 					// Pod already terminated
 					return nil, nil, nil
@@ -132,25 +135,46 @@ func tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSH
 		return nil, nil, err
 	}
 
-	pod, err = getShadowPod(resourceMeta)
+	pod, err = k.getShadowPod(resourceMeta)
 	return pod, generator, err
 }
 
-func getShadowPod(resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
-	podList, err := Ins().GetPodsByLabel(resourceMeta.Labels, resourceMeta.Namespace)
+func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
+	podList, err := k.GetPodsByLabel(resourceMeta.Labels, resourceMeta.Namespace)
 	if err != nil {
 		return
 	}
 	if len(podList.Items) == 1 {
 		log.Info().Msgf("Found shadow daemon pod, reuse it")
-		if err = Ins().IncreaseRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
+		if err = k.IncreaseRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
 			return
 		}
 		return &(podList.Items[0]), nil
 	} else if len(podList.Items) > 1 {
-		err = errors.New("Found more than one pod with name " + resourceMeta.Name + ", please make sure these is only one in namespace " + resourceMeta.Namespace)
+		err = fmt.Errorf("found more than one pod with name %s, please make sure these is only one in namespace %s",
+			resourceMeta.Name, resourceMeta.Namespace)
 	}
 	return
+}
+
+func getSSHVolume(volume string) coreV1.Volume {
+	sshVolume := coreV1.Volume{
+		Name: "ssh-public-key",
+		VolumeSource: coreV1.VolumeSource{
+			ConfigMap: &coreV1.ConfigMapVolumeSource{
+				LocalObjectReference: coreV1.LocalObjectReference{
+					Name: volume,
+				},
+				Items: []coreV1.KeyToPath{
+					{
+						Key:  util.SshAuthKey,
+						Path: "authorized_keys",
+					},
+				},
+			},
+		},
+	}
+	return sshVolume
 }
 
 func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, string) {
