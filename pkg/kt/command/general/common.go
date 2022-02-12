@@ -169,8 +169,8 @@ func getServiceByDeployment(app *appV1.Deployment,
 			len(svcList), app.Name, svcNames)
 	}
 	svc := svcList[0]
-	if strings.HasSuffix(svc.Name, common.OriginServiceSuffix) {
-		return cluster.Ins().GetService(strings.TrimSuffix(svc.Name, common.OriginServiceSuffix), namespace)
+	if strings.HasSuffix(svc.Name, common.StuntmanServiceSuffix) {
+		return cluster.Ins().GetService(strings.TrimSuffix(svc.Name, common.StuntmanServiceSuffix), namespace)
 	}
 	return &svc, nil
 }

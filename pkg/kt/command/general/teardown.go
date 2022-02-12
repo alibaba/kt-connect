@@ -120,11 +120,11 @@ func recoverService(routerConfig string) {
 	svcName := config["service"]
 	RecoverOriginalService(svcName, opt.Get().Namespace)
 
-	originSvcName := svcName + common.OriginServiceSuffix
-	if err := cluster.Ins().RemoveService(originSvcName, opt.Get().Namespace); err != nil {
-		log.Error().Err(err).Msgf("Failed to remove origin service %s", originSvcName)
+	stuntmanSvcName := svcName + common.StuntmanServiceSuffix
+	if err := cluster.Ins().RemoveService(stuntmanSvcName, opt.Get().Namespace); err != nil {
+		log.Error().Err(err).Msgf("Failed to remove stuntman service %s", stuntmanSvcName)
 	}
-	log.Info().Msgf("Substitution service %s removed", originSvcName)
+	log.Info().Msgf("Stuntman service %s removed", stuntmanSvcName)
 }
 
 func RecoverOriginalService(svcName, namespace string) {

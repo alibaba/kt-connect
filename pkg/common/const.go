@@ -61,8 +61,8 @@ const (
 	KtExchangeContainer = "kt-exchange"
 	// DefaultContainer default container name
 	DefaultContainer = "standalone"
-	// OriginServiceSuffix suffix of origin service name
-	OriginServiceSuffix = "-kt-origin"
+	// StuntmanServiceSuffix suffix of stuntman service name
+	StuntmanServiceSuffix = "-kt-stuntman"
 	// RouterPodSuffix suffix of router pod name
 	RouterPodSuffix = "-kt-router"
 	// ExchangePodInfix exchange pod name

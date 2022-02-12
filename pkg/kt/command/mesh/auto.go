@@ -49,7 +49,7 @@ func AutoMesh(resourceName string) error {
 	}
 
 	// Create origin service
-	if err = createOriginService(svc, ports); err != nil {
+	if err = createStuntmanService(svc, ports); err != nil {
 		return err
 	}
 
@@ -187,10 +187,10 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 	return nil
 }
 
-func createOriginService(svc *coreV1.Service, ports map[int]int) error {
-	originSvcName := svc.Name + common.OriginServiceSuffix
+func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
+	stuntmanSvcName := svc.Name + common.StuntmanServiceSuffix
 	namespace := opt.Get().Namespace
-	if originSvc, err := cluster.Ins().GetService(originSvcName, namespace); err != nil {
+	if stuntmanSvc, err := cluster.Ins().GetService(stuntmanSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
 		}
@@ -200,7 +200,7 @@ func createOriginService(svc *coreV1.Service, ports map[int]int) error {
 		}
 		if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
-				Name:        originSvcName,
+				Name:        stuntmanSvcName,
 				Namespace:   namespace,
 				Labels:      map[string]string{},
 				Annotations: map[string]string{},
@@ -211,11 +211,11 @@ func createOriginService(svc *coreV1.Service, ports map[int]int) error {
 		}); err != nil {
 			return err
 		}
-		log.Info().Msgf("Service %s created", originSvcName)
-	} else if originSvc.Annotations == nil || originSvc.Annotations[common.ControlBy] != common.KubernetesTool {
-		return fmt.Errorf("service %s exists, but not created by kt", originSvcName)
+		log.Info().Msgf("Service %s created", stuntmanSvcName)
+	} else if stuntmanSvc.Annotations == nil || stuntmanSvc.Annotations[common.ControlBy] != common.KubernetesTool {
+		return fmt.Errorf("service %s exists, but not created by kt", stuntmanSvcName)
 	} else {
-		cluster.Ins().UpdateServiceHeartBeat(originSvcName, namespace)
+		cluster.Ins().UpdateServiceHeartBeat(stuntmanSvcName, namespace)
 		log.Info().Msgf("Origin service already exists")
 	}
 	return nil
