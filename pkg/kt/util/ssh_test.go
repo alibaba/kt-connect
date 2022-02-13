@@ -3,6 +3,7 @@ package util
 import (
 	"crypto/rsa"
 	"github.com/stretchr/testify/require"
+	"math/big"
 	"os"
 	"testing"
 )
@@ -33,7 +34,7 @@ func TestGenerate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Remove(tt.args.privateKeyPath)
+			_ = os.Remove(tt.args.privateKeyPath)
 			got, err := Generate(tt.args.privateKeyPath)
 			require.Equal(t, err != nil, tt.wantErr, "Generate() error = %v, wantErr %v", err, tt.wantErr)
 			require.NotEmpty(t, got.PrivateKey, "fail generate private key")
@@ -49,41 +50,46 @@ func Test_generatePrivateKey(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		want    *rsa.PrivateKey
-		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should generate rsa key",
+			args: args{bitSize: 2048},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := generatePrivateKey(tt.args.bitSize)
-			require.Equal(t, err != nil, tt.wantErr,
-				"generatePrivateKey() error = %v, wantErr %v", err, tt.wantErr)
-			require.Equal(t, got, tt.want,
-				"generatePrivateKey() = %v, want %v", got, tt.want)
+			require.Empty(t, err, "generatePrivateKey() error = %v", err)
+			require.Equal(t, 256, got.PublicKey.Size(), "generatePrivateKey() = %v, want %v", got.PublicKey.Size(), 256)
 		})
 	}
 }
 
-func Test_generatePublicKey(t *testing.T) {
+func Test_encodePublicKey(t *testing.T) {
 	type args struct {
-		privatekey *rsa.PublicKey
+		publicKey *rsa.PublicKey
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    []byte
+		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "should encode public key",
+			args: args{publicKey: &rsa.PublicKey{
+				N: big.NewInt(7456871076443426339),
+				E: 65537},
+			},
+			want: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAACGd8ILxfS44j\n",
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := generatePublicKey(tt.args.privatekey)
-			require.Equal(t, err != nil, tt.wantErr,
-				"generatePublicKey() error = %v, wantErr %v", err, tt.wantErr)
-			require.Equal(t, got, tt.want,
-				"generatePublicKey() = %v, want %v", got, tt.want)
+			got, err := encodePublicKey(tt.args.publicKey)
+			require.Equal(t, err != nil, tt.wantErr, "encodePublicKey() error = %v, wantErr %v", err, tt.wantErr)
+			require.Equal(t, string(got), tt.want, "encodePublicKey() = %v, want %v", got, tt.want)
 		})
 	}
 }

@@ -38,7 +38,7 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 		return nil, err
 	}
 
-	publicKeyBytes, err := generatePublicKey(&privateKey.PublicKey)
+	publicKeyBytes, err := encodePublicKey(&privateKey.PublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -112,10 +112,10 @@ func encodePrivateKeyToPEM(privateKey *rsa.PrivateKey) []byte {
 	return privatePEM
 }
 
-// generatePublicKey take a rsa.PublicKey and return bytes suitable for writing to .pub file
-// returns in the format "ssh-rsa ..."
-func generatePublicKey(privatekey *rsa.PublicKey) ([]byte, error) {
-	publicRsaKey, err := ssh.NewPublicKey(privatekey)
+// encodePublicKey take a rsa.PublicKey and return bytes suitable for writing to .pub file
+// return format "ssh-rsa ..."
+func encodePublicKey(publicKey *rsa.PublicKey) ([]byte, error) {
+	publicRsaKey, err := ssh.NewPublicKey(publicKey)
 	if err != nil {
 		return nil, err
 	}
