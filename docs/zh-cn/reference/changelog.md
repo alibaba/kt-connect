@@ -12,7 +12,7 @@
 - `mesh`命令默认采用`auto`模式
 - `exchange`和`mesh`统一使用Service作为目标
 - 废弃`dashboard`命令
-- 废弃kubectl插件
+- 废弃`kubectl`插件
 - 增加`exchange`/`mesh`命令的目标端口校验
 - 修复命令行参数有效性校验
 
@@ -78,7 +78,7 @@
 * 新增`exchange`命令的`ephemeral`模式（for k8s 1.23+，感谢@[xyz-li](https://github.com/xyz-li)）
 * 修复`exchange`命令连接时常卡顿的问题（issues #184，感谢@[xyz-li](https://github.com/xyz-li)）
 * 当Port-forward的目标端口被占用时提供更优雅的报错信息（感谢@[xyz-li](https://github.com/xyz-li)）
-* 自动根据用户权限控制生成路由的范围，去除Connect命令的`--global`参数
+* 自动根据用户权限控制生成路由的范围，去除`connect`命令的`--global`参数
 * 优化Connect命令的`--cidr`参数，支持指定多个IP区段
 * 参数`--label`更名为`--withLabel`
 * 增加`--withAnnotation`参数为shadow pod增加额外标注
@@ -90,10 +90,10 @@
 
 > 发布时间：2021-08-29
 
-* 自动解析本地DNS配置，移除connect命令的`--localDomain`参数
-* 使用vpn模式时自动检测并安装sshuttle，简化初次使用的准备工作
-* 解决Exchange和Mesh连接闲置超时报"lost connection to pod"的问题
-* 修复Connect命令开启debug模式时无法连接的错误
+* 自动解析本地DNS配置，移除`connect`命令的`--localDomain`参数
+* 使用vpn模式时自动检测并安装`sshuttle`，简化初次使用的准备工作
+* 解决`exchange`和`mesh`命令连接闲置超时报"lost connection to pod"的问题
+* 修复`connect`命令开启debug模式时无法连接的错误
 * 优化Windows环境的屏幕输出，适配非管理员用户场景
 * 新增`--imagePullSecret`参数支持指定拉取代理Pod镜像使用的Secret（感谢@[pvtyuan](https://github.com/pvtyuan)）
 
@@ -119,16 +119,16 @@
 * 新增`clean`命令，清理集群中残留的Shadow Pods
 * 支持`service.namespace.svc`结构的服务域名解析
 * 完善缺失`sshuttle`依赖等运行时错误的报错信息
-* `connect`命令的`dump2hosts`参数支持完整服务域名
+* `connect`命令的`--dump2hosts`参数支持完整服务域名
 
 ### 0.0.13-rc13
 
 > 发布时间：2021-07-02
 
 * 提供`kubectl`工具的`exchange`/`mesh`/`run`插件
-* Exchange和Mesh命令支持多端口映射
+* `exchange`和`mesh`命令支持多端口映射
 * 消除本地SSH命令行工具依赖
-* 用端口检查替代固定延迟，提升Connect命令执行效率
+* 用端口检查替代固定延迟，提升`connect`命令执行效率
 * 支持本地访问StatefulSet的Pod域名
 * 兼容OpenShift 4.x
 

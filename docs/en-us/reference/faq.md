@@ -1,4 +1,5 @@
-# Frequency Asked Questions
+Frequency Asked Questions
+---
 
 #### Q：For multiple test clusters, how to specify the target of `ktctl` ?
 

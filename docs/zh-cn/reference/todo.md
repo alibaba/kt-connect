@@ -7,11 +7,15 @@ v1.0 版本计划
 
 #### v0.3.x
 
-* 扩展基于Tun设备的Connect功能，统一Linux/MacOS/Windows使用体验
-* `exchange`和`mesh`命令使用Service名作为目标
+* 完善Exchange命令的`ephemeral`模式，扩展至Mesh场景
 
 #### v0.4.x
 
 * 支持全局参数和子命令参数任意顺序混用
 * 支持全局配置，简化命令行参数
 * 支持断网自动重连
+* 支持[DAPR](https://dapr.io)开发环境
+
+#### v1.0.0
+
+* 与[kt-env](https://github.com/alibaba/virtual-environment)整合，打造云原生版本的阿里测试环境最佳实践

@@ -49,19 +49,19 @@ Mesh借助Router Pod或服务网格（如Istio）的能力实现按规则重定�
 
 #### Auto模式
 
-启动Shadow Pod和Shadow Pod并检查是否存在与目标Service匹配的Router Pod，若未找到则会创建Router Pod，修改目标Service的`selector`属性指向Router Pod，同时再创建一个Origin Service指向原Service的Pod实例。
+启动Shadow Pod和Shadow Pod并检查是否存在与目标Service匹配的Router Pod，若未找到则会创建Router Pod，修改目标Service的`selector`属性指向Router Pod，同时再创建一个Stuntman Service指向原Service的Pod实例。
 
-然后更新Router Pod的路由规则，将包含特定Header的请求转发到Shadow Service，其余请求则通过Origin Service回到测试环境原本的Pod实例。
+然后更新Router Pod的路由规则，将包含特定Header的请求转发到Shadow Service，其余请求则通过Stuntman Service回到测试环境原本的Pod实例。
 
-当ktctl mesh命令退出时，会移除Router Pod中通往当前Shadow Pod的路由规则。若Router Pod中已经没有其他路由，则同时删除Router Pod和Origin Service，并恢复原Service的`selector`属性内容。
+当ktctl mesh命令退出时，会移除Router Pod中通往当前Shadow Pod的路由规则。若Router Pod中已经没有其他路由，则同时删除Router Pod和Stuntman Service，并恢复原Service的`selector`属性内容。
 
 #### Manual模式
 
-与Auto模式的差异在于，创建出的Shadow Pod除了用于标识版本的`version`标签外（可通过`--versionMark`参数修改），其余Label均与目标Service的原始Pod实例相同，且不会自动创建Shadow Service、Router Pod和Origin Service。
+与Auto模式的差异在于，创建出的Shadow Pod除了用于标识版本的`version`标签外（可通过`--versionMark`参数修改），其余Label均与目标Service的原始Pod实例相同，且不会自动创建Shadow Service、Router Pod和Stuntman Service。
 
 开发者可以通过Pod的版本标识，自行创建服务网格规则，来控制哪些流量应该进入开发者的本地环境。
 
-![mesh](https://img.alicdn.com/imgextra/i4/O1CN01n5oprI1FFo8SbhBiu_!!6000000000458-0-tps-2494-978.jpg)
+![mesh](https://img.alicdn.com/imgextra/i4/O1CN01cCUk1Z1xnYPYuGTlB_!!6000000006488-0-tps-2486-986.jpg)
 
 ## Preview命令
 

@@ -1,5 +1,5 @@
-Mesh： develope with service mesh
-===========
+Manual Mesh Example：Development With Istio
+---
 
 In this example, we will deploy Tomcat7 in the cluster and access it through the Istio Gateway to join the local joint endpoint via `ktctl mesh` while ensuring that the original link is properly accessible. Finally, modify the Istio routing rules so that only traffic that meets certain rules is forwarded to the local debug endpoint (Tomcat8).
 
