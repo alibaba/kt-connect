@@ -3,6 +3,7 @@ package dns
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -41,8 +42,7 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 			dnsPort = preferredDnsInfo[1]
 		}
 
-		// TODO: read domain suffix from option
-		createResolverFile("local", "cluster.local", dnsIp, dnsPort)
+		createResolverFile("local", opt.Get().ConnectOptions.ClusterDomain, dnsIp, dnsPort)
 		for _, ns := range namespaces.Items {
 			createResolverFile(fmt.Sprintf("%s.local", ns.Name), ns.Name, dnsIp, dnsPort)
 		}
