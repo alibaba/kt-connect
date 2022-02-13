@@ -7,14 +7,14 @@ Downloads And Install
 
 Downloads:
 
-* [MacOS x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_MacOS_x86_64.tar.gz)
-* [MacOS ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_MacOS_arm_64.tar.gz)
+* [MacOS x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_MacOS_x86_64.tar.gz)
+* [MacOS ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_MacOS_arm_64.tar.gz)
 
 Install (use x86 64 edition as example):
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_MacOS_x86_64.tar.gz
-$ tar zxf ktctl_0.3.0-beta2_MacOS_x86_64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_MacOS_x86_64.tar.gz
+$ tar zxf ktctl_0.3.0_MacOS_x86_64.tar.gz
 $ mv ktctl /usr/local/bin/ktctl
 $ ktctl help
 ```
@@ -23,15 +23,15 @@ $ ktctl help
 
 Downloads:
 
-* [Linux x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_Linux_x86_64.tar.gz)
-* [Linux x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_linux_i386.tar.gz)
-* [Linux ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_Linux_arm_64.tar.gz)
+* [Linux x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_Linux_x86_64.tar.gz)
+* [Linux x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_linux_i386.tar.gz)
+* [Linux ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_Linux_arm_64.tar.gz)
 
 Install (use x86 64 edition as example):
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_Linux_x86_64.tar.gz
-$ tar zxf ktctl_0.3.0-beta2_Linux_x86_64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_Linux_x86_64.tar.gz
+$ tar zxf ktctl_0.3.0_Linux_x86_64.tar.gz
 $ mv ktctl /usr/local/bin/ktctl
 $ ktctl help
 ```
@@ -40,9 +40,9 @@ $ ktctl help
 
 Downloads:
 
-* [Windows x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_Windows_x86_64.zip)
-* [Windows x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_Windows_i386.zip)
-* [Windows ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0-beta2/ktctl_0.3.0-beta2_Windows_arm_64.zip)
+* [Windows x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_Windows_x86_64.zip)
+* [Windows x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_Windows_i386.zip)
+* [Windows ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.0/ktctl_0.3.0_Windows_arm_64.zip)
 
 Unzip package and put library file `wintun.dll` and executable file `ktctl.exe` to a folder included in `PATH` environment variable.
 
