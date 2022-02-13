@@ -188,7 +188,7 @@ function prepare_local() {
 
   exist=`docker ps -a | grep ' tomcat$' | grep -i ' Up '`
   if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; fi
-  docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
+  docker exec tomcat /bin/bash -c 'mkdir -p webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
   if [ $? -ne 0 ]; then fail "failed to update tomcat index page content"; fi
 
   if [ "${DOCKER_HOST}" != "" ]; then

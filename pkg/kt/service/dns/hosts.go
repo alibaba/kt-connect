@@ -16,8 +16,12 @@ import (
 const ktHostsEscapeBegin = "# Kt Hosts Begin"
 const ktHostsEscapeEnd = "# Kt Hosts End"
 
+// TODO: this is a temporary solution to avoid dumping after dropped
+var doNotDump = false
+
 // DropHosts remove hosts domain record added by kt
 func DropHosts() {
+	doNotDump = true
 	lines, err := loadHostsFile()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to load hosts file")
@@ -40,6 +44,9 @@ func DropHosts() {
 
 // DumpHosts dump service domain to hosts file
 func DumpHosts(hostsMap map[string]string) error {
+	if doNotDump {
+		return nil
+	}
 	lines, err := loadHostsFile()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to load hosts file")

@@ -28,8 +28,7 @@ func ForwardSSHTunnelToLocal(podName string, localPort int) (chan struct{}, erro
 		process.Stop(<-stop, cancel)
 	}()
 	go func() {
-		err := portForward(podName, common.StandardSshPort, localPort, stop)
-		if err != nil {
+		if err := portForward(podName, common.StandardSshPort, localPort, stop); err != nil {
 			log.Error().Err(err).Msgf("Port forward to %d -> %d pod %s interrupted", localPort, common.StandardSshPort, podName)
 			stop <- struct{}{}
 		}
