@@ -23,7 +23,7 @@ Connect命令的两种模式本质大同小异，只是在建立连接的方式�
 
 由于没有tun设备可作为路由表目标，Sshuttle模式利用`iptables`/`ipfwadm`/`nftables`工具（Linux系统）或`pfctl`工具（MacOS系统）来实现让目的地址是集群资源IP的请求发往代理服务。Windows系统中不存在类似`iptables`这样功能强大的路由控制工具，因而该模式尚无法支持Windows系统。
 
-![connect](https://img.alicdn.com/imgextra/i1/O1CN01wyIRRn1OGZKritg22_!!6000000001678-0-tps-2490-908.jpg)
+![connect](https://img.alicdn.com/imgextra/i3/O1CN010F3ixF1rYXjpVfHuq_!!6000000005643-0-tps-2482-886.jpg)
 
 ## Exchange命令
 
