@@ -13,7 +13,7 @@ import (
 // ForwardPodToLocal mapping pod port to local port
 func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
-	localSSHPort, err := util.GetRandomSSHPort()
+	localSSHPort, err := util.GetRandomTcpPort()
 	if err != nil {
 		return -1, err
 	}

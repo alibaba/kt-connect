@@ -23,7 +23,7 @@ func BySshuttle() error {
 		return err
 	}
 
-	localSshPort, err := util.GetRandomSSHPort()
+	localSshPort, err := util.GetRandomTcpPort()
 	if err != nil {
 		return err
 	}

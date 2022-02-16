@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// GetRandomSSHPort get pod random ssh port
-func GetRandomSSHPort() (int, error) {
+// GetRandomTcpPort get pod random ssh port
+func GetRandomTcpPort() (int, error) {
 	for i := 0; i < 20; i++ {
 		port := RandomPort()
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
@@ -20,11 +20,11 @@ func GetRandomSSHPort() (int, error) {
 			log.Debug().Msgf("Port %d not available", port)
 			_ = conn.Close()
 		} else {
-			log.Debug().Msgf("Using port %d for ssh", port)
+			log.Debug().Msgf("Using port %d", port)
 			return port, nil
 		}
 	}
-	return -1, fmt.Errorf("failed to find an available port for ssh forward")
+	return -1, fmt.Errorf("failed to find an available port")
 }
 
 // ParsePortMapping parse <port> or <localPort>:<removePort> parameter
@@ -100,3 +100,4 @@ func FindInvalidRemotePort(exposePorts string, svcPorts []coreV1.ServicePort) st
 	}
 	return ""
 }
+

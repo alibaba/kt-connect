@@ -20,7 +20,7 @@ func ByTun2Socks() error {
 	}
 	go activePodRoute(podName)
 
-	localSshPort, err := util.GetRandomSSHPort()
+	localSshPort, err := util.GetRandomTcpPort()
 	if err != nil {
 		return err
 	}
