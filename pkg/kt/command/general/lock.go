@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-// LockTimeout 5 minutes
-const LockTimeout = 5 * 60
+// LockTimeout 3 minutes
+const LockTimeout = 3 * 60
 
 func LockService(serviceName, namespace string, times int) (*coreV1.Service, error) {
 	if times > 10 {
