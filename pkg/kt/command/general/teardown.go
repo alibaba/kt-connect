@@ -18,7 +18,7 @@ import (
 
 // CleanupWorkspace clean workspace
 func CleanupWorkspace() {
-	log.Info().Msgf("Cleaning workspace")
+	log.Debug().Msgf("Cleaning workspace")
 	cleanLocalFiles()
 	if opt.Get().RuntimeStore.Component == util.ComponentConnect {
 		recoverGlobalHostsAndProxy()

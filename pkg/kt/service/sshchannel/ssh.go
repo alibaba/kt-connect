@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"io"
 	"io/ioutil"
 	"net"
@@ -101,6 +102,7 @@ func handleRequest(listener net.Listener, localEndpoint string) {
 	client, err := listener.Accept()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to accept remote request")
+		return
 	}
 
 	// Open a (local) connection to localEndpoint whose content will be forwarded to remoteEndpoint
@@ -108,10 +110,11 @@ func handleRequest(listener net.Listener, localEndpoint string) {
 	if err != nil {
 		_ = client.Close()
 		log.Error().Err(err).Msgf("Local service error")
-	} else {
-		// Handle request in individual coroutine, current coroutine continue to accept more requests
-		go handleClient(client, local)
+		return
 	}
+
+	// Handle request in individual coroutine, current coroutine continue to accept more requests
+	go handleClient(client, local)
 }
 
 func connection(privateKey string, address string) (*ssh.Client, error) {
@@ -143,32 +146,30 @@ func handleClient(client net.Conn, remote net.Conn) {
 	done := make(chan int)
 
 	// Start remote -> local data transfer
+	remoteReader := util.NewInterpretableReader(remote)
 	go func() {
 		defer handleBrokenTunnel(done)
-		if _, err := io.Copy(client, remote); err != nil {
-			log.Error().Err(err).Msgf("Error while copy remote->local")
+		if _, err := io.Copy(client, remoteReader); err != nil {
+			log.Warn().Err(err).Msgf("Error while copy remote->local")
 		}
 		done<-1
 	}()
 
 	// Start local -> remote data transfer
+	localReader := util.NewInterpretableReader(client)
 	go func() {
 		defer handleBrokenTunnel(done)
-		if _, err := io.Copy(remote, client); err != nil {
-			log.Error().Err(err).Msgf("Error while copy local->remote")
+		if _, err := io.Copy(remote, localReader); err != nil {
+			log.Warn().Err(err).Msgf("Error while copy local->remote")
 		}
 		done<-1
 	}()
 
 	<-done
-	err := remote.Close()
-	if err != nil {
-		log.Error().Err(err).Msgf("Close remote connection failed")
-	}
-	err = client.Close()
-	if err != nil {
-		log.Error().Err(err).Msgf("Close local connection failed")
-	}
+	remoteReader.Cancel()
+	localReader.Cancel()
+	_ = remote.Close()
+	_ = client.Close()
 }
 
 func handleBrokenTunnel(done chan int) {
