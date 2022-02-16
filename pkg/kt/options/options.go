@@ -1,7 +1,6 @@
 package options
 
 import (
-	"github.com/alibaba/kt-connect/pkg/common"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -15,6 +14,7 @@ type ConnectOptions struct {
 	DisableTunDevice     bool
 	DisableTunRoute      bool
 	SocksPort            int
+	DnsCacheTtl          int64
 	IncludeIps           string
 	ExcludeIps           string
 	Mode                 string
@@ -109,8 +109,8 @@ func Get() *DaemonOptions {
 			Namespace:  util.DefaultNamespace,
 			KubeConfig: util.KubeConfig(),
 			RuntimeStore: &RuntimeOptions{
-				UserHome: common.UserHome,
-				AppHome:  common.KtHome,
+				UserHome: util.UserHome,
+				AppHome:  util.KtHome,
 			},
 			ConnectOptions:  &ConnectOptions{},
 			ExchangeOptions: &ExchangeOptions{},

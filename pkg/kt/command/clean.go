@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -102,7 +101,7 @@ func (action *Action) Clean() error {
 }
 
 func (action *Action) cleanPidFiles() {
-	files, _ := ioutil.ReadDir(common.KtHome)
+	files, _ := ioutil.ReadDir(util.KtHome)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".pid") {
 			component, pid := action.parseComponentAndPid(f.Name())
@@ -110,7 +109,7 @@ func (action *Action) cleanPidFiles() {
 				log.Debug().Msgf("Find kt %s instance with pid %d", component, pid)
 			} else {
 				log.Info().Msgf("Removing remnant pid file %s", f.Name())
-				if err := os.Remove(fmt.Sprintf("%s/%s", common.KtHome, f.Name())); err != nil {
+				if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
 					log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
 				}
 			}

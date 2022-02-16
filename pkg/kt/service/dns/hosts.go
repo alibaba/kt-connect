@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/gofrs/flock"
 	"github.com/rs/zerolog/log"
@@ -137,7 +136,7 @@ func loadHostsFile() ([]string, error) {
 }
 
 func updateHostsFile(lines []string) error {
-	lock := flock.New(fmt.Sprintf("%s/%s", common.KtHome, util.DumpHostsLock))
+	lock := flock.New(fmt.Sprintf("%s/%s", util.KtHome, util.DumpHostsLock))
 	timeoutContext, cancel := context.WithTimeout(context.TODO(), 2 * time.Second)
 	defer cancel()
 	if ok, err := lock.TryLockContext(timeoutContext, 100 * time.Millisecond); !ok {
@@ -160,7 +159,7 @@ func updateHostsFile(lines []string) error {
 			continue
 		}
 		continualEmptyLine = l == ""
-		fmt.Fprintf(w, "%s%s", l, common.Eol)
+		fmt.Fprintf(w, "%s%s", l, util.Eol)
 	}
 
 	err = w.Flush()
@@ -172,7 +171,7 @@ func updateHostsFile(lines []string) error {
 
 func getHostsPath() string {
 	if os.Getenv("HOSTS_PATH") == "" {
-		return os.ExpandEnv(filepath.FromSlash(common.HostsFilePath))
+		return os.ExpandEnv(filepath.FromSlash(util.HostsFilePath))
 	} else {
 		return os.Getenv("HOSTS_PATH")
 	}

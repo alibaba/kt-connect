@@ -142,6 +142,12 @@ func ConnectActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Destination: &options.ConnectOptions.SocksPort,
 			Value:       2223,
 		},
+		cli.Int64Flag{
+			Name:       "dnsCacheTtl",
+			Usage:      "(local dns mode only) DNS cache refresh interval in seconds",
+			Destination: &options.ConnectOptions.DnsCacheTtl,
+			Value:       60,
+		},
 	}
 }
 

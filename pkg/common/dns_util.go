@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
 	"strconv"
@@ -16,7 +17,6 @@ type NsEntry struct {
 
 // domain to ip cache
 var nsCache = sync.Map{}
-const nsExpire = 60
 
 // SetupDnsServer start dns server on specified port
 func SetupDnsServer(dnsHandler dns.Handler, port int, net string) error {
@@ -63,7 +63,7 @@ func WriteCache(domain string, qtype uint16, answer []dns.RR) {
 }
 
 func notExpired(timestamp int64) bool {
-	return time.Now().Unix() - timestamp < nsExpire
+	return time.Now().Unix() - timestamp < opt.Get().ConnectOptions.DnsCacheTtl
 }
 
 func getCacheKey(domain string, qtype uint16) string {

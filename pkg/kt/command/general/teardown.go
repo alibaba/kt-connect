@@ -3,7 +3,6 @@ package general
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
@@ -44,7 +43,7 @@ func cleanLocalFiles() {
 	if opt.Get().RuntimeStore.Component == "" {
 		return
 	}
-	pidFile := fmt.Sprintf("%s/%s-%d.pid", common.KtHome, opt.Get().RuntimeStore.Component, os.Getpid())
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, opt.Get().RuntimeStore.Component, os.Getpid())
 	if err := os.Remove(pidFile); os.IsNotExist(err) {
 		log.Debug().Msgf("Pid file %s not exist", pidFile)
 	} else if err != nil {

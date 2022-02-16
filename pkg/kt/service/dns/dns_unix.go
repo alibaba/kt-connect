@@ -5,7 +5,6 @@ package dns
 import (
 	"bufio"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -19,7 +18,7 @@ const resolvedConf = "/run/systemd/resolve/resolv.conf"
 
 // GetLocalDomains get domain search postfixes
 func GetLocalDomains() string {
-	f, err := os.Open(common.ResolvConf)
+	f, err := os.Open(util.ResolvConf)
 	if err != nil {
 		return ""
 	}
@@ -29,10 +28,10 @@ func GetLocalDomains() string {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, common.FieldDomain) {
-			localDomains = append(localDomains, strings.TrimSpace(strings.TrimPrefix(line, common.FieldDomain)))
-		} else if strings.HasPrefix(line, common.FieldSearch) {
-			for _, s := range strings.Split(strings.TrimPrefix(line, common.FieldSearch), " ") {
+		if strings.HasPrefix(line, util.FieldDomain) {
+			localDomains = append(localDomains, strings.TrimSpace(strings.TrimPrefix(line, util.FieldDomain)))
+		} else if strings.HasPrefix(line, util.FieldSearch) {
+			for _, s := range strings.Split(strings.TrimPrefix(line, util.FieldSearch), " ") {
 				if s != "" {
 					localDomains = append(localDomains, s)
 				}
@@ -44,7 +43,7 @@ func GetLocalDomains() string {
 
 // GetNameServer get primary dns server
 func GetNameServer() string {
-	ns := fetchNameServerInConf(common.ResolvConf)
+	ns := fetchNameServerInConf(util.ResolvConf)
 	if util.IsLinux() && ns == resolvedAddr {
 		log.Debug().Msgf("Using systemd-resolved")
 		return fetchNameServerInConf(resolvedConf)
@@ -60,11 +59,11 @@ func fetchNameServerInConf(resolvConf string) string {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	pattern, _ := regexp.Compile(fmt.Sprintf("^%s[ \t]+[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", common.FieldNameserver))
+	pattern, _ := regexp.Compile(fmt.Sprintf("^%s[ \t]+[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", util.FieldNameserver))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if pattern.MatchString(line) {
-			return strings.TrimSpace(strings.TrimPrefix(line, common.FieldNameserver))
+			return strings.TrimSpace(strings.TrimPrefix(line, util.FieldNameserver))
 		}
 	}
 	return ""

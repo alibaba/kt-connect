@@ -1,6 +1,6 @@
 //go:build !windows
 
-package common
+package util
 
 import (
 	"fmt"

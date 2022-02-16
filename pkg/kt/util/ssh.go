@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/ssh"
 )
@@ -56,12 +55,12 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(name string) string {
-	return fmt.Sprintf("%s/pk/%s%s", common.KtHome, name, PostfixRsaKey)
+	return fmt.Sprintf("%s/pk/%s%s", KtHome, name, PostfixRsaKey)
 }
 
 // CleanRsaKeys ...
 func CleanRsaKeys() {
-	dir := fmt.Sprintf("%s/pk/", common.KtHome)
+	dir := fmt.Sprintf("%s/pk/", KtHome)
 	files, _ := ioutil.ReadDir(dir)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), PostfixRsaKey) {

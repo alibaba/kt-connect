@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
@@ -19,7 +18,7 @@ import (
 
 // GetDaemonRunning fetch daemon pid if exist
 func GetDaemonRunning(componentName string) int {
-	files, _ := ioutil.ReadDir(common.KtHome)
+	files, _ := ioutil.ReadDir(KtHome)
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), componentName) && strings.HasSuffix(f.Name(), ".pid") {
 			from := len(componentName) + 1
@@ -46,7 +45,7 @@ func IsProcessExist(pid int) bool {
 func KubeConfig() string {
 	kubeconfig := os.Getenv("KUBECONFIG")
 	if len(kubeconfig) == 0 {
-		kubeconfig = filepath.Join(common.UserHome, ".kube", "config")
+		kubeconfig = filepath.Join(UserHome, ".kube", "config")
 	}
 	return kubeconfig
 }
@@ -64,7 +63,7 @@ func CreateDirIfNotExist(dir string) error {
 
 // WritePidFile write pid to file
 func WritePidFile(componentName string, ch chan os.Signal) error {
-	pidFile := fmt.Sprintf("%s/%s-%d.pid", common.KtHome, componentName, os.Getpid())
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", KtHome, componentName, os.Getpid())
 	if err := ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
 		return err
 	}
