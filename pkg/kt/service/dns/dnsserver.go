@@ -51,13 +51,16 @@ func query(req *dns.Msg, clusterDnsAddr, upstreamDnsAddr string) []dns.RR {
 	}
 
 	res, err := common.NsLookup(domain, qtype, "tcp", clusterDnsAddr)
-	if err != nil && !common.IsDomainNotExist(err) {
-		log.Warn().Err(err).Msgf("Failed to lookup %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
-	} else if res != nil && len(res.Answer) > 0 {
+	if res != nil && len(res.Answer) > 0 {
+		// only record none-empty result of cluster dns
 		log.Debug().Msgf("Found domain %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
 		common.WriteCache(domain, qtype, res.Answer)
 		return res.Answer
 	} else {
+		if err != nil && !common.IsDomainNotExist(err) {
+			log.Warn().Err(err).Msgf("Failed to lookup %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
+		}
+
 		res, err = common.NsLookup(domain, qtype, "udp", upstreamDnsAddr)
 		if err != nil {
 			if common.IsDomainNotExist(err) {
