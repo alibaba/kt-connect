@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -39,15 +38,6 @@ func IsProcessExist(pid int) bool {
 		return false
 	}
 	return strings.Contains(proc.Executable(), "ktctl")
-}
-
-// KubeConfig location of kube-config file
-func KubeConfig() string {
-	kubeconfig := os.Getenv("KUBECONFIG")
-	if len(kubeconfig) == 0 {
-		kubeconfig = filepath.Join(UserHome, ".kube", "config")
-	}
-	return kubeconfig
 }
 
 // CreateDirIfNotExist create dir

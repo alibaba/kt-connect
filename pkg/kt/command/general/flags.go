@@ -18,7 +18,6 @@ func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 		cli.StringFlag{
 			Name:        "kubeconfig,c",
 			Usage:       "Specify path of KubeConfig file",
-			Value:       util.KubeConfig(),
 			Destination: &options.KubeConfig,
 		},
 		cli.StringFlag{

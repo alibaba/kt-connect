@@ -107,7 +107,6 @@ func Get() *DaemonOptions {
 	if opt == nil {
 		opt = &DaemonOptions{
 			Namespace:  util.DefaultNamespace,
-			KubeConfig: util.KubeConfig(),
 			RuntimeStore: &RuntimeOptions{
 				UserHome: util.UserHome,
 				AppHome:  util.KtHome,

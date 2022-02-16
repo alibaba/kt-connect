@@ -21,7 +21,10 @@ func SetupProcess(componentName string, ch chan os.Signal) error {
 
 // CombineKubeOpts set default options of kubectl if not assign
 func CombineKubeOpts() error {
-	config, err := clientcmd.LoadFromFile(opt.Get().KubeConfig)
+	if opt.Get().KubeConfig != ""{
+		_ = os.Setenv(util.EnvKubeConfig, opt.Get().KubeConfig)
+	}
+	config, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	if err != nil {
 		return err
 	}

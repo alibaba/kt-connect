@@ -1,6 +1,9 @@
 package util
 
 const (
+	// EnvKubeConfig environment variable for kube config file
+	EnvKubeConfig = "KUBECONFIG"
+
 	// KubernetesToolkit name of this tool
 	KubernetesToolkit = "kt"
 	// ComponentConnect connect command
