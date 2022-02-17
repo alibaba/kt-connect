@@ -181,33 +181,42 @@ func (action *Action) cleanResource(r ResourceToClean, namespace string) {
 	for _, name := range r.PodsToDelete {
 		err := cluster.Ins().RemovePod(name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to delete pods %s", name)
+			log.Warn().Err(err).Msgf("Failed to delete pods %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
 		err := cluster.Ins().RemoveConfigMap(name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to delete config map %s", name)
+			log.Warn().Err(err).Msgf("Failed to delete config map %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
 		}
 	}
 	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		err := cluster.Ins().ScaleTo(name, namespace, &replica)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
+			log.Warn().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
+		} else {
+			log.Info().Msgf(" * %s", name)
 		}
 	}
 	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
 		err := cluster.Ins().RemoveService(name, namespace)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to delete service %s", name)
+			log.Warn().Err(err).Msgf("Failed to delete service %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
 		}
 	}
 	log.Info().Msgf("Recovering %d meshed services", len(r.ServicesToRecover))
 	for _, name := range r.ServicesToRecover {
 		general.RecoverOriginalService(name, namespace)
+		log.Info().Msgf(" * %s", name)
 	}
 	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
 	for _, name := range r.ServicesToUnlock {
@@ -215,7 +224,9 @@ func (action *Action) cleanResource(r ResourceToClean, namespace string) {
 			delete(app.Annotations, util.KtLock)
 			_, err = cluster.Ins().UpdateService(app)
 			if err != nil {
-				log.Error().Err(err).Msgf("Failed to lock service %s", name)
+				log.Warn().Err(err).Msgf("Failed to lock service %s", name)
+			} else {
+				log.Info().Msgf(" * %s", name)
 			}
 		}
 	}

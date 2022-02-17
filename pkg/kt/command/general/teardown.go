@@ -88,6 +88,7 @@ func recoverExchangedTarget() {
 		_ = <-ch
 	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeSelector {
 		RecoverOriginalService(opt.Get().RuntimeStore.Origin, opt.Get().Namespace)
+		log.Info().Msgf("Original service %s recovered", opt.Get().RuntimeStore.Origin)
 	}
 }
 
@@ -118,6 +119,7 @@ func recoverService(routerConfig string) {
 	config := util.String2Map(routerConfig)
 	svcName := config["service"]
 	RecoverOriginalService(svcName, opt.Get().Namespace)
+	log.Info().Msgf("Original service %s recovered", svcName)
 
 	stuntmanSvcName := svcName + util.StuntmanServiceSuffix
 	if err := cluster.Ins().RemoveService(stuntmanSvcName, opt.Get().Namespace); err != nil {
@@ -152,7 +154,6 @@ func RecoverOriginalService(svcName, namespace string) {
 			log.Error().Err(err).Msgf("Failed to recover selector of original service %s", svcName)
 		}
 	}
-	log.Info().Msgf("Original service %s recovered", svcName)
 }
 
 func waitDeploymentRecoverComplete() {
