@@ -103,6 +103,9 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 	var marshaledSelector string
 	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
 		marshaledSelector = svc.Annotations[util.KtSelector]
+	} else if svc.Spec.Selector[util.KtRole] != "" {
+		// service has no kt-selector annotation, but already point to a shadow or router pod
+		return fmt.Errorf("exchange or mesh service selecting kt pods is not allow")
 	} else {
 		rawSelector, err2 := json.Marshal(svc.Spec.Selector)
 		if err2 != nil {
@@ -129,6 +132,7 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 			return
 		}
 		log.Debug().Msgf("Change in service %s detected", svcName)
+		// delay and double check to avoid multiple clients conflict
 		time.Sleep(util.RandomSeconds(1, 10))
 		if svc, err = cluster.Ins().GetService(svcName, namespace); err == nil {
 			if isServiceChanged(svc, selector, marshaledSelector) {
