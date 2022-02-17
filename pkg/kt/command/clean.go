@@ -126,13 +126,16 @@ func (action *Action) analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus 
 		}
 		log.Debug().Msgf("   role %s, config: %s", pod.Labels[util.KtRole], pod.Annotations[util.KtConfig])
 		config := util.String2Map(pod.Annotations[util.KtConfig])
+		// scale exchange
 		if pod.Labels[util.KtRole] == util.RoleExchangeShadow {
 			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 			app := config["app"]
 			if replica > 0 && app != "" {
 				resourceToClean.DeploymentsToScale[app] = int32(replica)
 			}
-		} else if pod.Labels[util.KtRole] == util.RoleRouter {
+		}
+		// auto mesh and selector exchange
+		if pod.Labels[util.KtRole] == util.RoleRouter || pod.Labels[util.KtRole] == util.RoleExchangeShadow {
 			if service, ok := config["service"]; ok {
 				resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
 			}
@@ -164,13 +167,36 @@ func (action *Action) analysisLockAndOrphanServices(svcs []coreV1.Service, resou
 		if lock, ok := svc.Annotations[util.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) > general.LockTimeout {
 			resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 		}
-		if svc.Annotations[util.KtSelector] != "" && !isRouterExist(svc.Name, svc.Namespace) {
-			resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, svc.Name)
+		if svc.Annotations[util.KtSelector] != "" {
+			if svc.Spec.Selector[util.KtRole] == util.RoleRouter {
+				// it's a meshed service, but router pod already gone
+				if !isRouterPodExist(svc.Name, svc.Namespace) {
+					resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, svc.Name)
+				}
+			} else {
+				// it's an exchanged service, but shadow pod already gone
+				if !isShadowPodExist(svc.Spec.Selector, svc.Name, svc.Namespace, util.KtExchangeContainer) {
+					resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, svc.Name)
+				}
+			}
 		}
 	}
 }
 
-func isRouterExist(svcName, namespace string) bool {
+func isShadowPodExist(selector map[string]string, svcName, namespace, suffix string) bool {
+	pods, err := cluster.Ins().GetPodsByLabel(selector, namespace)
+	if err != nil {
+		return false
+	}
+	for _, pod := range pods.Items {
+		if strings.HasPrefix(pod.Name, fmt.Sprintf("%s-%s-", svcName, suffix)) {
+			return true
+		}
+	}
+	return false
+}
+
+func isRouterPodExist(svcName, namespace string) bool {
 	routerPodName := svcName + util.RouterPodSuffix
 	_, err := cluster.Ins().GetPod(routerPodName, namespace)
 	return err == nil

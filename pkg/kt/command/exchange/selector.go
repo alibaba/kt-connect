@@ -43,7 +43,10 @@ func BySelector(resourceName string) error {
 		util.KtRole:   util.RoleExchangeShadow,
 		util.KtTarget: util.RandomString(20),
 	}
-	if err = general.CreateShadowAndInbound(shadowName, opt.Get().ExchangeOptions.Expose, shadowLabels, map[string]string{}); err != nil {
+	annotation := map[string]string{
+		util.KtConfig: fmt.Sprintf("service=%s", svc.Name),
+	}
+	if err = general.CreateShadowAndInbound(shadowName, opt.Get().ExchangeOptions.Expose, shadowLabels, annotation); err != nil {
 		return err
 	}
 
