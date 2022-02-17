@@ -50,7 +50,7 @@ func AutoMesh(resourceName string) error {
 		return err
 	}
 
-	// Create origin service
+	// Create stuntman service
 	if err = createStuntmanService(svc, ports); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func AutoMesh(resourceName string) error {
 	}
 
 	// Create router pod
-	// Must after origin service and shadow service, otherwise will cause 'host not found in upstream' error
+	// Must after stuntman service and shadow service, otherwise will cause 'host not found in upstream' error
 	routerPodName := svc.Name + util.RouterPodSuffix
 	routerLabels := map[string]string{
 		util.KtRole:   util.RoleRouter,
@@ -199,6 +199,9 @@ func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 		if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
 			return fmt.Errorf("service %s should not have %s annotation, please try use 'ktctl clean' to restore it",
 				svc.Name, util.KtSelector)
+		} else if svc.Spec.Selector[util.KtRole] != "" {
+			return fmt.Errorf("service %s should not point to kt pods, please try use 'ktctl clean' to restore it",
+				svc.Name)
 		}
 		if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
@@ -218,7 +221,7 @@ func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 		return fmt.Errorf("service %s exists, but not created by kt", stuntmanSvcName)
 	} else {
 		cluster.Ins().UpdateServiceHeartBeat(stuntmanSvcName, namespace)
-		log.Info().Msgf("Origin service already exists")
+		log.Info().Msgf("Stuntman service already exists")
 	}
 	return nil
 }
