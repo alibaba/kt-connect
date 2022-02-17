@@ -225,7 +225,7 @@ func CleanActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Name:        "thresholdInMinus",
 			Usage:       "Length of allowed disconnection time before a unavailing shadow pod be deleted",
 			Destination: &options.CleanOptions.ThresholdInMinus,
-			Value:       cluster.ResourceHeartBeatIntervalMinus * 3,
+			Value:       cluster.ResourceHeartBeatIntervalMinus * 2 + 1,
 		},
 	}
 }

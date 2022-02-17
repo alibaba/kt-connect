@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const ResourceHeartBeatIntervalMinus = 5
+const ResourceHeartBeatIntervalMinus = 2
 const portForwardHeartBeatIntervalSec = 60
 
 // SetupHeartBeat setup heartbeat watcher
