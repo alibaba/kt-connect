@@ -14,7 +14,7 @@ type KubernetesInterface interface {
 	CreatePod(metaAndSpec *PodMetaAndSpec) error
 	UpdatePod(pod *coreV1.Pod) (*coreV1.Pod, error)
 	RemovePod(name, namespace string) error
-	GetOrCreateShadow(name string, labels, annotations, envs map[string]string) (string, string, string, error)
+	GetOrCreateShadow(name string, labels, annotations, envs map[string]string, portsToExpose string) (string, string, string, error)
 	UpdatePodHeartBeat(name, namespace string)
 	WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error)
 	WaitPodTerminate(name, namespace string) (*coreV1.Pod, error)

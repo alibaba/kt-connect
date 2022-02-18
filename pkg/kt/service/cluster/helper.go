@@ -60,6 +60,7 @@ func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 	annotations := metaAndSpec.Meta.Annotations
 	annotations[util.KtRefCount] = "1"
 	annotations[util.KtLastHeartBeat] = util.GetTimestamp()
+	ports := metaAndSpec.Ports
 	image := metaAndSpec.Image
 	envs := metaAndSpec.Envs
 
@@ -73,7 +74,7 @@ func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 		Spec: coreV1.PodSpec{
 			ServiceAccountName: opt.Get().ServiceAccount,
 			Containers: []coreV1.Container{
-				createContainer(image, args, envs),
+				createContainer(image, args, envs, ports),
 			},
 		},
 	}
@@ -89,7 +90,7 @@ func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 	return pod
 }
 
-func createContainer(image string, args []string, envs map[string]string) coreV1.Container {
+func createContainer(image string, args []string, envs map[string]string, ports []int) coreV1.Container {
 	var envVar []coreV1.EnvVar
 	for k, v := range envs {
 		envVar = append(envVar, coreV1.EnvVar{Name: k, Value: v})
@@ -100,7 +101,7 @@ func createContainer(image string, args []string, envs map[string]string) coreV1
 	} else {
 		pullPolicy = "IfNotPresent"
 	}
-	return coreV1.Container{
+	container := coreV1.Container{
 		Name:            util.DefaultContainer,
 		Image:           image,
 		ImagePullPolicy: pullPolicy,
@@ -113,5 +114,13 @@ func createContainer(image string, args []string, envs map[string]string) coreV1
 				},
 			},
 		},
+		Ports: []coreV1.ContainerPort{},
 	}
+	for _, port := range ports {
+		container.Ports = append(container.Ports, coreV1.ContainerPort{
+			Protocol: coreV1.ProtocolTCP,
+			ContainerPort: int32(port),
+		})
+	}
+	return container
 }

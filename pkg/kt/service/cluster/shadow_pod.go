@@ -9,10 +9,12 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 )
 
 // GetOrCreateShadow create shadow
-func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string) (string, string, string, error) {
+func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string, exposePorts string) (
+	string, string, string, error) {
 	// record context data
 	opt.Get().RuntimeStore.Shadow = name
 
@@ -35,6 +37,19 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
+	ports := make([]int, 0)
+	if exposePorts != "" {
+		portPairs := strings.Split(exposePorts, ",")
+		for _, exposePort := range portPairs {
+			_, port, err := util.ParsePortMapping(exposePort)
+			if err != nil {
+				log.Warn().Err(err).Msgf("invalid port")
+			} else {
+				ports = append(ports, port)
+			}
+		}
+	}
+
 	if opt.Get().RuntimeStore.Component == util.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
 		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
@@ -50,6 +65,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 		Meta:  &resourceMeta,
 		Image: opt.Get().Image,
 		Envs:  envs,
+		Ports: ports,
 	}
 	return k.createShadow(&podMeta, &sshKeyMeta)
 }

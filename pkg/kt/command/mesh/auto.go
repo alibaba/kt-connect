@@ -151,7 +151,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		}
 		// Router not exist or just terminated
 		annotations := map[string]string{util.KtRefCount: "1", util.KtConfig: fmt.Sprintf("service=%s", svcName)}
-		if err = cluster.CreateRouterPod(routerPodName, routerLabels, annotations); err != nil {
+		if err = cluster.CreateRouterPod(routerPodName, routerLabels, annotations, ports); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}

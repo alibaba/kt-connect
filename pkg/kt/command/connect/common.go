@@ -131,7 +131,8 @@ func getOrCreateShadow() (string, string, string, error) {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
-	endPointIP, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, getLabels(), make(map[string]string), getEnvs())
+	endPointIP, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, getLabels(),
+		make(map[string]string), getEnvs(), "")
 	if err != nil {
 		return "", "", "", err
 	}

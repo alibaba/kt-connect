@@ -26,6 +26,7 @@ type PodMetaAndSpec struct {
 	Meta  *ResourceMeta
 	Image string
 	Envs  map[string]string
+	Ports []int
 }
 
 // GetPod ...
