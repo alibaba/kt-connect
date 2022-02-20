@@ -46,7 +46,7 @@ func NewCleanCommand(action ActionInterface) urfave.Command {
 	}
 }
 
-//Clean delete unavailing shadow pods
+// Clean delete unavailing shadow pods
 func (action *Action) Clean() error {
 	action.cleanPidFiles()
 	pods, cfs, svcs, err := cluster.Ins().GetKtResources(opt.Get().Namespace)
@@ -93,7 +93,7 @@ func (action *Action) Clean() error {
 				log.Debug().Msg("Cleaning DNS configuration ...")
 				dns.Ins().RestoreNameServer()
 			} else {
-				log.Info().Msgf("Not %s user, skipping DNS cleanup", util.GetAdminUserName())
+				log.Info().Msgf("Not %s user, DNS cleanup skipped", util.GetAdminUserName())
 			}
 		}
 	}

@@ -55,6 +55,7 @@ func newCommands(ch chan os.Signal) []cli.Command {
 		command.NewExchangeCommand(action, ch),
 		command.NewMeshCommand(action, ch),
 		command.NewPreviewCommand(action, ch),
+		command.NewRecoverCommand(action),
 		command.NewCleanCommand(action),
 	}
 }

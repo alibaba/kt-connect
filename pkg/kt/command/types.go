@@ -7,7 +7,8 @@ type ActionInterface interface {
 	Connect(ch chan os.Signal) error
 	Preview(serviceName string, ch chan os.Signal) error
 	Exchange(resourceName string, ch chan os.Signal) error
-	Mesh(deploymentName string, ch chan os.Signal) error
+	Mesh(resourceName string, ch chan os.Signal) error
+	Recover(serviceName string) error
 	Clean() error
 }
 

@@ -214,6 +214,11 @@ func PreviewActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	}
 }
 
+func RecoverActionFlag(options *opt.DaemonOptions) []cli.Flag {
+	return []cli.Flag{
+	}
+}
+
 func CleanActionFlag(options *opt.DaemonOptions) []cli.Flag {
 	return []cli.Flag{
 		cli.BoolFlag{
