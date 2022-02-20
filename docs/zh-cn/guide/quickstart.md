@@ -182,6 +182,8 @@ $ curl -H 'VERSION: feo3x' http://tomcat:8080
 kt-connect local v2
 ```
 
+在实际使用时，可结合[ModHeader插件](https://github.com/bewisse/modheader)，使得只有开发者从自己浏览器发出的请求会访问其本地的服务进程。
+
 除此以外，还有一种可灵活配置路由规则的`manual`模式，该模式下KtConnect不会自动创建路由，在Mesh命令运行后，访问指定服务的流量将随机访问集群服务和本地实例。您可以自行使用任何服务网格组件（譬如Istio）创建基于`version`标签的路由规则，将特定流量转发到本地。详见[Manual Mesh](zh-cn/reference/manual_mesh.md)文档。
 
 `ktctl exchange`与`ktctl mesh`命令的最大区别在于，前者会将原应用实例流量全部替换为由本地服务接收，而后者仅将包含指定Header的流量导流到本地，同时保证测试环境正常链路始终可用。

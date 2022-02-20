@@ -183,9 +183,9 @@ $ curl -H 'VERSION: feo3x' http://tomcat:8080
 kt-connect local v2
 ```
 
+In actual use, it can be combined with the [ModHeader plugin](https://github.com/bewisse/modheader), so that only the requests made by developers from their browsers will access their local service processes.
+
 The `manual` mode of mesh command provides possibility of more flexible route rule. In this mode, KtConnect will not automatically create the corresponding routing rules for you, the traffic accessing the service will randomly access the service in cluster and service at local. You can use any Service Mesh tool (such as Istio) to create routing rules based on the `version` label of shadow pod to forward specific traffic to the local. Read [Mesh Best Practice](/zh-cn/guide/mesh) doc for more detail
-
-
 
 The most significant difference between `ktctl mesh` and `ktctl exchange` commands is that the latter will completely replace the original application instance, while the former will still retain the original service pod after the shadow pod is created, and the router pod will dynamically generate a `version` header (or label), so only specified traffic will be redirected to local, while ensuring that the normal traffic in the test environment is not effected.
 
