@@ -13,7 +13,7 @@ type DnsServer struct {
 	upstreamDnsAddr string
 }
 
-func SetupLocalDns(shadowPodIp string, dnsPort int) error {
+func SetupLocalDns(remoteDnsPort, localDnsPort int) error {
 	var success = make(chan error)
 	go func() {
 		time.Sleep(1 * time.Second)
@@ -21,11 +21,12 @@ func SetupLocalDns(shadowPodIp string, dnsPort int) error {
 	}()
 	go func() {
 		nameserver := GetNameServer()
-		log.Debug().Msgf("Setup local DNS with shadow pod %s and upstream %s", shadowPodIp, nameserver)
+		log.Debug().Msgf("Setup local DNS with shadow pod %s:%d and upstream %s:%d",
+			common.Localhost, remoteDnsPort, nameserver, common.StandardDnsPort)
 		success <-common.SetupDnsServer(&DnsServer{
-			clusterDnsAddr: fmt.Sprintf("%s:%d", shadowPodIp, common.StandardDnsPort),
+			clusterDnsAddr: fmt.Sprintf("%s:%d", common.Localhost, remoteDnsPort),
 			upstreamDnsAddr: fmt.Sprintf("%s:%d", nameserver, common.StandardDnsPort),
-		}, dnsPort, "udp")
+		}, localDnsPort, "udp")
 	}()
 	return <-success
 }

@@ -6,6 +6,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
+	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
@@ -13,9 +14,10 @@ import (
 	"time"
 )
 
-func setupDns(shadowPodIp string) error {
+func setupDns(shadowPodName, shadowPodIp string) error {
 	namespace := opt.Get().Namespace
 	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
+		log.Info().Msgf("Setting up dns in hosts mode")
 		dump2HostsNamespaces := ""
 		pos := len(util.DnsModeHosts)
 		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
@@ -25,8 +27,10 @@ func setupDns(shadowPodIp string) error {
 			return err
 		}
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
+		log.Info().Msgf("Setting up dns in pod mode")
 		return dns.Ins().SetNameServer(shadowPodIp)
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
+		log.Info().Msgf("Setting up dns in local mode")
 		headlessPods, err := dumpCurrentNamespaceToHost(namespace)
 		if err != nil {
 			return err
@@ -49,13 +53,20 @@ func setupDns(shadowPodIp string) error {
 				headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
 			}
 		}, nil)
+
+		forwardedPodPort, err := util.GetRandomTcpPort()
+		if err != nil {
+			return err
+		}
+		transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort)
+
 		dnsPort := util.AlternativeDnsPort
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
 		}
 		// must setup name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux
-		if err = dns.SetupLocalDns(shadowPodIp, dnsPort); err != nil {
+		if err = dns.SetupLocalDns(forwardedPodPort, dnsPort); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}

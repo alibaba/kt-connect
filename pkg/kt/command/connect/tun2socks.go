@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
@@ -24,7 +25,7 @@ func ByTun2Socks() error {
 	if err != nil {
 		return err
 	}
-	if _, err = transmission.ForwardSSHTunnelToLocal(podName, localSshPort); err != nil {
+	if _, err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
 	if err = startSocks5Connection(privateKeyPath, localSshPort); err != nil {
@@ -34,7 +35,7 @@ func ByTun2Socks() error {
 	if opt.Get().ConnectOptions.DisableTunDevice {
 		showSetupSocksMessage(opt.Get().ConnectOptions.SocksPort)
 		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
-			return setupDns(podIP)
+			return setupDns(podName, podIP)
 		} else {
 			return nil
 		}
@@ -54,7 +55,7 @@ func ByTun2Socks() error {
 			}
 			log.Info().Msgf("Route to tun device completed")
 		}
-		return setupDns(podIP)
+		return setupDns(podName, podIP)
 	}
 }
 

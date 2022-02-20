@@ -2,6 +2,7 @@ package transmission
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -19,7 +20,7 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 	}
 
 	// port forward pod 22 -> local <random port>
-	if _, err = ForwardSSHTunnelToLocal(podName, localSSHPort); err != nil {
+	if _, err = SetupPortForwardToLocal(podName, common.StandardSshPort, localSSHPort); err != nil {
 		return -1, err
 	}
 

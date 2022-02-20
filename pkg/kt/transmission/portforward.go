@@ -3,7 +3,6 @@ package transmission
 import (
 	"context"
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -19,8 +18,8 @@ import (
 	"strings"
 )
 
-// ForwardSSHTunnelToLocal mapping local port to shadow pod ssh port
-func ForwardSSHTunnelToLocal(podName string, localPort int) (chan struct{}, error) {
+// SetupPortForwardToLocal mapping local port to shadow pod ssh port
+func SetupPortForwardToLocal(podName string, remotePort, localPort int) (chan struct{}, error) {
 	stop := make(chan struct{})
 	_, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
@@ -28,8 +27,8 @@ func ForwardSSHTunnelToLocal(podName string, localPort int) (chan struct{}, erro
 		process.Stop(<-stop, cancel)
 	}()
 	go func() {
-		if err := portForward(podName, common.StandardSshPort, localPort, stop); err != nil {
-			log.Error().Err(err).Msgf("Port forward to %d -> %d pod %s interrupted", localPort, common.StandardSshPort, podName)
+		if err := portForward(podName, remotePort, localPort, stop); err != nil {
+			log.Error().Err(err).Msgf("Port forward to %d -> %d pod %s interrupted", localPort, remotePort, podName)
 			stop <- struct{}{}
 		}
 	}()

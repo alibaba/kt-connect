@@ -2,6 +2,7 @@ package connect
 
 import (
 	"context"
+	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshuttle"
@@ -27,7 +28,7 @@ func BySshuttle() error {
 	if err != nil {
 		return err
 	}
-	stop, err := transmission.ForwardSSHTunnelToLocal(podName, localSshPort)
+	stop, err := transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort)
 	if err != nil {
 		return err
 	}
@@ -41,7 +42,7 @@ func BySshuttle() error {
 		return err
 	}
 
-	return setupDns(podIP)
+	return setupDns(podName, podIP)
 }
 
 func checkSshuttleInstalled() {
