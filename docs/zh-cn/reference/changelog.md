@@ -1,6 +1,19 @@
 更新日志
 ---
 
+### 0.3.1
+
+> 发布时间：2022-02-20
+
+- 支持多个KubeConfig文件合并（issue-270）
+- 支持自定义DNS缓存时长
+- 修复`connect`命令使用`localDNS`模式可能无法解析域名的问题
+- 修复`mesh`命令`auto`模式偶发Stuntman Service指向Router Pod的问题
+- 修复`clean`命令未正确清理`exchange`创建的遗留资源的问题
+- 修复`exchange`命令在网络偶发异常恢复后，依然打印连接异常日志的问题
+- 资源心跳包间隔和加锁超时均减少到3分钟，加速遗留资源清理
+- 补齐Shadow Pod和Router Pod的容器`ports`信息
+
 ### 0.3.0
 
 > 发布时间：2022-02-13

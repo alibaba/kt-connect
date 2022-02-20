@@ -1,12 +1,25 @@
 Changelog
 ---
 
+### 0.3.1
+
+> Release time: 2022-02-20
+
+- Support auto merge multiple kubeconfig files
+- Support change local dns cache timeout
+- Fix an issue of `connect` command `localDNS` mode failed to resolve cluster domain
+- Fix an issue cause stuntman service of `mesh` command selecting router pod in `auto` mode
+- Fix an issue of `clean` command failed to delete resources left by `exchange` command
+- Fix an issue of `exchange` command continually printing error even connect already recovered
+- Shorten resource heartbeat interval and lock timeout to speed up expired resource recycling
+- Add `ports` field to shadow pods and router pods
+
 ### 0.3.0
 
 > Release time: 2022-02-13
 
 - `connect` command supports `tun2socks` mode
-- The `connect` command supports local DNS, and supports simultaneous resolution of cluster service domain names and local intranet/extranet domain names
+- The `connect` command supports simultaneous resolution of cluster service domain names and local intranet/extranet domain names
 - `connect` command supports access to Headless Service on all systems
 - `exchange` command defaults to `selector` mode
 - `mesh` command defaults to `auto` mode
@@ -24,10 +37,10 @@ Changelog
 - Optimized the cleaning mark method of `clean` command to solve the problem of incomplete resource cleaning
 - Optimized calculation logic of the pod IP range of the `connect` command to avoid routing effects on irrelevant IP segments
 - Add `--nodeSelector` parameter to support specifying shadow pod to specified node (issue-185)
-- Fixed an issue that after auto mesh, service redeployment may cause mesh failure
-- Fixed an issue that error throw out when the `clean` command cleans resources whose status is already `Terminating`
-- Fixed an issue that the `connect` command reported an error when the local KubeConfig did not have the global pod permission
-- Fixed an issue that the `connect` command would have residual resources in some cases of abnormal exit
+- Fixed an issue of after auto mesh, service redeployment may cause mesh failure
+- Fixed an issue of error throw out when the `clean` command cleans resources whose status is already `Terminating`
+- Fixed an issue of the `connect` command reported an error when the local KubeConfig did not have the global pod permission
+- Fixed an issue of the `connect` command would have residual resources in some cases of abnormal exit
 
 ### 0.2.4
 
@@ -36,9 +49,9 @@ Changelog
 - Support `auto` mode of `mesh` command to specify access target using service name
 - Added `switch` mode for `exchange` command, no longer need to wait for pod resume when exiting
 - Remove the default password of shadow pod and use temporary private key to improve security
-- Fixed the problem that Namespace must be specified when running `ktctl` when the local kube config file is not configured with namespace
-- Fixed the problem that Shadow Pod was not cleaned up probabilistically when using Ctrl+C to interrupt `exchange` to exit the wait
-- Fixed the problem that the program could not exit automatically when the startup of sshuttle failed
+- Fixed an issue of Namespace must be specified when running `ktctl` when the local kube config file is not configured with namespace
+- Fixed an issue of Shadow Pod was not cleaned up probabilistically when using Ctrl+C to interrupt `exchange` to exit the wait
+- Fixed an issue of the program could not exit automatically when the startup of sshuttle failed
 
 ### 0.2.3
 
@@ -57,8 +70,8 @@ Changelog
 * `connect` command adds the `--excludeIps` parameter to exclude the specified non-cluster IP segment
 * `connect` command adds the `--proxyAddr` parameter, which is used to specify the IP address that the Socks5 proxy listens to
 * `exchange`/`mesh`/`provide` command adds a check to see if there is a service listening on the local port
-* Fix an issue that the `--cidr` parameter of the `connect` command specified multiple IP segments incorrectly
-* Fix an issue that connection of `exchange` will be automatically disconnected when the local service restarts or the response times out
+* Fix an issue of the `--cidr` parameter of the `connect` command specified multiple IP segments incorrectly
+* Fix an issue of `exchange` connection automatically disconnected when the local service restarts or the response times out
 
 ### 0.2.1
 

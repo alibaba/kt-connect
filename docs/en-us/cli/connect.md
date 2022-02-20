@@ -14,6 +14,7 @@ Create a network tunnel to kubernetes cluster. Available options:
 --disableTunDevice     (tun2socks mode only) Create socks5 proxy without tun device
 --disableTunRoute      (tun2socks mode only) Do not auto setup tun device route
 --proxyPort value      (tun2socks mode only) Specify the local port which socks5 proxy should use (default: 2223)
+--dnsCacheTtl value    (local dns mode only) DNS cache refresh interval in seconds (default: 60)
 ```
 
 Key options explanation:

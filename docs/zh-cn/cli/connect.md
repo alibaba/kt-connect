@@ -14,6 +14,7 @@ Ktctl Connect
 --disableTunDevice     （仅用于`tun2socks`模式）仅创建Socks5代理，不创建本地tun设备
 --disableTunRoute      （仅用于`tun2socks`模式）仅创建tun设备，不自动设置本地路由规则
 --proxyPort value      （仅用于`tun2socks`模式）指定Socks5代理监听的端口（默认值为2223）
+--dnsCacheTtl value    （仅用于`localDNS`模式）指定DNS缓存的超时秒数（默认值为60）
 ```
 
 关键参数说明：
