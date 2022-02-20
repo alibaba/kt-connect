@@ -8,9 +8,9 @@ Changelog
 - Support auto merge multiple kubeconfig files
 - Support change local dns cache timeout
 - Fix an issue of `connect` command `localDNS` mode failed to resolve cluster domain
+- Fix an issue of `exchange` command continually printing error even connect already recovered
 - Fix an issue cause stuntman service of `mesh` command selecting router pod in `auto` mode
 - Fix an issue of `clean` command failed to delete resources left by `exchange` command
-- Fix an issue of `exchange` command continually printing error even connect already recovered
 - Shorten resource heartbeat interval and lock timeout to speed up expired resource recycling
 - Add `ports` field to shadow pods and router pods
 
