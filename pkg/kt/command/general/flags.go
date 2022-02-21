@@ -72,6 +72,11 @@ func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 			Value:       60,
 		},
 		cli.BoolFlag{
+			Name:        "useShadowDeployment",
+			Usage:       "Deploy shadow container as deployment",
+			Destination: &options.UseShadowDeployment,
+		},
+		cli.BoolFlag{
 			Name:        "forceUpdate,f",
 			Usage:       "Always update shadow image",
 			Destination: &options.AlwaysUpdateShadow,

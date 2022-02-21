@@ -96,6 +96,7 @@ type DaemonOptions struct {
 	WithAnnotations     string
 	PortForwardWaitTime int
 	PodCreationWaitTime int
+	UseShadowDeployment bool
 	AlwaysUpdateShadow  bool
 	KubeContext         string
 }

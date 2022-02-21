@@ -4,6 +4,7 @@ import (
 	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -52,29 +53,52 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	return service
 }
 
+func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
+	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
+	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	podLabels := make(map[string]string, 0)
+	for k, v := range metaAndSpec.Meta.Labels {
+		if v != util.ControlBy {
+			podLabels[k] = v
+		}
+	}
+
+	return &appV1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        metaAndSpec.Meta.Name,
+			Namespace:   metaAndSpec.Meta.Namespace,
+			Labels:      metaAndSpec.Meta.Labels,
+			Annotations: metaAndSpec.Meta.Annotations,
+		},
+		Spec: appV1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: podLabels,
+			},
+			Template: coreV1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: podLabels,
+				},
+				Spec: createPod(metaAndSpec).Spec,
+			},
+		},
+	}
+}
+
 func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
-	var args []string
-	namespace := metaAndSpec.Meta.Namespace
-	name := metaAndSpec.Meta.Name
-	labels := metaAndSpec.Meta.Labels
-	annotations := metaAndSpec.Meta.Annotations
-	annotations[util.KtRefCount] = "1"
-	annotations[util.KtLastHeartBeat] = util.GetTimestamp()
-	ports := metaAndSpec.Ports
-	image := metaAndSpec.Image
-	envs := metaAndSpec.Envs
+	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
+	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
 
 	pod := &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        name,
-			Namespace:   namespace,
-			Labels:      labels,
-			Annotations: annotations,
+			Name:        metaAndSpec.Meta.Name,
+			Namespace:   metaAndSpec.Meta.Namespace,
+			Labels:      metaAndSpec.Meta.Labels,
+			Annotations: metaAndSpec.Meta.Annotations,
 		},
 		Spec: coreV1.PodSpec{
 			ServiceAccountName: opt.Get().ServiceAccount,
 			Containers: []coreV1.Container{
-				createContainer(image, args, envs, ports),
+				createContainer(metaAndSpec.Image, []string{}, metaAndSpec.Envs, metaAndSpec.Ports),
 			},
 		},
 	}

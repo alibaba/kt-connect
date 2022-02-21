@@ -6,6 +6,7 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labelApi "k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // GetDeployment ...
@@ -28,6 +29,14 @@ func (k *Kubernetes) GetAllDeploymentInNamespace(namespace string) (*appV1.Deplo
 // UpdateDeployment ...
 func (k *Kubernetes) UpdateDeployment(deployment *appV1.Deployment) (*appV1.Deployment, error) {
 	return k.Clientset.AppsV1().Deployments(deployment.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
+}
+
+func (k *Kubernetes) UpdateDeploymentHeartBeat(name, namespace string) {
+	log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, formattedTime())
+	if _, err := k.Clientset.AppsV1().Deployments(namespace).
+		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
+		log.Warn().Err(err).Msgf("Failed to update deployment heart beat")
+	}
 }
 
 // ScaleTo scale deployment to

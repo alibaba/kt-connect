@@ -93,34 +93,57 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 }
 
 func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
-	err := k.createShadowPod(metaAndSpec, sshcm)
+	var err error
+	var name string
+	if opt.Get().UseShadowDeployment {
+		err = k.createShadowDeployment(metaAndSpec, sshcm)
+	} else {
+		name = metaAndSpec.Meta.Name
+		err = k.createShadowPod(metaAndSpec, sshcm)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
+	log.Info().Msgf("Deploying shadow pod %s in namespace %s", name, metaAndSpec.Meta.Namespace)
 
-	return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+	return k.WaitPodReady(name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+}
+
+// createShadowDeployment create shadow deployment
+func (k *Kubernetes) createShadowDeployment(metaAndSpec *PodMetaAndSpec, sshcm string) error {
+	deployment := createDeployment(metaAndSpec)
+	k.appendSshVolume(&deployment.Spec.Template.Spec, sshcm)
+	if _, err := k.Clientset.AppsV1().Deployments(metaAndSpec.Meta.Namespace).
+		Create(context.TODO(), deployment, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdateDeploymentHeartBeat)
+	return nil
 }
 
 // createShadowPod create shadow pod
 func (k *Kubernetes) createShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error {
 	pod := createPod(metaAndSpec)
-	pod.Spec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
-		{
-			Name:      "ssh-public-key",
-			MountPath: fmt.Sprintf("/root/%s", util.SshAuthKey),
-		},
-	}
-	pod.Spec.Volumes = []coreV1.Volume{
-		getSSHVolume(sshcm),
-	}
+	k.appendSshVolume(&pod.Spec, sshcm)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return err
 	}
 	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdatePodHeartBeat)
 	return nil
+}
+
+func (k *Kubernetes) appendSshVolume(podSpec *coreV1.PodSpec, sshcm string) {
+	podSpec.Containers[0].VolumeMounts = []coreV1.VolumeMount{
+		{
+			Name:      "ssh-public-key",
+			MountPath: fmt.Sprintf("/root/%s", util.SshAuthKey),
+		},
+	}
+	podSpec.Volumes = []coreV1.Volume{
+		getSSHVolume(sshcm),
+	}
 }
 
 func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
