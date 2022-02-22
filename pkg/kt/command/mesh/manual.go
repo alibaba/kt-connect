@@ -5,20 +5,15 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	appV1 "k8s.io/api/apps/v1"
+	coreV1 "k8s.io/api/core/v1"
 )
 
-func ManualMesh(resourceName string) error {
-	app, err := general.GetDeploymentByResourceName(resourceName, opt.Get().Namespace)
-	if err != nil {
-		return err
-	}
-
+func ManualMesh(svc *coreV1.Service) error {
 	meshKey, meshVersion := getVersion(opt.Get().MeshOptions.VersionMark)
-	shadowPodName := app.Name + util.MeshPodInfix + meshVersion
-	labels := getMeshLabels(meshKey, meshVersion, app)
+	shadowPodName := svc.Name + util.MeshPodInfix + meshVersion
+	labels := getMeshLabels(meshKey, meshVersion, svc)
 	annotations := make(map[string]string)
-	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().MeshOptions.Expose, labels, annotations); err != nil {
+	if err := general.CreateShadowAndInbound(shadowPodName, opt.Get().MeshOptions.Expose, labels, annotations); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------")
@@ -27,10 +22,10 @@ func ManualMesh(resourceName string) error {
 	return nil
 }
 
-func getMeshLabels(meshKey, meshVersion string, app *appV1.Deployment) map[string]string {
+func getMeshLabels(meshKey, meshVersion string, svc *coreV1.Service) map[string]string {
 	labels := map[string]string{}
-	if app != nil {
-		for k, v := range app.Spec.Selector.MatchLabels {
+	if svc != nil {
+		for k, v := range svc.Spec.Selector {
 			labels[k] = v
 		}
 	}

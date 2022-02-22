@@ -14,18 +14,9 @@ import (
 	"time"
 )
 
-func AutoMesh(resourceName string) error {
-	// Get service to mesh
-	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
-	if err != nil {
-		return err
-	}
-	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, svc.Spec.Ports); port != "" {
-		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
-	}
-
+func AutoMesh(svc *coreV1.Service) error {
 	// Lock service to avoid conflict, must be first step
-	svc, err = general.LockService(svc.Name, opt.Get().Namespace, 0)
+	svc, err := general.LockService(svc.Name, opt.Get().Namespace, 0)
 	if err != nil {
 		return err
 	}

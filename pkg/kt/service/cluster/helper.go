@@ -56,12 +56,6 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
 	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
 	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
-	podLabels := make(map[string]string, 0)
-	for k, v := range metaAndSpec.Meta.Labels {
-		if v != util.ControlBy {
-			podLabels[k] = v
-		}
-	}
 
 	return &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -72,11 +66,11 @@ func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
 		},
 		Spec: appV1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
-				MatchLabels: podLabels,
+				MatchLabels: metaAndSpec.Meta.Labels,
 			},
 			Template: coreV1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: podLabels,
+					Labels: metaAndSpec.Meta.Labels,
 				},
 				Spec: createPod(metaAndSpec).Spec,
 			},

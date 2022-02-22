@@ -96,17 +96,24 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 	var err error
 	var name string
 	if opt.Get().UseShadowDeployment {
-		err = k.createShadowDeployment(metaAndSpec, sshcm)
+		if err = k.createShadowDeployment(metaAndSpec, sshcm); err != nil {
+			return nil, err
+		}
+		pods, err2 := k.GetPodsByLabel(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace)
+		if err2 != nil {
+			return nil, err2
+		} else if len(pods.Items) != 1 {
+			return nil, fmt.Errorf("should have exactly one shadow pod, but found %d", len(pods.Items))
+		}
+		name = pods.Items[0].Name
 	} else {
+		if err = k.createShadowPod(metaAndSpec, sshcm); err != nil {
+			return nil, err
+		}
 		name = metaAndSpec.Meta.Name
-		err = k.createShadowPod(metaAndSpec, sshcm)
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	log.Info().Msgf("Deploying shadow pod %s in namespace %s", name, metaAndSpec.Meta.Namespace)
-
 	return k.WaitPodReady(name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
 }
 

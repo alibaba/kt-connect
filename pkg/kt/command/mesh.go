@@ -51,10 +51,20 @@ func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
+	// Get service to mesh
+	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
+	if err != nil {
+		return err
+	}
+
+	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, svc.Spec.Ports); port != "" {
+		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
+	}
+
 	if opt.Get().MeshOptions.Mode == util.MeshModeManual {
-		err = mesh.ManualMesh(resourceName)
+		err = mesh.ManualMesh(svc)
 	} else if opt.Get().MeshOptions.Mode == util.MeshModeAuto {
-		err = mesh.AutoMesh(resourceName)
+		err = mesh.AutoMesh(svc)
 	} else {
 		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.Mode,
 			util.MeshModeAuto, util.MeshModeManual)
