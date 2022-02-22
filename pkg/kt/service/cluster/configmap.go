@@ -24,9 +24,8 @@ func (k *Kubernetes) GetConfigMapsByLabel(labels map[string]string, namespace st
 
 // RemoveConfigMap remove ConfigMap instance
 func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
-	cli := k.Clientset.CoreV1().ConfigMaps(namespace)
 	deletePolicy := metav1.DeletePropagationBackground
-	return cli.Delete(context.TODO(), name, metav1.DeleteOptions{
+	return k.Clientset.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 }

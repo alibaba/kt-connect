@@ -31,6 +31,14 @@ func (k *Kubernetes) UpdateDeployment(deployment *appV1.Deployment) (*appV1.Depl
 	return k.Clientset.AppsV1().Deployments(deployment.Namespace).Update(context.TODO(), deployment, metav1.UpdateOptions{})
 }
 
+// RemoveDeployment remove deployment instances
+func (k *Kubernetes) RemoveDeployment(name, namespace string) (err error) {
+	deletePolicy := metav1.DeletePropagationBackground
+	return k.Clientset.AppsV1().Deployments(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+}
+
 func (k *Kubernetes) UpdateDeploymentHeartBeat(name, namespace string) {
 	log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, formattedTime())
 	if _, err := k.Clientset.AppsV1().Deployments(namespace).

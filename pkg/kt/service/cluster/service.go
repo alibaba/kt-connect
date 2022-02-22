@@ -64,8 +64,10 @@ func (k *Kubernetes) UpdateService(svc *coreV1.Service) (*coreV1.Service, error)
 
 // RemoveService remove service
 func (k *Kubernetes) RemoveService(name, namespace string) (err error) {
-	client := k.Clientset.CoreV1().Services(namespace)
-	return client.Delete(context.TODO(), name, metav1.DeleteOptions{})
+	deletePolicy := metav1.DeletePropagationBackground
+	return k.Clientset.CoreV1().Services(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
 }
 
 func (k *Kubernetes) UpdateServiceHeartBeat(name, namespace string) {

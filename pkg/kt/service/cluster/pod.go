@@ -58,9 +58,8 @@ func (k *Kubernetes) UpdatePod(pod *coreV1.Pod) (*coreV1.Pod, error) {
 
 // RemovePod remove pod instances
 func (k *Kubernetes) RemovePod(name, namespace string) (err error) {
-	podsClient := k.Clientset.CoreV1().Pods(namespace)
 	deletePolicy := metav1.DeletePropagationBackground
-	return podsClient.Delete(context.TODO(), name, metav1.DeleteOptions{
+	return k.Clientset.CoreV1().Pods(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 }

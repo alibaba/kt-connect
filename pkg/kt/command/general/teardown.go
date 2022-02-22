@@ -192,6 +192,7 @@ func cleanShadowPodAndConfigMap() {
 	if opt.Get().RuntimeStore.Shadow != "" {
 		shouldDelWithShared := false
 		if opt.Get().ConnectOptions.SharedShadow {
+			// There is always exactly one shadow pod or deployment for connect
 			shouldDelWithShared, err = cluster.Ins().DecreaseRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opt.Get().RuntimeStore.Shadow)
@@ -214,10 +215,14 @@ func cleanShadowPodAndConfigMap() {
 					log.Error().Err(err).Msgf("Remove ephemeral container of pod %s failed", shadow)
 				}
 			}
-		} else {
+		} else if shouldDelWithShared || !opt.Get().ConnectOptions.SharedShadow {
 			for _, shadow := range strings.Split(opt.Get().RuntimeStore.Shadow, ",") {
 				log.Info().Msgf("Cleaning shadow pod %s", shadow)
-				err = cluster.Ins().RemovePod(shadow, opt.Get().Namespace)
+				if opt.Get().UseShadowDeployment {
+					err = cluster.Ins().RemoveDeployment(shadow, opt.Get().Namespace)
+				} else {
+					err = cluster.Ins().RemovePod(shadow, opt.Get().Namespace)
+				}
 				if err != nil {
 					log.Error().Err(err).Msgf("Delete shadow pod %s failed", shadow)
 				}

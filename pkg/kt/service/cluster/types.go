@@ -29,6 +29,7 @@ type KubernetesInterface interface {
 	GetDeploymentsByLabel(labels map[string]string, namespace string) (*appV1.DeploymentList, error)
 	GetAllDeploymentInNamespace(namespace string) (*appV1.DeploymentList, error)
 	UpdateDeployment(deployment *appV1.Deployment) (*appV1.Deployment, error)
+	RemoveDeployment(name, namespace string) error
 	ScaleTo(deployment, namespace string, replicas *int32) (err error)
 
 	GetService(name, namespace string) (*coreV1.Service, error)
