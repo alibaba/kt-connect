@@ -134,9 +134,9 @@ func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, cmd ...
 	return stdoutMsg, stderrMsg, err
 }
 
-// IncreaseRef increase pod ref count by 1
-func (k *Kubernetes) IncreaseRef(name string, namespace string) error {
-	pod, err := k.Clientset.CoreV1().Pods(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+// IncreasePodRef increase pod ref count by 1
+func (k *Kubernetes) IncreasePodRef(name string, namespace string) error {
+	pod, err := k.GetPod(name, namespace)
 	if err != nil {
 		return err
 	}
@@ -149,13 +149,12 @@ func (k *Kubernetes) IncreaseRef(name string, namespace string) error {
 	}
 
 	pod.Annotations[util.KtRefCount] = strconv.Itoa(count + 1)
-
-	_, err = k.Clientset.CoreV1().Pods(namespace).Update(context.TODO(), pod, metav1.UpdateOptions{})
+	_, err = k.UpdatePod(pod)
 	return err
 }
 
-// DecreaseRef decrease pod ref count by 1
-func (k *Kubernetes) DecreaseRef(name string, namespace string) (cleanup bool, err error) {
+// DecreasePodRef decrease pod ref count by 1
+func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool, err error) {
 	pod, err := k.GetPod(name, namespace)
 	if err != nil {
 		return
@@ -166,7 +165,13 @@ func (k *Kubernetes) DecreaseRef(name string, namespace string) (cleanup bool, e
 		log.Info().Msgf("Pod %s has only one ref, gonna remove", name)
 		err = k.RemovePod(pod.Name, pod.Namespace)
 	} else {
-		err = k.decreasePodRefByOne(refCount, pod)
+		count, err2 := decreaseRef(refCount)
+		if err2 != nil {
+			return
+		}
+		log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
+		util.MapPut(pod.Annotations, util.KtRefCount, count)
+		_, err = k.UpdatePod(pod)
 	}
 	return
 }
@@ -207,17 +212,6 @@ func (k *Kubernetes) waitPodTerminate(name, namespace string, times int) (*coreV
 	}
 }
 
-func (k *Kubernetes) decreasePodRefByOne(refCount string, pod *coreV1.Pod) (err error) {
-	count, err := decreaseRef(refCount)
-	if err != nil {
-		return
-	}
-	log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
-	util.MapPut(pod.Annotations, util.KtRefCount, count)
-	_, err = k.UpdatePod(pod)
-	return
-}
-
 func addImagePullSecret(pod *coreV1.Pod, imagePullSecret string) {
 	pod.Spec.ImagePullSecrets = []coreV1.LocalObjectReference{
 		{
@@ -237,13 +231,4 @@ func execute(method string, url *url.URL, config *restclient.Config, stdin io.Re
 		Stderr: stderr,
 		Tty:    tty,
 	})
-}
-
-func decreaseRef(refCount string) (count string, err error) {
-	currentCount, err := strconv.Atoi(refCount)
-	if err != nil {
-		return
-	}
-	count = strconv.Itoa(currentCount - 1)
-	return
 }

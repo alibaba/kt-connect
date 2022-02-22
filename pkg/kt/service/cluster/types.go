@@ -22,14 +22,16 @@ type KubernetesInterface interface {
 	ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error)
 	AddEphemeralContainer(containerName, podName string, envs map[string]string) (string, error)
 	RemoveEphemeralContainer(containerName, podName string, namespace string) error
-	IncreaseRef(name ,namespace string) error
-	DecreaseRef(name, namespace string) (bool, error)
+	IncreasePodRef(name ,namespace string) error
+	DecreasePodRef(name, namespace string) (bool, error)
 
 	GetDeployment(name string, namespace string) (*appV1.Deployment, error)
 	GetDeploymentsByLabel(labels map[string]string, namespace string) (*appV1.DeploymentList, error)
 	GetAllDeploymentInNamespace(namespace string) (*appV1.DeploymentList, error)
 	UpdateDeployment(deployment *appV1.Deployment) (*appV1.Deployment, error)
 	RemoveDeployment(name, namespace string) error
+	IncreaseDeploymentRef(name ,namespace string) error
+	DecreaseDeploymentRef(name, namespace string) (bool, error)
 	ScaleTo(deployment, namespace string, replicas *int32) (err error)
 
 	GetService(name, namespace string) (*coreV1.Service, error)

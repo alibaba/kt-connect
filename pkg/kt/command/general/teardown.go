@@ -99,7 +99,7 @@ func recoverAutoMeshRoute() {
 			log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
 			return
 		}
-		if shouldDelRouter, err2 := cluster.Ins().DecreaseRef(opt.Get().RuntimeStore.Router, opt.Get().Namespace); err2 != nil {
+		if shouldDelRouter, err2 := cluster.Ins().DecreasePodRef(opt.Get().RuntimeStore.Router, opt.Get().Namespace); err2 != nil {
 			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opt.Get().RuntimeStore.Shadow)
 		} else if shouldDelRouter {
 			recoverService(routerPod.Annotations[util.KtConfig])
@@ -193,7 +193,7 @@ func cleanShadowPodAndConfigMap() {
 		shouldDelWithShared := false
 		if opt.Get().ConnectOptions.SharedShadow {
 			// There is always exactly one shadow pod or deployment for connect
-			shouldDelWithShared, err = cluster.Ins().DecreaseRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
+			shouldDelWithShared, err = cluster.Ins().DecreasePodRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
 			if err != nil {
 				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opt.Get().RuntimeStore.Shadow)
 			}

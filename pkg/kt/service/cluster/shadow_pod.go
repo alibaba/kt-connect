@@ -192,7 +192,7 @@ func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta) (pod *coreV1.Pod, 
 	}
 	if len(podList.Items) == 1 {
 		log.Info().Msgf("Found shadow daemon pod, reuse it")
-		if err = k.IncreaseRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
+		if err = k.IncreasePodRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
 			return
 		}
 		return &(podList.Items[0]), nil

@@ -161,7 +161,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		if _, err = strconv.Atoi(routerPod.Annotations[util.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
 			return err
-		} else if err = cluster.Ins().IncreaseRef(routerPodName, namespace); err != nil {
+		} else if err = cluster.Ins().IncreasePodRef(routerPodName, namespace); err != nil {
 			log.Error().Msgf("Failed to increase router pod ref count")
 			return err
 		}

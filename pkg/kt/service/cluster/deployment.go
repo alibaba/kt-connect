@@ -2,11 +2,13 @@ package cluster
 
 import (
 	"context"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
+	"strconv"
 )
 
 // GetDeployment ...
@@ -37,6 +39,48 @@ func (k *Kubernetes) RemoveDeployment(name, namespace string) (err error) {
 	return k.Clientset.AppsV1().Deployments(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
+}
+
+// IncreaseDeploymentRef increase deployment ref count by 1
+func (k *Kubernetes) IncreaseDeploymentRef(name string, namespace string) error {
+	app, err := k.GetDeployment(name, namespace)
+	if err != nil {
+		return err
+	}
+	annotations := app.ObjectMeta.Annotations
+	count, err := strconv.Atoi(annotations[util.KtRefCount])
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to parse annotations[%s] of deployment %s with value %s",
+			util.KtRefCount, name, annotations[util.KtRefCount])
+		return err
+	}
+
+	app.Annotations[util.KtRefCount] = strconv.Itoa(count + 1)
+	_, err = k.UpdateDeployment(app)
+	return err
+}
+
+// DecreaseDeploymentRef decrease deployment ref count by 1
+func (k *Kubernetes) DecreaseDeploymentRef(name string, namespace string) (cleanup bool, err error) {
+	app, err := k.GetDeployment(name, namespace)
+	if err != nil {
+		return
+	}
+	refCount := app.Annotations[util.KtRefCount]
+	if refCount == "1" {
+		cleanup = true
+		log.Info().Msgf("Deployment %s has only one ref, gonna remove", name)
+		err = k.RemoveDeployment(app.Name, app.Namespace)
+	} else {
+		count, err2 := decreaseRef(refCount)
+		if err2 != nil {
+			return
+		}
+		log.Info().Msgf("Deployment %s has %s refs, decrease to %s", app.Name, refCount, count)
+		util.MapPut(app.Annotations, util.KtRefCount, count)
+		_, err = k.UpdateDeployment(app)
+	}
+	return
 }
 
 func (k *Kubernetes) UpdateDeploymentHeartBeat(name, namespace string) {

@@ -8,6 +8,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/cache"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -84,4 +85,13 @@ func (k *Kubernetes) watchResource(name, namespace, resourceType string, objType
 
 func isSingleIp(ipRange string) bool {
 	return !strings.Contains(ipRange, "/") || strings.Split(ipRange,"/")[1] == "32"
+}
+
+func decreaseRef(refCount string) (count string, err error) {
+	currentCount, err := strconv.Atoi(refCount)
+	if err != nil {
+		return
+	}
+	count = strconv.Itoa(currentCount - 1)
+	return
 }
