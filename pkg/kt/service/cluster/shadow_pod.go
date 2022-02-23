@@ -100,14 +100,15 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 		if err = k.createShadowDeployment(metaAndSpec, sshcm); err != nil {
 			return nil, err
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		pods, err2 := k.GetPodsByLabel(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace)
+		runningPods := filterRunningPods(pods.Items)
 		if err2 != nil {
 			return nil, err2
-		} else if len(pods.Items) != 1 {
-			return nil, fmt.Errorf("should have exactly one shadow pod, but found %d", len(pods.Items))
+		} else if len(runningPods) != 1 {
+			return nil, fmt.Errorf("should have exactly one shadow pod, but found %d", len(runningPods))
 		}
-		name = pods.Items[0].Name
+		name = runningPods[0].Name
 	} else {
 		if err = k.createShadowPod(metaAndSpec, sshcm); err != nil {
 			return nil, err
@@ -117,6 +118,16 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 
 	log.Info().Msgf("Deploying shadow pod %s in namespace %s", name, metaAndSpec.Meta.Namespace)
 	return k.WaitPodReady(name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+}
+
+func filterRunningPods(pods []coreV1.Pod) []coreV1.Pod {
+	runningPods := make([]coreV1.Pod, 0)
+	for _, pod := range pods {
+		if pod.DeletionTimestamp == nil {
+			runningPods = append(runningPods, pod)
+		}
+	}
+	return runningPods
 }
 
 // createShadowDeployment create shadow deployment
