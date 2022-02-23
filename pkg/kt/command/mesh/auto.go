@@ -130,7 +130,6 @@ func createShadowService(shadowSvcName string, ports map[int]int,
 
 func createRouter(routerPodName string, svcName string, ports map[int]int, labels map[string]string, versionMark string) error {
 	namespace := opt.Get().Namespace
-	routerLabels := util.MergeMap(labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 	routerPod, err := cluster.Ins().GetPod(routerPodName, namespace)
 	if err == nil && routerPod.DeletionTimestamp != nil {
 		routerPod, err = cluster.Ins().WaitPodTerminate(routerPodName, namespace)
@@ -142,7 +141,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		}
 		// Router not exist or just terminated
 		annotations := map[string]string{util.KtRefCount: "1", util.KtConfig: fmt.Sprintf("service=%s", svcName)}
-		if err = cluster.CreateRouterPod(routerPodName, routerLabels, annotations, ports); err != nil {
+		if _, err = cluster.Ins().CreateRouterPod(routerPodName, labels, annotations, ports); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
 			return err
 		}
@@ -208,7 +207,7 @@ func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 			return err
 		}
 		log.Info().Msgf("Service %s created", stuntmanSvcName)
-	} else if stuntmanSvc.Annotations == nil || stuntmanSvc.Annotations[util.ControlBy] != util.KubernetesToolkit {
+	} else if stuntmanSvc.Labels[util.ControlBy] != util.KubernetesToolkit {
 		return fmt.Errorf("service %s exists, but not created by kt", stuntmanSvcName)
 	} else {
 		cluster.Ins().UpdateServiceHeartBeat(stuntmanSvcName, namespace)

@@ -15,7 +15,6 @@ func Expose(serviceName string) error {
 	version := strings.ToLower(util.RandomString(5))
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
-		util.ControlBy: util.KubernetesToolkit,
 		util.KtRole:    util.RolePreviewShadow,
 		util.KtTarget:  util.RandomString(20),
 	}

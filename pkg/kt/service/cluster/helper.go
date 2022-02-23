@@ -56,6 +56,7 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
 	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
 	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
 
 	return &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -72,15 +73,18 @@ func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: metaAndSpec.Meta.Labels,
 				},
-				Spec: createPod(metaAndSpec).Spec,
+				Spec: createPod(metaAndSpec, false).Spec,
 			},
 		},
 	}
 }
 
-func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
+func createPod(metaAndSpec *PodMetaAndSpec, isLeaf bool) *coreV1.Pod {
 	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
 	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	if isLeaf {
+		util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
+	}
 
 	pod := &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

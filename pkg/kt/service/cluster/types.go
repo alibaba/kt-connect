@@ -11,10 +11,10 @@ import (
 type KubernetesInterface interface {
 	GetPod(name string, namespace string) (*coreV1.Pod, error)
 	GetPodsByLabel(labels map[string]string, namespace string) (*coreV1.PodList, error)
-	CreatePod(metaAndSpec *PodMetaAndSpec) error
 	UpdatePod(pod *coreV1.Pod) (*coreV1.Pod, error)
 	RemovePod(name, namespace string) error
 	GetOrCreateShadow(name string, labels, annotations, envs map[string]string, portsToExpose string) (string, string, string, error)
+	CreateRouterPod(name string, labels, annotations map[string]string, ports map[int]int) (*coreV1.Pod, error)
 	UpdatePodHeartBeat(name, namespace string)
 	WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error)
 	WaitPodTerminate(name, namespace string) (*coreV1.Pod, error)

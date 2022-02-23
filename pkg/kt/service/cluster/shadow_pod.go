@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// GetOrCreateShadow create shadow
+// GetOrCreateShadow create shadow pod or deployment
 func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string, exposePorts string) (
 	string, string, string, error) {
 	// record context data
@@ -57,8 +57,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 			return "", "", "", err2
 		}
 		if pod != nil && generator != nil {
-			podIP, podName, credential := shadowResult(pod, generator)
-			return podIP, podName, credential, nil
+			return shadowResult(pod, generator)
 		}
 	}
 
@@ -89,8 +88,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 	if err != nil {
 		return
 	}
-	podIP, podName, privateKeyPath = shadowResult(pod, generator)
-	return
+	return shadowResult(pod, generator)
 }
 
 func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
@@ -144,7 +142,7 @@ func (k *Kubernetes) createShadowDeployment(metaAndSpec *PodMetaAndSpec, sshcm s
 
 // createShadowPod create shadow pod
 func (k *Kubernetes) createShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error {
-	pod := createPod(metaAndSpec)
+	pod := createPod(metaAndSpec, true)
 	k.appendSshVolume(&pod.Spec, sshcm)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
@@ -167,7 +165,7 @@ func (k *Kubernetes) appendSshVolume(podSpec *coreV1.PodSpec, sshcm string) {
 }
 
 func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
-	pod, ignorableErr := k.GetPod(resourceMeta.Name, resourceMeta.Namespace);
+	pod, ignorableErr := k.GetPod(resourceMeta.Name, resourceMeta.Namespace)
 	if ignorableErr != nil {
 		return nil, nil, nil
 	}
@@ -236,8 +234,8 @@ func getSSHVolume(volume string) coreV1.Volume {
 	return sshVolume
 }
 
-func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, string) {
+func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, string, error) {
 	podIP := pod.Status.PodIP
 	podName := pod.Name
-	return podIP, podName, generator.PrivateKeyPath
+	return podIP, podName, generator.PrivateKeyPath, nil
 }

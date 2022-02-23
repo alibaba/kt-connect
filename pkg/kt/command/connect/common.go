@@ -173,8 +173,10 @@ func getEnvs() map[string]string {
 
 func getLabels() map[string]string {
 	labels := map[string]string{
-		util.ControlBy: util.KubernetesToolkit,
 		util.KtRole:    util.RoleConnectShadow,
+	}
+	if opt.Get().UseShadowDeployment {
+		labels[util.KtTarget] = util.RandomString(20)
 	}
 	return labels
 }

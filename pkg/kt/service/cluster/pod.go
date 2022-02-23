@@ -27,6 +27,7 @@ type PodMetaAndSpec struct {
 	Image string
 	Envs  map[string]string
 	Ports []int
+	IsLeaf bool
 }
 
 // GetPod ...
@@ -39,16 +40,6 @@ func (k *Kubernetes) GetPodsByLabel(labels map[string]string, namespace string) 
 	return k.Clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
 	})
-}
-
-// CreatePod create pod
-func (k *Kubernetes) CreatePod(metaAndSpec *PodMetaAndSpec) error {
-	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
-		Create(context.TODO(), createPod(metaAndSpec), metav1.CreateOptions{}); err != nil {
-		return err
-	}
-	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdatePodHeartBeat)
-	return nil
 }
 
 // UpdatePod ...

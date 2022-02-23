@@ -13,12 +13,10 @@ import (
 	"time"
 )
 
-func CreateShadowAndInbound(shadowPodName, portsToExpose string,
-	labels, annotations map[string]string) error {
+func CreateShadowAndInbound(shadowPodName, portsToExpose string, labels, annotations map[string]string) error {
 
-	podLabels := util.MergeMap(labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 	envs := make(map[string]string)
-	_, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, podLabels, annotations, envs, portsToExpose)
+	_, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, labels, annotations, envs, portsToExpose)
 	if err != nil {
 		return err
 	}
