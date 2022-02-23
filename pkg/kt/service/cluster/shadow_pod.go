@@ -10,6 +10,7 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
+	"time"
 )
 
 // GetOrCreateShadow create shadow
@@ -99,6 +100,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 		if err = k.createShadowDeployment(metaAndSpec, sshcm); err != nil {
 			return nil, err
 		}
+		time.Sleep(1 * time.Second)
 		pods, err2 := k.GetPodsByLabel(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace)
 		if err2 != nil {
 			return nil, err2
