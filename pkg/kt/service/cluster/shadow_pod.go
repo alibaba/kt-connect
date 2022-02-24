@@ -11,7 +11,6 @@ import (
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"strings"
-	"time"
 )
 
 // GetOrCreateShadow create shadow pod or deployment
@@ -93,36 +92,30 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 }
 
 func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
-	var err error
-	var name string
 	if opt.Get().UseShadowDeployment {
-		if err = k.createShadowDeployment(metaAndSpec, sshcm); err != nil {
+		if err := k.createShadowDeployment(metaAndSpec, sshcm); err != nil {
 			return nil, err
 		}
-		time.Sleep(500 * time.Millisecond)
-		pods, err2 := k.GetPodsByLabel(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace)
-		runningPods := filterRunningPods(pods.Items)
-		if err2 != nil {
-			return nil, err2
-		} else if len(runningPods) != 1 {
-			return nil, fmt.Errorf("should have exactly one shadow pod, but found %d", len(runningPods))
+		log.Info().Msgf("Creating shadow deployment %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
+		delete(metaAndSpec.Meta.Labels, util.ControlBy)
+		pods, err := k.WaitPodsReady(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+		if err != nil {
+			return nil, err
 		}
-		name = runningPods[0].Name
+		return &pods[0], nil
 	} else {
-		if err = k.createShadowPod(metaAndSpec, sshcm); err != nil {
+		if err := k.createShadowPod(metaAndSpec, sshcm); err != nil {
 			return nil, err
 		}
-		name = metaAndSpec.Meta.Name
+		log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
+		return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
 	}
-
-	log.Info().Msgf("Deploying shadow pod %s in namespace %s", name, metaAndSpec.Meta.Namespace)
-	return k.WaitPodReady(name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
 }
 
 func filterRunningPods(pods []coreV1.Pod) []coreV1.Pod {
 	runningPods := make([]coreV1.Pod, 0)
 	for _, pod := range pods {
-		if pod.DeletionTimestamp == nil {
+		if pod.Status.Phase == coreV1.PodRunning && pod.DeletionTimestamp == nil {
 			runningPods = append(runningPods, pod)
 		}
 	}

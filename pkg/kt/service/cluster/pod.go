@@ -55,6 +55,10 @@ func (k *Kubernetes) RemovePod(name, namespace string) (err error) {
 	})
 }
 
+func (k *Kubernetes) WaitPodsReady(labels map[string]string, namespace string, timeoutSec int) ([]coreV1.Pod, error) {
+	return k.waitPodsReady(labels, namespace, timeoutSec, 0)
+}
+
 // WaitPodReady ...
 func (k *Kubernetes) WaitPodReady(name, namespace string, timeoutSec int) (*coreV1.Pod, error) {
 	return k.waitPodReady(name, namespace, timeoutSec, 0)
@@ -165,6 +169,29 @@ func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool
 		_, err = k.UpdatePod(pod)
 	}
 	return
+}
+
+func (k *Kubernetes) waitPodsReady(labels map[string]string, namespace string, timeoutSec int, times int) ([]coreV1.Pod, error) {
+	pods, err := k.GetPodsByLabel(labels, namespace)
+	if err != nil {
+		return nil, err
+	}
+	const interval = 6
+	if times > timeoutSec / interval {
+		if len(pods.Items) < 1 {
+			return nil, fmt.Errorf("pod with label %v not found", labels)
+		} else {
+			return nil, fmt.Errorf("pod %s failed to start", pods.Items[0].Name)
+		}
+	}
+	runningPods := filterRunningPods(pods.Items)
+	if len(runningPods) > 0 {
+		log.Info().Msgf("Pod %s is ready", runningPods[0].Name)
+		return runningPods, nil
+	}
+	log.Info().Msgf("Waiting for shadow pod ...")
+	time.Sleep(1 * time.Second)
+	return k.waitPodsReady(labels, namespace, timeoutSec, times + 1)
 }
 
 func (k *Kubernetes) waitPodReady(name, namespace string, timeoutSec int, times int) (*coreV1.Pod, error) {
