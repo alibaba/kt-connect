@@ -20,7 +20,7 @@ func (k *Kubernetes) CreateRouterPod(name string, labels, annotations map[string
 		Labels:      labels,
 		Annotations: annotations,
 	}, opt.Get().MeshOptions.RouterImage, map[string]string{}, targetPorts, true}
-	pod := createPod(metaAndSpec, true)
+	pod := createPod(metaAndSpec)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return nil, err

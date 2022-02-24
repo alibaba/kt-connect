@@ -193,9 +193,13 @@ func cleanShadowPodAndConfigMap() {
 		shouldDelWithShared := false
 		if opt.Get().ConnectOptions.SharedShadow {
 			// There is always exactly one shadow pod or deployment for connect
-			shouldDelWithShared, err = cluster.Ins().DecreasePodRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
+			if opt.Get().UseShadowDeployment {
+				shouldDelWithShared, err = cluster.Ins().DecreaseDeploymentRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
+			} else {
+				shouldDelWithShared, err = cluster.Ins().DecreasePodRef(opt.Get().RuntimeStore.Shadow, opt.Get().Namespace)
+			}
 			if err != nil {
-				log.Error().Err(err).Msgf("Decrease shadow daemon pod %s ref count failed", opt.Get().RuntimeStore.Shadow)
+				log.Error().Err(err).Msgf("Decrease shadow daemon %s ref count failed", opt.Get().RuntimeStore.Shadow)
 			}
 		}
 		if shouldDelWithShared || !opt.Get().ConnectOptions.SharedShadow {

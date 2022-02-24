@@ -6,6 +6,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -52,12 +53,12 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 	}
 
 	if opt.Get().RuntimeStore.Component == util.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
-		pod, generator, err2 := k.tryGetExistingShadowRelatedObjs(&resourceMeta, &sshKeyMeta)
+		pod, generator, err2 := k.tryGetExistingShadows(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
 		}
 		if pod != nil && generator != nil {
-			return shadowResult(pod, generator)
+			return pod.Status.PodIP, pod.Name, generator.PrivateKeyPath, nil
 		}
 	}
 
@@ -88,7 +89,7 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 	if err != nil {
 		return
 	}
-	return shadowResult(pod, generator)
+	return pod.Status.PodIP, pod.Name, generator.PrivateKeyPath, nil
 }
 
 func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
@@ -142,7 +143,7 @@ func (k *Kubernetes) createShadowDeployment(metaAndSpec *PodMetaAndSpec, sshcm s
 
 // createShadowPod create shadow pod
 func (k *Kubernetes) createShadowPod(metaAndSpec *PodMetaAndSpec, sshcm string) error {
-	pod := createPod(metaAndSpec, true)
+	pod := createPod(metaAndSpec)
 	k.appendSshVolume(&pod.Spec, sshcm)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
@@ -164,10 +165,30 @@ func (k *Kubernetes) appendSshVolume(podSpec *coreV1.PodSpec, sshcm string) {
 	}
 }
 
-func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
-	pod, ignorableErr := k.GetPod(resourceMeta.Name, resourceMeta.Namespace)
-	if ignorableErr != nil {
-		return nil, nil, nil
+func (k *Kubernetes) tryGetExistingShadows(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
+	var app *appV1.Deployment
+	var pod *coreV1.Pod
+	if opt.Get().UseShadowDeployment {
+		app, _ = k.GetDeployment(resourceMeta.Name, resourceMeta.Namespace)
+		if pod == nil {
+			// shared deployment not found is ok, return without error
+			return nil, nil, nil
+		}
+		podList, err := k.GetPodsByLabel(app.Spec.Selector.MatchLabels, resourceMeta.Namespace)
+		if err != nil || len(podList.Items) == 0 {
+			log.Error().Err(err).Msgf("Found shadow deployment '%s' but cannot fetch it's pod", resourceMeta.Name)
+			return nil, nil, err
+		} else if len(podList.Items) > 1 {
+			log.Warn().Msgf("Found more than one shadow pod with labels %v", app.Spec.Selector.MatchLabels)
+			return nil, nil, err
+		}
+		pod = &podList.Items[0]
+	} else {
+		pod, _ = k.GetPod(resourceMeta.Name, resourceMeta.Namespace)
+		if pod == nil {
+			// shared pod not found is ok, return without error
+			return nil, nil, nil
+		}
 	}
 
 	configMap, err := k.GetConfigMap(sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
@@ -192,26 +213,18 @@ func (k *Kubernetes) tryGetExistingShadowRelatedObjs(resourceMeta *ResourceMeta,
 		return nil, nil, err
 	}
 
-	pod, err = k.getShadowPod(resourceMeta)
-	return pod, generator, err
-}
-
-func (k *Kubernetes) getShadowPod(resourceMeta *ResourceMeta) (pod *coreV1.Pod, err error) {
-	podList, err := k.GetPodsByLabel(resourceMeta.Labels, resourceMeta.Namespace)
-	if err != nil {
-		return
-	}
-	if len(podList.Items) == 1 {
+	if opt.Get().UseShadowDeployment {
+		log.Info().Msgf("Found shadow daemon deployment, reuse it")
+		if err = k.IncreaseDeploymentRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
+			return nil, nil, err
+		}
+	} else {
 		log.Info().Msgf("Found shadow daemon pod, reuse it")
 		if err = k.IncreasePodRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
-			return
+			return nil, nil, err
 		}
-		return &(podList.Items[0]), nil
-	} else if len(podList.Items) > 1 {
-		err = fmt.Errorf("found more than one pod with name %s, please make sure these is only one in namespace %s",
-			resourceMeta.Name, resourceMeta.Namespace)
 	}
-	return
+	return pod, generator, nil
 }
 
 func getSSHVolume(volume string) coreV1.Volume {
@@ -234,8 +247,3 @@ func getSSHVolume(volume string) coreV1.Volume {
 	return sshVolume
 }
 
-func shadowResult(pod *coreV1.Pod, generator *util.SSHGenerator) (string, string, string, error) {
-	podIP := pod.Status.PodIP
-	podName := pod.Name
-	return podIP, podName, generator.PrivateKeyPath, nil
-}
