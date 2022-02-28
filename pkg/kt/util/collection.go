@@ -1,6 +1,8 @@
 package util
 
-import "reflect"
+import (
+	"reflect"
+)
 
 // Contains check whether obj exist in target, the type of target can be an array, slice or map
 func Contains(obj interface{}, target interface{}) bool {
@@ -40,7 +42,7 @@ func MapPut(m map[string]string, k, v string) {
 	m[k] = v
 }
 
-func MergeMap(m1 map[string]string, m2 map[string]string) map[string]string {
+func MergeMap(m1, m2 map[string]string) map[string]string {
 	cp := make(map[string]string)
 	for key, value := range m1 {
 		cp[key] = value
@@ -49,4 +51,23 @@ func MergeMap(m1 map[string]string, m2 map[string]string) map[string]string {
 		cp[key] = value
 	}
 	return cp
+}
+
+func ListEquals(src, target []string) bool {
+	if len(src) != len(target) {
+		return false
+	}
+	for i := 0; i < len(src); i++ {
+		found := false
+		for j := 0; j < len(target); j++ {
+			if src[i] == target[j] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }

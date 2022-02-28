@@ -39,7 +39,7 @@ func (k *Kubernetes) ClusterCidrs(namespace string) (cidrs []string, err error) 
 			}
 		}
 	}
-	return
+	return calculateMinimalIpRange(cidrs), nil
 }
 
 func getPodCidrs(k kubernetes.Interface, namespace string) ([]string, error) {
@@ -82,7 +82,7 @@ func getPodCidrByInstance(k kubernetes.Interface, namespace string) ([]string, e
 		}
 	}
 
-	return calculateMinimalIpRange(ips), nil
+	return ips, nil
 }
 
 func getServiceCidr(k kubernetes.Interface, namespace string) ([]string, error) {
@@ -98,7 +98,7 @@ func getServiceCidr(k kubernetes.Interface, namespace string) ([]string, error) 
 		}
 	}
 
-	return calculateMinimalIpRange(ips), nil
+	return ips, nil
 }
 
 // fetchServiceList try list service at cluster scope. fallback to namespace scope

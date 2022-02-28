@@ -2,6 +2,7 @@ package cluster
 
 import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/stretchr/testify/require"
 	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -160,18 +161,8 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			realRange := calculateMinimalIpRange(test.ips)
-			require.Equal(t, len(test.miniRange), len(realRange), "range length should equal for %s", test.name)
-			for i := 0; i < len(realRange); i++ {
-				found := false
-				for j := 0; j < len(test.miniRange); j++ {
-					if realRange[i] == test.miniRange[j] {
-						found = true
-						break
-					}
-				}
-				if !found {
-					t.Fatalf("range %s not found for %s", realRange[i], test.name)
-				}
+			if !util.ListEquals(test.miniRange, realRange) {
+				t.Fatalf("range %v not as expect as %v", realRange, test.miniRange)
 			}
 		})
 	}
