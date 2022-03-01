@@ -81,12 +81,12 @@ func dropHosts(rawLines []string, namespaceToDrop string) ([]string, []string, e
 		} else if l == ktHostsEscapeEnd {
 			escapeEnd = i
 		} else if escapeBegin >= 0 && escapeEnd < 0 && namespaceToDrop != "" {
-			if  !strings.HasSuffix(l, midDomain) && !strings.HasSuffix(l, fullDomain) {
-				recordsToKeep = append(recordsToKeep, l)
-			} else if keepShortDomain {
-				if ok, err := regexp.MatchString(".+ [^.]+$", l); ok && err == nil {
+			if ok, err := regexp.MatchString(".+ [^.]+$", l); ok && err == nil {
+				if keepShortDomain {
 					recordsToKeep = append(recordsToKeep, l)
 				}
+			} else if !strings.HasSuffix(l, midDomain) && !strings.HasSuffix(l, fullDomain) {
+				recordsToKeep = append(recordsToKeep, l)
 			}
 		}
 	}

@@ -15,7 +15,6 @@ import (
 )
 
 func setupDns(shadowPodName, shadowPodIp string) error {
-	namespace := opt.Get().Namespace
 	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
 		log.Info().Msgf("Setting up dns in hosts mode")
 		dump2HostsNamespaces := ""
@@ -23,7 +22,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
 		}
-		if err := dumpToHost(namespace, dump2HostsNamespaces); err != nil {
+		if err := dumpToHost(dump2HostsNamespaces); err != nil {
 			return err
 		}
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
@@ -31,11 +30,11 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		return dns.Ins().SetNameServer(shadowPodIp)
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 		log.Info().Msgf("Setting up dns in local mode")
-		svcToIp, headlessPods := getServiceHosts(namespace)
+		svcToIp, headlessPods := getServiceHosts(opt.Get().Namespace, true)
 		if err := dns.DumpHosts(svcToIp, ""); err != nil {
 			return err
 		}
-		watchServicesAndPods(namespace, svcToIp, headlessPods)
+		watchServicesAndPods(opt.Get().Namespace, svcToIp, headlessPods, true)
 
 		forwardedPodPort, err := util.GetRandomTcpPort()
 		if err != nil {
@@ -61,32 +60,32 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 	return nil
 }
 
-func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessPods []string) {
+func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessPods []string, shortDomainOnly bool) {
 	setupTime := time.Now().Unix()
 	go cluster.Ins().WatchService("", namespace,
 		func(svc *coreV1.Service) {
 			// ignore add service event during watch setup
 			if time.Now().Unix()-setupTime > 3 {
-				svcToIp, headlessPods = getServiceHosts(namespace)
+				svcToIp, headlessPods = getServiceHosts(namespace, shortDomainOnly)
 				_ = dns.DumpHosts(svcToIp, namespace)
 			}
 		},
 		func(svc *coreV1.Service) {
-			svcToIp, headlessPods = getServiceHosts(namespace)
+			svcToIp, headlessPods = getServiceHosts(namespace, shortDomainOnly)
 			_ = dns.DumpHosts(svcToIp, namespace)
 		}, nil)
 	go cluster.Ins().WatchPod("", namespace, nil, func(pod *coreV1.Pod) {
 		if util.Contains(pod.Name, headlessPods) {
 			// it may take some time for new pod get assign an ip
 			time.Sleep(5 * time.Second)
-			svcToIp, headlessPods = getServiceHosts(namespace)
+			svcToIp, headlessPods = getServiceHosts(namespace, shortDomainOnly)
 			_ = dns.DumpHosts(svcToIp, namespace)
 		}
 	}, nil)
 }
 
-func dumpToHost(currentNamespace, targetNamespaces string) error {
-	namespacesToDump := []string{currentNamespace}
+func dumpToHost(targetNamespaces string) error {
+	namespacesToDump := []string{opt.Get().Namespace}
 	if targetNamespaces != "" {
 		namespacesToDump = []string{}
 		for _, ns := range strings.Split(targetNamespaces, ",") {
@@ -96,19 +95,16 @@ func dumpToHost(currentNamespace, targetNamespaces string) error {
 	hosts := map[string]string{}
 	for _, namespace := range namespacesToDump {
 		log.Debug().Msgf("Search service in %s namespace ...", namespace)
-		svcToIp, _ := getServiceHosts(namespace)
+		svcToIp, headlessPods := getServiceHosts(namespace, false)
+		watchServicesAndPods(namespace, svcToIp, headlessPods, false)
 		for svc, ip := range svcToIp {
-			if namespace == currentNamespace {
-				hosts[svc] = ip
-			}
-			hosts[fmt.Sprintf(".%s", namespace)] = ip
-			hosts[fmt.Sprintf(".%s.svc.%s", namespace, opt.Get().ConnectOptions.ClusterDomain)] = ip
+			hosts[svc] = ip
 		}
 	}
 	return dns.DumpHosts(hosts, "")
 }
 
-func getServiceHosts(namespace string) (map[string]string, []string) {
+func getServiceHosts(namespace string, shortDomainOnly bool) (map[string]string, []string) {
 	hosts := make(map[string]string)
 	podNames := make([]string, 0)
 	services, err := cluster.Ins().GetAllServiceInNamespace(namespace)
@@ -131,7 +127,15 @@ func getServiceHosts(namespace string) (map[string]string, []string) {
 			} else {
 				log.Debug().Msgf("Service found: %s.%s %s", service.Name, namespace, ip)
 			}
-			hosts[service.Name] = ip
+			if shortDomainOnly {
+				hosts[service.Name] = ip
+			} else {
+				if namespace == opt.Get().Namespace {
+					hosts[service.Name] = ip
+				}
+				hosts[fmt.Sprintf("%s.%s", service.Name, namespace)] = ip
+				hosts[fmt.Sprintf("%s.%s.svc.%s", service.Name, namespace, opt.Get().ConnectOptions.ClusterDomain)] = ip
+			}
 		}
 	}
 	return hosts, podNames
