@@ -162,11 +162,12 @@ func (k *Kubernetes) tryGetExistingShadows(resourceMeta *ResourceMeta, sshKeyMet
 	var app *appV1.Deployment
 	var pod *coreV1.Pod
 	if opt.Get().UseShadowDeployment {
-		app, _ = k.GetDeployment(resourceMeta.Name, resourceMeta.Namespace)
-		if pod == nil {
+		app2, err := k.GetDeployment(resourceMeta.Name, resourceMeta.Namespace)
+		if err != nil {
 			// shared deployment not found is ok, return without error
 			return nil, nil, nil
 		}
+		app = app2
 		podList, err := k.GetPodsByLabel(app.Spec.Selector.MatchLabels, resourceMeta.Namespace)
 		if err != nil || len(podList.Items) == 0 {
 			log.Error().Err(err).Msgf("Found shadow deployment '%s' but cannot fetch it's pod", resourceMeta.Name)
@@ -177,18 +178,19 @@ func (k *Kubernetes) tryGetExistingShadows(resourceMeta *ResourceMeta, sshKeyMet
 		}
 		pod = &podList.Items[0]
 	} else {
-		pod, _ = k.GetPod(resourceMeta.Name, resourceMeta.Namespace)
-		if pod == nil {
+		pod2, err := k.GetPod(resourceMeta.Name, resourceMeta.Namespace)
+		if err != nil {
 			// shared pod not found is ok, return without error
 			return nil, nil, nil
 		}
+		pod = pod2
 	}
 
 	configMap, err := k.GetConfigMap(sshKeyMeta.SshConfigMapName, resourceMeta.Namespace)
 	if err != nil {
 		if k8sErrors.IsNotFound(err) {
 			if pod.DeletionTimestamp == nil {
-				log.Error().Msgf("Found shadow Pod without ConfigMap. Please delete the pod '%s'", resourceMeta.Name)
+				log.Error().Msgf("Found shadow pod without configmap. Please delete the pod '%s'", resourceMeta.Name)
 			} else {
 				_, err = k.WaitPodTerminate(resourceMeta.Name, resourceMeta.Namespace)
 				if k8sErrors.IsNotFound(err) {

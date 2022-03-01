@@ -156,9 +156,8 @@ func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool
 	}
 	refCount := pod.Annotations[util.KtRefCount]
 	if refCount == "1" {
-		cleanup = true
 		log.Info().Msgf("Pod %s has only one ref, gonna remove", name)
-		err = k.RemovePod(pod.Name, pod.Namespace)
+		return true, nil
 	} else {
 		count, err2 := decreaseRef(refCount)
 		if err2 != nil {
@@ -167,8 +166,8 @@ func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool
 		log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
 		util.MapPut(pod.Annotations, util.KtRefCount, count)
 		_, err = k.UpdatePod(pod)
+		return
 	}
-	return
 }
 
 func (k *Kubernetes) waitPodsReady(labels map[string]string, namespace string, timeoutSec int, times int) ([]coreV1.Pod, error) {

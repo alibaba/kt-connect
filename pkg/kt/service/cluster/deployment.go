@@ -68,9 +68,8 @@ func (k *Kubernetes) DecreaseDeploymentRef(name string, namespace string) (clean
 	}
 	refCount := app.Annotations[util.KtRefCount]
 	if refCount == "1" {
-		cleanup = true
 		log.Info().Msgf("Deployment %s has only one ref, gonna remove", name)
-		err = k.RemoveDeployment(app.Name, app.Namespace)
+		return true, nil
 	} else {
 		count, err2 := decreaseRef(refCount)
 		if err2 != nil {
@@ -79,8 +78,8 @@ func (k *Kubernetes) DecreaseDeploymentRef(name string, namespace string) (clean
 		log.Info().Msgf("Deployment %s has %s refs, decrease to %s", app.Name, refCount, count)
 		util.MapPut(app.Annotations, util.KtRefCount, count)
 		_, err = k.UpdateDeployment(app)
+		return
 	}
-	return
 }
 
 func (k *Kubernetes) UpdateDeploymentHeartBeat(name, namespace string) {
