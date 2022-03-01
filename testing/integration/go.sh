@@ -160,9 +160,9 @@ function prepare_cluster() {
 function test_ktctl_connect() {
   # Test connect
   if [ "${DOCKER_HOST}" == "" ]; then
-    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --dnsMode ${DNS_MODE} >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --dnsMode ${DNS_MODE} --dnsCacheTtl 10 >/tmp/kt-it-connect.log 2>&1 &
   else
-    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --dnsMode ${DNS_MODE} --excludeIps ${DOCKER_HOST#*@} >/tmp/kt-it-connect.log 2>&1 &
+    sudo ktctl -d -n ${NS} -i ${SHADOW_IMAGE} -f connect --mode ${CONNECT_MODE} --dnsMode ${DNS_MODE} --dnsCacheTtl 10 --excludeIps ${DOCKER_HOST#*@} >/tmp/kt-it-connect.log 2>&1 &
   fi
   wait_for_pod kt-connect 1
   check_job connect

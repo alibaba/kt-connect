@@ -4,18 +4,21 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/gofrs/flock"
 	"github.com/rs/zerolog/log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 	"time"
 )
 
 const ktHostsEscapeBegin = "# Kt Hosts Begin"
 const ktHostsEscapeEnd = "# Kt Hosts End"
 
-// TODO: this is a temporary solution to avoid dumping after dropped
+// TODO: this is a temporary solution to avoid dumping after cleanup triggered
 var doNotDump = false
 
 // DropHosts remove hosts domain record added by kt
@@ -26,7 +29,7 @@ func DropHosts() {
 		log.Error().Err(err).Msgf("Failed to load hosts file")
 		return
 	}
-	linesAfterDrop, err := dropHosts(lines)
+	linesAfterDrop, _, err := dropHosts(lines, "")
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to parse hosts file")
 		return
@@ -42,7 +45,7 @@ func DropHosts() {
 }
 
 // DumpHosts dump service domain to hosts file
-func DumpHosts(hostsMap map[string]string) error {
+func DumpHosts(hostsMap map[string]string, namespaceToDrop string) error {
 	if doNotDump {
 		return nil
 	}
@@ -51,12 +54,12 @@ func DumpHosts(hostsMap map[string]string) error {
 		log.Error().Err(err).Msgf("Failed to load hosts file")
 		return err
 	}
-	linesBeforeDump, err := dropHosts(lines)
+	linesBeforeDump, linesToKeep, err := dropHosts(lines, namespaceToDrop)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to parse hosts file")
 		return err
 	}
-	if err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap))); err != nil {
+	if err = updateHostsFile(mergeLines(linesBeforeDump, dumpHosts(hostsMap, linesToKeep))); err != nil {
 		log.Warn().Msgf("Failed to dump hosts file")
 		log.Debug().Msg(err.Error())
 		return err
@@ -65,18 +68,30 @@ func DumpHosts(hostsMap map[string]string) error {
 	return nil
 }
 
-func dropHosts(rawLines []string) ([]string, error) {
+func dropHosts(rawLines []string, namespaceToDrop string) ([]string, []string, error) {
 	escapeBegin := -1
 	escapeEnd := -1
+	midDomain := fmt.Sprintf(".%s", namespaceToDrop)
+	fullDomain := fmt.Sprintf(".%s.svc.%s", namespaceToDrop, opt.Get().ConnectOptions.ClusterDomain)
+	keepShortDomain := namespaceToDrop != opt.Get().Namespace
+	recordsToKeep := make([]string, 0)
 	for i, l := range rawLines {
 		if l == ktHostsEscapeBegin {
 			escapeBegin = i
 		} else if l == ktHostsEscapeEnd {
 			escapeEnd = i
+		} else if escapeBegin >= 0 && escapeEnd < 0 && namespaceToDrop != "" {
+			if  !strings.HasSuffix(l, midDomain) && !strings.HasSuffix(l, fullDomain) {
+				recordsToKeep = append(recordsToKeep, l)
+			} else if keepShortDomain {
+				if ok, err := regexp.MatchString(".+ [^.]+$", l); ok && err == nil {
+					recordsToKeep = append(recordsToKeep, l)
+				}
+			}
 		}
 	}
 	if escapeEnd < escapeBegin {
-		return nil, fmt.Errorf("invalid hosts file: escapeBegin=%d, escapeEnd=%d", escapeBegin, escapeEnd)
+		return nil, nil, fmt.Errorf("invalid hosts file: recordBegin=%d, recordEnd=%d", escapeBegin, escapeEnd)
 	}
 
 	if escapeBegin >= 0 && escapeEnd > 0 {
@@ -87,19 +102,24 @@ func dropHosts(rawLines []string) ([]string, error) {
 		if escapeEnd < len(rawLines)-1 {
 			copy(linesAfterDrop[escapeBegin:], rawLines[escapeEnd+1:])
 		}
-		return linesAfterDrop, nil
+		return linesAfterDrop, recordsToKeep, nil
+	} else if escapeBegin >= 0 || escapeEnd > 0 {
+		return nil, nil, fmt.Errorf("invalid hosts file: recordBegin=%d, recordEnd=%d", escapeBegin, escapeEnd)
 	} else {
-		return rawLines, nil
+		return rawLines, []string{}, nil
 	}
 }
 
-func dumpHosts(hostsMap map[string]string) []string {
+func dumpHosts(hostsMap map[string]string, linesToKeep []string) []string {
 	var lines []string
 	lines = append(lines, ktHostsEscapeBegin)
 	for host, ip := range hostsMap {
 		if ip != "" {
 			lines = append(lines, fmt.Sprintf("%s %s", ip, host))
 		}
+	}
+	for _, l := range linesToKeep {
+		lines = append(lines, l)
 	}
 	lines = append(lines, ktHostsEscapeEnd)
 	return lines

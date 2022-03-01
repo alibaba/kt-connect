@@ -23,7 +23,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
 			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
 		}
-		if err := dumpToHost(namespace, dump2HostsNamespaces, opt.Get().ConnectOptions.ClusterDomain); err != nil {
+		if err := dumpToHost(namespace, dump2HostsNamespaces); err != nil {
 			return err
 		}
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
@@ -31,28 +31,11 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		return dns.Ins().SetNameServer(shadowPodIp)
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
 		log.Info().Msgf("Setting up dns in local mode")
-		headlessPods, err := dumpCurrentNamespaceToHost(namespace)
-		if err != nil {
+		svcToIp, headlessPods := getServiceHosts(namespace)
+		if err := dns.DumpHosts(svcToIp, ""); err != nil {
 			return err
 		}
-		setupTime := time.Now().Unix()
-		go cluster.Ins().WatchService("", namespace,
-			func(svc *coreV1.Service) {
-				// ignore add service event during watch setup
-				if time.Now().Unix() - setupTime > 3 {
-					headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
-				}
-			},
-			func(svc *coreV1.Service) {
-				headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
-			}, nil)
-		go cluster.Ins().WatchPod("", namespace, nil, func(pod *coreV1.Pod) {
-			if util.Contains(pod.Name, headlessPods) {
-				// it may take some time for new pod get assign an ip
-				time.Sleep(5 * time.Second)
-				headlessPods, _ = dumpCurrentNamespaceToHost(namespace)
-			}
-		}, nil)
+		watchServicesAndPods(namespace, svcToIp, headlessPods)
 
 		forwardedPodPort, err := util.GetRandomTcpPort()
 		if err != nil {
@@ -78,7 +61,31 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 	return nil
 }
 
-func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error {
+func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessPods []string) {
+	setupTime := time.Now().Unix()
+	go cluster.Ins().WatchService("", namespace,
+		func(svc *coreV1.Service) {
+			// ignore add service event during watch setup
+			if time.Now().Unix()-setupTime > 3 {
+				svcToIp, headlessPods = getServiceHosts(namespace)
+				_ = dns.DumpHosts(svcToIp, namespace)
+			}
+		},
+		func(svc *coreV1.Service) {
+			svcToIp, headlessPods = getServiceHosts(namespace)
+			_ = dns.DumpHosts(svcToIp, namespace)
+		}, nil)
+	go cluster.Ins().WatchPod("", namespace, nil, func(pod *coreV1.Pod) {
+		if util.Contains(pod.Name, headlessPods) {
+			// it may take some time for new pod get assign an ip
+			time.Sleep(5 * time.Second)
+			svcToIp, headlessPods = getServiceHosts(namespace)
+			_ = dns.DumpHosts(svcToIp, namespace)
+		}
+	}, nil)
+}
+
+func dumpToHost(currentNamespace, targetNamespaces string) error {
 	namespacesToDump := []string{currentNamespace}
 	if targetNamespaces != "" {
 		namespacesToDump = []string{}
@@ -94,17 +101,11 @@ func dumpToHost(currentNamespace, targetNamespaces, clusterDomain string) error 
 			if namespace == currentNamespace {
 				hosts[svc] = ip
 			}
-			hosts[svc+"."+namespace] = ip
-			hosts[svc+"."+namespace+".svc."+clusterDomain] = ip
+			hosts[fmt.Sprintf(".%s", namespace)] = ip
+			hosts[fmt.Sprintf(".%s.svc.%s", namespace, opt.Get().ConnectOptions.ClusterDomain)] = ip
 		}
 	}
-	return dns.DumpHosts(hosts)
-}
-
-func dumpCurrentNamespaceToHost(currentNamespace string) ([]string, error) {
-	log.Debug().Msgf("Search service in %s namespace ...", currentNamespace)
-	svcToIp, headlessPods := getServiceHosts(currentNamespace)
-	return headlessPods, dns.DumpHosts(svcToIp)
+	return dns.DumpHosts(hosts, "")
 }
 
 func getServiceHosts(namespace string) (map[string]string, []string) {

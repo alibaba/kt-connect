@@ -125,7 +125,7 @@ func TestDropHosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			linesAfterDrop, _ := dropHosts(tt.args.linesBeforeDrop)
+			linesAfterDrop, _, _ := dropHosts(tt.args.linesBeforeDrop, "")
 			require.Equal(t, len(tt.args.linesAfterDrop), len(linesAfterDrop),
 				"should has %d lines, but got %d", len(tt.args.linesAfterDrop), len(linesAfterDrop))
 			for i, line := range tt.args.linesAfterDrop {
