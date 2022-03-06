@@ -143,8 +143,7 @@ func RecoverOriginalService(svcName, namespace string) {
 			log.Warn().Msgf("No selector annotation found in service %s, skipping", svcName)
 			return
 		}
-		err = json.Unmarshal([]byte(originSelector), &selector)
-		if err != nil {
+		if err = json.Unmarshal([]byte(originSelector), &selector); err != nil {
 			log.Error().Err(err).Msgf("Failed to unmarshal original selector of service %s", svcName)
 			return
 		}

@@ -28,7 +28,8 @@ func BySelector(resourceName string) error {
 
 	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
 		if svc.Spec.Selector[util.KtRole] == util.RoleExchangeShadow {
-			return fmt.Errorf("service '%s' is already exchanging by another user, cannot apply exchange", svc.Name)
+			return fmt.Errorf("service '%s' is already exchanging by another user%s, cannot apply exchange",
+				svc.Name, general.GetOccupiedUser(svc.Spec.Selector))
 		} else if svc.Spec.Selector[util.KtRole] == util.RoleRouter {
 			return fmt.Errorf("another user is meshing service '%s', cannot apply exchange", svc.Name)
 		} else {

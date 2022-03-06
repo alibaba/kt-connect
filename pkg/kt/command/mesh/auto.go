@@ -23,7 +23,8 @@ func AutoMesh(svc *coreV1.Service) error {
 	defer general.UnlockService(svc.Name, opt.Get().Namespace)
 
 	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" && svc.Spec.Selector[util.KtRole] == util.RoleExchangeShadow {
-		return fmt.Errorf("another user is exchanging service '%s', cannot apply mesh", svc.Name)
+		return fmt.Errorf("another user%s is exchanging service '%s', cannot apply mesh",
+			general.GetOccupiedUser(svc.Spec.Selector), svc.Name)
 	}
 
 	// Parse or generate mesh kv

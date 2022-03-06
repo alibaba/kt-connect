@@ -3,6 +3,7 @@ package general
 import (
 	"encoding/json"
 	"fmt"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -189,4 +190,16 @@ func getDeploymentByService(svc *coreV1.Service, namespace string) (*appV1.Deplo
 		}
 	}
 	return nil, fmt.Errorf("failed to find deployment for service '%s', with selector '%v'", svc.Name, svc.Spec.Selector)
+}
+
+func GetOccupiedUser(labels map[string]string) string {
+	podList, err3 := cluster.Ins().GetPodsByLabel(labels, opt.Get().Namespace)
+	if err3 == nil && len(podList.Items) > 0 && podList.Items[0].Annotations != nil && podList.Items[0].Annotations[util.KtUser] != "" {
+		return " (" + podList.Items[0].Annotations[util.KtUser] + ")"
+	}
+	appList, err := cluster.Ins().GetDeploymentsByLabel(labels, opt.Get().Namespace)
+	if err == nil && len(appList.Items) > 0 && appList.Items[0].Annotations != nil && appList.Items[0].Annotations[util.KtUser] != "" {
+		return " (" + appList.Items[0].Annotations[util.KtUser] + ")"
+	}
+	return ""
 }
