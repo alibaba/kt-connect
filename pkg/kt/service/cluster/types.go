@@ -49,7 +49,7 @@ type KubernetesInterface interface {
 	RemoveConfigMap(name, namespace string) (err error)
 	UpdateConfigMapHeartBeat(name, namespace string)
 
-	GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []coreV1.Service, error)
+	GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []appV1.Deployment, []coreV1.Service, error)
 	GetAllNamespaces() (*coreV1.NamespaceList, error)
 	ClusterCidrs(namespace string) (cidrs []string, err error)
 }

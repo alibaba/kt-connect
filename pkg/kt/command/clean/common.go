@@ -6,6 +6,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ type ResourceToClean struct {
 	PodsToDelete        []string
 	ServicesToDelete    []string
 	ConfigMapsToDelete  []string
+	DeploymentsToDelete []string
 	DeploymentsToScale  map[string]int32
 	ServicesToRecover   []string
 	ServicesToUnlock   []string
@@ -53,6 +55,13 @@ func AnalysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64,
 	lastHeartBeat := util.ParseTimestamp(cf.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, cf.Name)
+	}
+}
+
+func AnalysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+	lastHeartBeat := util.ParseTimestamp(app.Annotations[util.KtLastHeartBeat])
+	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+		resourceToClean.DeploymentsToDelete = append(resourceToClean.DeploymentsToDelete, app.Name)
 	}
 }
 
@@ -125,6 +134,15 @@ func TidyResource(r ResourceToClean, namespace string) {
 			log.Info().Msgf(" * %s", name)
 		}
 	}
+	log.Info().Msgf("Deleting %d unavailing deployments", len(r.DeploymentsToDelete))
+	for _, name := range r.DeploymentsToDelete {
+		err := cluster.Ins().RemoveDeployment(name, namespace)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to delete deployment %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
+		}
+	}
 	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		err := cluster.Ins().ScaleTo(name, namespace, &replica)
@@ -172,6 +190,10 @@ func PrintResourceToClean(r ResourceToClean) {
 	for _, name := range r.ConfigMapsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
+	log.Info().Msgf("Find %d unavailing deployments to delete:", len(r.DeploymentsToScale))
+	for _, name := range r.DeploymentsToDelete {
+		log.Info().Msgf(" * %s", name)
+	}
 	log.Info().Msgf("Find %d exchanged deployments to recover:", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
 		log.Info().Msgf(" * %s -> %d", name, replica)
@@ -195,10 +217,11 @@ func isExpired(lastHeartBeat, cleanThresholdInMinus int64) bool {
 }
 
 func IsEmpty(r ResourceToClean) bool {
-	return len(r.ServicesToDelete) == 0 &&
-		len(r.PodsToDelete) == 0 &&
+	return len(r.PodsToDelete) == 0 &&
 		len(r.ConfigMapsToDelete) == 0 &&
+		len(r.DeploymentsToDelete) == 0 &&
+		len(r.DeploymentsToScale) == 0 &&
+		len(r.ServicesToDelete) == 0 &&
 		len(r.ServicesToUnlock) == 0 &&
-		len(r.ServicesToRecover) == 0 &&
-		len(r.DeploymentsToScale) == 0
+		len(r.ServicesToRecover) == 0
 }

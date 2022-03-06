@@ -39,7 +39,7 @@ func NewCleanCommand(action ActionInterface) urfave.Command {
 // Clean delete unavailing shadow pods
 func (action *Action) Clean() error {
 	cleanPidFiles()
-	pods, cfs, svcs, err := cluster.Ins().GetKtResources(opt.Get().Namespace)
+	pods, cfs, apps, svcs, err := cluster.Ins().GetKtResources(opt.Get().Namespace)
 	if err != nil {
 		return err
 	}
@@ -48,6 +48,7 @@ func (action *Action) Clean() error {
 		PodsToDelete: make([]string, 0),
 		ServicesToDelete: make([]string, 0),
 		ConfigMapsToDelete: make([]string, 0),
+		DeploymentsToDelete: make([]string, 0),
 		DeploymentsToScale: make(map[string]int32),
 		ServicesToRecover: make([]string, 0),
 		ServicesToUnlock: make([]string, 0),
@@ -57,6 +58,9 @@ func (action *Action) Clean() error {
 	}
 	for _, cf := range cfs {
 		clean.AnalysisExpiredConfigmaps(cf, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
+	for _, app := range apps {
+		clean.AnalysisExpiredDeployments(app, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
 	}
 	for _, svc := range svcs {
 		clean.AnalysisExpiredServices(svc, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
