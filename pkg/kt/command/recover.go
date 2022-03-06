@@ -45,27 +45,27 @@ func (action *Action) Recover(serviceName string) error {
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch service %s", serviceName)
 	}
-	if svc.Annotations == nil {
-		log.Info().Msgf("Service %s is clean and tidy, nothing would be done", serviceName)
-		return nil
-	}
 
-	needUnlock := false
-	if _, ok := svc.Annotations[util.KtLock]; ok {
-		log.Info().Msgf("Unlocking service %s", serviceName)
-		delete(svc.Annotations, util.KtLock)
-		needUnlock = true
+	apps, err := cluster.Ins().GetDeploymentsByLabel(svc.Spec.Selector, svc.Namespace)
+	if err != nil {
+		return err
 	}
-
-	apps, err2 := cluster.Ins().GetDeploymentsByLabel(svc.Spec.Selector, opt.Get().Namespace)
-	if err2 != nil {
-		return err2
-	}
-	pods, err2 := cluster.Ins().GetPodsByLabel(svc.Spec.Selector, opt.Get().Namespace)
-	if err2 != nil {
-		return err2
+	pods, err := cluster.Ins().GetPodsByLabel(svc.Spec.Selector, svc.Namespace)
+	if err != nil {
+		return err
 	}
 	targetDeployment, targetPod, targetRole := fetchTargetRole(apps, pods)
+
+	if svc.Annotations == nil {
+		// put an empty map to avoid npe
+		svc.Annotations = map[string]string{}
+		if targetRole == "" {
+			log.Info().Msgf("Service %s is clean and tidy, nothing would be done", serviceName)
+			return nil
+		}
+	}
+
+	needUnlock := checkAndMarkUnlock(serviceName, svc)
 
 	if originSelector, ok := svc.Annotations[util.KtSelector]; ok {
 		var selector map[string]string
@@ -99,6 +99,15 @@ func (action *Action) Recover(serviceName string) error {
 	return nil
 }
 
+func checkAndMarkUnlock(serviceName string, svc *coreV1.Service) bool {
+	if _, ok := svc.Annotations[util.KtLock]; ok {
+		log.Info().Msgf("Unlocking service %s", serviceName)
+		delete(svc.Annotations, util.KtLock)
+		return true
+	}
+	return false
+}
+
 func unlockServiceOnly(svc *coreV1.Service) error {
 	_, err := cluster.Ins().UpdateService(svc)
 	return err
@@ -108,9 +117,16 @@ func recoverExchangedByScaleService(svc *coreV1.Service, deployment *appV1.Deplo
 	if _, err := cluster.Ins().UpdateService(svc); err != nil {
 		return err
 	}
-	config := util.String2Map(pod.Annotations[util.KtConfig])
-	if len(config) == 0 {
+	config := make(map[string]string)
+	if pod != nil && pod.Annotations != nil && pod.DeletionTimestamp == nil {
+		config = util.String2Map(pod.Annotations[util.KtConfig])
+		log.Info().Msgf("Deleting shadow pod %s", pod.Name)
+		_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
+	}
+	if len(config) == 0 && deployment != nil && deployment.Annotations != nil {
 		config = util.String2Map(deployment.Annotations[util.KtConfig])
+		log.Info().Msgf("Deleting shadow deployment %s", deployment.Name)
+		_ = cluster.Ins().RemoveDeployment(deployment.Name, deployment.Namespace)
 	}
 	replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
 	app := config["app"]
@@ -130,9 +146,11 @@ func recoverServiceSelectorOnly(svc *coreV1.Service, deployment *appV1.Deploymen
 		return err
 	}
 	if deployment != nil {
+		log.Info().Msgf("Deleting shadow deployment %s", deployment.Name)
 		_ = cluster.Ins().RemoveDeployment(deployment.Name, deployment.Namespace)
 	}
 	if pod != nil {
+		log.Info().Msgf("Deleting shadow pod %s", pod.Name)
 		_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
 	}
 	return nil
@@ -149,16 +167,16 @@ func recoverMeshedByAutoService(svc *coreV1.Service) error {
 func fetchTargetRole(apps *appV1.DeploymentList, pods *coreV1.PodList) (*appV1.Deployment, *coreV1.Pod, string) {
 	if len(apps.Items) > 0 {
 		for _, app := range apps.Items {
-			if app.Annotations != nil {
-				if role, ok2 := app.Annotations[util.KtRole]; ok2 {
+			if app.Labels != nil {
+				if role, ok2 := app.Labels[util.KtRole]; ok2 {
 					return &app, nil, role
 				}
 			}
 		}
 	} else if len(pods.Items) > 0 {
 		for _, pod := range pods.Items {
-			if pod.Annotations != nil {
-				if role, ok2 := pod.Annotations[util.KtRole]; ok2 {
+			if pod.Labels != nil {
+				if role, ok2 := pod.Labels[util.KtRole]; ok2 {
 					return nil, &pod, role
 				}
 			}
