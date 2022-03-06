@@ -30,22 +30,7 @@ func AnalysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceTo
 		if pod.DeletionTimestamp == nil {
 			resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
 		}
-		log.Debug().Msgf("   role %s, config: %s", pod.Labels[util.KtRole], pod.Annotations[util.KtConfig])
-		config := util.String2Map(pod.Annotations[util.KtConfig])
-		// scale exchange
-		if pod.Labels[util.KtRole] == util.RoleExchangeShadow {
-			replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
-			app := config["app"]
-			if replica > 0 && app != "" {
-				resourceToClean.DeploymentsToScale[app] = int32(replica)
-			}
-		}
-		// auto mesh and selector exchange
-		if pod.Labels[util.KtRole] == util.RoleRouter || pod.Labels[util.KtRole] == util.RoleExchangeShadow {
-			if service, ok := config["service"]; ok {
-				resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
-			}
-		}
+		analysisConfigAnnotation(pod.Labels[util.KtRole], util.String2Map(pod.Annotations[util.KtConfig]), resourceToClean)
 	} else {
 		log.Debug().Msgf("Pod %s does no have heart beat annotation", pod.Name)
 	}
@@ -62,6 +47,7 @@ func AnalysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int6
 	lastHeartBeat := util.ParseTimestamp(app.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.DeploymentsToDelete = append(resourceToClean.DeploymentsToDelete, app.Name)
+		analysisConfigAnnotation(app.Labels[util.KtRole], util.String2Map(app.Annotations[util.KtConfig]), resourceToClean)
 	}
 }
 
@@ -92,6 +78,24 @@ func AnalysisLockAndOrphanServices(svcs []coreV1.Service, resourceToClean *Resou
 					resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, svc.Name)
 				}
 			}
+		}
+	}
+}
+
+func analysisConfigAnnotation(role string, config map[string]string, resourceToClean *ResourceToClean) {
+	log.Debug().Msgf("   role %s, config: %v", role, config)
+	// scale exchange
+	if role == util.RoleExchangeShadow {
+		replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
+		app := config["app"]
+		if replica > 0 && app != "" {
+			resourceToClean.DeploymentsToScale[app] = int32(replica)
+		}
+	}
+	// auto mesh and selector exchange
+	if role == util.RoleRouter || role == util.RoleExchangeShadow {
+		if service, ok := config["service"]; ok {
+			resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
 		}
 	}
 }
