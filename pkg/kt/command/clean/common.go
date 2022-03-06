@@ -194,7 +194,7 @@ func PrintResourceToClean(r ResourceToClean) {
 	for _, name := range r.ConfigMapsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}
-	log.Info().Msgf("Find %d unavailing deployments to delete:", len(r.DeploymentsToScale))
+	log.Info().Msgf("Find %d unavailing deployments to delete:", len(r.DeploymentsToDelete))
 	for _, name := range r.DeploymentsToDelete {
 		log.Info().Msgf(" * %s", name)
 	}

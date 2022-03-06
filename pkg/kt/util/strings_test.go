@@ -15,6 +15,13 @@ func TestString2Map(t *testing.T) {
 		want map[string]string
 	}{
 		{
+			name: "should handle empty string",
+			args: args{
+				str: "",
+			},
+			want: map[string]string{},
+		},
+		{
 			name: "should covert to key value",
 			args: args{
 				str: "k1=v1,k2=v2",

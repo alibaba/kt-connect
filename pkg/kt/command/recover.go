@@ -1,6 +1,7 @@
 package command
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -11,6 +12,7 @@ import (
 	urfave "github.com/urfave/cli"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	"strconv"
 )
 
 // NewRecoverCommand return new recover command
@@ -63,9 +65,14 @@ func (action *Action) Recover(serviceName string) error {
 	if err2 != nil {
 		return err2
 	}
-	targetRole := fetchTargetRole(apps, pods)
+	targetDeployment, targetPod, targetRole := fetchTargetRole(apps, pods)
 
-	if _, ok := svc.Annotations[util.KtSelector]; ok {
+	if originSelector, ok := svc.Annotations[util.KtSelector]; ok {
+		var selector map[string]string
+		if err = json.Unmarshal([]byte(originSelector), &selector); err != nil {
+			return fmt.Errorf("service %s has %s annotation, but selecting nothing", serviceName, util.KtSelector)
+		}
+		svc.Spec.Selector = selector
 		delete(svc.Annotations, util.KtSelector)
 		if targetRole == util.RoleRouter {
 			log.Info().Msgf("Service %s is meshed, recovering", serviceName)
@@ -75,15 +82,15 @@ func (action *Action) Recover(serviceName string) error {
 			return recoverExchangedBySelectorService(svc)
 		} else {
 			log.Info().Msgf("Service %s is selecting non-kt pods, recovering", serviceName)
-			return recoverServiceSelectorOnly(svc)
+			return recoverServiceSelectorOnly(svc, targetDeployment, targetPod)
 		}
 	} else {
 		if targetRole == util.RoleMeshShadow {
 			log.Info().Msgf("Service %s is meshed, recovering", serviceName)
-			return recoverMeshedByManualService(svc)
+			return recoverMeshedByManualService(svc, targetDeployment, targetPod)
 		} else if targetRole == util.RoleExchangeShadow {
 			log.Info().Msgf("Service %s is exchanged, recovering", serviceName)
-			return recoverExchangedByScaleService(svc)
+			return recoverExchangedByScaleService(svc, targetDeployment, targetPod)
 		} else if needUnlock {
 			return unlockServiceOnly(svc)
 		}
@@ -93,18 +100,41 @@ func (action *Action) Recover(serviceName string) error {
 }
 
 func unlockServiceOnly(svc *coreV1.Service) error {
+	_, err := cluster.Ins().UpdateService(svc)
+	return err
+}
+
+func recoverExchangedByScaleService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+	if _, err := cluster.Ins().UpdateService(svc); err != nil {
+		return err
+	}
+	config := util.String2Map(pod.Annotations[util.KtConfig])
+	if len(config) == 0 {
+		config = util.String2Map(deployment.Annotations[util.KtConfig])
+	}
+	replica, _ := strconv.ParseInt(config["replicas"], 10, 32)
+	app := config["app"]
+	if replica > 0 && app != "" {
+		originReplica := int32(replica)
+		return cluster.Ins().ScaleTo(app, svc.Namespace, &originReplica)
+	}
 	return nil
 }
 
-func recoverExchangedByScaleService(svc *coreV1.Service) error {
-	return nil
+func recoverMeshedByManualService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+	return recoverServiceSelectorOnly(svc, deployment, pod)
 }
 
-func recoverMeshedByManualService(svc *coreV1.Service) error {
-	return nil
-}
-
-func recoverServiceSelectorOnly(svc *coreV1.Service) error {
+func recoverServiceSelectorOnly(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+	if _, err := cluster.Ins().UpdateService(svc); err != nil {
+		return err
+	}
+	if deployment != nil {
+		_ = cluster.Ins().RemoveDeployment(deployment.Name, deployment.Namespace)
+	}
+	if pod != nil {
+		_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
+	}
 	return nil
 }
 
@@ -116,12 +146,12 @@ func recoverMeshedByAutoService(svc *coreV1.Service) error {
 	return nil
 }
 
-func fetchTargetRole(apps *appV1.DeploymentList, pods *coreV1.PodList) string {
+func fetchTargetRole(apps *appV1.DeploymentList, pods *coreV1.PodList) (*appV1.Deployment, *coreV1.Pod, string) {
 	if len(apps.Items) > 0 {
 		for _, app := range apps.Items {
 			if app.Annotations != nil {
 				if role, ok2 := app.Annotations[util.KtRole]; ok2 {
-					return role
+					return &app, nil, role
 				}
 			}
 		}
@@ -129,10 +159,10 @@ func fetchTargetRole(apps *appV1.DeploymentList, pods *coreV1.PodList) string {
 		for _, pod := range pods.Items {
 			if pod.Annotations != nil {
 				if role, ok2 := pod.Annotations[util.KtRole]; ok2 {
-					return role
+					return nil, &pod, role
 				}
 			}
 		}
 	}
-	return ""
+	return nil, nil, ""
 }
