@@ -60,7 +60,11 @@ func (action *Action) Recover(serviceName string) error {
 		// put an empty map to avoid npe
 		svc.Annotations = map[string]string{}
 		if targetRole == "" {
-			log.Info().Msgf("Service %s is clean and tidy, nothing would be done", serviceName)
+			if svc.Spec.Selector[util.KtRole] != "" {
+				log.Error().Msgf("Service %s is selecting kt pods, but cannot be recovered automatically", serviceName)
+			} else {
+				log.Info().Msgf("Service %s is clean and tidy, nothing would be done", serviceName)
+			}
 			return nil
 		}
 	}
@@ -72,14 +76,15 @@ func (action *Action) Recover(serviceName string) error {
 		if err = json.Unmarshal([]byte(originSelector), &selector); err != nil {
 			return fmt.Errorf("service %s has %s annotation, but selecting nothing", serviceName, util.KtSelector)
 		}
+		log.Debug().Msgf("Recovering selector to %v", selector)
 		svc.Spec.Selector = selector
 		delete(svc.Annotations, util.KtSelector)
 		if targetRole == util.RoleRouter {
 			log.Info().Msgf("Service %s is meshed, recovering", serviceName)
-			return recoverMeshedByAutoService(svc)
+			return recoverMeshedByAutoService(svc, targetDeployment, targetPod)
 		} else if targetRole == util.RoleExchangeShadow {
 			log.Info().Msgf("Service %s is exchanged, recovering", serviceName)
-			return recoverExchangedBySelectorService(svc)
+			return recoverExchangedBySelectorService(svc, targetDeployment, targetPod)
 		} else {
 			log.Info().Msgf("Service %s is selecting non-kt pods, recovering", serviceName)
 			return recoverServiceSelectorOnly(svc, targetDeployment, targetPod)
@@ -156,11 +161,11 @@ func recoverServiceSelectorOnly(svc *coreV1.Service, deployment *appV1.Deploymen
 	return nil
 }
 
-func recoverExchangedBySelectorService(svc *coreV1.Service) error {
-	return nil
+func recoverExchangedBySelectorService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+	return recoverServiceSelectorOnly(svc, deployment, pod)
 }
 
-func recoverMeshedByAutoService(svc *coreV1.Service) error {
+func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
 	return nil
 }
 
