@@ -38,7 +38,9 @@ func main() {
 	app.Commands = newCommands(ch)
 	// must overwrite default error handler to perform graceful exit
 	app.ExitErrHandler = func(context *cli.Context, err error) {
-		log.Error().Err(err).Msgf("Failed to start")
+		if err != nil {
+			log.Error().Err(err).Msgf("Failed to start")
+		}
 		general.CleanupWorkspace()
 		os.Exit(1)
 	}
