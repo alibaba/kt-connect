@@ -164,7 +164,7 @@ func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool
 			return
 		}
 		log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
-		util.MapPut(pod.Annotations, util.KtRefCount, count)
+		pod.Annotations = util.MapPut(pod.Annotations, util.KtRefCount, count)
 		_, err = k.UpdatePod(pod)
 		return
 	}

@@ -76,7 +76,7 @@ func (k *Kubernetes) DecreaseDeploymentRef(name string, namespace string) (clean
 			return
 		}
 		log.Info().Msgf("Deployment %s has %s refs, decrease to %s", app.Name, refCount, count)
-		util.MapPut(app.Annotations, util.KtRefCount, count)
+		app.Annotations = util.MapPut(app.Annotations, util.KtRefCount, count)
 		_, err = k.UpdateDeployment(app)
 		return
 	}

@@ -123,7 +123,7 @@ func recoverExchangedByScaleService(svc *coreV1.Service, deployment *appV1.Deplo
 		return err
 	}
 	config := make(map[string]string)
-	if pod != nil && pod.Annotations != nil && pod.DeletionTimestamp == nil {
+	if pod != nil && pod.Annotations != nil {
 		config = util.String2Map(pod.Annotations[util.KtConfig])
 		log.Info().Msgf("Deleting shadow pod %s", pod.Name)
 		_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
@@ -180,7 +180,7 @@ func fetchTargetRole(apps *appV1.DeploymentList, pods *coreV1.PodList) (*appV1.D
 		}
 	} else if len(pods.Items) > 0 {
 		for _, pod := range pods.Items {
-			if pod.Labels != nil {
+			if pod.Labels != nil && pod.DeletionTimestamp == nil {
 				if role, ok2 := pod.Labels[util.KtRole]; ok2 {
 					return nil, &pod, role
 				}

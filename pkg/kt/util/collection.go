@@ -35,20 +35,25 @@ func MapEquals(src, target map[string]string) bool {
 	return len(src) == len(target) && MapContains(src, target)
 }
 
-func MapPut(m map[string]string, k, v string) {
+func MapPut(m map[string]string, k, v string) map[string]string {
 	if m == nil {
-		m = make(map[string]string)
+		return map[string]string{k: v}
 	}
 	m[k] = v
+	return m
 }
 
 func MergeMap(m1, m2 map[string]string) map[string]string {
 	cp := make(map[string]string)
-	for key, value := range m1 {
-		cp[key] = value
+	if m1 != nil {
+		for key, value := range m1 {
+			cp[key] = value
+		}
 	}
-	for key, value := range m2 {
-		cp[key] = value
+	if m2 != nil {
+		for key, value := range m2 {
+			cp[key] = value
+		}
 	}
 	return cp
 }

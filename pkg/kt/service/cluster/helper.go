@@ -23,8 +23,8 @@ func getKubernetesClient(kubeConfig string) (clientset *kubernetes.Clientset, er
 
 func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	var servicePorts []coreV1.ServicePort
-	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
-	util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
+	metaAndSpec.Meta.Annotations = util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	metaAndSpec.Meta.Labels = util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
 
 	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{
@@ -54,14 +54,14 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 }
 
 func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
-	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
-	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	metaAndSpec.Meta.Annotations = util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
+	metaAndSpec.Meta.Annotations = util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
 
 	var originLabels = make(map[string]string, 0)
 	for k, v := range metaAndSpec.Meta.Labels {
 		originLabels[k] = v
 	}
-	util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
+	metaAndSpec.Meta.Labels = util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
 
 	return &appV1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -85,9 +85,9 @@ func createDeployment(metaAndSpec *PodMetaAndSpec) *appV1.Deployment {
 }
 
 func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
-	util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
-	util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
-	util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
+	metaAndSpec.Meta.Annotations = util.MapPut(metaAndSpec.Meta.Annotations, util.KtRefCount, "1")
+	metaAndSpec.Meta.Annotations = util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
+	metaAndSpec.Meta.Labels = util.MapPut(metaAndSpec.Meta.Labels, util.ControlBy, util.KubernetesToolkit)
 
 	pod := &coreV1.Pod{
 		ObjectMeta: metav1.ObjectMeta{

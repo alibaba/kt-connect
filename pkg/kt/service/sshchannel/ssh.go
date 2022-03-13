@@ -102,6 +102,7 @@ func handleRequest(listener net.Listener, localEndpoint string) {
 	client, err := listener.Accept()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to accept remote request")
+		time.Sleep(1 * time.Second)
 		return
 	}
 

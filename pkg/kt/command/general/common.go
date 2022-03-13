@@ -112,10 +112,8 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 			return err2
 		}
 		marshaledSelector = string(rawSelector)
-		if svc.Annotations == nil {
-			util.MapPut(svc.Annotations, util.KtSelector, marshaledSelector)
-		} else if svc.Annotations[util.KtSelector] == "" {
-			svc.Annotations[util.KtSelector] = marshaledSelector
+		if svc.Annotations == nil || svc.Annotations[util.KtSelector] == "" {
+			svc.Annotations = util.MapPut(svc.Annotations, util.KtSelector, marshaledSelector)
 		}
 	}
 
@@ -136,7 +134,7 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 		if svc, err = cluster.Ins().GetService(svcName, namespace); err == nil {
 			if isServiceChanged(svc, selector, marshaledSelector) {
 				svc.Spec.Selector = selector
-				util.MapPut(svc.Annotations, util.KtSelector, marshaledSelector)
+				svc.Annotations = util.MapPut(svc.Annotations, util.KtSelector, marshaledSelector)
 				if _, err = cluster.Ins().UpdateService(svc); err != nil {
 					log.Error().Err(err).Msgf("Failed to recover service %s", svcName)
 				} else {

@@ -80,3 +80,44 @@ func TestMapContains(t *testing.T) {
 		})
 	}
 }
+
+func TestMapPut(t *testing.T) {
+	type obj struct {
+		label map[string]string
+	}
+	type args struct {
+		origin obj
+		key string
+		value string
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]string
+	}{
+		{
+			name: "normal map",
+			args: args {
+				origin: obj { label: map[string]string{"a": "b"} },
+				key: "c",
+				value: "d",
+			},
+			want: map[string]string {"a": "b", "c": "d"},
+		},
+		{
+			name: "nil map",
+			args: args {
+				origin: obj { label: nil },
+				key: "c",
+				value: "d",
+			},
+			want: map[string]string {"c": "d"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := MapPut(tt.args.origin.label, tt.args.key, tt.args.value)
+			require.True(t, MapEquals(target, tt.want), "%v != %v", target, tt.want)
+		})
+	}
+}
