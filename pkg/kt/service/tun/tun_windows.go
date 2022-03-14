@@ -25,7 +25,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	var lastErr error
 	anyRouteOk := false
 	for i, r := range ipRange {
-		ip, mask, err := toIpAndMask(r)
+		_, mask, err := toIpAndMask(r)
 		tunIp := strings.Split(r, "/")[0]
 		if err != nil {
 			return AllRouteFailError{err}
@@ -61,12 +61,14 @@ func (s *Cli) SetRoute(ipRange []string) error {
 		} else {
 			anyRouteOk = true
 		}
-		// run command: route add 172.20.0.0 mask 255.255.0.0 172.20.0.1
-		_, _, err = util.RunAndWait(exec.Command("route",
+		// run command: netsh interface ipv4 add route 172.20.0.0/16 KtConnectTunnel 172.20.0.0
+		_, _, err = util.RunAndWait(exec.Command("netsh",
+			"interface",
+			"ipv4",
 			"add",
-			ip,
-			"mask",
-			mask,
+			"route",
+			r,
+			s.GetName(),
 			tunIp,
 		))
 		if err != nil {
