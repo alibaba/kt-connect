@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	"strings"
 	"time"
 )
@@ -40,13 +41,20 @@ func GetServiceByResourceName(resourceName, namespace string) (*coreV1.Service, 
 	case "deployment":
 		app, err2 := cluster.Ins().GetDeployment(name, namespace)
 		if err2 != nil {
+			if k8sErrors.IsNotFound(err2) {
+				return nil, fmt.Errorf("deployment '%s' is not found in namespace %s", name, namespace)
+			}
 			return nil, err2
 		}
 		return getServiceByDeployment(app, namespace)
 	case "svc":
 		fallthrough
 	case "service":
-		return cluster.Ins().GetService(name, namespace)
+		svc, err2 := cluster.Ins().GetService(name, namespace)
+		if err2 != nil && k8sErrors.IsNotFound(err2) {
+			return nil, fmt.Errorf("service '%s' is not found in namespace %s", name, namespace)
+		}
+		return svc, err2
 	default:
 		return nil, fmt.Errorf("invalid resource type: %s", resourceType)
 	}
@@ -62,12 +70,19 @@ func GetDeploymentByResourceName(resourceName, namespace string) (*appV1.Deploym
 	case "deploy":
 		fallthrough
 	case "deployment":
-		return cluster.Ins().GetDeployment(name, namespace)
+		app, err2 := cluster.Ins().GetDeployment(name, namespace)
+		if err2 != nil && k8sErrors.IsNotFound(err2) {
+			return nil, fmt.Errorf("deployment '%s' is not found in namespace %s", name, namespace)
+		}
+		return app, err2
 	case "svc":
 		fallthrough
 	case "service":
 		svc, err2 := cluster.Ins().GetService(name, namespace)
 		if err2 != nil {
+			if k8sErrors.IsNotFound(err2) {
+				return nil, fmt.Errorf("service '%s' is not found in namespace %s", name, namespace)
+			}
 			return nil, err2
 		}
 		return getDeploymentByService(svc, namespace)
