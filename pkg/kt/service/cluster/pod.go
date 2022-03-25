@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"io"
 	coreV1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labelApi "k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
@@ -16,6 +17,7 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -234,6 +236,22 @@ func addImagePullSecret(pod *coreV1.Pod, imagePullSecret string) {
 		{
 			Name: imagePullSecret,
 		},
+	}
+}
+
+func addResourceLimit(container *coreV1.Container, quotaText string) {
+	for _, quota := range strings.Split(quotaText, ",") {
+		if ok, err := regexp.MatchString("^[0-9.]+[Cc]$", quota); ok && err == nil {
+			limit := quota[0: len(quota) - 1]
+			container.Resources.Limits[coreV1.ResourceCPU] = resource.MustParse(limit)
+			container.Resources.Requests[coreV1.ResourceCPU] = resource.MustParse(limit)
+		} else if ok2, err2 := regexp.MatchString("^[0-9.]+[KkMmGg]$", quota); ok2 && err2 == nil {
+			limit := strings.ToUpper(quota) + "i"
+			container.Resources.Limits[coreV1.ResourceMemory] = resource.MustParse(limit)
+			container.Resources.Requests[coreV1.ResourceMemory] = resource.MustParse(limit)
+		} else {
+			log.Warn().Msgf("Pod quote \"%s\" is invalid, ignoring", quota)
+		}
 	}
 }
 

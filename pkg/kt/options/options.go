@@ -99,6 +99,7 @@ type DaemonOptions struct {
 	UseShadowDeployment bool
 	AlwaysUpdateShadow  bool
 	KubeContext         string
+	PodQuota            string
 }
 
 var opt *DaemonOptions

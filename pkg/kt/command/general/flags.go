@@ -86,6 +86,11 @@ func AppFlags(options *opt.DaemonOptions) []cli.Flag {
 			Usage:       "Specify current context of kubeconfig",
 			Destination: &options.KubeContext,
 		},
+		cli.StringFlag{
+			Name:        "podQuota",
+			Usage:       "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'",
+			Destination: &options.PodQuota,
+		},
 	}
 }
 

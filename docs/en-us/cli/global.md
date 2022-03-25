@@ -24,6 +24,7 @@ Available options:
 --podCreationTimeout value    Seconds to wait before shadow or router pod creation timeout (default: 60)
 --forceUpdate, -f             Always update shadow image
 --context value               Specify current context of kubeconfig
+--podQuota value              Specify resource limit for shadow and router pod, e.g. '0.5c,512m'
 --help, -h                    show help
 --version, -v                 print the version
 ```
@@ -33,3 +34,4 @@ Key options explanation:
 - `--namespace` actually specifies which Namespace to run Shadow Pod in.
   For the `connect`, `preview` commands, it will affect the access method of the service, that is, you can directly access the service in the same Namespace as the Shadow Pod through `<ServiceName>`, while accessing other Namespace services must use `<ServiceName>.<Namespace>` as the domain name.
   For `exchange`, `mesh` commands, you must specify the same Namespace as the target service to be replaced.
+- `--podQuota` use letter `c` for CPU quota (number of cores), use letter `k`/`m`/`g` for memory quota (amount of "KB"/"MB"/"GB")

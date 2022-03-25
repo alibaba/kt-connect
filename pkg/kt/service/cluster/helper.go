@@ -140,6 +140,13 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 			},
 		},
 		Ports: []coreV1.ContainerPort{},
+		Resources: coreV1.ResourceRequirements{
+			Limits: coreV1.ResourceList{},
+			Requests: coreV1.ResourceList{},
+		},
+	}
+	if opt.Get().PodQuota != "" {
+		addResourceLimit(&container, opt.Get().PodQuota)
 	}
 	for _, port := range ports {
 		container.Ports = append(container.Ports, coreV1.ContainerPort{
