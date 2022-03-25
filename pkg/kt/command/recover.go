@@ -13,6 +13,7 @@ import (
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
 	"strconv"
+	"strings"
 )
 
 // NewRecoverCommand return new recover command
@@ -55,6 +56,7 @@ func (action *Action) Recover(serviceName string) error {
 		return err
 	}
 	targetDeployment, targetPod, targetRole := fetchTargetRole(apps, pods)
+	log.Debug().Msgf("Target role is: %s", targetRole)
 
 	if svc.Annotations == nil {
 		// put an empty map to avoid npe
@@ -87,7 +89,7 @@ func (action *Action) Recover(serviceName string) error {
 			return recoverExchangedBySelectorService(svc, targetDeployment, targetPod)
 		} else {
 			log.Info().Msgf("Service %s is selecting non-kt pods, recovering", serviceName)
-			return recoverServiceSelectorOnly(svc, targetDeployment, targetPod)
+			return recoverServiceSelectorAndRemotePods(svc, targetDeployment, targetPod)
 		}
 	} else {
 		if targetRole == util.RoleMeshShadow {
@@ -143,10 +145,57 @@ func recoverExchangedByScaleService(svc *coreV1.Service, deployment *appV1.Deplo
 }
 
 func recoverMeshedByManualService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
-	return recoverServiceSelectorOnly(svc, deployment, pod)
+	return recoverServiceSelectorAndRemotePods(svc, deployment, pod)
 }
 
-func recoverServiceSelectorOnly(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+func recoverExchangedBySelectorService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+	return recoverServiceSelectorAndRemotePods(svc, deployment, pod)
+}
+
+func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
+	// shadow pods, shadow deployments, shadow services
+	if deployment != nil {
+		return fmt.Errorf("service '%s' is meshed but selecting more than a router pod, cannot auto recover", svc.Name)
+	} else if pod == nil {
+		return fmt.Errorf("service '%s' is meshed without selecting a router pod, cannot auto recover", svc.Name)
+	} else if _, err := cluster.Ins().UpdateService(svc); err != nil {
+		return err
+	}
+	log.Info().Msgf("Deleting route pod %s", pod.Name)
+	_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
+	log.Info().Msgf("Deleting stuntman service %s", svc.Name + util.StuntmanServiceSuffix)
+	_ = cluster.Ins().RemoveService(svc.Name + util.StuntmanServiceSuffix, svc.Namespace)
+	shadowLabels := map[string]string{
+		util.ControlBy: util.KubernetesToolkit,
+		util.KtRole:    util.RoleMeshShadow,
+	}
+	shadowSvcNames := make([]string, 0)
+	if apps, err := cluster.Ins().GetDeploymentsByLabel(shadowLabels, svc.Namespace); err == nil {
+		for _, shadowApp := range apps.Items {
+			if strings.HasPrefix(shadowApp.Name, svc.Name + util.MeshPodInfix) {
+				log.Info().Msgf("Deleting shadow deployment %s", shadowApp.Name)
+				_ = cluster.Ins().RemoveDeployment(shadowApp.Name, shadowApp.Namespace)
+				shadowSvcNames = append(shadowSvcNames, shadowApp.Name)
+			}
+		}
+	}
+	if pods, err := cluster.Ins().GetPodsByLabel(shadowLabels, svc.Namespace); err == nil {
+		for _, shadowPod := range pods.Items {
+			if strings.HasPrefix(shadowPod.Name, svc.Name + util.MeshPodInfix) && shadowPod.DeletionTimestamp == nil {
+				log.Info().Msgf("Deleting shadow pod %s", shadowPod.Name)
+				_ = cluster.Ins().RemoveDeployment(shadowPod.Name, shadowPod.Namespace)
+				shadowSvcNames = append(shadowSvcNames, shadowPod.Name)
+			}
+		}
+	}
+	for _, shadowSvc := range shadowSvcNames {
+		log.Info().Msgf("Deleting shadow service %s", shadowSvc)
+		_ = cluster.Ins().RemoveService(shadowSvc, svc.Namespace)
+	}
+	return nil
+}
+
+func recoverServiceSelectorAndRemotePods(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
 	if _, err := cluster.Ins().UpdateService(svc); err != nil {
 		return err
 	}
@@ -158,14 +207,6 @@ func recoverServiceSelectorOnly(svc *coreV1.Service, deployment *appV1.Deploymen
 		log.Info().Msgf("Deleting shadow pod %s", pod.Name)
 		_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
 	}
-	return nil
-}
-
-func recoverExchangedBySelectorService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
-	return recoverServiceSelectorOnly(svc, deployment, pod)
-}
-
-func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deployment, pod *coreV1.Pod) error {
 	return nil
 }
 
