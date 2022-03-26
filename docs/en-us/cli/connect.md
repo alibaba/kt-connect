@@ -9,6 +9,7 @@ Create a network tunnel to kubernetes cluster. Available options:
 --shareShadow          Use shared shadow pod
 --clusterDomain value  The cluster domain provided to kubernetes api-server (default: "cluster.local")
 --disablePodIp         Disable access to pod IP address
+--skipCleanup          Do not auto cleanup residual resources in cluster
 --includeIps value     Specify extra IP ranges which should be route to cluster, e.g. '172.2.0.0/16', use ',' separated
 --excludeIps value     (sshuttle mode only) Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated
 --disableTunDevice     (tun2socks mode only) Create socks5 proxy without tun device

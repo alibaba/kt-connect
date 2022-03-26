@@ -165,8 +165,7 @@ func isServiceChanged(svc *coreV1.Service, selector map[string]string, marshaled
 	return !util.MapEquals(svc.Spec.Selector, selector) || svc.Annotations == nil || svc.Annotations[util.KtSelector] != marshaledSelector
 }
 
-func getServiceByDeployment(app *appV1.Deployment,
-	namespace string) (*coreV1.Service, error) {
+func getServiceByDeployment(app *appV1.Deployment, namespace string) (*coreV1.Service, error) {
 	svcList, err := cluster.Ins().GetServicesBySelector(app.Spec.Selector.MatchLabels, namespace)
 	if err != nil {
 		return nil, err

@@ -125,6 +125,11 @@ func ConnectActionFlag(options *opt.DaemonOptions) []cli.Flag {
 			Usage:       "Disable access to pod IP address",
 			Destination: &options.ConnectOptions.DisablePodIp,
 		},
+		cli.BoolFlag{
+			Name:        "skipCleanup",
+			Usage:       "Do not auto cleanup residual resources in cluster",
+			Destination: &options.ConnectOptions.SkipCleanup,
+		},
 		cli.StringFlag{
 			Name:        "includeIps",
 			Usage:       "Specify extra IP ranges which should be route to cluster, e.g. '172.2.0.0/16', use ',' separated",

@@ -49,7 +49,7 @@ func BackgroundRun(cmdCtx *CMDContext) error {
 			log.Debug().Msgf("[STDERR] %s", stderr)
 		}
 		if err != nil {
-			log.Info().Msgf("Background task %s exit abnormally: %s", cmdCtx.Name, err.Error())
+			log.Info().Msgf("Background task %s closed, %s", cmdCtx.Name, err.Error())
 		}
 		log.Info().Msgf("Task %s completed", cmdCtx.Name)
 	}()

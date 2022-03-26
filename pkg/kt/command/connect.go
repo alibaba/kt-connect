@@ -2,10 +2,12 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/command/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -46,6 +48,10 @@ func (action *Action) Connect(ch chan os.Signal) error {
 		return err
 	}
 
+	if !opt.Get().ConnectOptions.SkipCleanup {
+		go silenceCleanup()
+	}
+
 	if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks {
 		err = connect.ByTun2Socks()
 	} else if opt.Get().ConnectOptions.Mode == util.ConnectModeShuttle {
@@ -65,11 +71,28 @@ func (action *Action) Connect(ch chan os.Signal) error {
 	go func() {
 		<-process.Interrupt()
 		log.Error().Msgf("Command interrupted")
-		ch <-os.Interrupt
+		ch <- os.Interrupt
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
 	return nil
+}
+
+func silenceCleanup() {
+	if r, err := clean.CheckClusterResources(); err == nil {
+		for _, name := range r.PodsToDelete {
+			_ = cluster.Ins().RemovePod(name, opt.Get().Namespace)
+		}
+		for _, name := range r.ConfigMapsToDelete {
+			_ = cluster.Ins().RemoveConfigMap(name, opt.Get().Namespace)
+		}
+		for _, name := range r.DeploymentsToDelete {
+			_ = cluster.Ins().RemoveDeployment(name, opt.Get().Namespace)
+		}
+		for _, name := range r.ServicesToDelete {
+			_ = cluster.Ins().RemoveService(name, opt.Get().Namespace)
+		}
+	}
 }
 
 func checkPermissionAndOptions() error {

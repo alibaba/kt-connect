@@ -3,11 +3,15 @@ package clean
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
+	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"io/ioutil"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -23,7 +27,185 @@ type ResourceToClean struct {
 	ServicesToUnlock   []string
 }
 
-func AnalysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+
+func CheckClusterResources() (*ResourceToClean, error) {
+	pods, cfs, apps, svcs, err := cluster.Ins().GetKtResources(opt.Get().Namespace)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug().Msgf("Find %d kt pods", len(pods))
+	resourceToClean := ResourceToClean{
+		PodsToDelete:        make([]string, 0),
+		ServicesToDelete:    make([]string, 0),
+		ConfigMapsToDelete:  make([]string, 0),
+		DeploymentsToDelete: make([]string, 0),
+		DeploymentsToScale:  make(map[string]int32),
+		ServicesToRecover:   make([]string, 0),
+		ServicesToUnlock:    make([]string, 0),
+	}
+	for _, pod := range pods {
+		analysisExpiredPods(pod, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
+	for _, cf := range cfs {
+		analysisExpiredConfigmaps(cf, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
+	for _, app := range apps {
+		analysisExpiredDeployments(app, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
+	for _, svc := range svcs {
+		analysisExpiredServices(svc, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+	}
+	svcList, err := cluster.Ins().GetAllServiceInNamespace(opt.Get().Namespace)
+	analysisLockAndOrphanServices(svcList.Items, &resourceToClean)
+	return &resourceToClean, nil
+}
+
+func TidyClusterResources(r *ResourceToClean) {
+	log.Info().Msgf("Deleting %d unavailing kt pods", len(r.PodsToDelete))
+	for _, name := range r.PodsToDelete {
+		err := cluster.Ins().RemovePod(name, opt.Get().Namespace)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to delete pods %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
+		}
+	}
+	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
+	for _, name := range r.ConfigMapsToDelete {
+		err := cluster.Ins().RemoveConfigMap(name, opt.Get().Namespace)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to delete config map %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
+		}
+	}
+	log.Info().Msgf("Deleting %d unavailing deployments", len(r.DeploymentsToDelete))
+	for _, name := range r.DeploymentsToDelete {
+		err := cluster.Ins().RemoveDeployment(name, opt.Get().Namespace)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to delete deployment %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
+		}
+	}
+	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
+	for name, replica := range r.DeploymentsToScale {
+		err := cluster.Ins().ScaleTo(name, opt.Get().Namespace, &replica)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
+		} else {
+			log.Info().Msgf(" * %s", name)
+		}
+	}
+	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
+	for _, name := range r.ServicesToDelete {
+		err := cluster.Ins().RemoveService(name, opt.Get().Namespace)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to delete service %s", name)
+		} else {
+			log.Info().Msgf(" * %s", name)
+		}
+	}
+	log.Info().Msgf("Recovering %d meshed services", len(r.ServicesToRecover))
+	for _, name := range r.ServicesToRecover {
+		general.RecoverOriginalService(name, opt.Get().Namespace)
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
+	for _, name := range r.ServicesToUnlock {
+		if app, err := cluster.Ins().GetService(name, opt.Get().Namespace); err == nil {
+			delete(app.Annotations, util.KtLock)
+			_, err = cluster.Ins().UpdateService(app)
+			if err != nil {
+				log.Warn().Err(err).Msgf("Failed to lock service %s", name)
+			} else {
+				log.Info().Msgf(" * %s", name)
+			}
+		}
+	}
+	log.Info().Msg("Done")
+}
+
+func PrintClusterResourcesToClean(r *ResourceToClean) {
+	log.Info().Msgf("Find %d unavailing pods to delete:", len(r.PodsToDelete))
+	for _, name := range r.PodsToDelete {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Find %d unavailing config maps to delete:", len(r.ConfigMapsToDelete))
+	for _, name := range r.ConfigMapsToDelete {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Find %d unavailing deployments to delete:", len(r.DeploymentsToDelete))
+	for _, name := range r.DeploymentsToDelete {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Find %d exchanged deployments to recover:", len(r.DeploymentsToScale))
+	for name, replica := range r.DeploymentsToScale {
+		log.Info().Msgf(" * %s -> %d", name, replica)
+	}
+	log.Info().Msgf("Find %d unavailing service to delete:", len(r.ServicesToDelete))
+	for _, name := range r.ServicesToDelete {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Find %d meshed service to recover:", len(r.ServicesToRecover))
+	for _, name := range r.ServicesToRecover {
+		log.Info().Msgf(" * %s", name)
+	}
+	log.Info().Msgf("Find %d locked services to recover:", len(r.ServicesToUnlock))
+	for _, name := range r.ServicesToUnlock {
+		log.Info().Msgf(" * %s", name)
+	}
+}
+
+func TidyLocalResources() {
+	log.Debug().Msg("Cleaning up unused pid files ...")
+	cleanPidFiles()
+	log.Debug().Msg("Cleaning up unused local rsa keys ...")
+	util.CleanRsaKeys()
+	if util.GetDaemonRunning(util.ComponentConnect) < 0 {
+		if util.IsRunAsAdmin() {
+			log.Debug().Msg("Cleaning up hosts file ...")
+			dns.DropHosts()
+			log.Debug().Msg("Cleaning DNS configuration ...")
+			dns.Ins().RestoreNameServer()
+		} else {
+			log.Info().Msgf("Not %s user, DNS cleanup skipped", util.GetAdminUserName())
+		}
+	}
+}
+
+func cleanPidFiles() {
+	files, _ := ioutil.ReadDir(util.KtHome)
+	for _, f := range files {
+		if strings.HasSuffix(f.Name(), ".pid") {
+			component, pid := parseComponentAndPid(f.Name())
+			if util.IsProcessExist(pid) {
+				log.Debug().Msgf("Find kt %s instance with pid %d", component, pid)
+			} else {
+				log.Info().Msgf("Removing remnant pid file %s", f.Name())
+				if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
+					log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
+				}
+			}
+		}
+	}
+}
+
+func parseComponentAndPid(pidFileName string) (string, int) {
+	startPos := strings.LastIndex(pidFileName, "-")
+	endPos := strings.Index(pidFileName, ".")
+	if startPos > 0 && endPos > startPos {
+		component := pidFileName[0 : startPos]
+		pid, err := strconv.Atoi(pidFileName[startPos+1 : endPos])
+		if err != nil {
+			return "", -1
+		}
+		return component, pid
+	}
+	return "", -1
+}
+
+func analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(pod.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
@@ -36,14 +218,14 @@ func AnalysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceTo
 	}
 }
 
-func AnalysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+func analysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(cf.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, cf.Name)
 	}
 }
 
-func AnalysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+func analysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(app.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.DeploymentsToDelete = append(resourceToClean.DeploymentsToDelete, app.Name)
@@ -51,14 +233,14 @@ func AnalysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int6
 	}
 }
 
-func AnalysisExpiredServices(svc coreV1.Service, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
+func analysisExpiredServices(svc coreV1.Service, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(svc.Annotations[util.KtLastHeartBeat])
 	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, svc.Name)
 	}
 }
 
-func AnalysisLockAndOrphanServices(svcs []coreV1.Service, resourceToClean *ResourceToClean) {
+func analysisLockAndOrphanServices(svcs []coreV1.Service, resourceToClean *ResourceToClean) {
 	for _, svc := range svcs {
 		if svc.Annotations == nil {
 			continue
@@ -119,113 +301,7 @@ func isRouterPodExist(svcName, namespace string) bool {
 	return err == nil
 }
 
-func TidyResource(r ResourceToClean, namespace string) {
-	log.Info().Msgf("Deleting %d unavailing kt pods", len(r.PodsToDelete))
-	for _, name := range r.PodsToDelete {
-		err := cluster.Ins().RemovePod(name, namespace)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to delete pods %s", name)
-		} else {
-			log.Info().Msgf(" * %s", name)
-		}
-	}
-	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
-	for _, name := range r.ConfigMapsToDelete {
-		err := cluster.Ins().RemoveConfigMap(name, namespace)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to delete config map %s", name)
-		} else {
-			log.Info().Msgf(" * %s", name)
-		}
-	}
-	log.Info().Msgf("Deleting %d unavailing deployments", len(r.DeploymentsToDelete))
-	for _, name := range r.DeploymentsToDelete {
-		err := cluster.Ins().RemoveDeployment(name, namespace)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to delete deployment %s", name)
-		} else {
-			log.Info().Msgf(" * %s", name)
-		}
-	}
-	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
-	for name, replica := range r.DeploymentsToScale {
-		err := cluster.Ins().ScaleTo(name, namespace, &replica)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
-		} else {
-			log.Info().Msgf(" * %s", name)
-		}
-	}
-	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
-	for _, name := range r.ServicesToDelete {
-		err := cluster.Ins().RemoveService(name, namespace)
-		if err != nil {
-			log.Warn().Err(err).Msgf("Failed to delete service %s", name)
-		} else {
-			log.Info().Msgf(" * %s", name)
-		}
-	}
-	log.Info().Msgf("Recovering %d meshed services", len(r.ServicesToRecover))
-	for _, name := range r.ServicesToRecover {
-		general.RecoverOriginalService(name, namespace)
-		log.Info().Msgf(" * %s", name)
-	}
-	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
-	for _, name := range r.ServicesToUnlock {
-		if app, err := cluster.Ins().GetService(name, namespace); err == nil {
-			delete(app.Annotations, util.KtLock)
-			_, err = cluster.Ins().UpdateService(app)
-			if err != nil {
-				log.Warn().Err(err).Msgf("Failed to lock service %s", name)
-			} else {
-				log.Info().Msgf(" * %s", name)
-			}
-		}
-	}
-	log.Info().Msg("Done")
-}
-
-func PrintResourceToClean(r ResourceToClean) {
-	log.Info().Msgf("Find %d unavailing pods to delete:", len(r.PodsToDelete))
-	for _, name := range r.PodsToDelete {
-		log.Info().Msgf(" * %s", name)
-	}
-	log.Info().Msgf("Find %d unavailing config maps to delete:", len(r.ConfigMapsToDelete))
-	for _, name := range r.ConfigMapsToDelete {
-		log.Info().Msgf(" * %s", name)
-	}
-	log.Info().Msgf("Find %d unavailing deployments to delete:", len(r.DeploymentsToDelete))
-	for _, name := range r.DeploymentsToDelete {
-		log.Info().Msgf(" * %s", name)
-	}
-	log.Info().Msgf("Find %d exchanged deployments to recover:", len(r.DeploymentsToScale))
-	for name, replica := range r.DeploymentsToScale {
-		log.Info().Msgf(" * %s -> %d", name, replica)
-	}
-	log.Info().Msgf("Find %d unavailing service to delete:", len(r.ServicesToDelete))
-	for _, name := range r.ServicesToDelete {
-		log.Info().Msgf(" * %s", name)
-	}
-	log.Info().Msgf("Find %d meshed service to recover:", len(r.ServicesToRecover))
-	for _, name := range r.ServicesToRecover {
-		log.Info().Msgf(" * %s", name)
-	}
-	log.Info().Msgf("Find %d locked services to recover:", len(r.ServicesToUnlock))
-	for _, name := range r.ServicesToUnlock {
-		log.Info().Msgf(" * %s", name)
-	}
-}
-
 func isExpired(lastHeartBeat, cleanThresholdInMinus int64) bool {
 	return time.Now().Unix()-lastHeartBeat > cleanThresholdInMinus*60
 }
 
-func IsEmpty(r ResourceToClean) bool {
-	return len(r.PodsToDelete) == 0 &&
-		len(r.ConfigMapsToDelete) == 0 &&
-		len(r.DeploymentsToDelete) == 0 &&
-		len(r.DeploymentsToScale) == 0 &&
-		len(r.ServicesToDelete) == 0 &&
-		len(r.ServicesToUnlock) == 0 &&
-		len(r.ServicesToRecover) == 0
-}

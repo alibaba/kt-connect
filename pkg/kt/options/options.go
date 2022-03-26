@@ -21,6 +21,7 @@ type ConnectOptions struct {
 	DnsMode              string
 	SharedShadow         bool
 	ClusterDomain        string
+	SkipCleanup          bool
 }
 
 // ExchangeOptions ...
