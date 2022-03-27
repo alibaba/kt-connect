@@ -40,9 +40,9 @@ func (k *Kubernetes) UpdateConfigMapHeartBeat(name, namespace string) {
 
 func (k *Kubernetes) createConfigMapWithSshKey(labels map[string]string, sshcm string, namespace string,
 	generator *util.SSHGenerator) (configMap *coreV1.ConfigMap, err error) {
-
 	SetupHeartBeat(sshcm, namespace, k.UpdateConfigMapHeartBeat)
 
+	labels = util.MergeMap(labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 	return k.Clientset.CoreV1().ConfigMaps(namespace).Create(context.TODO(), &coreV1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        sshcm,
