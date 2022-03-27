@@ -44,26 +44,12 @@ func (k *Kubernetes) ClusterCidrs(namespace string) (cidrs []string, err error) 
 
 func getPodCidrs(k kubernetes.Interface, namespace string) ([]string, error) {
 	var cidrs []string
-	if nodeList, err := k.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{}); err != nil {
-		// Usually cause by the local kube config has not enough permission
-		log.Debug().Err(err).Msgf("Failed to read node information of cluster")
-	} else {
-		for _, node := range nodeList.Items {
-			if node.Spec.PodCIDR != "" && len(node.Spec.PodCIDR) != 0 {
-				cidrs = append(cidrs, node.Spec.PodCIDR)
-			}
-		}
+	ipRanges, err := getPodCidrByInstance(k, namespace)
+	if err != nil {
+		return nil, err
 	}
-
-	if len(cidrs) == 0 {
-		log.Info().Msgf("No PodCIDR available, fetching with pod samples")
-		ipRanges, err := getPodCidrByInstance(k, namespace)
-		if err != nil {
-			return nil, err
-		}
-		for _, ir := range ipRanges {
-			cidrs = append(cidrs, ir)
-		}
+	for _, ir := range ipRanges {
+		cidrs = append(cidrs, ir)
 	}
 
 	return cidrs, nil

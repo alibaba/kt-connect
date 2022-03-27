@@ -27,10 +27,9 @@ rules:
   - ""
   resources:
   - events
-  - namespaces/status
   - pods/status
+  - namespaces/status
   - namespaces
-  - nodes
   verbs:
   - get
   - list
