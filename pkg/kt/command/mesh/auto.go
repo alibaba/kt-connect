@@ -72,6 +72,7 @@ func AutoMesh(svc *coreV1.Service) error {
 	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Namespace, routerLabels); err != nil {
 		return err
 	}
+	opt.Get().RuntimeStore.Origin = svc.Name
 
 	// Create shadow pod
 	annotations := map[string]string{

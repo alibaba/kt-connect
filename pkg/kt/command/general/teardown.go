@@ -97,12 +97,18 @@ func recoverAutoMeshRoute() {
 		routerPod, err := cluster.Ins().GetPod(opt.Get().RuntimeStore.Router, opt.Get().Namespace)
 		if err != nil {
 			log.Error().Err(err).Msgf("Router pod has been removed unexpectedly")
+			// in case of router pod gone, try recover origin service via runtime store
+			if opt.Get().RuntimeStore.Origin != "" {
+				recoverService(opt.Get().RuntimeStore.Origin)
+			}
 			return
 		}
 		if shouldDelRouter, err2 := cluster.Ins().DecreasePodRef(opt.Get().RuntimeStore.Router, opt.Get().Namespace); err2 != nil {
 			log.Error().Err(err2).Msgf("Decrease router pod %s reference failed", opt.Get().RuntimeStore.Shadow)
 		} else if shouldDelRouter {
-			recoverService(routerPod.Annotations[util.KtConfig])
+			routerConfig := routerPod.Annotations[util.KtConfig]
+			config := util.String2Map(routerConfig)
+			recoverService(config["service"])
 		} else {
 			stdout, stderr, err3 := cluster.Ins().ExecInPod(util.DefaultContainer, opt.Get().RuntimeStore.Router, opt.Get().Namespace,
 				util.RouterBin, "remove", opt.Get().RuntimeStore.Mesh)
@@ -115,13 +121,11 @@ func recoverAutoMeshRoute() {
 	}
 }
 
-func recoverService(routerConfig string) {
-	config := util.String2Map(routerConfig)
-	svcName := config["service"]
-	RecoverOriginalService(svcName, opt.Get().Namespace)
-	log.Info().Msgf("Original service %s recovered", svcName)
+func recoverService(originSvcName string) {
+	RecoverOriginalService(originSvcName, opt.Get().Namespace)
+	log.Info().Msgf("Original service %s recovered", originSvcName)
 
-	stuntmanSvcName := svcName + util.StuntmanServiceSuffix
+	stuntmanSvcName := originSvcName + util.StuntmanServiceSuffix
 	if err := cluster.Ins().RemoveService(stuntmanSvcName, opt.Get().Namespace); err != nil {
 		log.Error().Err(err).Msgf("Failed to remove stuntman service %s", stuntmanSvcName)
 	}

@@ -68,7 +68,7 @@ type RuntimeOptions struct {
 	Router string
 	// Mesh version of mesh pod
 	Mesh string
-	// Origin the origin app name
+	// Origin the origin deployment or service name
 	Origin string
 	// Replicas the origin replicas
 	Replicas int32
