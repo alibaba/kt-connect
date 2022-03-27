@@ -14,6 +14,7 @@ import (
 	coreV1 "k8s.io/api/core/v1"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // NewRecoverCommand return new recover command
@@ -158,12 +159,15 @@ func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deploymen
 		return fmt.Errorf("service '%s' is meshed but selecting more than a router pod, cannot auto recover", svc.Name)
 	} else if pod == nil {
 		return fmt.Errorf("service '%s' is meshed without selecting a router pod, cannot auto recover", svc.Name)
-	} else if _, err := cluster.Ins().UpdateService(svc); err != nil {
-		return err
 	}
+	// must delete router pod first, to avoid origin service recover by mesh watcher
 	log.Info().Msgf("Deleting route pod %s", pod.Name)
 	if err := cluster.Ins().RemovePod(pod.Name, pod.Namespace); err != nil {
 		log.Debug().Err(err).Msgf("Failed to remove pod %s", pod.Name)
+	}
+	time.Sleep(1 * time.Second)
+	if _, err := cluster.Ins().UpdateService(svc); err != nil {
+		return err
 	}
 	log.Info().Msgf("Deleting stuntman service %s", svc.Name + util.StuntmanServiceSuffix)
 	if err := cluster.Ins().RemoveService(svc.Name + util.StuntmanServiceSuffix, svc.Namespace); err != nil {

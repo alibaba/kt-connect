@@ -140,6 +140,15 @@ func UpdateServiceSelector(svcName, namespace string, selector map[string]string
 	}
 
 	go cluster.Ins().WatchService(svcName, namespace, nil, nil, func(newSvc *coreV1.Service) {
+		if pods, err2 := cluster.Ins().GetPodsByLabel(selector, namespace); err2 != nil || len(pods.Items) == 0 {
+			log.Warn().Msgf("Router pod has gone")
+			return
+		} else if pods.Items[0].DeletionTimestamp != nil {
+			log.Warn().Msgf("Router pod is terminating")
+			return
+		} else if len(pods.Items) > 1 {
+			log.Warn().Msgf("More than one router pod selected")
+		}
 		if !isServiceChanged(newSvc, selector, marshaledSelector) {
 			return
 		}
