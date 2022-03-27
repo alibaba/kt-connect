@@ -162,9 +162,13 @@ func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deploymen
 		return err
 	}
 	log.Info().Msgf("Deleting route pod %s", pod.Name)
-	_ = cluster.Ins().RemovePod(pod.Name, pod.Namespace)
+	if err := cluster.Ins().RemovePod(pod.Name, pod.Namespace); err != nil {
+		log.Debug().Err(err).Msgf("Failed to remove pod %s", pod.Name)
+	}
 	log.Info().Msgf("Deleting stuntman service %s", svc.Name + util.StuntmanServiceSuffix)
-	_ = cluster.Ins().RemoveService(svc.Name + util.StuntmanServiceSuffix, svc.Namespace)
+	if err := cluster.Ins().RemoveService(svc.Name + util.StuntmanServiceSuffix, svc.Namespace); err != nil {
+		log.Debug().Err(err).Msgf("Failed to remove service %s", svc.Name)
+	}
 	shadowLabels := map[string]string{
 		util.ControlBy: util.KubernetesToolkit,
 		util.KtRole:    util.RoleMeshShadow,
@@ -174,7 +178,9 @@ func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deploymen
 		for _, shadowApp := range apps.Items {
 			if strings.HasPrefix(shadowApp.Name, svc.Name + util.MeshPodInfix) {
 				log.Info().Msgf("Deleting shadow deployment %s", shadowApp.Name)
-				_ = cluster.Ins().RemoveDeployment(shadowApp.Name, shadowApp.Namespace)
+				if err2 := cluster.Ins().RemoveDeployment(shadowApp.Name, shadowApp.Namespace); err2 != nil {
+					log.Debug().Err(err2).Msgf("Failed to remove deployment %s", shadowApp.Name)
+				}
 				shadowSvcNames = append(shadowSvcNames, shadowApp.Name)
 			}
 		}
@@ -183,14 +189,18 @@ func recoverMeshedByAutoService(svc *coreV1.Service, deployment *appV1.Deploymen
 		for _, shadowPod := range pods.Items {
 			if strings.HasPrefix(shadowPod.Name, svc.Name + util.MeshPodInfix) && shadowPod.DeletionTimestamp == nil {
 				log.Info().Msgf("Deleting shadow pod %s", shadowPod.Name)
-				_ = cluster.Ins().RemoveDeployment(shadowPod.Name, shadowPod.Namespace)
+				if err2 := cluster.Ins().RemovePod(shadowPod.Name, shadowPod.Namespace); err2 != nil {
+					log.Debug().Err(err2).Msgf("Failed to remove pod %s", pod.Name)
+				}
 				shadowSvcNames = append(shadowSvcNames, shadowPod.Name)
 			}
 		}
 	}
 	for _, shadowSvc := range shadowSvcNames {
 		log.Info().Msgf("Deleting shadow service %s", shadowSvc)
-		_ = cluster.Ins().RemoveService(shadowSvc, svc.Namespace)
+		if err := cluster.Ins().RemoveService(shadowSvc, svc.Namespace); err != nil {
+			log.Debug().Err(err).Msgf("Failed to remove service %s", svc.Name)
+		}
 	}
 	return nil
 }
