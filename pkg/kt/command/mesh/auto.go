@@ -49,10 +49,9 @@ func AutoMesh(svc *coreV1.Service) error {
 
 	// Create shadow service
 	shadowName := svc.Name + util.MeshPodInfix + meshVersion
-	targetMark := util.RandomString(20)
 	shadowLabels := map[string]string{
 		util.KtRole:   util.RoleMeshShadow,
-		util.KtTarget: targetMark,
+		util.KtTarget: util.RandomString(20),
 	}
 	if err = createShadowService(shadowName, ports, shadowLabels); err != nil {
 		return err
@@ -63,7 +62,6 @@ func AutoMesh(svc *coreV1.Service) error {
 	routerPodName := svc.Name + util.RouterPodSuffix
 	routerLabels := map[string]string{
 		util.KtRole:   util.RoleRouter,
-		util.KtTarget: targetMark,
 	}
 	if err = createRouter(routerPodName, svc.Name, ports, routerLabels, versionMark); err != nil {
 		return err
@@ -141,6 +139,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 			return err
 		}
 		// Router not exist or just terminated
+		labels[util.KtTarget] = util.RandomString(20)
 		annotations := map[string]string{util.KtRefCount: "1", util.KtConfig: fmt.Sprintf("service=%s", svcName)}
 		if _, err = cluster.Ins().CreateRouterPod(routerPodName, labels, annotations, ports); err != nil {
 			log.Error().Err(err).Msgf("Failed to create router pod")
@@ -157,6 +156,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		}
 	} else {
 		// Router pod exist
+		labels[util.KtTarget] = routerPod.Labels[util.KtTarget]
 		cluster.Ins().UpdatePodHeartBeat(routerPodName, namespace)
 		if _, err = strconv.Atoi(routerPod.Annotations[util.KtRefCount]); err != nil {
 			log.Error().Msgf("Router pod exists, but do not have ref count")
