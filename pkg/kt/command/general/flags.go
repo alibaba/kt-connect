@@ -137,7 +137,7 @@ func ConnectActionFlag(options *opt.DaemonOptions) []cli.Flag {
 		},
 		cli.StringFlag{
 			Name:        "excludeIps",
-			Usage:       "(sshuttle mode only) Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
+			Usage:       "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
 			Destination: &options.ConnectOptions.ExcludeIps,
 		},
 		cli.BoolFlag{

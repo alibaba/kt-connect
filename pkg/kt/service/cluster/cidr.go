@@ -29,6 +29,12 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 			}
 		}
 	}
+	if opt.Get().ConnectOptions.ExcludeIps != "" {
+		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {
+			util.ArrayDelete(cidrs, ipRange)
+		}
+	}
+	log.Debug().Msgf("Cluster CIDR are: %v", cidrs)
 	return cidrs, nil
 }
 

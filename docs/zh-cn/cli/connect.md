@@ -11,7 +11,7 @@ Ktctl Connect
 --disablePodIp         禁用Pod IP访问，只能访问服务的Cluster IP或服务域名
 --skipCleanup          禁止自动清理集群中残留的过期对象
 --includeIps value     将指定IP段指定为集群网段，多个IP段用逗号分隔，IP段格式如 '172.2.0.0/16'
---excludeIps value     （仅用于`sshuttle`模式）将指定IP段指定为非集群网段，多个IP段用逗号分隔，可指定单个IP如 '192.168.64.2' 或IP段如 '192.168.64.0/24'
+--excludeIps value     将指定IP段指定为非集群网段，多个IP段用逗号分隔，可指定单个IP如 '192.168.64.2' 或IP段如 '192.168.64.0/24'
 --disableTunDevice     （仅用于`tun2socks`模式）仅创建Socks5代理，不创建本地tun设备
 --disableTunRoute      （仅用于`tun2socks`模式）仅创建tun设备，不自动设置本地路由规则
 --proxyPort value      （仅用于`tun2socks`模式）指定Socks5代理监听的端口（默认值为2223）

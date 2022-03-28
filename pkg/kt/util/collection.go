@@ -58,7 +58,7 @@ func MergeMap(m1, m2 map[string]string) map[string]string {
 	return cp
 }
 
-func ListEquals(src, target []string) bool {
+func ArrayEquals(src, target []string) bool {
 	if len(src) != len(target) {
 		return false
 	}
@@ -75,4 +75,13 @@ func ListEquals(src, target []string) bool {
 		}
 	}
 	return true
+}
+
+func ArrayDelete(arr []string, item string) []string {
+	for i, v := range arr {
+		if v == item {
+			return append(arr[:i], arr[i+1:]...)
+		}
+	}
+	return arr
 }

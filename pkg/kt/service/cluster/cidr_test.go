@@ -87,7 +87,7 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			realRange := calculateMinimalIpRange(test.ips)
-			if !util.ListEquals(test.miniRange, realRange) {
+			if !util.ArrayEquals(test.miniRange, realRange) {
 				t.Fatalf("range %v not as expect as %v", realRange, test.miniRange)
 			}
 		})
