@@ -1,7 +1,13 @@
 Ktctl Preview
 ---
 
-用于将本地服务添加到Kubernetes集群。子命令参数如下：
+用于将本地服务添加到Kubernetes集群。基本用法如下：
+
+```bash
+ktctl preview <新建服务名> --expose <本地端口>:<新建服务端口>
+```
+
+命令可选参数：
 
 ```
 --expose value  指定本地服务监听的端口，格式为`port`或`local:remote`，多个端口用逗号分隔，例如：7001,8080:80

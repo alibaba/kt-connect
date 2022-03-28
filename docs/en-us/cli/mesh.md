@@ -1,7 +1,13 @@
 Ktctl Mesh
 ---
 
-Redirect marked requests of specified kubernetes service to local. Available options:
+Redirect marked requests of specified kubernetes service to local. Basic usage:
+
+```bash
+ktctl mesh <TargetService> --expose <LocalPort>:<TargetServicePort>
+```
+
+Available options:
 
 ```
 --mode value         Mesh method 'auto' or 'manual' (default: "auto")

@@ -1,7 +1,13 @@
 Ktctl Exchange
 ---
 
-Redirect all requests of specified kubernetes service to local. Available options:
+Redirect all requests of specified kubernetes service to local. Basic usage:
+
+```bash
+ktctl exchange <TargetService> --expose <LocalPort>:<TargetServicePort>
+```
+
+Available options:
 
 ```
 --mode value             Exchange method 'selector', 'scale' or 'ephemeral'(experimental) (default: "selector")

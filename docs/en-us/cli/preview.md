@@ -1,7 +1,13 @@
 Ktctl Preview
 ---
 
-Expose a local service to kubernetes cluster. Available options:
+Expose a local service to kubernetes cluster. Basic usage:
+
+```bash
+ktctl preview <NewService> --expose <LocalPort>:<NewServicePort>
+```
+
+Available options:
 
 ```
 --expose value  Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80

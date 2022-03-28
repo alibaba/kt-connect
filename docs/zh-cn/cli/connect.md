@@ -1,7 +1,13 @@
 Ktctl Connect
 ---
 
-用于从本地连接到集群。子命令参数如下：
+用于从本地连接到集群。基本用法如下：
+
+```bash
+ktctl connect
+```
+
+命令可选参数：
 
 ```text
 --mode value           与集群建立虚拟连接的方式，可选值为 "tun2socks"（默认）和 "sshuttle"（仅限Linux/Mac）

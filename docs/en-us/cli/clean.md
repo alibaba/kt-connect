@@ -1,7 +1,13 @@
 Ktctl Clean
 ---
 
-Delete unavailing resources created by kt from kubernetes cluster. Available options:
+Delete unavailing resources created by kt from kubernetes cluster. Basic usage:
+
+```bash
+ktctl clean
+```
+
+Available options:
 
 ```
 --dryRun                  Only print name of deployments to be deleted

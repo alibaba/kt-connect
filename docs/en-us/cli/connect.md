@@ -1,7 +1,13 @@
 Ktctl Connect
 ---
 
-Create a network tunnel to kubernetes cluster. Available options:
+Create a network tunnel to kubernetes cluster. Basic usage:
+
+```bash
+ktctl connect
+```
+
+Available options:
 
 ```
 --mode value           Connect mode 'tun2socks' or 'sshuttle' (default: "tun2socks")

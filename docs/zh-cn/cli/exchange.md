@@ -1,7 +1,13 @@
 Ktctl Exchange
 ---
 
-用于使用本地服务替换集群中的Service实例。子命令参数如下：
+用于使用本地服务替换集群中的Service实例。基本用法如下：
+
+```bash
+ktctl exchange <目标服务名> --expose <本地端口>:<目标服务端口>
+```
+
+命令可选参数：
 
 ```text
 --mode value            重定向网络请求的方法，可选值为 "selector"（默认），"scale" 和 "ephemeral"（实验性功能）
