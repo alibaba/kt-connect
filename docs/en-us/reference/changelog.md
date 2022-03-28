@@ -1,6 +1,22 @@
 Changelog
 ---
 
+### 0.3.2
+
+> Release time: 2022-03-28
+
+- Add new command `recover` to immediately restore the traffic changed by `exchange` or `mesh` command of specified service
+- `connect` command now automatically clean up expired resources in the cluster before each run, without manually executing the `clean` command
+- `connect` command add `--useShadowDeployment` parameter to support deploying shadow containers as Deployment
+- `connect` command add `--podQuota` parameter to support configuring the resource limitation of shadow pod and router pod
+- `connect` command routing rule no longer dependent on the node's PodCIDR configuration
+- `connect` command now monitoring Service changes when using `hosts` dns mode
+- Show owner's username when the target service of `exchange`/`mesh` command is occupied
+- `manual` mode of the `mesh` command now using Service name as the target parameter
+- Fix an issue that the routing setting does not take effect in some cases in Windows environment (thanks to @[dominicqi](https://github.com/dominicqi))
+- Fix an issue that CPU and memory usage often soared in Windows environment
+- Fix error message when execute `ktctl` command without sub-command
+
 ### 0.3.1
 
 > Release time: 2022-02-20
@@ -19,7 +35,7 @@ Changelog
 > Release time: 2022-02-13
 
 - `connect` command supports `tun2socks` mode
-- The `connect` command supports simultaneous resolution of cluster service domain names and local intranet/extranet domain names
+- `connect` command supports simultaneous resolution of cluster service domain names and local intranet/extranet domain names
 - `connect` command supports access to Headless Service on all systems
 - `exchange` command defaults to `selector` mode
 - `mesh` command defaults to `auto` mode

@@ -1,6 +1,22 @@
 更新日志
 ---
 
+### 0.3.2
+
+> 发布时间：2022-03-28
+
+- 增加`recover`命令用于立即恢复指定服务被`exchange`或`mesh`的流量
+- `connect`运行时自动静默清理集群里的过期资源，可部分替代手工执行`clean`命令的功能
+- `connect`命令增加`--useShadowDeployment`参数，支持使用Deployment部署Shadow容器
+- `connect`命令增加`--podQuota`参数，支持配置ShadowPod和RouterPod的资源限额（issue-277）
+- `connect`命令路由规则不再读取节点的PodCIDR配置，去除对节点权限的依赖
+- `connect`命令的hosts域名解析模式增加对Service变化的监听和自动适配
+- `exchange`/`mesh`的目标被占用时，显示占用者信息
+- `mesh`命令的manual模式现在统一使用Service名作为目标参数
+- 修复Windows环境在某些情况下路由设置不生效的问题（感谢@[dominicqi](https://github.com/dominicqi)）
+- 修复Windows环境下CPU和内存占用时常飙高的问题（issue-291）
+- 修复`ktctl`未加子命令时的运行报错（issue-282）
+
 ### 0.3.1
 
 > 发布时间：2022-02-20
