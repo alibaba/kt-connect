@@ -6,7 +6,6 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	coreV1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"strconv"
@@ -14,22 +13,13 @@ import (
 )
 
 // ClusterCidrs get cluster Cidrs
-func (k *Kubernetes) ClusterCidrs(namespace string) (cidrs []string, err error) {
+func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
+	ips := getServiceIps(k.Clientset, namespace)
 	if !opt.Get().ConnectOptions.DisablePodIp {
-		cidrs, err = getPodCidrs(k.Clientset, namespace)
-		if err != nil {
-			return
-		}
+		ips = append(ips, getPodIps(k.Clientset, namespace)...)
 	}
-	log.Debug().Msgf("Pod CIDR is %v", cidrs)
 
-	serviceCidr, err := getServiceCidr(k.Clientset, namespace)
-	if err != nil {
-		return
-	}
-	cidrs = append(cidrs, serviceCidr...)
-	log.Debug().Msgf("Service CIDR is %v", serviceCidr)
-
+	cidrs := calculateMinimalIpRange(ips)
 	if opt.Get().ConnectOptions.IncludeIps != "" {
 		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.IncludeIps, ",") {
 			if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks && isSingleIp(ipRange) {
@@ -39,26 +29,17 @@ func (k *Kubernetes) ClusterCidrs(namespace string) (cidrs []string, err error) 
 			}
 		}
 	}
-	return calculateMinimalIpRange(cidrs), nil
-}
-
-func getPodCidrs(k kubernetes.Interface, namespace string) ([]string, error) {
-	var cidrs []string
-	ipRanges, err := getPodCidrByInstance(k, namespace)
-	if err != nil {
-		return nil, err
-	}
-	for _, ir := range ipRanges {
-		cidrs = append(cidrs, ir)
-	}
-
 	return cidrs, nil
 }
 
-func getPodCidrByInstance(k kubernetes.Interface, namespace string) ([]string, error) {
+func getPodIps(k kubernetes.Interface, namespace string) []string {
 	podList, err := k.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
 	if err != nil {
 		podList, err = k.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to fetch pod ips")
+			return []string{}
+		}
 	}
 
 	var ips []string
@@ -68,13 +49,17 @@ func getPodCidrByInstance(k kubernetes.Interface, namespace string) ([]string, e
 		}
 	}
 
-	return ips, nil
+	return ips
 }
 
-func getServiceCidr(k kubernetes.Interface, namespace string) ([]string, error) {
-	serviceList, err := fetchServiceList(k, namespace)
+func getServiceIps(k kubernetes.Interface, namespace string) []string {
+	serviceList, err := k.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
 	if err != nil {
-		return []string{}, err
+		serviceList, err = k.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
+		if err != nil {
+			log.Warn().Err(err).Msgf("Failed to fetch service ips")
+			return []string{}
+		}
 	}
 
 	var ips []string
@@ -84,16 +69,7 @@ func getServiceCidr(k kubernetes.Interface, namespace string) ([]string, error) 
 		}
 	}
 
-	return ips, nil
-}
-
-// fetchServiceList try list service at cluster scope. fallback to namespace scope
-func fetchServiceList(k kubernetes.Interface, namespace string) (*coreV1.ServiceList, error) {
-	serviceList, err := k.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
-	if err != nil {
-		return k.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
-	}
-	return serviceList, err
+	return ips
 }
 
 func calculateMinimalIpRange(ips []string) []string {

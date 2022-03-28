@@ -16,7 +16,7 @@ import (
 
 func TestKubernetes_ClusterCidrs(t *testing.T) {
 	type args struct {
-		extraIps []string
+		IncludeIps []string
 	}
 	tests := []struct {
 		name      string
@@ -28,19 +28,22 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 		{
 			name: "shouldGetClusterCidr",
 			args: args{
-				extraIps: []string{
+				IncludeIps: []string{
 					"10.10.10.0/24",
 				},
 			},
 			objs: []runtime.Object{
-				buildNode("default", "node1", "192.168.0.0/24"),
-				buildPod("default", "pod1", "image", "192.168.0.7", map[string]string{"labe": "value"}),
-				buildService("default", "svc1", "172.168.0.18"),
-				buildService("default", "svc2", "172.168.1.18"),
+				buildPod("default", "pod1", "image", "172.168.0.7", map[string]string{"label": "value"}),
+				buildPod("default", "pod2", "image", "172.168.0.8", map[string]string{"label": "value"}),
+				buildPod("default", "pod3", "image", "172.167.0.7", map[string]string{"label": "value"}),
+				buildPod("default", "pod4", "image", "172.167.0.8", map[string]string{"label": "value"}),
+				buildService("default", "svc1", "192.168.0.18"),
+				buildService("default", "svc2", "192.168.1.18"),
 			},
 			wantCidrs: []string{
-				"192.168.0.0/24",
-				"172.168.0.0/16",
+				"192.168.0.0/16",
+				"172.168.0.0/24",
+				"172.167.0.0/24",
 				"10.10.10.0/24",
 			},
 			wantErr: false,
@@ -51,7 +54,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			opt.Get().ConnectOptions.IncludeIps = strings.Join(tt.args.extraIps, ",")
+			opt.Get().ConnectOptions.IncludeIps = strings.Join(tt.args.IncludeIps, ",")
 			gotCidrs, err := k.ClusterCidrs("default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
@@ -63,83 +66,6 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 		})
 	}
 }
-
-func Test_getPodCidrs(t *testing.T) {
-	tests := []struct {
-		name      string
-		objs      []runtime.Object
-		wantCidrs []string
-		wantErr   bool
-	}{
-		{
-			name: "should_get_pod_cidr_from_pods",
-			objs: []runtime.Object{
-				buildPod("default", "POD1", "a", "172.168.1.2", map[string]string{}),
-				buildPod("default", "POD2", "b", "172.168.1.3", map[string]string{}),
-			},
-			wantCidrs: []string{
-				"172.168.1.0/24",
-			},
-			wantErr: false,
-		},
-		{
-			name: "should_get_pod_cidr_from_nodes",
-			objs: []runtime.Object{
-				buildNode("default", "a", "172.168.1.0/24"),
-			},
-			wantCidrs: []string{
-				"172.168.1.0/24",
-			},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			client := testclient.NewSimpleClientset(tt.objs...)
-			gotCidrs, err := getPodCidrs(client, "default")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getPodCidrs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotCidrs, tt.wantCidrs) {
-				t.Errorf("getPodCidrs() = %v, want %v", gotCidrs, tt.wantCidrs)
-			}
-		})
-	}
-}
-
-func Test_getServiceCidr(t *testing.T) {
-	tests := []struct {
-		name     string
-		objs      []runtime.Object
-		wantCidr []string
-		wantErr  bool
-	}{
-		{
-			name: "should_get_service_cidr_by_svc_sample",
-			objs: []runtime.Object{
-				buildService( "default", "SVC1", "172.168.1.2"),
-				buildService( "default", "SVC2", "172.168.2.2"),
-			},
-			wantErr:  false,
-			wantCidr: []string{"172.168.0.0/16"},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			client := testclient.NewSimpleClientset(tt.objs...)
-			gotCidr, err := getServiceCidr(client, "default")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getServiceCidr() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(gotCidr, tt.wantCidr) {
-				t.Errorf("getServiceCidr() = %v, want %v", gotCidr, tt.wantCidr)
-			}
-		})
-	}
-}
-
 
 func Test_calculateMinimalIpRange(t *testing.T) {
 	tests := []struct {
@@ -219,15 +145,6 @@ func buildService(namespace, name, clusterIP string) *coreV1.Service {
 		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
 		Spec: coreV1.ServiceSpec{
 			ClusterIP: clusterIP,
-		},
-	}
-}
-
-func buildNode(namespace, name, cidr string) *coreV1.Node {
-	return &coreV1.Node{
-		ObjectMeta: metav1.ObjectMeta{Namespace: namespace, Name: name},
-		Spec: coreV1.NodeSpec{
-			PodCIDR: cidr,
 		},
 	}
 }

@@ -162,7 +162,7 @@ func TestDumpHosts(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			linesAfterDump := dumpHosts(tt.args.hostsToDump)
+			linesAfterDump := dumpHosts(tt.args.hostsToDump, []string{})
 			require.Equal(t, len(tt.args.linesAfterDump), len(linesAfterDump),
 				"should has %d lines, but got %d", len(tt.args.linesAfterDump), len(linesAfterDump))
 			for _, line := range tt.args.linesAfterDump {

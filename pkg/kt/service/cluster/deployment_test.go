@@ -33,6 +33,12 @@ func TestKubernetes_ScaleTo(t *testing.T) {
 						Name:      "app",
 						Namespace: "default",
 					},
+					Spec: appv1.DeploymentSpec {
+						Replicas: func() *int32 {
+							i := int32(0)
+							return &i
+						}(),
+					},
 				},
 			},
 			wantErr: false,

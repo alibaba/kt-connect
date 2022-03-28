@@ -97,6 +97,7 @@ func (k *Kubernetes) ScaleTo(name, namespace string, replicas *int32) (err error
 		return
 	}
 
+	// replicas field is refer type, must compare with its real value
 	if *deployment.Spec.Replicas == *replicas {
 		log.Warn().Msgf("Deployment %s already having %d replicas, not need to scale", name, *replicas)
 		return nil
