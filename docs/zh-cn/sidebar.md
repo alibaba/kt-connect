@@ -8,6 +8,7 @@
   - [ktctl exchange](zh-cn/cli/exchange.md)
   - [ktctl mesh](zh-cn/cli/mesh.md)
   - [ktctl preview](zh-cn/cli/preview.md)
+  - [Ktctl recover](zh-cn/cli/recover.md)
   - [ktctl clean](zh-cn/cli/clean.md)
 
 - 技术参考

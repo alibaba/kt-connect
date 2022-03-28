@@ -8,6 +8,7 @@
   - [Ktctl Exchange](en-us/cli/exchange.md)
   - [Ktctl Mesh](en-us/cli/mesh.md)
   - [Ktctl Preview](en-us/cli/preview.md)
+  - [Ktctl Recover](en-us/cli/recover.md)
   - [Ktctl Clean](en-us/cli/clean.md)
 
 - Tech References
