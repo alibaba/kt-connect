@@ -15,7 +15,8 @@ import (
 // SetupProcess write pid file and print setup message
 func SetupProcess(componentName string, ch chan os.Signal) error {
 	opt.Get().RuntimeStore.Component = componentName
-	log.Info().Msgf("KtConnect %s start at %d (%s)", opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS)
+	log.Info().Msgf("KtConnect %s start at %d (%s %s)",
+		opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
 	return util.WritePidFile(componentName, ch)
 }
 
