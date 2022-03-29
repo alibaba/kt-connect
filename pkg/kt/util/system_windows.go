@@ -1,12 +1,12 @@
 package util
 
 import (
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sys/windows"
 )
 
+// Refer to https://github.com/golang/go/issues/28804
 func IsRunAsAdmin() bool {
-	// Refer to telepresence, which is transform from windows official C++ API.
-	// See https://docs.microsoft.com/en-us/windows/desktop/api/securitybaseapi/nf-securitybaseapi-checktokenmembership
 	var sid *windows.SID
 	err := windows.AllocateAndInitializeSid(
 		&windows.SECURITY_NT_AUTHORITY,
@@ -16,10 +16,19 @@ func IsRunAsAdmin() bool {
 		0, 0, 0, 0, 0, 0,
 		&sid)
 	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to get SID")
 		return false
 	}
-	adm, err := windows.GetCurrentProcessToken().IsMember(sid)
-	return err == nil && adm
+	defer windows.FreeSid(sid)
+
+	token := windows.Token(0)
+	isAdminMember, err := token.IsMember(sid)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to get token membership")
+		return false
+	}
+
+	return token.IsElevated() || isAdminMember
 }
 
 func GetAdminUserName() string {
