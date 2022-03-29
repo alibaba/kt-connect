@@ -59,7 +59,8 @@ func query(req *dns.Msg, clusterDnsAddr, upstreamDnsAddr string) []dns.RR {
 		return res.Answer
 	} else {
 		if err != nil && !common.IsDomainNotExist(err) {
-			log.Warn().Err(err).Msgf("Failed to lookup %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
+			// usually io timeout error
+			log.Debug().Err(err).Msgf("Failed to lookup %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
 		}
 
 		res, err = common.NsLookup(domain, qtype, "udp", upstreamDnsAddr)

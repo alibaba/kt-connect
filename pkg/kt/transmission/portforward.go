@@ -62,7 +62,6 @@ func portForward(podName string, remotePort, localPort int, stop chan struct{}) 
 	if err != nil {
 		return err
 	}
-	// in client-go 0.22, this always return nil
 	return fw.ForwardPorts()
 }
 
