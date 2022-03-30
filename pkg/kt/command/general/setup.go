@@ -27,7 +27,10 @@ func CombineKubeOpts() error {
 	}
 	config, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse kubeconfig: %s", err)
+	} else if config == nil {
+		// should not happen, but issue-275 and issue-285 may cause by it
+		return fmt.Errorf("failed to parse kubeconfig")
 	}
 	if len(opt.Get().KubeContext) > 0 {
 		found := false
