@@ -17,10 +17,9 @@ import (
 
 // NewRecoverCommand return new recover command
 func NewRecoverCommand(action ActionInterface) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:  "recover",
-		Long: "Restore traffic of specified kubernetes service changed by exchange or mesh",
-		Short: "ktctl recover [command options]",
+		Short: "Restore traffic of specified kubernetes service changed by exchange or mesh",
 		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -34,6 +33,13 @@ func NewRecoverCommand(action ActionInterface) *cobra.Command {
 			}
 		},
 	}
+
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl recover [command options]"))
+	cmd.Long = cmd.Short
+
+	cmd.Flags().SortFlags = false
+	cmd.InheritedFlags().SortFlags = false
+	return cmd
 }
 
 // Recover delete unavailing shadow pods

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/clean"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -14,8 +15,7 @@ import (
 func NewCleanCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "clean",
-		Long: "Delete unavailing resources created by kt from kubernetes cluster",
-		Short: "ktctl clean [command options]",
+		Short: "Delete unavailing resources created by kt from kubernetes cluster",
 		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -27,7 +27,12 @@ func NewCleanCommand(action ActionInterface) *cobra.Command {
 			}
 		},
 	}
+
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl clean [command options]"))
+	cmd.Long = cmd.Short
+
 	cmd.Flags().SortFlags = false
+	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().Int64Var(&opt.Get().CleanOptions.ThresholdInMinus, "thresholdInMinus", cluster.ResourceHeartBeatIntervalMinus * 2 + 1, "Length of allowed disconnection time before a unavailing shadow pod be deleted")
 	cmd.Flags().BoolVar(&opt.Get().CleanOptions.DryRun, "dryRun", false, "Only print name of deployments to be deleted")
 	return cmd

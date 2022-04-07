@@ -18,8 +18,7 @@ import (
 func NewExchangeCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "exchange",
-		Long: "Redirect all requests of specified kubernetes service to local",
-		Short: "ktctl exchange <service-name> [command options]",
+		Short: "Redirect all requests of specified kubernetes service to local",
 		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -28,14 +27,17 @@ func NewExchangeCommand(action ActionInterface, ch chan os.Signal) *cobra.Comman
 				log.Error().Msgf("%s", err)
 			} else if len(args) == 0 {
 				log.Error().Msgf("name of service to exchange is required")
-			} else if len(opt.Get().ExchangeOptions.Expose) == 0 {
-				log.Error().Msgf("--expose is required")
 			} else if err2 := action.Exchange(args[0], ch); err2 != nil {
 				log.Error().Msgf("%s", err2)
 			}
 		},
 	}
+
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
+	cmd.Long = cmd.Short
+
 	cmd.Flags().SortFlags = false
+	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Expose, "expose", util.ExchangeModeSelector, "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
 	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Mode, "mode", util.MeshModeAuto, "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)")
 	cmd.Flags().IntVar(&opt.Get().ExchangeOptions.RecoverWaitTime, "recoverWaitTime", 120, "(scale method only) Seconds to wait for original deployment recover before turn off the shadow pod")

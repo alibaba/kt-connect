@@ -19,8 +19,7 @@ import (
 func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "connect",
-		Long: "Create a network tunnel to kubernetes cluster",
-		Short: "ktctl connect [command options]",
+		Short: "Create a network tunnel to kubernetes cluster",
 		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -32,7 +31,12 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 			}
 		},
 	}
+
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl connect [command options]"))
+	cmd.Long = cmd.Short
+
 	cmd.Flags().SortFlags = false
+	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().StringVar(&opt.Get().ConnectOptions.Mode, "mode", util.ConnectModeTun2Socks, "Connect mode 'tun2socks' or 'sshuttle'")
 	cmd.Flags().StringVar(&opt.Get().ConnectOptions.DnsMode, "dnsMode", util.DnsModeLocalDns, "Specify how to resolve service domains, can be 'localDNS', 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation")
 	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.SharedShadow, "shareShadow", false, "Use shared shadow pod")

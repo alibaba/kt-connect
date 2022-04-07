@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
@@ -48,6 +49,9 @@ func main() {
 	rootCmd.AddCommand(command.NewRecoverCommand(action))
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 
+	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
+
+	rootCmd.Flags().SortFlags = false
 	rootCmd.PersistentFlags().SortFlags = false
 	rootCmd.PersistentFlags().StringVarP(&opt.Get().Namespace, "namespace", "n", "", "Specify target namespace (otherwise follow kubeconfig current context)")
 	rootCmd.PersistentFlags().StringVarP(&opt.Get().KubeConfig, "kubeconfig", "c", "", "Specify path of KubeConfig file")

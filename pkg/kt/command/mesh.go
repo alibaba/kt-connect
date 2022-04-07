@@ -17,8 +17,7 @@ import (
 func NewMeshCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "mesh",
-		Long: "Redirect marked requests of specified kubernetes service to local",
-		Short: "ktctl mesh <service-name> [command options]",
+		Short: "Redirect marked requests of specified kubernetes service to local",
 		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -32,7 +31,12 @@ func NewMeshCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
 			}
 		},
 	}
+
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl mesh <service-name> [command options]"))
+	cmd.Long = cmd.Short
+
 	cmd.Flags().SortFlags = false
+	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.Mode, "mode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")

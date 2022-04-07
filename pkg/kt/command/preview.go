@@ -17,8 +17,7 @@ import (
 func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "preview",
-		Long: "Expose a local service to kubernetes cluster",
-		Short: "ktctl preview <service-name> [command options]",
+		Short: "Expose a local service to kubernetes cluster",
 		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
@@ -26,13 +25,18 @@ func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 			if err := general.CombineKubeOpts(); err != nil {
 				log.Error().Msgf("%s", err)
 			} else if len(args) == 0 {
-				log.Error().Msgf("an service name must be specified")
+				log.Error().Msgf("a service name must be specified")
 			} else if err2 := action.Preview(args[0], ch); err2 != nil {
 				log.Error().Msgf("%s", err2)
 			}
 		},
 	}
+
+	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl preview <service-name> [command options]"))
+	cmd.Long = cmd.Short
+
 	cmd.Flags().SortFlags = false
+	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().StringVar(&opt.Get().PreviewOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
 	cmd.Flags().BoolVar(&opt.Get().PreviewOptions.External, "external", false, "If specified, a public, external service is created")
 	_ = cmd.MarkFlagRequired("expose")
