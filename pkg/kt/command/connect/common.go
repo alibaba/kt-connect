@@ -40,7 +40,9 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		if err != nil {
 			return err
 		}
-		transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort)
+		if err = transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort); err != nil {
+			return err
+		}
 
 		dnsPort := util.AlternativeDnsPort
 		if util.IsWindows() {

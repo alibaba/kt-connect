@@ -16,7 +16,6 @@ type CMDContext struct {
 	Ctx     context.Context
 	Cmd     *exec.Cmd
 	Name    string
-	Stop    chan struct{} // notify parent current Cmd occur error
 }
 
 // RunAndWait run cmd

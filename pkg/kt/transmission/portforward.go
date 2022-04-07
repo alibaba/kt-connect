@@ -19,7 +19,8 @@ import (
 )
 
 // SetupPortForwardToLocal mapping local port to shadow pod ssh port
-func SetupPortForwardToLocal(podName string, remotePort, localPort int) (chan struct{}, error) {
+func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
+	// TODO: reconnect when network interrupted and recovered
 	stop := make(chan struct{})
 	_, cancel := context.WithCancel(context.Background())
 	// one of the background process start failed and will cancel the started process
@@ -34,10 +35,10 @@ func SetupPortForwardToLocal(podName string, remotePort, localPort int) (chan st
 	}()
 
 	if !util.WaitPortBeReady(opt.Get().PortForwardWaitTime, localPort) {
-		return nil, fmt.Errorf("connect to port-forward failed")
+		return fmt.Errorf("connect to port-forward failed")
 	}
 	cluster.SetupPortForwardHeartBeat(localPort)
-	return stop, nil
+	return nil
 }
 
 // PortForward call port forward api

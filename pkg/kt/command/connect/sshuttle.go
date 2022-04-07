@@ -28,8 +28,7 @@ func BySshuttle() error {
 	if err != nil {
 		return err
 	}
-	stop, err := transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort)
-	if err != nil {
+	if err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
 
@@ -38,7 +37,7 @@ func BySshuttle() error {
 		RemoteSSHPKPath:        privateKeyPath,
 		RemoteDNSServerAddress: podIP,
 		CustomCIDR:             cidrs,
-	}, stop); err != nil {
+	}); err != nil {
 		return err
 	}
 
@@ -54,11 +53,10 @@ func checkSshuttleInstalled() {
 	}
 }
 
-func startVPNConnection(req *sshuttle.SSHVPNRequest, stop chan struct{}) (err error) {
+func startVPNConnection(req *sshuttle.SSHVPNRequest) (err error) {
 	return util.BackgroundRun(&util.CMDContext{
 		Ctx:  context.Background(),
 		Cmd:  sshuttle.Ins().Connect(req),
 		Name: "vpn(sshuttle)",
-		Stop: stop,
 	})
 }
