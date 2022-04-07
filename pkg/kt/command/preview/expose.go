@@ -39,11 +39,12 @@ func exposeLocalService(serviceName, shadowPodName string, labels, annotations m
 	portPairs := strings.Split(opt.Get().PreviewOptions.Expose, ",")
 	ports := make(map[int]int)
 	for _, exposePort := range portPairs {
-		localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
+		_, remotePort, err2 := util.ParsePortMapping(exposePort)
 		if err2 != nil {
 			return err
 		}
-		ports[localPort] = remotePort
+		// service port to target port
+		ports[remotePort] = remotePort
 	}
 	if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 		Meta: &cluster.ResourceMeta{
