@@ -9,35 +9,36 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	urfave "github.com/urfave/cli"
+	"github.com/spf13/cobra"
 	"os"
 )
 
 // NewMeshCommand return new mesh command
-func NewMeshCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
-	return urfave.Command{
-		Name:  "mesh",
-		Usage: "redirect marked requests of specified kubernetes service to local",
-		UsageText: "ktctl mesh <service-name> [command options]",
-		Flags: general.MeshActionFlag(opt.Get()),
-		Action: func(c *urfave.Context) error {
+func NewMeshCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "mesh",
+		Long: "Redirect marked requests of specified kubernetes service to local",
+		Short: "ktctl mesh <service-name> [command options]",
+		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			if err := general.CombineKubeOpts(); err != nil {
-				return err
+				log.Error().Msgf("%s", err)
+			} else if len(args) == 0 {
+				log.Error().Msgf("name of service to mesh is required")
+			} else if err2 := action.Mesh(args[0], ch); err2 != nil {
+				log.Error().Msgf("%s", err2)
 			}
-
-			if len(c.Args()) == 0 {
-				return fmt.Errorf("name of deployment to mesh is required")
-			}
-			if len(opt.Get().MeshOptions.Expose) == 0 {
-				return fmt.Errorf("--expose is required")
-			}
-
-			return action.Mesh(c.Args().First(), ch)
 		},
 	}
+	cmd.Flags().SortFlags = false
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.Mode, "mode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.RouterImage, "routerImage", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + opt.Get().RuntimeStore.Version, "(auto method only) Customize router image")
+	_ = cmd.MarkFlagRequired("expose")
+	return cmd
 }
 
 //Mesh exchange kubernetes workload

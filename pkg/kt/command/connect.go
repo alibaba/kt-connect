@@ -11,27 +11,41 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	urfave "github.com/urfave/cli"
+	"github.com/spf13/cobra"
 	"os"
 )
 
 // NewConnectCommand return new connect command
-func NewConnectCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
-	return urfave.Command{
-		Name:  "connect",
-		Usage: "create a network tunnel to kubernetes cluster",
-		UsageText: "ktctl connect [command options]",
-		Flags: general.ConnectActionFlag(opt.Get()),
-		Action: func(c *urfave.Context) error {
+func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "connect",
+		Long: "Create a network tunnel to kubernetes cluster",
+		Short: "ktctl connect [command options]",
+		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			if err := general.CombineKubeOpts(); err != nil {
-				return err
+				log.Error().Msgf("%s", err)
+			} else if err2 := action.Connect(ch); err2 != nil {
+				log.Error().Msgf("%s", err2)
 			}
-			return action.Connect(ch)
 		},
 	}
+	cmd.Flags().SortFlags = false
+	cmd.Flags().StringVar(&opt.Get().ConnectOptions.Mode, "mode", util.ConnectModeTun2Socks, "Connect mode 'tun2socks' or 'sshuttle'")
+	cmd.Flags().StringVar(&opt.Get().ConnectOptions.DnsMode, "dnsMode", util.DnsModeLocalDns, "Specify how to resolve service domains, can be 'localDNS', 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation")
+	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.SharedShadow, "shareShadow", false, "Use shared shadow pod")
+	cmd.Flags().StringVar(&opt.Get().ConnectOptions.ClusterDomain, "clusterDomain", "cluster.local", "The cluster domain provided to kubernetes api-server")
+	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisablePodIp, "disablePodIp", false, "Disable access to pod IP address")
+	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.SkipCleanup, "skipCleanup", false, "Do not auto cleanup residual resources in cluster")
+	cmd.Flags().StringVar(&opt.Get().ConnectOptions.IncludeIps, "includeIps", "", "Specify extra IP ranges which should be route to cluster, e.g. '172.2.0.0/16', use ',' separated")
+	cmd.Flags().StringVar(&opt.Get().ConnectOptions.ExcludeIps, "excludeIps", "", "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated")
+	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisableTunDevice, "disableTunDevice", false, "(tun2socks mode only) Create socks5 proxy without tun device")
+	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisableTunRoute, "disableTunRoute", false, "(tun2socks mode only) Do not auto setup tun device route")
+	cmd.Flags().IntVar(&opt.Get().ConnectOptions.SocksPort, "proxyPort", 2223, "(tun2socks mode only) Specify the local port which socks5 proxy should use")
+	cmd.Flags().Int64Var(&opt.Get().ConnectOptions.DnsCacheTtl, "dnsCacheTtl", 60, "(local dns mode only) DNS cache refresh interval in seconds")
+	return cmd
 }
 
 // Connect setup vpn to kubernetes cluster

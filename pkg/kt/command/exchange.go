@@ -9,36 +9,38 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	urfave "github.com/urfave/cli"
+	"github.com/spf13/cobra"
 	"os"
 	"strings"
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
-	return urfave.Command{
-		Name:  "exchange",
-		Usage: "redirect all requests of specified kubernetes service to local",
-		UsageText: "ktctl exchange <service-name> [command options]",
-		Flags: general.ExchangeActionFlag(opt.Get()),
-		Action: func(c *urfave.Context) error {
+func NewExchangeCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "exchange",
+		Long: "Redirect all requests of specified kubernetes service to local",
+		Short: "ktctl exchange <service-name> [command options]",
+		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			if err := general.CombineKubeOpts(); err != nil {
-				return err
+				log.Error().Msgf("%s", err)
+			} else if len(args) == 0 {
+				log.Error().Msgf("name of service to exchange is required")
+			} else if len(opt.Get().ExchangeOptions.Expose) == 0 {
+				log.Error().Msgf("--expose is required")
+			} else if err2 := action.Exchange(args[0], ch); err2 != nil {
+				log.Error().Msgf("%s", err2)
 			}
-
-			if len(c.Args()) == 0 {
-				return fmt.Errorf("name of resource to exchange is required")
-			}
-			if len(opt.Get().ExchangeOptions.Expose) == 0 {
-				return fmt.Errorf("--expose is required")
-			}
-
-			return action.Exchange(c.Args().First(), ch)
 		},
 	}
+	cmd.Flags().SortFlags = false
+	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Expose, "expose", util.ExchangeModeSelector, "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
+	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Mode, "mode", util.MeshModeAuto, "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)")
+	cmd.Flags().IntVar(&opt.Get().ExchangeOptions.RecoverWaitTime, "recoverWaitTime", 120, "(scale method only) Seconds to wait for original deployment recover before turn off the shadow pod")
+	_ = cmd.MarkFlagRequired("expose")
+	return cmd
 }
 
 //Exchange exchange kubernetes workload

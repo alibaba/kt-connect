@@ -9,33 +9,34 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	urfave "github.com/urfave/cli"
+	"github.com/spf13/cobra"
 	"os"
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(action ActionInterface, ch chan os.Signal) urfave.Command {
-	return urfave.Command{
-		Name:  "preview",
-		Usage: "expose a local service to kubernetes cluster",
-		UsageText: "ktctl preview <service-name> [command options]",
-		Flags: general.PreviewActionFlag(opt.Get()),
-		Action: func(c *urfave.Context) error {
+func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:  "preview",
+		Long: "Expose a local service to kubernetes cluster",
+		Short: "ktctl preview <service-name> [command options]",
+		Run: func(cmd *cobra.Command, args []string) {
 			if opt.Get().Debug {
 				zerolog.SetGlobalLevel(zerolog.DebugLevel)
 			}
 			if err := general.CombineKubeOpts(); err != nil {
-				return err
+				log.Error().Msgf("%s", err)
+			} else if len(args) == 0 {
+				log.Error().Msgf("an service name must be specified")
+			} else if err2 := action.Preview(args[0], ch); err2 != nil {
+				log.Error().Msgf("%s", err2)
 			}
-			if len(c.Args()) == 0 {
-				return fmt.Errorf("an service name must be specified")
-			}
-			if len(opt.Get().PreviewOptions.Expose) == 0 {
-				return fmt.Errorf("--expose is required")
-			}
-			return action.Preview(c.Args().First(), ch)
 		},
 	}
+	cmd.Flags().SortFlags = false
+	cmd.Flags().StringVar(&opt.Get().PreviewOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
+	cmd.Flags().BoolVar(&opt.Get().PreviewOptions.External, "external", false, "If specified, a public, external service is created")
+	_ = cmd.MarkFlagRequired("expose")
+	return cmd
 }
 
 // Preview create a new service in cluster

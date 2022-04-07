@@ -3,13 +3,13 @@ module github.com/alibaba/kt-connect
 go 1.18
 
 require (
-	github.com/fsnotify/fsnotify v1.4.9
+	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gofrs/flock v0.8.0
 	github.com/miekg/dns v1.1.45
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/rs/zerolog v1.23.0
+	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.0
-	github.com/urfave/cli v1.22.4
 	github.com/wzshiming/socks5 v0.4.0
 	github.com/xjasonlyu/tun2socks/v2 v2.3.3
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
@@ -21,9 +21,8 @@ require (
 )
 
 require (
-	cloud.google.com/go v0.88.0 // indirect
+	cloud.google.com/go v0.99.0 // indirect
 	github.com/Dreamacro/go-shadowsocks2 v0.1.7 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/go-chi/chi/v5 v5.0.7 // indirect
@@ -39,20 +38,19 @@ require (
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/imdario/mergo v0.3.5 // indirect
-	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/russross/blackfriday/v2 v2.0.1 // indirect
-	github.com/shurcooL/sanitized_anchor_name v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/mod v0.5.1 // indirect
 	golang.org/x/net v0.0.0-20220325170049-de3da57026de // indirect
-	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1 // indirect
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20220224211638-0e9765cccd65 // indirect
