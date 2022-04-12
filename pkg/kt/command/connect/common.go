@@ -67,7 +67,7 @@ func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessP
 	go cluster.Ins().WatchService("", namespace,
 		func(svc *coreV1.Service) {
 			// ignore add service event during watch setup
-			if time.Now().Unix()-setupTime > 3 {
+			if time.Now().Unix() - setupTime > 3 {
 				svcToIp, headlessPods = getServiceHosts(namespace, shortDomainOnly)
 				_ = dns.DumpHosts(svcToIp, namespace)
 			}

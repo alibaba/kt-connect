@@ -24,7 +24,7 @@ func LockService(serviceName, namespace string, times int) (*coreV1.Service, err
 	if svc.Annotations == nil {
 		svc.Annotations = make(map[string]string)
 	}
-	if lock, ok := svc.Annotations[util.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) < LockTimeout {
+	if lock, ok := svc.Annotations[util.KtLock]; ok && util.GetTime() - util.ParseTimestamp(lock) < LockTimeout {
 		log.Info().Msgf("Another user is occupying service %s, waiting for lock ...", serviceName)
 		time.Sleep(3 * time.Second)
 		return LockService(serviceName, namespace, times + 1)

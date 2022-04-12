@@ -14,7 +14,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type ResourceToClean struct {
@@ -245,7 +244,7 @@ func analysisLockAndOrphanServices(svcs []coreV1.Service, resourceToClean *Resou
 		if svc.Annotations == nil {
 			continue
 		}
-		if lock, ok := svc.Annotations[util.KtLock]; ok && time.Now().Unix() - util.ParseTimestamp(lock) > general.LockTimeout {
+		if lock, ok := svc.Annotations[util.KtLock]; ok && util.GetTime() - util.ParseTimestamp(lock) > general.LockTimeout {
 			resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 		}
 		if svc.Annotations[util.KtSelector] != "" {
@@ -302,6 +301,6 @@ func isRouterPodExist(svcName, namespace string) bool {
 }
 
 func isExpired(lastHeartBeat, cleanThresholdInMinus int64) bool {
-	return time.Now().Unix()-lastHeartBeat > cleanThresholdInMinus*60
+	return util.GetTime() - lastHeartBeat > cleanThresholdInMinus*60
 }
 

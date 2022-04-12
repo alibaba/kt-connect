@@ -15,6 +15,9 @@ import (
 	ps "github.com/mitchellh/go-ps"
 )
 
+// TimeDifference seconds between remote and local time
+var TimeDifference int64 = 0
+
 // GetDaemonRunning fetch daemon pid if exist
 func GetDaemonRunning(componentName string) int {
 	files, _ := ioutil.ReadDir(KtHome)
@@ -100,9 +103,14 @@ func FixFileOwner(path string) {
 	_ = os.Chown(path, uid, gid)
 }
 
+// GetTime get time with rectification
+func GetTime() int64 {
+	return time.Now().Unix() + TimeDifference
+}
+
 // GetTimestamp get current timestamp
 func GetTimestamp() string {
-	return strconv.FormatInt(time.Now().Unix(), 10)
+	return strconv.FormatInt(GetTime(), 10)
 }
 
 // ParseTimestamp parse timestamp to unix time

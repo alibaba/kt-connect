@@ -15,8 +15,6 @@ import (
 const ResourceHeartBeatIntervalMinus = 2
 const portForwardHeartBeatIntervalSec = 60
 
-var TimeDifference int64 = 0
-
 // SetupTimeDifference get time difference between cluster and local
 func SetupTimeDifference() error {
 	rectifierPodName := fmt.Sprintf("kt-rectifier-%s", strings.ToLower(util.RandomString(5)))
@@ -38,12 +36,13 @@ func SetupTimeDifference() error {
 		log.Warn().Msgf("Invalid cluster time: '%s' %s", stdout, stderr)
 		return err
 	}
-	TimeDifference = remoteTime - time.Now().Unix()
-	if TimeDifference >= -1 && TimeDifference <= 1 {
+	timeDifference := remoteTime - time.Now().Unix()
+	if timeDifference >= -1 && timeDifference <= 1 {
 		log.Info().Msgf("No time difference")
 	} else {
-		log.Info().Msgf("Time difference is %d", TimeDifference)
+		log.Info().Msgf("Time difference is %d", timeDifference)
 	}
+	util.TimeDifference = timeDifference
 	return nil
 }
 
