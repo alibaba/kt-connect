@@ -17,7 +17,7 @@ const portForwardHeartBeatIntervalSec = 60
 
 // SetupTimeDifference get time difference between cluster and local
 func SetupTimeDifference() error {
-	rectifierPodName := fmt.Sprintf("kt-rectifier-%s", strings.ToLower(util.RandomString(5)))
+	rectifierPodName := fmt.Sprintf("%s%s", util.RectifierPodPrefix, strings.ToLower(util.RandomString(5)))
 	_, err := Ins().CreateRectifierPod(rectifierPodName)
 	if err != nil {
 		return err

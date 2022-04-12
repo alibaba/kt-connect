@@ -205,11 +205,17 @@ func (k *Kubernetes) waitPodReady(name, namespace string, timeoutSec int, times 
 		return nil, err
 	}
 	if pod.Status.Phase != coreV1.PodRunning {
-		log.Info().Msgf("Waiting for pod %s ...", name)
+		if strings.HasPrefix(name, util.RectifierPodPrefix) {
+			log.Info().Msgf("Fetching cluster time ...")
+		} else {
+			log.Info().Msgf("Waiting for pod %s ...", name)
+		}
 		time.Sleep(interval * time.Second)
 		return k.waitPodReady(name, namespace, timeoutSec, times + 1)
 	}
-	log.Info().Msgf("Pod %s is ready", pod.Name)
+	if !strings.HasPrefix(name, util.RectifierPodPrefix) {
+		log.Info().Msgf("Pod %s is ready", pod.Name)
+	}
 	return pod, err
 }
 

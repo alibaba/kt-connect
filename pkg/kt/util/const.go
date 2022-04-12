@@ -81,6 +81,8 @@ const (
 	ExchangePodInfix = "-kt-exchange-"
 	// MeshPodInfix mesh pod and mesh service name
 	MeshPodInfix = "-kt-mesh-"
+	// RectifierPodPrefix rectifier pod name
+	RectifierPodPrefix = "kt-rectifier-"
 	// RoleConnectShadow shadow role
 	RoleConnectShadow = "shadow-connect"
 	// RoleExchangeShadow shadow role

@@ -43,6 +43,6 @@ func (k *Kubernetes) CreateRectifierPod(name string) (*coreV1.Pod, error) {
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return nil, err
 	}
-	log.Info().Msgf("Rectify pod %s created", name)
+	log.Debug().Msgf("Rectify pod %s created", name)
 	return k.WaitPodReady(name, opt.Get().Namespace, opt.Get().PodCreationWaitTime)
 }
