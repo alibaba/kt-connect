@@ -19,7 +19,6 @@ func ByTun2Socks() error {
 	if err != nil {
 		return err
 	}
-	cluster.GetTimeDifference(podName, opt.Get().Namespace)
 
 	localSshPort, err := util.GetRandomTcpPort()
 	if err != nil {

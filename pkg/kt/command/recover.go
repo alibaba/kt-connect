@@ -20,6 +20,7 @@ func NewRecoverCommand(action ActionInterface) *cobra.Command {
 		Use:  "recover",
 		Short: "Restore traffic of specified kubernetes service changed by exchange or mesh",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			opt.Get().SkipTimeDiff = true
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -29,3 +29,20 @@ func (k *Kubernetes) CreateRouterPod(name string, labels, annotations map[string
 	log.Info().Msgf("Router pod %s created", name)
 	return k.WaitPodReady(name, opt.Get().Namespace, opt.Get().PodCreationWaitTime)
 }
+
+// CreateRectifierPod create pod for rectify time difference
+func (k *Kubernetes) CreateRectifierPod(name string) (*coreV1.Pod, error) {
+	metaAndSpec := &PodMetaAndSpec{&ResourceMeta{
+		Name:        name,
+		Namespace:   opt.Get().Namespace,
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+	}, opt.Get().Image, map[string]string{}, []int{}, true}
+	pod := createPod(metaAndSpec)
+	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
+		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
+		return nil, err
+	}
+	log.Info().Msgf("Rectify pod %s created", name)
+	return k.WaitPodReady(name, opt.Get().Namespace, opt.Get().PodCreationWaitTime)
+}

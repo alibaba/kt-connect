@@ -99,6 +99,7 @@ type DaemonOptions struct {
 	PodCreationWaitTime int
 	UseShadowDeployment bool
 	AlwaysUpdateShadow  bool
+	SkipTimeDiff        bool
 	KubeContext         string
 	PodQuota            string
 }
