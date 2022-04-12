@@ -6,7 +6,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -16,15 +15,11 @@ func NewCleanCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "clean",
 		Short: "Delete unavailing resources created by kt from kubernetes cluster",
-		Run: func(cmd *cobra.Command, args []string) {
-			if opt.Get().Debug {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
-			}
-			if err := general.CombineKubeOpts(); err != nil {
-				log.Error().Msgf("%s", err)
-			} else if err2 := action.Clean(); err2 != nil {
-				log.Error().Msgf("%s", err2)
-			}
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return general.Prepare()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return action.Clean()
 		},
 	}
 

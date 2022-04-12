@@ -9,7 +9,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os"
@@ -20,15 +19,11 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 	cmd := &cobra.Command{
 		Use:  "connect",
 		Short: "Create a network tunnel to kubernetes cluster",
-		Run: func(cmd *cobra.Command, args []string) {
-			if opt.Get().Debug {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
-			}
-			if err := general.CombineKubeOpts(); err != nil {
-				log.Error().Msgf("%s", err)
-			} else if err2 := action.Connect(ch); err2 != nil {
-				log.Error().Msgf("%s", err2)
-			}
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return general.Prepare()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return action.Connect(ch)
 		},
 	}
 

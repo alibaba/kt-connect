@@ -7,7 +7,6 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os"
@@ -18,17 +17,14 @@ func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 	cmd := &cobra.Command{
 		Use:  "preview",
 		Short: "Expose a local service to kubernetes cluster",
-		Run: func(cmd *cobra.Command, args []string) {
-			if opt.Get().Debug {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return general.Prepare()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("a service name must be specified")
 			}
-			if err := general.CombineKubeOpts(); err != nil {
-				log.Error().Msgf("%s", err)
-			} else if len(args) == 0 {
-				log.Error().Msgf("a service name must be specified")
-			} else if err2 := action.Preview(args[0], ch); err2 != nil {
-				log.Error().Msgf("%s", err2)
-			}
+			return action.Preview(args[0], ch)
 		},
 	}
 

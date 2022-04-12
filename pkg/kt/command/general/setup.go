@@ -4,6 +4,7 @@ import (
 	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -36,6 +37,17 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
 `
 
+// Prepare setup log level, time difference and kube config
+func Prepare() error {
+	if opt.Get().Debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+	if err := combineKubeOpts(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SetupProcess write pid file and print setup message
 func SetupProcess(componentName string, ch chan os.Signal) error {
 	opt.Get().RuntimeStore.Component = componentName
@@ -44,8 +56,8 @@ func SetupProcess(componentName string, ch chan os.Signal) error {
 	return util.WritePidFile(componentName, ch)
 }
 
-// CombineKubeOpts set default options of kubectl if not assign
-func CombineKubeOpts() error {
+// combineKubeOpts set default options of kubectl if not assign
+func combineKubeOpts() error {
 	if opt.Get().KubeConfig != ""{
 		_ = os.Setenv(util.EnvKubeConfig, opt.Get().KubeConfig)
 	}

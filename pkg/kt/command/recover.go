@@ -8,7 +8,6 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	appV1 "k8s.io/api/apps/v1"
@@ -20,17 +19,14 @@ func NewRecoverCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "recover",
 		Short: "Restore traffic of specified kubernetes service changed by exchange or mesh",
-		Run: func(cmd *cobra.Command, args []string) {
-			if opt.Get().Debug {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return general.Prepare()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to recover is required")
 			}
-			if err := general.CombineKubeOpts(); err != nil {
-				log.Error().Msgf("%s", err)
-			} else if len(args) == 0 {
-				log.Error().Msgf("name of service to recover is required")
-			} else if err2 := action.Recover(args[0]); err2 != nil {
-				log.Error().Msgf("%s", err2)
-			}
+			return action.Recover(args[0])
 		},
 	}
 

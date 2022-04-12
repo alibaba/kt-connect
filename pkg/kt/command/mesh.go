@@ -7,7 +7,6 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"os"
@@ -18,17 +17,14 @@ func NewMeshCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "mesh",
 		Short: "Redirect marked requests of specified kubernetes service to local",
-		Run: func(cmd *cobra.Command, args []string) {
-			if opt.Get().Debug {
-				zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return general.Prepare()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to mesh is required")
 			}
-			if err := general.CombineKubeOpts(); err != nil {
-				log.Error().Msgf("%s", err)
-			} else if len(args) == 0 {
-				log.Error().Msgf("name of service to mesh is required")
-			} else if err2 := action.Mesh(args[0], ch); err2 != nil {
-				log.Error().Msgf("%s", err2)
-			}
+			return action.Mesh(args[0], ch)
 		},
 	}
 

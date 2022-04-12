@@ -19,7 +19,7 @@ func ByTun2Socks() error {
 	if err != nil {
 		return err
 	}
-	go activePodRoute(podName)
+	cluster.GetTimeDifference(podName, opt.Get().Namespace)
 
 	localSshPort, err := util.GetRandomTcpPort()
 	if err != nil {
@@ -56,15 +56,6 @@ func ByTun2Socks() error {
 			log.Info().Msgf("Route to tun device completed")
 		}
 		return setupDns(podName, podIP)
-	}
-}
-
-func activePodRoute(podName string) {
-	stdout, stderr, err := cluster.Ins().ExecInPod(util.DefaultContainer, podName, opt.Get().Namespace,
-		"nslookup", "-vc", "kubernetes.default.svc")
-	log.Debug().Msgf("Active DNS %s", strings.TrimSpace(strings.Split(stdout, "\n")[0]))
-	if stderr != "" || err != nil {
-		log.Warn().Msgf("Pod route not ready yet, %s", stderr)
 	}
 }
 
