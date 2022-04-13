@@ -12,6 +12,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const IpAddrPattern = "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+"
+
 // GetRandomTcpPort get pod random ssh port
 func GetRandomTcpPort() (int, error) {
 	for i := 0; i < 20; i++ {
@@ -108,12 +110,18 @@ func ExtractHostIp(url string) string {
 		return ""
 	}
 	host := strings.Trim(strings.Split(url, ":")[1], "/")
-	if ok, err := regexp.Match("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", []byte(host)); ok && err == nil {
+	if ok, err := regexp.Match(IpAddrPattern, []byte(host)); ok && err == nil {
 		return host
 	}
 	ips, err := net.LookupIP(host)
-	if err != nil || len(ips) == 0 {
+	if err != nil {
 		return ""
 	}
-	return ips[0].String()
+	for _, ip := range ips {
+		// skip ipv6
+		if ok, err2 := regexp.Match(IpAddrPattern, []byte(ip.String())); ok && err2 == nil {
+			return ip.String()
+		}
+	}
+	return ""
 }

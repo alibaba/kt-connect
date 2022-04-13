@@ -49,7 +49,7 @@ func GetNameServer() string {
 		log.Error().Msgf("Failed to get dns server")
 		return ""
 	} else {
-		r, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+")
+		r, _ := regexp.Compile(util.IpAddrPattern)
 		return r.FindString(out)
 	}
 }

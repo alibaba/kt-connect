@@ -59,7 +59,7 @@ func fetchNameServerInConf(resolvConf string) string {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	pattern, _ := regexp.Compile(fmt.Sprintf("^%s[ \t]+[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", util.FieldNameserver))
+	pattern, _ := regexp.Compile(fmt.Sprintf("^%s[ \t]+" + util.IpAddrPattern, util.FieldNameserver))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if pattern.MatchString(line) {

@@ -8,6 +8,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	testclient "k8s.io/client-go/kubernetes/fake"
+	"k8s.io/client-go/rest"
 	"reflect"
 	"strconv"
 	"strings"
@@ -55,6 +56,7 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
 			opt.Get().ConnectOptions.IncludeIps = strings.Join(tt.args.IncludeIps, ",")
+			opt.Get().RuntimeStore.RestConfig = &rest.Config{ Host: "" }
 			gotCidrs, err := k.ClusterCidrs("default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
