@@ -4,6 +4,7 @@ import (
 	"fmt"
 	coreV1 "k8s.io/api/core/v1"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -101,3 +102,18 @@ func FindInvalidRemotePort(exposePorts string, svcPorts []coreV1.ServicePort) st
 	return ""
 }
 
+// ExtractHostIp Get host ip address from url
+func ExtractHostIp(url string) string {
+	if !strings.Contains(url, ":") {
+		return ""
+	}
+	host := strings.Trim(strings.Split(url, ":")[1], "/")
+	if ok, err := regexp.Match("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", []byte(host)); ok && err == nil {
+		return host
+	}
+	ips, err := net.LookupIP(host)
+	if err != nil || len(ips) == 0 {
+		return ""
+	}
+	return ips[0].String()
+}

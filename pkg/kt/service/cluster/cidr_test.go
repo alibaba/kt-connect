@@ -83,6 +83,11 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 			ips: []string{"1.2.3.4", "2.3.4.5", "1.2.3.100", "2.3.5.5"},
 			miniRange: []string{"1.2.3.0/24", "2.3.0.0/16"},
 		},
+		{
+			name: "duplicate address",
+			ips: []string{"1.2.3.4", "1.2.3.4", "1.2.3.4", "1.2.3.4"},
+			miniRange: []string{"1.2.3.4/32"},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

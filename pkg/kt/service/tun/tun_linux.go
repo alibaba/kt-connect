@@ -29,6 +29,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	var lastErr error
 	anyRouteOk := false
 	for _, r := range ipRange {
+		log.Info().Msgf("Adding route to %s", r)
 		// run command: ip route add 10.96.0.0/16 dev kt0
 		_, _, err = util.RunAndWait(exec.Command("ip",
 			"route",

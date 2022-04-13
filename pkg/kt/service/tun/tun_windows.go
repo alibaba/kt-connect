@@ -25,6 +25,7 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	var lastErr error
 	anyRouteOk := false
 	for i, r := range ipRange {
+		log.Info().Msgf("Adding route to %s", r)
 		_, mask, err := toIpAndMask(r)
 		tunIp := strings.Split(r, "/")[0]
 		if err != nil {

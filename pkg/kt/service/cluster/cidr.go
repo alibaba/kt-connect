@@ -20,6 +20,13 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	}
 
 	cidrs := calculateMinimalIpRange(ips)
+
+	apiServerIp := util.ExtractHostIp(opt.Get().RuntimeStore.RestConfig.Host)
+	log.Debug().Msgf("Using cluster ip %s", apiServerIp)
+	if apiServerIp != "" {
+		util.ArrayDelete(cidrs, apiServerIp + "/32")
+	}
+
 	if opt.Get().ConnectOptions.IncludeIps != "" {
 		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.IncludeIps, ",") {
 			if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks && isSingleIp(ipRange) {
@@ -98,11 +105,14 @@ func calculateMinimalIpRange(ips []string) []string {
 			for j, b := range bins {
 				if b != ipBin[j] {
 					if j >= threshold {
-						// mark the match start position
+						// partially equal and over threshold, mark the match start position
 						match = true
 						miniBins[i][j] = -1
 					}
 					break
+				} else if j == 31 {
+					// fully equal
+					match = true
 				}
 			}
 			if match {

@@ -78,10 +78,22 @@ func ArrayEquals(src, target []string) bool {
 }
 
 func ArrayDelete(arr []string, item string) []string {
-	for i, v := range arr {
+	count := 0
+	for _, v := range arr {
 		if v == item {
-			return append(arr[:i], arr[i+1:]...)
+			count++
 		}
 	}
-	return arr
+	if count == 0 {
+		return arr
+	}
+	newArr := make([]string, len(arr) - count)
+	i := 0
+	for _, v := range arr {
+		if v != item {
+			newArr[i] = v
+			i++
+		}
+	}
+	return newArr
 }
