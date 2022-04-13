@@ -20,6 +20,7 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	}
 
 	cidrs := calculateMinimalIpRange(ips)
+	log.Debug().Msgf("Cluster CIDR are: %v", cidrs)
 
 	apiServerIp := util.ExtractHostIp(opt.Get().RuntimeStore.RestConfig.Host)
 	log.Debug().Msgf("Using cluster ip %s", apiServerIp)
@@ -41,7 +42,6 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 			util.ArrayDelete(cidrs, ipRange)
 		}
 	}
-	log.Debug().Msgf("Cluster CIDR are: %v", cidrs)
 	return cidrs, nil
 }
 

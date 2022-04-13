@@ -22,6 +22,8 @@ $ ktctl --namespace demo connect --includeIps 10.1.0.0/16
 --withAnnotation value        为Shadow Pod指定额外的注解，多个注解使用逗号分隔，例如"annotation1=val1,annotation2=val2"
 --portForwardTimeout value    等待PortForward建立的超时时长，单位秒（默认值是10）
 --podCreationTimeout value    等待Shadow Pod和Router Pod创建完成的超时时长，单位秒（默认值是60）
+--useShadowDeployment         使用Deployment方式部署Shadow容器
+--useLocalTime                使用本地时间（而非集群时间）作为KT资源的心跳包时间戳
 --forceUpdate, -f             总是从镜像仓库重新拉取最新的Shadow Pod和Router Pod镜像
 --context value               使用本地KubeConfig配置里的指定Context
 --podQuota value              指定Shadow Pod和Router Pod的CPU和内存限制（逗号分隔，例如"0.5c,512m"）
