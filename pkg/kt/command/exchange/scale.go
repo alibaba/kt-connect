@@ -25,7 +25,7 @@ func ByScale(resourceName string) error {
 
 	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Namespace)
 	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().ExchangeOptions.Expose,
-		getExchangeLabels(app), getExchangeAnnotation()); err != nil {
+		getExchangeLabels(app), getExchangeAnnotation(), map[int]string{}); err != nil {
 		return err
 	}
 

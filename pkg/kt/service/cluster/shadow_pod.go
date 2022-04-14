@@ -14,7 +14,7 @@ import (
 )
 
 // GetOrCreateShadow create shadow pod or deployment
-func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string, exposePorts string) (
+func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string, exposePorts string, portNameDict map[int]string) (
 	string, string, string, error) {
 	// record context data
 	opt.Get().RuntimeStore.Shadow = name
@@ -38,7 +38,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 		PrivateKeyPath:   util.PrivateKeyPath(name),
 	}
 
-	ports := make([]int, 0)
+	ports := map[string]int{}
 	if exposePorts != "" {
 		portPairs := strings.Split(exposePorts, ",")
 		for _, exposePort := range portPairs {
@@ -46,7 +46,12 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 			if err != nil {
 				log.Warn().Err(err).Msgf("invalid port")
 			} else {
-				ports = append(ports, port)
+				// TODO: assume port using http protocol for istio constraint, should support user-defined protocol
+				name = fmt.Sprintf("http-%d", port)
+				if n, ok := portNameDict[port]; ok {
+					name = n
+				}
+				ports[name] = port
 			}
 		}
 	}

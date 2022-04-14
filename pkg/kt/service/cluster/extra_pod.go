@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"context"
+	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
@@ -10,9 +11,9 @@ import (
 
 // CreateRouterPod create router pod
 func (k *Kubernetes) CreateRouterPod(name string, labels, annotations map[string]string, ports map[int]int) (*coreV1.Pod, error) {
-	targetPorts := make([]int, 0)
-	for _, v := range ports {
-		targetPorts = append(targetPorts, v)
+	targetPorts := map[string]int{}
+	for _, remotePort := range ports {
+		targetPorts[fmt.Sprintf("router-%d", remotePort)] = remotePort
 	}
 	metaAndSpec := &PodMetaAndSpec{&ResourceMeta{
 		Name:        name,
@@ -37,7 +38,7 @@ func (k *Kubernetes) CreateRectifierPod(name string) (*coreV1.Pod, error) {
 		Namespace:   opt.Get().Namespace,
 		Labels:      map[string]string{},
 		Annotations: map[string]string{},
-	}, opt.Get().Image, map[string]string{}, []int{}, true}
+	}, opt.Get().Image, map[string]string{}, map[string]int{}, true}
 	pod := createPod(metaAndSpec)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {

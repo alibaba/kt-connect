@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	coreV1 "k8s.io/api/core/v1"
 	"net"
 	"regexp"
 	"strconv"
@@ -84,10 +83,10 @@ func FindBrokenLocalPort(exposePorts string) string {
 }
 
 // FindInvalidRemotePort Check if all ports exist in provide service
-func FindInvalidRemotePort(exposePorts string, svcPorts []coreV1.ServicePort) string {
+func FindInvalidRemotePort(exposePorts string, svcPorts map[int]string) string {
 	validPorts := make([]string, 0)
-	for _, p := range svcPorts {
-		validPorts = append(validPorts, strconv.Itoa(p.TargetPort.IntValue()))
+	for p := range svcPorts {
+		validPorts = append(validPorts, strconv.Itoa(p))
 	}
 
 	portPairs := strings.Split(exposePorts, ",")

@@ -78,7 +78,8 @@ func AutoMesh(svc *coreV1.Service) error {
 	annotations := map[string]string{
 		util.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
-	if err = general.CreateShadowAndInbound(shadowName, opt.Get().MeshOptions.Expose, shadowLabels, annotations); err != nil {
+	if err = general.CreateShadowAndInbound(shadowName, opt.Get().MeshOptions.Expose,
+		shadowLabels, annotations, general.GetTargetPorts(svc)); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")

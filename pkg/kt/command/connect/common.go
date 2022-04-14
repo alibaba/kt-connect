@@ -150,7 +150,7 @@ func getOrCreateShadow() (string, string, string, error) {
 	}
 
 	endPointIP, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, getLabels(),
-		make(map[string]string), getEnvs(), "")
+		make(map[string]string), getEnvs(), "", map[int]string{})
 	if err != nil {
 		return "", "", "", err
 	}

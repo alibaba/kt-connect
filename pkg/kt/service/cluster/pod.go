@@ -28,7 +28,7 @@ type PodMetaAndSpec struct {
 	Meta  *ResourceMeta
 	Image string
 	Envs  map[string]string
-	Ports []int
+	Ports map[string]int
 	IsLeaf bool
 }
 

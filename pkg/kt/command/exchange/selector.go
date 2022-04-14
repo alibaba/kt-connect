@@ -15,7 +15,7 @@ func BySelector(resourceName string) error {
 	if err != nil {
 		return err
 	}
-	if port := util.FindInvalidRemotePort(opt.Get().ExchangeOptions.Expose, svc.Spec.Ports); port != "" {
+	if port := util.FindInvalidRemotePort(opt.Get().ExchangeOptions.Expose, general.GetTargetPorts(svc)); port != "" {
 		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
@@ -47,7 +47,8 @@ func BySelector(resourceName string) error {
 	annotation := map[string]string{
 		util.KtConfig: fmt.Sprintf("service=%s", svc.Name),
 	}
-	if err = general.CreateShadowAndInbound(shadowName, opt.Get().ExchangeOptions.Expose, shadowLabels, annotation); err != nil {
+	if err = general.CreateShadowAndInbound(shadowName, opt.Get().ExchangeOptions.Expose,
+		shadowLabels, annotation, general.GetTargetPorts(svc)); err != nil {
 		return err
 	}
 

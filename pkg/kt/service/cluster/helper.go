@@ -115,7 +115,7 @@ func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 	return pod
 }
 
-func createContainer(image string, args []string, envs map[string]string, ports []int) coreV1.Container {
+func createContainer(image string, args []string, envs map[string]string, ports map[string]int) coreV1.Container {
 	var envVar []coreV1.EnvVar
 	for k, v := range envs {
 		envVar = append(envVar, coreV1.EnvVar{Name: k, Value: v})
@@ -148,10 +148,9 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 	if opt.Get().PodQuota != "" {
 		addResourceLimit(&container, opt.Get().PodQuota)
 	}
-	for _, port := range ports {
+	for name, port := range ports {
 		container.Ports = append(container.Ports, coreV1.ContainerPort{
-			// TODO: assume port using http protocol, should be replace with user-defined protocol, for istio constraint
-			Name: fmt.Sprintf("http-%d", port),
+			Name: name,
 			Protocol: coreV1.ProtocolTCP,
 			ContainerPort: int32(port),
 		})

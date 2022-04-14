@@ -30,7 +30,7 @@ func exposeLocalService(serviceName, shadowPodName string, labels, annotations m
 
 	envs := make(map[string]string)
 	_, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, labels, annotations, envs,
-		opt.Get().PreviewOptions.Expose)
+		opt.Get().PreviewOptions.Expose, map[int]string{})
 	if err != nil {
 		return err
 	}

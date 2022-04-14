@@ -58,7 +58,7 @@ func (action *Action) Mesh(resourceName string, ch chan os.Signal) error {
 		return err
 	}
 
-	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, svc.Spec.Ports); port != "" {
+	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, general.GetTargetPorts(svc)); port != "" {
 		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
