@@ -1,4 +1,4 @@
-package main
+package shadow
 
 import (
 	"github.com/alibaba/kt-connect/pkg/common"
