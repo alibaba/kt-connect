@@ -7,7 +7,7 @@ require (
 	github.com/gofrs/flock v0.8.0
 	github.com/miekg/dns v1.1.45
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/rs/zerolog v1.23.0
+	github.com/rs/zerolog v1.26.1
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.0
 	github.com/wzshiming/socks5 v0.4.0
