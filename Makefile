@@ -25,9 +25,9 @@ check:
 
 # build ktctl
 ktctl:
-	GOARCH=amd64 GOOS=linux go build -o "artifacts/ktctl/ktctl-linux" ./cmd/ktctl
-	GOARCH=amd64 GOOS=darwin go build -o "artifacts/ktctl/ktctl-darwin" ./cmd/ktctl
-	GOARCH=amd64 GOOS=windows go build -o "artifacts/ktctl/ktctl-windows" ./cmd/ktctl
+	GOARCH=amd64 GOOS=linux go build -o artifacts/ktctl/ktctl-linux ./cmd/ktctl
+	GOARCH=amd64 GOOS=darwin go build -o artifacts/ktctl/ktctl-darwin ./cmd/ktctl
+	GOARCH=amd64 GOOS=windows go build -o artifacts/ktctl/ktctl-windows ./cmd/ktctl
 
 # build this image before shadow
 shadow-base:
@@ -38,9 +38,13 @@ shadow:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-linux-amd64 cmd/shadow/main.go
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile .
 
+# shadow
+shadow-local:
+	go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-local cmd/shadow/main.go
+
 # dlv for debug
 shadow-dlv:
-	make build-shadow TAG=latest
+	make shadow TAG=latest
 	scripts/build-shadow-dlv
 
 # build router

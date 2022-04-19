@@ -7,17 +7,17 @@ import (
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
 	"net"
-	"os"
 	"strings"
 )
 
 // DnsServer nds server
 type DnsServer struct {
+	localDomain string
 	config *dns.ClientConfig
 }
 
 // Start setup dns server
-func Start() {
+func Start(dnsPort int, dnsProtocol string, localDomain string) {
 	config, _ := dns.ClientConfigFromFile(util.ResolvConf)
 	for _, server := range config.Servers {
 		log.Info().Msgf("Load nameserver %s", server)
@@ -25,7 +25,7 @@ func Start() {
 	for _, domain := range config.Search {
 		log.Info().Msgf("Load search %s", domain)
 	}
-	err := common.SetupDnsServer(&DnsServer{config}, common.StandardDnsPort, os.Getenv(common.EnvVarDnsProtocol))
+	err := common.SetupDnsServer(&DnsServer{localDomain, config}, dnsPort, dnsProtocol)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to start dns server")
 	}
@@ -58,9 +58,8 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 		return answer
 	}
 
-	localDomains := os.Getenv(common.EnvVarLocalDomains)
-	if localDomains != "" {
-		for _, d := range strings.Split(localDomains, ",") {
+	if s.localDomain != "" {
+		for _, d := range strings.Split(s.localDomain, ",") {
 			if strings.HasSuffix(name, d+".") {
 				name = name[0:(len(name) - len(d) - 1)]
 				break
