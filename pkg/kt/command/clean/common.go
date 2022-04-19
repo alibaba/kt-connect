@@ -206,27 +206,31 @@ func parseComponentAndPid(pidFileName string) (string, int) {
 
 func analysisExpiredPods(pod coreV1.Pod, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(pod.Annotations[util.KtLastHeartBeat])
-	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	if lastHeartBeat < 0 {
+		log.Debug().Msgf("Pod %s does no have heart beat annotation", pod.Name)
+	} else if isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		log.Debug().Msgf(" * pod %s expired, lastHeartBeat: %d ", pod.Name, lastHeartBeat)
 		if pod.DeletionTimestamp == nil {
 			resourceToClean.PodsToDelete = append(resourceToClean.PodsToDelete, pod.Name)
 		}
 		analysisConfigAnnotation(pod.Labels[util.KtRole], util.String2Map(pod.Annotations[util.KtConfig]), resourceToClean)
-	} else {
-		log.Debug().Msgf("Pod %s does no have heart beat annotation", pod.Name)
 	}
 }
 
 func analysisExpiredConfigmaps(cf coreV1.ConfigMap, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(cf.Annotations[util.KtLastHeartBeat])
-	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	if lastHeartBeat < 0 {
+		log.Debug().Msgf("Configmap %s does no have heart beat annotation", cf.Name)
+	} else if isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ConfigMapsToDelete = append(resourceToClean.ConfigMapsToDelete, cf.Name)
 	}
 }
 
 func analysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(app.Annotations[util.KtLastHeartBeat])
-	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	if lastHeartBeat < 0 {
+		log.Debug().Msgf("Deployment %s does no have heart beat annotation", app.Name)
+	} else if isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.DeploymentsToDelete = append(resourceToClean.DeploymentsToDelete, app.Name)
 		analysisConfigAnnotation(app.Labels[util.KtRole], util.String2Map(app.Annotations[util.KtConfig]), resourceToClean)
 	}
@@ -234,7 +238,9 @@ func analysisExpiredDeployments(app appV1.Deployment, cleanThresholdInMinus int6
 
 func analysisExpiredServices(svc coreV1.Service, cleanThresholdInMinus int64, resourceToClean *ResourceToClean) {
 	lastHeartBeat := util.ParseTimestamp(svc.Annotations[util.KtLastHeartBeat])
-	if lastHeartBeat > 0 && isExpired(lastHeartBeat, cleanThresholdInMinus) {
+	if lastHeartBeat < 0 {
+		log.Debug().Msgf("Service %s does no have heart beat annotation", svc.Name)
+	} else if isExpired(lastHeartBeat, cleanThresholdInMinus) {
 		resourceToClean.ServicesToDelete = append(resourceToClean.ServicesToDelete, svc.Name)
 	}
 }
