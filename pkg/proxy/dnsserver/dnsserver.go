@@ -154,11 +154,11 @@ func (s *DnsServer) getResolveServer() (address string, err error) {
 }
 
 // Look for domain record from upstream dns server
-func (s *DnsServer) lookup(domain string, qtype uint16, name string) (rr []dns.RR, err error) {
+func (s *DnsServer) lookup(domain string, qtype uint16, name string) ([]dns.RR, error) {
 	address, err := s.getResolveServer()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch upstream dns")
-		return
+		return []dns.RR{}, nil
 	}
 	log.Debug().Msgf("Resolving domain %s (%d) via upstream %s", domain, qtype, address)
 
@@ -169,40 +169,28 @@ func (s *DnsServer) lookup(domain string, qtype uint16, name string) (rr []dns.R
 		} else {
 			log.Warn().Err(err).Msgf("Failed to answer name %s (%d) query for %s", name, qtype, domain)
 		}
-		return
+		return []dns.RR{}, nil
 	}
 
 	if len(res.Answer) == 0 {
 		log.Debug().Msgf("Empty answer")
 	}
-	for _, item := range res.Answer {
-		log.Debug().Msgf("Response: %s", item.String())
-		r, errInLoop := s.convertAnswer(name, domain, item)
-		if errInLoop != nil {
-			err = errInLoop
-			return
-		}
-		rr = append(rr, r)
-	}
-
-	return
+	return s.convertAnswer(name, res.Answer), nil
 }
 
 // Replace fully qualified domain name with short domain name in dns answer
-func (s *DnsServer) convertAnswer(name, inClusterName string, actual dns.RR) (rr dns.RR, err error) {
-	if name != inClusterName {
-		var parts []string
-		parts = append(parts, name)
-		answer := strings.Split(actual.String(), "\t")
-		parts = append(parts, answer[1:]...)
-		rrStr := strings.Join(parts, " ")
-		rr, err = dns.NewRR(rrStr)
-		if err != nil {
-			return
+func (s *DnsServer) convertAnswer(name string, answer []dns.RR) []dns.RR {
+	cnames := []string{name}
+	for _, item := range answer {
+		log.Debug().Msgf("Response: %s", item.String())
+		if item.Header().Rrtype == dns.TypeCNAME {
+			cnames = append(cnames, item.(*dns.CNAME).Target)
 		}
-	} else {
-		rr = actual
 	}
-	rr.Header().Name = name
-	return
+	for _, item := range answer {
+		if !util.Contains(item.Header().Name, cnames) {
+			item.Header().Name = name
+		}
+	}
+	return answer
 }
