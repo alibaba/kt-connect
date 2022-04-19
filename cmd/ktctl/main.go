@@ -1,4 +1,4 @@
-package ktctl
+package main
 
 import (
 	"fmt"

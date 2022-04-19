@@ -25,7 +25,7 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	apiServerIp := util.ExtractHostIp(opt.Get().RuntimeStore.RestConfig.Host)
 	log.Debug().Msgf("Using cluster ip %s", apiServerIp)
 	if apiServerIp != "" {
-		util.ArrayDelete(cidrs, apiServerIp + "/32")
+		cidrs = util.ArrayDelete(cidrs, apiServerIp + "/32")
 	}
 
 	if opt.Get().ConnectOptions.IncludeIps != "" {
@@ -39,7 +39,7 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	}
 	if opt.Get().ConnectOptions.ExcludeIps != "" {
 		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {
-			util.ArrayDelete(cidrs, ipRange)
+			cidrs = util.ArrayDelete(cidrs, ipRange)
 		}
 	}
 	return cidrs, nil
