@@ -70,4 +70,4 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-replace github.com/xjasonlyu/tun2socks/v2 v2.3.3 => github.com/linfan/tun2socks/v2 v2.3.3-0.20220328035721-6a7d8f6bac52
+replace github.com/xjasonlyu/tun2socks/v2 v2.3.3 => github.com/linfan/tun2socks/v2 v2.3.3-0.20220420143758-4f429191aa1c
