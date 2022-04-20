@@ -14,7 +14,7 @@ import (
 const IpAddrPattern = "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+"
 
 // GetRandomTcpPort get pod random ssh port
-func GetRandomTcpPort() (int, error) {
+func GetRandomTcpPort() int {
 	for i := 0; i < 20; i++ {
 		port := RandomPort()
 		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
@@ -23,10 +23,12 @@ func GetRandomTcpPort() (int, error) {
 			_ = conn.Close()
 		} else {
 			log.Debug().Msgf("Using port %d", port)
-			return port, nil
+			return port
 		}
 	}
-	return -1, fmt.Errorf("failed to find an available port")
+	port := RandomPort()
+	log.Info().Msgf("Using random port %d", port)
+	return port
 }
 
 // ParsePortMapping parse <port> or <localPort>:<removePort> parameter

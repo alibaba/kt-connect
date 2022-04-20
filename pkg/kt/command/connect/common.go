@@ -36,11 +36,8 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		}
 		watchServicesAndPods(opt.Get().Namespace, svcToIp, headlessPods, true)
 
-		forwardedPodPort, err := util.GetRandomTcpPort()
-		if err != nil {
-			return err
-		}
-		if err = transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort); err != nil {
+		forwardedPodPort := util.GetRandomTcpPort()
+		if err := transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort); err != nil {
 			return err
 		}
 
@@ -50,7 +47,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		}
 		// must setup name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux
-		if err = dns.SetupLocalDns(forwardedPodPort, dnsPort); err != nil {
+		if err := dns.SetupLocalDns(forwardedPodPort, dnsPort); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}

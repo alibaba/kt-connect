@@ -14,13 +14,10 @@ import (
 // ForwardPodToLocal mapping pod port to local port
 func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
-	localSSHPort, err := util.GetRandomTcpPort()
-	if err != nil {
-		return -1, err
-	}
+	localSSHPort := util.GetRandomTcpPort()
 
 	// port forward pod 22 -> local <random port>
-	if err = SetupPortForwardToLocal(podName, common.StandardSshPort, localSSHPort); err != nil {
+	if err := SetupPortForwardToLocal(podName, common.StandardSshPort, localSSHPort); err != nil {
 		return -1, err
 	}
 
