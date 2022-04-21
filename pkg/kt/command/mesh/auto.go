@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 	coreV1 "k8s.io/api/core/v1"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"strconv"
 	"strings"
 	"time"
@@ -32,9 +33,25 @@ func AutoMesh(svc *coreV1.Service) error {
 	versionMark := meshKey + ":" + meshVersion
 	opt.Get().RuntimeStore.Mesh = versionMark
 
+	portToNames := general.GetTargetPorts(svc)
 	ports := make(map[int]int)
-	for _, p := range svc.Spec.Ports {
-		ports[int(p.Port)] = p.TargetPort.IntValue()
+	for _, specPort := range svc.Spec.Ports {
+		if specPort.TargetPort.Type == intstr.Int {
+			ports[int(specPort.Port)] = specPort.TargetPort.IntValue()
+		} else {
+			podPort := -1
+			for p, n := range portToNames {
+				if n == specPort.TargetPort.StrVal {
+					podPort = p
+					break
+				}
+			}
+			if podPort < 0 {
+				return fmt.Errorf("cannot found port number of target port '%s' of service %s",
+					specPort.TargetPort.StrVal, svc.Name)
+			}
+			ports[int(specPort.Port)] = podPort
+		}
 	}
 
 	// Check name usable
@@ -79,7 +96,7 @@ func AutoMesh(svc *coreV1.Service) error {
 		util.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
 	if err = general.CreateShadowAndInbound(shadowName, opt.Get().MeshOptions.Expose,
-		shadowLabels, annotations, general.GetTargetPorts(svc)); err != nil {
+		shadowLabels, annotations, portToNames); err != nil {
 		return err
 	}
 	log.Info().Msg("---------------------------------------------------------------")
