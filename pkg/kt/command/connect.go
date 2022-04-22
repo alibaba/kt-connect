@@ -20,6 +20,9 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 		Use:  "connect",
 		Short: "Create a network tunnel to kubernetes cluster",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if err := preCheck(); err != nil {
+				return err
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -49,13 +52,6 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 
 // Connect setup vpn to kubernetes cluster
 func (action *Action) Connect(ch chan os.Signal) error {
-	if err := checkPermissionAndOptions(); err != nil {
-		return err
-	}
-	if pid := util.GetDaemonRunning(util.ComponentConnect); pid > 0 {
-		return fmt.Errorf("another connect process already running at %d, exiting", pid)
-	}
-
 	err := general.SetupProcess(util.ComponentConnect, ch)
 	if err != nil {
 		return err
@@ -88,6 +84,16 @@ func (action *Action) Connect(ch chan os.Signal) error {
 	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
+	return nil
+}
+
+func preCheck() error {
+	if err := checkPermissionAndOptions(); err != nil {
+		return err
+	}
+	if pid := util.GetDaemonRunning(util.ComponentConnect); pid > 0 {
+		return fmt.Errorf("another connect process already running at %d, exiting", pid)
+	}
 	return nil
 }
 
