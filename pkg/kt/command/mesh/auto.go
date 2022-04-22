@@ -59,6 +59,11 @@ func AutoMesh(svc *coreV1.Service) error {
 		return err
 	}
 
+	// Check service in sanity status
+	if err = sanityCheck(svc); err != nil {
+		return err
+	}
+
 	// Create stuntman service
 	if err = createStuntmanService(svc, ports); err != nil {
 		return err
@@ -121,6 +126,17 @@ func isNameUsable(name, meshVersion string, times int) error {
 		log.Info().Msgf("Previous meshing pod for service '%s' not finished yet, waiting ...", name)
 		time.Sleep(3 * time.Second)
 		return isNameUsable(name, meshVersion, times + 1)
+	}
+	return nil
+}
+
+func sanityCheck(svc *coreV1.Service) error {
+	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
+		return fmt.Errorf("service %s should not have %s annotation, please try use 'ktctl recover %s' to restore it",
+			svc.Name, util.KtSelector, svc.Name)
+	} else if svc.Spec.Selector[util.KtRole] != "" {
+		return fmt.Errorf("service %s should not point to kt pods, please try use 'ktctl recover %s' to restore it",
+			svc.Name, svc.Name)
 	}
 	return nil
 }
@@ -205,15 +221,7 @@ func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 	if stuntmanSvc, err := cluster.Ins().GetService(stuntmanSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
-		}
-		if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
-			return fmt.Errorf("service %s should not have %s annotation, please try use 'ktctl clean' to restore it",
-				svc.Name, util.KtSelector)
-		} else if svc.Spec.Selector[util.KtRole] != "" {
-			return fmt.Errorf("service %s should not point to kt pods, please try use 'ktctl clean' to restore it",
-				svc.Name)
-		}
-		if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
+		} else if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
 				Name:        stuntmanSvcName,
 				Namespace:   namespace,
