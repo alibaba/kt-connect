@@ -151,10 +151,10 @@ func (k *Kubernetes) IncreasePodRef(name string, namespace string) error {
 }
 
 // DecreasePodRef decrease pod ref count by 1
-func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool, err error) {
+func (k *Kubernetes) DecreasePodRef(name string, namespace string) (bool, error) {
 	pod, err := k.GetPod(name, namespace)
 	if err != nil {
-		return
+		return false, err
 	}
 	refCount := pod.Annotations[util.KtRefCount]
 	if refCount == "1" {
@@ -163,12 +163,12 @@ func (k *Kubernetes) DecreasePodRef(name string, namespace string) (cleanup bool
 	} else {
 		count, err2 := decreaseRef(refCount)
 		if err2 != nil {
-			return
+			return false, err2
 		}
 		log.Info().Msgf("Pod %s has %s refs, decrease to %s", pod.Name, refCount, count)
 		pod.Annotations = util.MapPut(pod.Annotations, util.KtRefCount, count)
 		_, err = k.UpdatePod(pod)
-		return
+		return false, nil
 	}
 }
 
