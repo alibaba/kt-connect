@@ -113,5 +113,14 @@ func combineKubeOpts() error {
 	opt.Get().RuntimeStore.Clientset = clientSet
 	opt.Get().RuntimeStore.RestConfig = restConfig
 
+	clusterName := "none"
+	for name, context := range config.Contexts {
+		if name == config.CurrentContext {
+			clusterName = context.Cluster
+			break
+		}
+	}
+	log.Info().Msgf("Using cluster context %s (%s)", config.CurrentContext, clusterName)
+
 	return nil
 }

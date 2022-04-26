@@ -38,9 +38,9 @@ func SetupTimeDifference() error {
 	}
 	timeDifference := remoteTime - time.Now().Unix()
 	if timeDifference >= -1 && timeDifference <= 1 {
-		log.Info().Msgf("No time difference")
+		log.Debug().Msgf("No time difference")
 	} else {
-		log.Info().Msgf("Time difference is %d", timeDifference)
+		log.Debug().Msgf("Time difference is %d", timeDifference)
 	}
 	util.TimeDifference = timeDifference
 	return nil
