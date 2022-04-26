@@ -51,6 +51,11 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	return lastErr
 }
 
+// RestoreRoute delete route rules made by kt
+func (s *Cli) RestoreRoute() error {
+	return nil
+}
+
 func (s *Cli) GetName() string {
 	return util.TunNameLinux
 }

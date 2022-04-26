@@ -5,6 +5,7 @@ type Tunnel interface {
 	CheckContext() error
 	ToSocks(sockAddr string) error
 	SetRoute(ipRange []string) error
+	RestoreRoute() error
 	GetName() string
 }
 

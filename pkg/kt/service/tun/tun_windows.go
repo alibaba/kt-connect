@@ -32,10 +32,10 @@ func (s *Cli) SetRoute(ipRange []string) error {
 			return AllRouteFailError{err}
 		}
 		if i == 0 {
-			// run command: netsh interface ip set address KtConnectTunnel static 172.20.0.1 255.255.0.0
+			// run command: netsh interface ipv4 set address KtConnectTunnel static 172.20.0.1 255.255.0.0
 			_, _, err = util.RunAndWait(exec.Command("netsh",
 				"interface",
-				"ip",
+				"ipv4",
 				"set",
 				"address",
 				s.GetName(),
@@ -44,10 +44,10 @@ func (s *Cli) SetRoute(ipRange []string) error {
 				mask,
 			))
 		} else {
-			// run command: netsh interface ip add address KtConnectTunnel 172.21.0.1 255.255.0.0
+			// run command: netsh interface ipv4 add address KtConnectTunnel 172.21.0.1 255.255.0.0
 			_, _, err = util.RunAndWait(exec.Command("netsh",
 				"interface",
-				"ip",
+				"ipv4",
 				"add",
 				"address",
 				s.GetName(),
@@ -83,6 +83,11 @@ func (s *Cli) SetRoute(ipRange []string) error {
 		return AllRouteFailError{lastErr}
 	}
 	return lastErr
+}
+
+// RestoreRoute delete route rules made by kt
+func (s *Cli) RestoreRoute() error {
+	return nil
 }
 
 func (s *Cli) GetName() string {

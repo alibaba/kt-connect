@@ -6,6 +6,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
+	"github.com/alibaba/kt-connect/pkg/kt/service/tun"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
@@ -157,16 +158,20 @@ func PrintClusterResourcesToClean(r *ResourceToClean) {
 }
 
 func TidyLocalResources() {
-	log.Debug().Msg("Cleaning up unused pid files ...")
+	log.Debug().Msg("Cleaning up unused pid files")
 	cleanPidFiles()
-	log.Debug().Msg("Cleaning up unused local rsa keys ...")
+	log.Debug().Msg("Cleaning up unused local rsa keys")
 	util.CleanRsaKeys()
 	if util.GetDaemonRunning(util.ComponentConnect) < 0 {
 		if util.IsRunAsAdmin() {
-			log.Debug().Msg("Cleaning up hosts file ...")
+			log.Debug().Msg("Cleaning up hosts file")
 			dns.DropHosts()
-			log.Debug().Msg("Cleaning DNS configuration ...")
+			log.Debug().Msg("Cleaning DNS configuration")
 			dns.Ins().RestoreNameServer()
+			if opt.Get().CleanOptions.SweepLocalRoute {
+				log.Info().Msgf("Cleaning route table")
+				_ = tun.Ins().RestoreRoute()
+			}
 		} else {
 			log.Info().Msgf("Not %s user, DNS cleanup skipped", util.GetAdminUserName())
 		}
