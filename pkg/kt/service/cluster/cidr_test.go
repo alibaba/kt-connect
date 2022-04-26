@@ -122,6 +122,44 @@ func Test_decToBin(t *testing.T) {
 	}
 }
 
+func Test_removeCidrOf(t *testing.T) {
+	cidrs := []string{"192.168.10.0/24", "192.168.11.0/24", "192.168.12.0/24"}
+	expectedCidrs := []string{"192.168.10.0/24", "192.168.12.0/24"}
+	realCidrs := removeCidrOf(cidrs, "192.168.11.1/26")
+	require.Equal(t, len(expectedCidrs), len(realCidrs))
+	for i := 0; i < len(expectedCidrs); i++ {
+		require.Equal(t, expectedCidrs[i], realCidrs[i])
+	}
+}
+
+func Test_isPartOfRange(t *testing.T) {
+	tests := []struct {
+		range1 string
+		range2 string
+		res bool
+	}{
+		{range1: "192.168.10.11/32", range2: "192.168.10.11/32", res: true},
+		{range1: "192.168.10.0/24", range2: "192.168.10.11/32", res: true},
+		{range1: "192.168.11.0/24", range2: "192.168.10.11/32", res: false},
+	}
+	for _, test := range tests {
+		t.Run(test.range2, func(t *testing.T) {
+			require.Equal(t, test.res, isPartOfRange(test.range1, test.range2))
+		})
+	}
+}
+
+func Test_ipRangeToBin(t *testing.T) {
+	ipNum, _ := ipRangeToBin("100.25.255.0/24")
+	expIp := []int{0, 1, 1, 0, 0, 1, 0, 0,
+		0, 0, 0, 1, 1, 0, 0, 1,
+		1, 1, 1, 1, 1, 1, 1, 1,
+		-1, 0, 0, 0, 0, 0, 0, 0}
+	for i := 0; i < 32; i++ {
+		require.Equal(t, expIp[i], ipNum[i], "failed on index: %d", i)
+	}
+}
+
 func Test_ipToBin(t *testing.T) {
 	ipNum, _ := ipToBin("100.25.255.0")
 	expIp := []int{0, 1, 1, 0, 0, 1, 0, 0,

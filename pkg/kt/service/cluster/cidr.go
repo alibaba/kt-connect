@@ -25,7 +25,7 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	apiServerIp := util.ExtractHostIp(opt.Get().RuntimeStore.RestConfig.Host)
 	log.Debug().Msgf("Using cluster ip %s", apiServerIp)
 	if apiServerIp != "" {
-		cidrs = util.ArrayDelete(cidrs, apiServerIp + "/32")
+		cidrs = removeCidrOf(cidrs, apiServerIp + "/32")
 	}
 
 	if opt.Get().ConnectOptions.IncludeIps != "" {
@@ -43,6 +43,36 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 		}
 	}
 	return cidrs, nil
+}
+
+func removeCidrOf(cidrRanges []string, ipRange string) []string {
+	var newRange []string
+	for _, cidr := range cidrRanges {
+		if !isPartOfRange(cidr, ipRange) {
+			newRange = append(newRange, cidr)
+		}
+	}
+	return newRange
+}
+
+func isPartOfRange(ipRange string, subIpRange string) bool {
+	ipRangeBin, err := ipRangeToBin(ipRange)
+	if err != nil {
+		return false
+	}
+	subIpRangeBin, err := ipRangeToBin(subIpRange)
+	if err != nil {
+		return false
+	}
+	for i := 0; i < 32; i++ {
+		if ipRangeBin[i] == -1 {
+			return true
+		}
+		if subIpRangeBin[i] != ipRangeBin[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func getPodIps(k kubernetes.Interface, namespace string) []string {
@@ -158,6 +188,25 @@ func binToIpRange(bins [32]int, withAlign bool) string {
 		}
 	}
 	return fmt.Sprintf("%s/%d", strings.Join(ips, "."), mask)
+}
+
+func ipRangeToBin(ipRange string) ([32]int, error) {
+	parts := strings.Split(ipRange, "/")
+	if len(parts) != 2 {
+		return [32]int{}, fmt.Errorf("invalid ip range format: %s", ipRange)
+	}
+	sepIndex, err := strconv.Atoi(parts[1])
+	if err != nil {
+		return [32]int{}, err
+	}
+	ipBin, err := ipToBin(parts[0])
+	if err != nil {
+		return [32]int{}, err
+	}
+	if sepIndex < 32 {
+		ipBin[sepIndex] = -1
+	}
+	return ipBin, nil
 }
 
 func ipToBin(ip string) (ipBin [32]int, err error) {
