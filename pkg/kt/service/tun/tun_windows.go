@@ -87,7 +87,64 @@ func (s *Cli) SetRoute(ipRange []string) error {
 
 // RestoreRoute delete route rules made by kt
 func (s *Cli) RestoreRoute() error {
-	return nil
+	var lastErr error
+	// run command: netsh interface ipv4 show route store=persistent
+	out, _, err := util.RunAndWait(exec.Command("netsh",
+		"interface",
+		"ipv4",
+		"show",
+		"route",
+		"store=persistent",
+	))
+	if err != nil {
+		log.Warn().Msgf("failed to get route table")
+		return err
+	}
+	for _, line := range strings.Split(out, util.Eol) {
+		if !strings.HasSuffix(line, ".0") {
+			continue
+		}
+		log.Debug().Msgf("Route recode: %s", line)
+		parts := strings.Split(line, " ")
+		ipRange := ""
+		iface := ""
+		gateway := ""
+		index := 0
+		for i := len(parts) - 1; i >= 0; i-- {
+			if parts[i] != "" {
+				index++
+				if index == 3 {
+					ipRange = parts[i]
+					break
+				} else if index == 2 {
+					iface = parts[i]
+				} else if index == 1 {
+					gateway = parts[i]
+				}
+			}
+		}
+		if ipRange == "" {
+			continue
+		}
+		// run command: netsh interface ipv4 delete route store=persistent 172.20.0.0/16 29 172.20.0.0
+		_, _, err = util.RunAndWait(exec.Command("netsh",
+			"interface",
+			"ipv4",
+			"delete",
+			"route",
+			"store=persistent",
+			ipRange,
+			iface,
+			gateway,
+		))
+		if err != nil {
+			log.Warn().Msgf("Failed to clean route to %s", ipRange)
+			lastErr = err
+		} else {
+			log.Info().Msgf(" * %s", ipRange)
+		}
+	}
+	return lastErr
 }
 
 func (s *Cli) GetName() string {

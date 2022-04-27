@@ -30,6 +30,7 @@ func NewCleanCommand(action ActionInterface) *cobra.Command {
 	cmd.InheritedFlags().SortFlags = false
 	cmd.Flags().Int64Var(&opt.Get().CleanOptions.ThresholdInMinus, "thresholdInMinus", cluster.ResourceHeartBeatIntervalMinus * 2 + 1, "Length of allowed disconnection time before a unavailing shadow pod be deleted")
 	cmd.Flags().BoolVar(&opt.Get().CleanOptions.DryRun, "dryRun", false, "Only print name of deployments to be deleted")
+	cmd.Flags().BoolVar(&opt.Get().CleanOptions.SweepLocalRoute, "sweepLocalRoute", false, "Also clean up local route table record created by kt")
 	return cmd
 }
 

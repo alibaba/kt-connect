@@ -170,7 +170,9 @@ func TidyLocalResources() {
 			dns.Ins().RestoreNameServer()
 			if opt.Get().CleanOptions.SweepLocalRoute {
 				log.Info().Msgf("Cleaning route table")
-				_ = tun.Ins().RestoreRoute()
+				if err := tun.Ins().RestoreRoute(); err != nil {
+					log.Warn().Err(err).Msgf("Unable to clean up route table")
+				}
 			}
 		} else {
 			log.Info().Msgf("Not %s user, DNS cleanup skipped", util.GetAdminUserName())
