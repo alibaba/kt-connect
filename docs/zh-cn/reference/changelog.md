@@ -1,6 +1,22 @@
 更新日志
 ---
 
+### 0.3.3
+
+> 发布时间：2022-04-27
+
+- 支持在任意位置使用全局参数
+- `mesh`命令对带有未知Header值的请求改为路由到默认环境，不再报"404"错误
+- `exchange`和`mesh`命令支持使用端口名称定义的Service Port (issue-172)
+- `clean`命令支持清理本地残留的路由表配置 (issue-294)
+- 启动时显示当前连接的Kubernetes集群名称和配置的context名称 (issue-305)
+- 当无法找到可用端口时，尝试监听随机端口，规避某些环境下端口检查逻辑不正常的问题 (issue-284)
+- 修复`mesh`命令退出时，Router Pod没有被正确删除的问题
+- 修复`preview`命令创建的Service误用`--expose`参数本地端口号的问题
+- 修复由于开发者之间的本地时间不一致，导致误清理集群未过期资源的问题 (issue-297)
+- 修复由于Cluster IP段与API Server地址重合，导致DNS端口Port Forward失败的问题 (issue-300)
+- 修复代理DNS对CName记录的域名处理不当的问题 (issue-190)
+
 ### 0.3.2
 
 > 发布时间：2022-03-28
@@ -192,8 +208,8 @@
 
 > 发布时间：2020-01-16
 
-* Support Service Name as dns address
-* Make sure shadow is clean up after command exit
+* 支持本地直接访问Service名称
+* 修复Shadow pod未正确清理的问题
 
 ### 0.0.8
 
@@ -214,8 +230,8 @@
 
 > 发布时间：2019-10-10
 
-* 修复ClusterIP cidr地址获取逻辑
-* 重新规划托管docker 镜像仓库地址
+* 修复ClusterIP CIDR地址获取逻辑
+* 重新规划托管Docker镜像仓库地址
 
 ### 0.0.5
 
@@ -233,17 +249,18 @@
 
 > 发布时间：2019-06-19
 
-* 添加mesh命令，支持基于Istio的流量调度能力
+* 添加`mesh`命令，支持基于Istio的流量调度能力
 
 ### 0.0.2
 
 > 发布时间：2019-06-19
 
-* 修复当Namespace启用Istio自动注入后，exchange无法转发请求到本地问题
-* exchange命令支持独立运行
+* 修复当Namespace启用Istio自动注入后，`exchange`无法转发请求到本地问题
+* `exchange`命令支持独立运行
 
 ### 0.0.1
 
 > 发布时间：2019-06-18
 
-* 拆分connect与exchaneg子命令，支持多应用转发请求到本地
+* 拆分`connect`与`exchaneg`子命令，支持多应用转发请求到本地
+* 支持同时对多个服务进行`exchaneg`操作

@@ -101,6 +101,7 @@ func (s *Cli) RestoreRoute() error {
 		return err
 	}
 	for _, line := range strings.Split(out, util.Eol) {
+		// Assume only kt using gateway address of x.x.x.0
 		if !strings.HasSuffix(line, ".0") {
 			continue
 		}
