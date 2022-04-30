@@ -87,6 +87,7 @@ type DaemonOptions struct {
 	ExchangeOptions     *ExchangeOptions
 	MeshOptions         *MeshOptions
 	CleanOptions        *CleanOptions
+	RunAsWorkerProcess  bool
 	KubeConfig          string
 	Namespace           string
 	ServiceAccount      string

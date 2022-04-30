@@ -48,7 +48,6 @@ func main() {
 	rootCmd.AddCommand(command.NewCleanCommand(action))
 	rootCmd.AddCommand(command.NewRecoverCommand(action))
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-
 	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
 
 	rootCmd.Flags().SortFlags = false
@@ -69,6 +68,11 @@ func main() {
 	rootCmd.PersistentFlags().BoolVarP(&opt.Get().AlwaysUpdateShadow, "forceUpdate", "f", false, "Always update shadow image")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().KubeContext, "context", "", "Specify current context of kubeconfig")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().PodQuota, "podQuota", "", "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'")
+
+	rootCmd.PersistentFlags().BoolVar(&opt.Get().RunAsWorkerProcess, "asWorker", false, "Run as worker process")
+	_ = rootCmd.PersistentFlags().MarkHidden("asWorker")
+	rootCmd.SilenceUsage = true
+	rootCmd.SilenceErrors = true
 
 	// process will hang here
 	if err := rootCmd.Execute(); err != nil {
