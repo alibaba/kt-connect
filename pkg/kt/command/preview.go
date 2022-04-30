@@ -5,15 +5,13 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+func NewPreviewCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "preview",
 		Short: "Expose a local service to kubernetes cluster",
@@ -24,7 +22,7 @@ func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 			if len(args) == 0 {
 				return fmt.Errorf("a service name must be specified")
 			}
-			return action.Preview(args[0], ch)
+			return action.Preview(args[0])
 		},
 	}
 
@@ -40,8 +38,8 @@ func NewPreviewCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 }
 
 // Preview create a new service in cluster
-func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
-	err := general.SetupProcess(util.ComponentPreview, ch)
+func (action *Action) Preview(serviceName string) error {
+	ch, err := general.SetupProcess(util.ComponentPreview)
 	if err != nil {
 		return err
 	}
@@ -58,12 +56,6 @@ func (action *Action) Preview(serviceName string, ch chan os.Signal) error {
 	log.Info().Msg("---------------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
-	go func() {
-		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted")
-		ch <-os.Interrupt
-	}()
-
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return nil

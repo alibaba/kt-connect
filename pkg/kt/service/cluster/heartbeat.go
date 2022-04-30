@@ -57,18 +57,26 @@ func SetupHeartBeat(name, namespace string, updater func(string, string)) {
 }
 
 // SetupPortForwardHeartBeat setup heartbeat watcher for port forward
-func SetupPortForwardHeartBeat(port int) {
-	ticker := time.NewTicker(time.Second *portForwardHeartBeatIntervalSec - util.RandomSeconds(0, 5))
+func SetupPortForwardHeartBeat(port int) *time.Ticker {
+	ticker := time.NewTicker(portForwardHeartBeatIntervalSec * time.Second - util.RandomSeconds(0, 5))
 	go func() {
-		for range ticker.C {
-			if conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port)); err != nil {
-				log.Warn().Err(err).Msgf("Heartbeat port forward %d ticked failed: %s", port, err)
-			} else {
-				log.Debug().Msgf("Heartbeat port forward %d ticked at %s", port, formattedTime())
-				_ = conn.Close()
+		TickLoop:
+		for {
+			select {
+			case <-ticker.C:
+				if conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port)); err != nil {
+					log.Warn().Err(err).Msgf("Heartbeat port forward %d ticked failed: %s", port, err)
+				} else {
+					log.Debug().Msgf("Heartbeat port forward %d ticked at %s", port, formattedTime())
+					_ = conn.Close()
+				}
+			case <-time.After(2 * portForwardHeartBeatIntervalSec * time.Second):
+				log.Debug().Msgf("Heartbeat port forward %d stopped", port)
+				break TickLoop
 			}
 		}
 	}()
+	return ticker
 }
 
 func formattedTime() string {

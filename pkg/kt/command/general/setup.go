@@ -11,7 +11,9 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 )
 
 const UsageTemplate = `Usage:{{if .Runnable}}
@@ -59,9 +61,11 @@ func Prepare() error {
 }
 
 // SetupProcess write pid file and set component type
-func SetupProcess(componentName string, ch chan os.Signal) error {
+func SetupProcess(componentName string) (chan os.Signal, error) {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
 	opt.Get().RuntimeStore.Component = componentName
-	return util.WritePidFile(componentName, ch)
+	return ch, util.WritePidFile(componentName, ch)
 }
 
 // combineKubeOpts set default options of kubectl if not assign

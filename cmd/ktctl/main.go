@@ -12,8 +12,6 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
 var (
@@ -28,7 +26,6 @@ func init() {
 func main() {
 	// this line must go first
 	opt.Get().RuntimeStore.Version = version
-	ch := setupCloseHandler()
 
 	var rootCmd = &cobra.Command{
 		Use:   "ktctl",
@@ -41,10 +38,10 @@ func main() {
 	}
 
 	action := &command.Action{}
-	rootCmd.AddCommand(command.NewConnectCommand(action, ch))
-	rootCmd.AddCommand(command.NewExchangeCommand(action, ch))
-	rootCmd.AddCommand(command.NewMeshCommand(action, ch))
-	rootCmd.AddCommand(command.NewPreviewCommand(action, ch))
+	rootCmd.AddCommand(command.NewConnectCommand(action))
+	rootCmd.AddCommand(command.NewExchangeCommand(action))
+	rootCmd.AddCommand(command.NewMeshCommand(action))
+	rootCmd.AddCommand(command.NewPreviewCommand(action))
 	rootCmd.AddCommand(command.NewCleanCommand(action))
 	rootCmd.AddCommand(command.NewRecoverCommand(action))
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
@@ -79,11 +76,4 @@ func main() {
 		log.Error().Msgf("Failed to start: %s", err)
 	}
 	general.CleanupWorkspace()
-}
-
-// setupCloseHandler registry close handler
-func setupCloseHandler() (ch chan os.Signal) {
-	ch = make(chan os.Signal)
-	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
-	return ch
 }

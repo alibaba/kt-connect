@@ -5,16 +5,14 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/exchange"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"os"
 	"strings"
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+func NewExchangeCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "exchange",
 		Short: "Redirect all requests of specified kubernetes service to local",
@@ -25,7 +23,7 @@ func NewExchangeCommand(action ActionInterface, ch chan os.Signal) *cobra.Comman
 			if len(args) == 0 {
 				return fmt.Errorf("name of service to exchange is required")
 			}
-			return action.Exchange(args[0], ch)
+			return action.Exchange(args[0])
 		},
 	}
 
@@ -42,8 +40,8 @@ func NewExchangeCommand(action ActionInterface, ch chan os.Signal) *cobra.Comman
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
-	err := general.SetupProcess(util.ComponentExchange, ch)
+func (action *Action) Exchange(resourceName string) error {
+	ch, err := general.SetupProcess(util.ComponentExchange)
 	if err != nil {
 		return err
 	}
@@ -71,11 +69,6 @@ func (action *Action) Exchange(resourceName string, ch chan os.Signal) error {
 	log.Info().Msg("---------------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
-	go func() {
-		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted")
-		ch <-os.Interrupt
-	}()
 	s := <-ch
 	log.Info().Msgf("Terminal Signal is %s", s)
 	return nil

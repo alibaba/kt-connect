@@ -6,16 +6,14 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/connect"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 // NewConnectCommand return new connect command
-func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command {
+func NewConnectCommand(action ActionInterface) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "connect",
 		Short: "Create a network tunnel to kubernetes cluster",
@@ -26,7 +24,7 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return action.Connect(ch)
+			return action.Connect()
 		},
 	}
 
@@ -51,8 +49,8 @@ func NewConnectCommand(action ActionInterface, ch chan os.Signal) *cobra.Command
 }
 
 // Connect setup vpn to kubernetes cluster
-func (action *Action) Connect(ch chan os.Signal) error {
-	err := general.SetupProcess(util.ComponentConnect, ch)
+func (action *Action) Connect() error {
+	ch, err := general.SetupProcess(util.ComponentConnect)
 	if err != nil {
 		return err
 	}
@@ -77,11 +75,6 @@ func (action *Action) Connect(ch chan os.Signal) error {
 	log.Info().Msg("---------------------------------------------------------------")
 
 	// watch background process, clean the workspace and exit if background process occur exception
-	go func() {
-		<-process.Interrupt()
-		log.Error().Msgf("Command interrupted")
-		ch <- os.Interrupt
-	}()
 	s := <-ch
 	log.Info().Msgf("Terminal signal is %s", s)
 	return nil

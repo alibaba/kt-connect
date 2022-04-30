@@ -83,24 +83,27 @@ func (k *Kubernetes) UpdatePodHeartBeat(name, namespace string) {
 func (k *Kubernetes) WatchPod(name, namespace string, fAdd, fDel, fMod func(*coreV1.Pod)) {
 	k.watchResource(name, namespace, string(coreV1.ResourcePods), &coreV1.Pod{},
 		func(obj any) {
-			if fAdd != nil {
-				log.Debug().Msgf("Pod %s added", obj.(*coreV1.Pod).Name)
-				fAdd(obj.(*coreV1.Pod))
-			}
+			handleEvent(obj, "added", fAdd)
 		},
 		func(obj any) {
-			if fDel != nil {
-				log.Debug().Msgf("Pod %s deleted", obj.(*coreV1.Pod).Name)
-				fDel(obj.(*coreV1.Pod))
-			}
+			handleEvent(obj, "deleted", fDel)
 		},
 		func(obj any) {
-			if fMod != nil {
-				log.Debug().Msgf("Pod %s modified", obj.(*coreV1.Pod).Name)
-				fMod(obj.(*coreV1.Pod))
-			}
+			handleEvent(obj, "modified", fMod)
 		},
 	)
+}
+
+func handleEvent(obj any, status string, f func(*coreV1.Pod)) {
+	switch obj.(type) {
+	case *coreV1.Pod:
+		if f != nil {
+			log.Debug().Msgf("Pod %s %s", obj.(*coreV1.Pod).Name, status)
+			f(obj.(*coreV1.Pod))
+		}
+	default:
+		// ignore
+	}
 }
 
 func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, cmd ...string) (string, string, error) {
