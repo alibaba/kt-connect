@@ -5,7 +5,7 @@ import (
 )
 
 // Contains check whether obj exist in target, the type of target can be an array, slice or map
-func Contains(obj interface{}, target interface{}) bool {
+func Contains(obj any, target any) bool {
 	targetValue := reflect.ValueOf(target)
 	switch reflect.TypeOf(target).Kind() {
 	case reflect.Slice, reflect.Array:

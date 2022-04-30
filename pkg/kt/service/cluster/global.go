@@ -58,7 +58,7 @@ func (k *Kubernetes) GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.Co
 // name: empty for any name
 // namespace: empty for all namespace
 // fAdd, fDel, fMod: nil for ignore
-func (k *Kubernetes) watchResource(name, namespace, resourceType string, objType runtime.Object, fAdd, fDel, fMod func(interface{})) {
+func (k *Kubernetes) watchResource(name, namespace, resourceType string, objType runtime.Object, fAdd, fDel, fMod func(any)) {
 	selector := fields.Nothing()
 	if name != "" {
 		selector = fields.OneTermEqualSelector("metadata.name", name)
@@ -74,9 +74,9 @@ func (k *Kubernetes) watchResource(name, namespace, resourceType string, objType
 		objType,
 		0,
 		cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) { fAdd(obj) },
-			DeleteFunc: func(obj interface{}) { fDel(obj) },
-			UpdateFunc: func(oldObj, newObj interface{}) { fMod(newObj) },
+			AddFunc: func(obj any) { fAdd(obj) },
+			DeleteFunc: func(obj any) { fDel(obj) },
+			UpdateFunc: func(oldObj, newObj any) { fMod(newObj) },
 		},
 	)
 

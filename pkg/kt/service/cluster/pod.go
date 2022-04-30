@@ -82,19 +82,19 @@ func (k *Kubernetes) UpdatePodHeartBeat(name, namespace string) {
 // WatchPod ...
 func (k *Kubernetes) WatchPod(name, namespace string, fAdd, fDel, fMod func(*coreV1.Pod)) {
 	k.watchResource(name, namespace, string(coreV1.ResourcePods), &coreV1.Pod{},
-		func(obj interface{}) {
+		func(obj any) {
 			if fAdd != nil {
 				log.Debug().Msgf("Pod %s added", obj.(*coreV1.Pod).Name)
 				fAdd(obj.(*coreV1.Pod))
 			}
 		},
-		func(obj interface{}) {
+		func(obj any) {
 			if fDel != nil {
 				log.Debug().Msgf("Pod %s deleted", obj.(*coreV1.Pod).Name)
 				fDel(obj.(*coreV1.Pod))
 			}
 		},
-		func(obj interface{}) {
+		func(obj any) {
 			if fMod != nil {
 				log.Debug().Msgf("Pod %s modified", obj.(*coreV1.Pod).Name)
 				fMod(obj.(*coreV1.Pod))

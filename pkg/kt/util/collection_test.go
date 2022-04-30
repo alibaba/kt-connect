@@ -7,8 +7,8 @@ import (
 
 func TestContains(t *testing.T) {
 	type args struct {
-		obj    interface{}
-		target interface{}
+		obj    any
+		target any
 	}
 	tests := []struct {
 		name string

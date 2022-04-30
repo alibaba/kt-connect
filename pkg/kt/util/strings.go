@@ -29,7 +29,7 @@ func RandomSeconds(min, max int) time.Duration {
 	if val < min {
 		val = min
 	}
-	return time.Duration(int64(val)) * time.Second
+	return time.Duration(val) * time.Second
 }
 
 // RandomPort Generate random number [1024, 65535)

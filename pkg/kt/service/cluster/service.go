@@ -81,19 +81,19 @@ func (k *Kubernetes) UpdateServiceHeartBeat(name, namespace string) {
 // WatchService ...
 func (k *Kubernetes) WatchService(name, namespace string, fAdd, fDel, fMod func(*coreV1.Service)) {
 	k.watchResource(name, namespace, string(coreV1.ResourceServices), &coreV1.Service{},
-		func(obj interface{}) {
+		func(obj any) {
 			if fAdd != nil {
 				log.Debug().Msgf("Service %s added", obj.(*coreV1.Service).Name)
 				fAdd(obj.(*coreV1.Service))
 			}
 		},
-		func(obj interface{}) {
+		func(obj any) {
 			if fDel != nil {
 				log.Debug().Msgf("Service %s deleted", obj.(*coreV1.Service).Name)
 				fDel(obj.(*coreV1.Service))
 			}
 		},
-		func(obj interface{}) {
+		func(obj any) {
 			if fMod != nil {
 				log.Debug().Msgf("Service %s modified", obj.(*coreV1.Service).Name)
 				fMod(obj.(*coreV1.Service))

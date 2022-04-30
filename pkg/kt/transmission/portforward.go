@@ -1,12 +1,9 @@
 package transmission
 
 import (
-	"context"
 	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
-	"github.com/alibaba/kt-connect/pkg/kt/process"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io"
 	"k8s.io/client-go/tools/portforward"
@@ -16,34 +13,30 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 // SetupPortForwardToLocal mapping local port to shadow pod ssh port
 func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
 	// TODO: reconnect when network interrupted and recovered
-	stop := make(chan struct{})
-	_, cancel := context.WithCancel(context.Background())
-	// one of the background process start failed and will cancel the started process
+	ready := make(chan struct{})
 	go func() {
-		process.Stop(<-stop, cancel)
-	}()
-	go func() {
-		if err := portForward(podName, remotePort, localPort, stop); err != nil {
+		if err := portForward(podName, remotePort, localPort, ready); err != nil {
 			log.Error().Err(err).Msgf("Port forward to %d -> %d pod %s interrupted", localPort, remotePort, podName)
-			stop <- struct{}{}
 		}
 	}()
 
-	if !util.WaitPortBeReady(opt.Get().PortForwardWaitTime, localPort) {
+	select {
+	case <-ready:
+		cluster.SetupPortForwardHeartBeat(localPort)
+	case <-time.After(time.Duration(opt.Get().PortForwardWaitTime) * time.Second):
 		return fmt.Errorf("connect to port-forward failed")
 	}
-	cluster.SetupPortForwardHeartBeat(localPort)
 	return nil
 }
 
 // PortForward call port forward api
-func portForward(podName string, remotePort, localPort int, stop chan struct{}) error {
-	ready := make(chan struct{})
+func portForward(podName string, remotePort, localPort int, ready chan struct{}) error {
 	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", opt.Get().Namespace, podName)
 	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Get().RuntimeStore.RestConfig.Host)
 	apiUrl, err := parseReqHost(opt.Get().RuntimeStore.RestConfig.Host, apiPath)
@@ -59,7 +52,7 @@ func portForward(podName string, remotePort, localPort int, stop chan struct{}) 
 	if opt.Get().Debug {
 		out = os.Stdout
 	}
-	fw, err := portforward.New(dialer, ports, stop, ready, out, os.Stderr)
+	fw, err := portforward.New(dialer, ports, make(<-chan struct{}), ready, out, os.Stderr)
 	if err != nil {
 		return err
 	}

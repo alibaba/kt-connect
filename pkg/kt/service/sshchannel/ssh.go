@@ -17,7 +17,7 @@ import (
 
 type SocksLogger struct {}
 
-func (s SocksLogger) Println(v ...interface{}) {
+func (s SocksLogger) Println(v ...any) {
 	log.Info().Msgf(fmt.Sprint(v...))
 }
 
