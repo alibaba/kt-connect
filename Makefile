@@ -3,6 +3,7 @@ TAG				  ?= $(shell date +%s)
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 ROUTER_IMAGE	  =  kt-connect-router
+NAVIGATOR_IMAGE	  =  kt-connect-navigator
 
 # run mod tidy
 mod:
@@ -33,24 +34,33 @@ ktctl:
 shadow-base:
 	docker build -t $(PREFIX)/$(SHADOW_BASE_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile_base .
 
-# build shadow
+# build shadow image
 shadow:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-linux-amd64 cmd/shadow/main.go
 	docker build -t $(PREFIX)/$(SHADOW_IMAGE):$(TAG) -f build/docker/shadow/Dockerfile .
 
-# shadow
-shadow-local:
-	go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-local cmd/shadow/main.go
-
-# dlv for debug
+# shadow with dlv
 shadow-dlv:
 	make shadow TAG=latest
 	scripts/build-shadow-dlv
 
-# build router
+# shadow for local debug
+shadow-local:
+	go build -gcflags "all=-N -l" -o artifacts/shadow/shadow-local cmd/shadow/main.go
+
+# build router image
 router:
 	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
 	docker build -t $(PREFIX)/$(ROUTER_IMAGE):$(TAG) -f build/docker/router/Dockerfile .
+
+# build navigator image
+navigator:
+	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
+	docker build -t $(PREFIX)/$(ROUTER_IMAGE):$(TAG) -f build/docker/router/Dockerfile .
+
+# navigator for local debug
+navigator-local:
+	go build -gcflags "all=-N -l" -o artifacts/navigator/navigator cmd/navigator/main.go
 
 # clean up workspace
 clean:
