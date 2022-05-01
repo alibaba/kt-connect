@@ -3,8 +3,10 @@ package tun
 import (
 	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/xjasonlyu/tun2socks/v2/engine"
+	tunLog "github.com/xjasonlyu/tun2socks/v2/log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -22,6 +24,7 @@ func (s *Cli) ToSocks(sockAddr string) error {
 		key.Proxy = sockAddr
 		key.Device = fmt.Sprintf("tun://%s", s.GetName())
 		key.LogLevel = logLevel
+		tunLog.SetOutput(util.BackgroundLogger)
 		engine.Insert(key)
 		tunSignal <-engine.Start()
 

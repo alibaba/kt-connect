@@ -55,7 +55,7 @@ router:
 
 # build navigator image
 navigator:
-	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/router/router-linux-amd64 cmd/router/main.go
+	GOARCH=amd64 GOOS=linux go build -gcflags "all=-N -l" -o artifacts/navigator/navigator-linux-amd64 cmd/navigator/main.go
 	docker build -t $(PREFIX)/$(ROUTER_IMAGE):$(TAG) -f build/docker/router/Dockerfile .
 
 # navigator for local debug

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	"io"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"strings"
 	"time"
@@ -55,7 +54,7 @@ func portForward(podName string, remotePort, localPort int, ready chan struct{})
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, apiUrl)
 	ports := []string{fmt.Sprintf("%d:%d", localPort, remotePort)}
-	fw, err := portforward.New(dialer, ports, make(<-chan struct{}), ready, io.Discard, os.Stderr)
+	fw, err := portforward.New(dialer, ports, make(<-chan struct{}), ready, util.BackgroundLogger, util.BackgroundLogger)
 	if err != nil {
 		return err
 	}

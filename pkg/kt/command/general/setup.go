@@ -45,6 +45,7 @@ func Prepare() error {
 	if opt.Get().Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
+	util.PrepareLogger(opt.Get().Debug)
 	if err := combineKubeOpts(); err != nil {
 		return err
 	}

@@ -11,7 +11,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/stretchr/testify v1.7.1
 	github.com/wzshiming/socks5 v0.4.0
-	github.com/xjasonlyu/tun2socks/v2 v2.3.3
+	github.com/xjasonlyu/tun2socks/v2 v2.4.1
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
 	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461
 	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
@@ -71,4 +71,4 @@ require (
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-replace github.com/xjasonlyu/tun2socks/v2 v2.3.3 => github.com/linfan/tun2socks/v2 v2.3.3-0.20220420143758-4f429191aa1c
+replace github.com/xjasonlyu/tun2socks/v2 v2.4.1 => github.com/linfan/tun2socks/v2 v2.4.2-0.20220501081747-6f4a45525a7c

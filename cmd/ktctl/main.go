@@ -21,6 +21,8 @@ var (
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: util.IsWindows()})
+	_ = util.CreateDirIfNotExist(util.KtHome)
+	util.FixFileOwner(util.KtHome)
 }
 
 func main() {
