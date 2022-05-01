@@ -14,10 +14,10 @@ import (
 // ForwardPodToLocal mapping pod port to local port
 func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 	log.Info().Msgf("Forwarding pod %s to local via port %s", podName, exposePorts)
-	localSSHPort := util.GetRandomTcpPort()
+	localSshPort := util.GetRandomTcpPort()
 
 	// port forward pod 22 -> local <random port>
-	if err := SetupPortForwardToLocal(podName, common.StandardSshPort, localSSHPort); err != nil {
+	if err := SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return -1, err
 	}
 
@@ -31,21 +31,21 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 			if err2 != nil {
 				return -1, err2
 			}
-			ExposeLocalPort(&wg, localPort, remotePort, localSSHPort, privateKey)
+			ForwardRemotePortViaSshTunnel(&wg, localPort, remotePort, localSshPort, privateKey)
 		}
 		wg.Wait()
 	}
-	return localSSHPort, nil
+	return localSshPort, nil
 }
 
-// ExposeLocalPort forward remote pod to local
-func ExposeLocalPort(wg *sync.WaitGroup, localPort, remotePort, localSSHPort int, privateKey string) {
+// ForwardRemotePortViaSshTunnel forward remote pod to local
+func ForwardRemotePortViaSshTunnel(wg *sync.WaitGroup, localPort, remotePort, localSshPort int, privateKey string) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
 		log.Debug().Msgf("Exposing remote pod:%d to local port localhost:%d", remotePort, localPort)
 		err := sshchannel.Ins().ForwardRemoteToLocal(
 			privateKey,
-			fmt.Sprintf("127.0.0.1:%d", localSSHPort),
+			fmt.Sprintf("127.0.0.1:%d", localSshPort),
 			fmt.Sprintf("0.0.0.0:%d", remotePort),
 			fmt.Sprintf("127.0.0.1:%d", localPort),
 		)

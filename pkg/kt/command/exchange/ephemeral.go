@@ -149,7 +149,7 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 			return err2
 		}
 		var wg sync.WaitGroup
-		transmission.ExposeLocalPort(&wg, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
+		transmission.ForwardRemotePortViaSshTunnel(&wg, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
 		wg.Done()
 	}
 

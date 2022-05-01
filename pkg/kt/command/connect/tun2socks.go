@@ -30,11 +30,6 @@ func ByTun2Socks() error {
 
 	if opt.Get().ConnectOptions.DisableTunDevice {
 		showSetupSocksMessage(opt.Get().ConnectOptions.SocksPort)
-		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
-			return setupDns(podName, podIP)
-		} else {
-			return nil
-		}
 	} else {
 		if err = tun.Ins().CheckContext(); err != nil {
 			return err
@@ -51,8 +46,8 @@ func ByTun2Socks() error {
 			}
 			log.Info().Msgf("Route to tun device completed")
 		}
-		return setupDns(podName, podIP)
 	}
+	return setupDns(podName, podIP)
 }
 
 func setupTunRoute() error {
@@ -98,7 +93,6 @@ func startSocks5Connection(privateKey string, localSshPort int) error {
 }
 
 func showSetupSocksMessage(socksPort int) {
-	log.Info().Msgf("--------------------------------------------------------------")
 	if util.IsWindows() {
 		if util.IsCmd() {
 			log.Info().Msgf("Please setup proxy config by: set http_proxy=socks5://127.0.0.1:%d", socksPort)
@@ -108,5 +102,4 @@ func showSetupSocksMessage(socksPort int) {
 	} else {
 		log.Info().Msgf("Please setup proxy config by: export http_proxy=socks5://127.0.0.1:%d", socksPort)
 	}
-	log.Info().Msgf("--------------------------------------------------------------")
 }
