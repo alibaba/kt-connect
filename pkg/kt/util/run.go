@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"context"
 	"io"
 	"os/exec"
 	"strings"
@@ -11,19 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CMDContext context of cmd
-type CMDContext struct {
-	Ctx     context.Context
-	Cmd     *exec.Cmd
-	Name    string
-}
-
 // RunAndWait run cmd
 func RunAndWait(cmd *exec.Cmd) (string, string, error) {
-	outbuf, errbuf, err := runCmd(&CMDContext{
-		Cmd:     cmd,
-		Name:    cmd.Path,
-	})
+	outbuf, errbuf, err := runCmd(cmd, cmd.Path)
 	if err != nil {
 		return outbuf.String(), errbuf.String(), err
 	}
@@ -32,13 +21,14 @@ func RunAndWait(cmd *exec.Cmd) (string, string, error) {
 }
 
 // BackgroundRun run cmd in background with context
-func BackgroundRun(cmdCtx *CMDContext) error {
-	outbuf, errbuf, err := runCmd(cmdCtx)
+func BackgroundRun(cmd *exec.Cmd, name string, res chan error) error {
+	outbuf, errbuf, err := runCmd(cmd, name)
 	if err != nil {
 		return err
 	}
+
 	go func() {
-		err = cmdCtx.Cmd.Wait()
+		err = cmd.Wait()
 		stdout := strings.TrimSpace(outbuf.String())
 		stderr := strings.TrimSpace(errbuf.String())
 		if len(stdout) > 0 {
@@ -48,10 +38,13 @@ func BackgroundRun(cmdCtx *CMDContext) error {
 			log.Debug().Msgf("[STDERR] %s", stderr)
 		}
 		if err != nil {
-			log.Info().Msgf("Background task %s closed, %s", cmdCtx.Name, err.Error())
+			log.Info().Msgf("Background task %s closed, %s", name, err.Error())
+		} else {
+			log.Info().Msgf("Background task %s completed", name)
 		}
-		log.Info().Msgf("Task %s completed", cmdCtx.Name)
+		res <-err
 	}()
+
 	return nil
 }
 
@@ -60,9 +53,8 @@ func CanRun(cmd *exec.Cmd) bool {
 	return cmd.Run() == nil
 }
 
-func runCmd(cmdCtx *CMDContext) (*bytes.Buffer, *bytes.Buffer, error) {
-	cmd := cmdCtx.Cmd
-	log.Debug().Msgf("Task name = %s, cmd.Args = %+v", cmdCtx.Name, cmd.Args)
+func runCmd(cmd *exec.Cmd, name string) (*bytes.Buffer, *bytes.Buffer, error) {
+	log.Debug().Msgf("Task name = %s, cmd.Args = %+v", name, cmd.Args)
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
@@ -79,18 +71,6 @@ func runCmd(cmdCtx *CMDContext) (*bytes.Buffer, *bytes.Buffer, error) {
 
 	time.Sleep(100 * time.Millisecond)
 	pid := cmd.Process.Pid
-	log.Debug().Msgf("Start %s at pid: %d", cmdCtx.Name, pid)
-	// will kill the process when parent cancel
-	go func() {
-		if cmdCtx.Ctx != nil {
-			select {
-			case <-cmdCtx.Ctx.Done():
-				err2 := cmd.Process.Kill()
-				if err2 != nil {
-					log.Debug().Msgf("Task %s(%d) killed", cmdCtx.Name, pid)
-				}
-			}
-		}
-	}()
+	log.Debug().Msgf("Start %s at pid: %d", name, pid)
 	return outbuf, errbuf, nil
 }

@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"context"
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
@@ -9,6 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"time"
 )
 
 func BySshuttle() error {
@@ -29,16 +29,35 @@ func BySshuttle() error {
 		return err
 	}
 
-	if err = startVPNConnection(&sshuttle.SSHVPNRequest{
+	req := &sshuttle.SSHVPNRequest{
 		LocalSshPort:           localSshPort,
 		RemoteSSHPKPath:        privateKeyPath,
 		RemoteDNSServerAddress: podIP,
 		CustomCIDR:             cidrs,
-	}); err != nil {
+	}
+	if err = startSshuttle(req); err != nil {
 		return err
 	}
 
 	return setupDns(podName, podIP)
+}
+
+func startSshuttle(req *sshuttle.SSHVPNRequest) error {
+	res := make(chan error)
+	if err := util.BackgroundRun(sshuttle.Ins().Connect(req), "vpn(sshuttle)", res); err != nil {
+		return err
+	}
+
+	go func() {
+		select {
+		case <-res:
+			time.Sleep(10 * time.Second)
+			log.Debug().Msgf("Restarting sshuttle ...")
+			_ = startSshuttle(req)
+		}
+	}()
+
+	return nil
 }
 
 func checkSshuttleInstalled() {
@@ -48,12 +67,4 @@ func checkSshuttleInstalled() {
 			log.Error().Err(err).Msgf("Failed find or install sshuttle")
 		}
 	}
-}
-
-func startVPNConnection(req *sshuttle.SSHVPNRequest) (err error) {
-	return util.BackgroundRun(&util.CMDContext{
-		Ctx:  context.Background(),
-		Cmd:  sshuttle.Ins().Connect(req),
-		Name: "vpn(sshuttle)",
-	})
 }
