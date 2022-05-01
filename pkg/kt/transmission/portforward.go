@@ -55,11 +55,7 @@ func portForward(podName string, remotePort, localPort int, ready chan struct{})
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, apiUrl)
 	ports := []string{fmt.Sprintf("%d:%d", localPort, remotePort)}
-	var out io.Writer = nil
-	if opt.Get().Debug {
-		out = os.Stdout
-	}
-	fw, err := portforward.New(dialer, ports, make(<-chan struct{}), ready, out, os.Stderr)
+	fw, err := portforward.New(dialer, ports, make(<-chan struct{}), ready, io.Discard, os.Stderr)
 	if err != nil {
 		return err
 	}
