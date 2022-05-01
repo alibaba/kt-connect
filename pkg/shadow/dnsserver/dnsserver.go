@@ -52,7 +52,7 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 
 	name := req.Question[0].Name
 	qtype := req.Question[0].Qtype
-	answer := common.ReadCache(name, qtype)
+	answer := common.ReadCache(name, qtype, 60)
 	if answer != nil {
 		log.Debug().Msgf("Found domain %s (%d) in cache", name, qtype)
 		return answer

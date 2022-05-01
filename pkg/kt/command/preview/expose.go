@@ -2,7 +2,7 @@ package preview
 
 import (
 	"fmt"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
@@ -48,13 +48,13 @@ func exposeLocalService(serviceName, shadowPodName string, labels, annotations m
 	}
 	if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 		Meta: &cluster.ResourceMeta{
-			Name: serviceName,
-			Namespace: opt.Get().Namespace,
-			Labels: map[string]string{},
+			Name:        serviceName,
+			Namespace:   opt.Get().Namespace,
+			Labels:      map[string]string{},
 			Annotations: map[string]string{},
 		},
-		External: opt.Get().PreviewOptions.External,
-		Ports: ports,
+		External:  opt.Get().PreviewOptions.External,
+		Ports:     ports,
 		Selectors: labels,
 	}); err != nil {
 		return err

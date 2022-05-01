@@ -1,7 +1,7 @@
 package cluster
 
 import (
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/stretchr/testify/require"
 	coreV1 "k8s.io/api/core/v1"

@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/gofrs/flock"
 	"github.com/rs/zerolog/log"

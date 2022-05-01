@@ -2,7 +2,7 @@ package tun
 
 import (
 	"fmt"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
+	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/rs/zerolog/log"
 	"github.com/xjasonlyu/tun2socks/v2/engine"
 	"os"

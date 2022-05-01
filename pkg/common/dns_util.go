@@ -2,7 +2,6 @@ package common
 
 import (
 	"fmt"
-	opt "github.com/alibaba/kt-connect/pkg/kt/options"
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
 	"strconv"
@@ -50,8 +49,8 @@ func NsLookup(domain string, qtype uint16, net, dnsServerAddr string) (*dns.Msg,
 }
 
 // ReadCache fetch from cache
-func ReadCache(domain string, qtype uint16) []dns.RR {
-	if record, ok := nsCache.Load(getCacheKey(domain, qtype)); ok && notExpired(record.(NsEntry).timestamp) {
+func ReadCache(domain string, qtype uint16, ttl int64) []dns.RR {
+	if record, ok := nsCache.Load(getCacheKey(domain, qtype)); ok && notExpired(record.(NsEntry).timestamp, ttl) {
 		return record.(NsEntry).answer
 	}
 	return nil
@@ -62,8 +61,8 @@ func WriteCache(domain string, qtype uint16, answer []dns.RR) {
 	nsCache.Store(getCacheKey(domain, qtype), NsEntry{answer, time.Now().Unix()})
 }
 
-func notExpired(timestamp int64) bool {
-	return time.Now().Unix() - timestamp < opt.Get().ConnectOptions.DnsCacheTtl
+func notExpired(timestamp int64, ttl int64) bool {
+	return time.Now().Unix() < timestamp + ttl
 }
 
 func getCacheKey(domain string, qtype uint16) string {
