@@ -76,20 +76,30 @@ func setupTunRoute() error {
 }
 
 func startSocks5Connection(privateKey string, localSshPort int) error {
-	var success = make(chan error)
-	go func() {
-		time.Sleep(1 * time.Second)
-		success <-nil
-	}()
+	var res = make(chan error)
+	gone := false
 	go func() {
 		// will hang here if not error happen
-		success <- sshchannel.Ins().StartSocks5Proxy(
+		err := sshchannel.Ins().StartSocks5Proxy(
 			privateKey,
 			fmt.Sprintf("127.0.0.1:%d", localSshPort),
 			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort),
 		)
+		log.Warn().Err(err).Msgf("Socks proxy broken")
+		if !gone {
+			res <-err
+		}
+		time.Sleep(10 * time.Second)
+		log.Debug().Msgf("Socks proxy reconnecting ...")
+		_ = startSocks5Connection(privateKey, localSshPort)
 	}()
-	return <-success
+	select {
+	case err := <-res:
+		return err
+	case <-time.After(1 * time.Second):
+		gone = true
+		return nil
+	}
 }
 
 func showSetupSocksMessage(socksPort int) {
