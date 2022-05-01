@@ -18,7 +18,7 @@ import (
 type SocksLogger struct {}
 
 func (s SocksLogger) Println(v ...any) {
-	log.Info().Msgf(fmt.Sprint(v...))
+	_, _ = util.BackgroundLogger.Write([]byte(fmt.Sprint(v...) + util.Eol))
 }
 
 // StartSocks5Proxy start socks5 proxy

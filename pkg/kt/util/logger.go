@@ -14,9 +14,10 @@ func PrepareLogger(enable bool) {
 		return
 	}
 	if tmpFile, err := ioutil.TempFile(os.TempDir(), "kt-"); err != nil {
-		log.Warn().Msgf("Cannot create verbose log file", err)
+		log.Warn().Msgf("Cannot create background log file", err)
 	} else {
 		log.Debug().Msgf("Background task log to %s", tmpFile.Name())
+		FixFileOwner(tmpFile.Name())
 		BackgroundLogger = FileWriter{tmpFile}
 	}
 }

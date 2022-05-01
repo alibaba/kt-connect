@@ -7,9 +7,11 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	k8sRuntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+	"k8s.io/klog/v2"
 	"os"
 	"os/signal"
 	"runtime"
@@ -46,6 +48,13 @@ func Prepare() error {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 	util.PrepareLogger(opt.Get().Debug)
+	k8sRuntime.ErrorHandlers = []func(error){
+		func(err error) {
+			_, _ = util.BackgroundLogger.Write([]byte(err.Error() + util.Eol))
+		},
+	}
+	klog.SetOutput(util.BackgroundLogger)
+	klog.LogToStderr(false)
 	if err := combineKubeOpts(); err != nil {
 		return err
 	}

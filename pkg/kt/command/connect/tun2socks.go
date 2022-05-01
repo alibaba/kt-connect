@@ -95,11 +95,11 @@ func startSocks5Connection(privateKey string, localSshPort int) error {
 func showSetupSocksMessage(socksPort int) {
 	if util.IsWindows() {
 		if util.IsCmd() {
-			log.Info().Msgf("Please setup proxy config by: set http_proxy=socks5://127.0.0.1:%d", socksPort)
+			log.Info().Msgf(">> Please setup proxy config by: set http_proxy=socks5://127.0.0.1:%d <<", socksPort)
 		} else {
-			log.Info().Msgf("Please setup proxy config by: $env:http_proxy=\"socks5://127.0.0.1:%d\"", socksPort)
+			log.Info().Msgf(">> Please setup proxy config by: $env:http_proxy=\"socks5://127.0.0.1:%d\" <<", socksPort)
 		}
 	} else {
-		log.Info().Msgf("Please setup proxy config by: export http_proxy=socks5://127.0.0.1:%d", socksPort)
+		log.Info().Msgf(">> Please setup proxy config by: export http_proxy=socks5://127.0.0.1:%d <<", socksPort)
 	}
 }
