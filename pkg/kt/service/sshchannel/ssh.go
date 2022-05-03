@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -80,7 +81,7 @@ func (c *Cli) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to listen remote endpoint")
 		_ = conn.Close()
-		// TODO: kill the sshd process in pod
+		disconnectRemotePort(privateKey, sshAddress, remoteEndpoint, c)
 		return err
 	}
 
@@ -90,6 +91,17 @@ func (c *Cli) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint
 			_ = conn.Close()
 			return err
 		}
+	}
+}
+
+func disconnectRemotePort(privateKey string, sshAddress string, remoteEndpoint string, c *Cli) {
+	remotePort := strings.Split(remoteEndpoint, ":")[1]
+	out, err := c.RunScript(privateKey, sshAddress, fmt.Sprintf("/disconnect.sh %s", remotePort))
+	if out != "" {
+		_, _ = util.BackgroundLogger.Write([]byte(out + util.Eol))
+	}
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to disconnect remote port %s", remotePort)
 	}
 }
 
