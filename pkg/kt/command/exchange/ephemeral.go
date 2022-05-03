@@ -143,15 +143,15 @@ func exchangeWithEphemeralContainer(exposePorts string, localSSHPort int, privat
 		return err
 	}
 	portPairs := strings.Split(exposePorts, ",")
+	var wg sync.WaitGroup
 	for _, exposePort := range portPairs {
 		localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
 		if err2 != nil {
 			return err2
 		}
-		var wg sync.WaitGroup
 		transmission.ForwardRemotePortViaSshTunnel(&wg, localPort, redirectPorts[remotePort], localSSHPort, privateKey)
-		wg.Done()
 	}
+	wg.Wait()
 
 	return nil
 }

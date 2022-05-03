@@ -42,7 +42,6 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 func ForwardRemotePortViaSshTunnel(wg *sync.WaitGroup, localPort, remotePort, localSshPort int, privateKey string) {
 	wg.Add(1)
 	go func(wg *sync.WaitGroup) {
-		log.Debug().Msgf("Exposing remote pod:%d to local port localhost:%d", remotePort, localPort)
 		err := sshchannel.Ins().ForwardRemoteToLocal(
 			privateKey,
 			fmt.Sprintf("127.0.0.1:%d", localSshPort),
