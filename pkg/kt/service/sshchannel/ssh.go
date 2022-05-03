@@ -68,44 +68,28 @@ func (c *Cli) RunScript(privateKey string, sshAddress, script string) (result st
 
 // ForwardRemoteToLocal forward remote request to local
 func (c *Cli) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint, localEndpoint string) error {
-	res := make(chan error)
-	done := false
-	log.Debug().Msgf("Forwarding %s to local endpoint %s via %s", remoteEndpoint, localEndpoint, sshAddress)
-	go func() {
-		// Handle incoming connections on reverse forwarded tunnel
-		if conn, err := createSshConnection(privateKey, sshAddress); err != nil {
-			log.Error().Err(err).Msgf("Failed to create ssh tunnel")
-			if !done {
-				res <- err
-			}
-		} else {
-			// Listen on remote server port of shadow pod, via ssh connection
-			if listener, err2 := conn.Listen("tcp", remoteEndpoint); err2 != nil {
-				log.Error().Err(err2).Msgf("Failed to listen remote endpoint")
-				_ = conn.Close()
-				if !done {
-					res <-err2
-				}
-			} else {
-				for {
-					if err = handleRequest(listener, localEndpoint); errors.Is(err, io.EOF) {
-						_ = listener.Close()
-						_ = conn.Close()
-						break
-					}
-				}
-			}
-		}
-		time.Sleep(10 * time.Second)
-		log.Debug().Msgf("Reverse channel reconnecting ...")
-		_ = c.ForwardRemoteToLocal(privateKey, sshAddress, remoteEndpoint, localEndpoint)
-	}()
-	select {
-	case err := <-res:
+	// Handle incoming connections on reverse forwarded tunnel
+	conn, err := createSshConnection(privateKey, sshAddress)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
 		return err
-	case <-time.After(1 * time.Second):
-		done = true
-		return nil
+	}
+
+	// Listen on remote server port of shadow pod, via ssh connection
+	listener, err := conn.Listen("tcp", remoteEndpoint)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to listen remote endpoint")
+		_ = conn.Close()
+		// TODO: kill the sshd process in pod
+		return err
+	}
+
+	for {
+		if err = handleRequest(listener, localEndpoint); errors.Is(err, io.EOF) {
+			_ = listener.Close()
+			_ = conn.Close()
+			return err
+		}
 	}
 }
 

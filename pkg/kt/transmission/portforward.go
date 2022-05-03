@@ -21,7 +21,7 @@ func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
 	var ticker *time.Ticker
 	go func() {
 		if err := portForward(podName, remotePort, localPort, ready); err != nil {
-			log.Error().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, remotePort, podName)
+			log.Error().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, podName, remotePort)
 			time.Sleep(time.Duration(opt.Get().PortForwardWaitTime) * time.Second)
 		} else {
 			if ticker != nil {
@@ -35,7 +35,7 @@ func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
 	select {
 	case <-ready:
 		ticker = cluster.SetupPortForwardHeartBeat(localPort)
-		log.Info().Msgf("Port forward local:%d -> pod %s:%d established", localPort, remotePort, podName)
+		log.Info().Msgf("Port forward local:%d -> pod %s:%d established", localPort, podName, remotePort)
 		return nil
 	case <-time.After(time.Duration(opt.Get().PortForwardWaitTime) * time.Second):
 		return fmt.Errorf("connect to port-forward failed")

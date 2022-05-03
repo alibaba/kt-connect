@@ -3,12 +3,11 @@ package transmission
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
-	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/sshchannel"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"strings"
-	"sync"
+	"time"
 )
 
 // ForwardPodToLocal mapping pod port to local port
@@ -21,36 +20,59 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 		return -1, err
 	}
 
-	if opt.Get().ExchangeOptions.Mode != util.ExchangeModeEphemeral {
-		// remote forward pod -> local via ssh
-		var wg sync.WaitGroup
-		// supports multi port pairs
-		portPairs := strings.Split(exposePorts, ",")
-		for _, exposePort := range portPairs {
-			localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
-			if err2 != nil {
-				return -1, err2
-			}
-			ForwardRemotePortViaSshTunnel(&wg, localPort, remotePort, localSshPort, privateKey)
-		}
-		wg.Wait()
+	err := ForwardRemotePortsViaSshTunnel(exposePorts, localSshPort, privateKey)
+	if err != nil {
+		return -1, err
 	}
+
 	return localSshPort, nil
 }
 
-// ForwardRemotePortViaSshTunnel forward remote pod to local
-func ForwardRemotePortViaSshTunnel(wg *sync.WaitGroup, localPort, remotePort, localSshPort int, privateKey string) {
-	wg.Add(1)
-	go func(wg *sync.WaitGroup) {
-		err := sshchannel.Ins().ForwardRemoteToLocal(
-			privateKey,
-			fmt.Sprintf("127.0.0.1:%d", localSshPort),
-			fmt.Sprintf("0.0.0.0:%d", remotePort),
-			fmt.Sprintf("127.0.0.1:%d", localPort),
-		)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error happen when forward remote request to local")
+// ForwardRemotePortsViaSshTunnel forward multiple remote ports to local
+func ForwardRemotePortsViaSshTunnel(exposePorts string, localSshPort int, privateKey string) error {
+	// supports multi port-pairs
+	portPairs := strings.Split(exposePorts, ",")
+	res := make(chan error)
+	for _, exposePort := range portPairs {
+		localPort, remotePort, err2 := util.ParsePortMapping(exposePort)
+		if err2 != nil {
+			return err2
 		}
-		wg.Done()
-	}(wg)
+		forwardRemotePortViaSshTunnel(localPort, remotePort, localSshPort, privateKey, res)
+	}
+	select {
+	case err := <-res:
+		return err
+	case <-time.After(1 * time.Second):
+		go func() {
+			// consume the res channel to avoid block reverse tunnel
+			<-res
+		}()
+	}
+	return nil
+}
+
+// ForwardRemotePortViaSshTunnel forward remote pod to local
+func forwardRemotePortViaSshTunnel(localPort, remotePort, localSshPort int, privateKey string, res chan error) {
+	remoteEndpoint := fmt.Sprintf("127.0.0.1:%d", localSshPort)
+	localEndpoint := fmt.Sprintf("0.0.0.0:%d", remotePort)
+	sshAddress := fmt.Sprintf("127.0.0.1:%d", localPort)
+	log.Debug().Msgf("Forwarding %s to local endpoint %s via %s", remoteEndpoint, localEndpoint, sshAddress)
+	sshReverseTunnel(privateKey, remoteEndpoint, localEndpoint, sshAddress, res)
+}
+
+func sshReverseTunnel(privateKey, remoteEndpoint, localEndpoint, sshAddress string, res chan error) {
+	go func() {
+		err := sshchannel.Ins().ForwardRemoteToLocal(privateKey, remoteEndpoint, localEndpoint, sshAddress)
+		if err != nil {
+			log.Error().Err(err).Msgf("Reverse tunnel interrupted")
+			if res != nil {
+				res <-err
+			}
+		}
+
+		time.Sleep(10 * time.Second)
+		log.Debug().Msgf("Reverse tunnel reconnecting ...")
+		sshReverseTunnel(privateKey, remoteEndpoint, localEndpoint, sshAddress, nil)
+	}()
 }
