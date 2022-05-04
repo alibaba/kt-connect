@@ -10,6 +10,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/transmission"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/net/proxy"
 	"strings"
 	"time"
 )
@@ -24,7 +25,7 @@ func ByTun2Socks() error {
 	if err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
-	if err = startSocks5Connection(privateKeyPath, localSshPort); err != nil {
+	if err = startSocks5Connection(podIP, privateKeyPath, localSshPort); err != nil {
 		return err
 	}
 
@@ -75,31 +76,61 @@ func setupTunRoute() error {
 	return nil
 }
 
-func startSocks5Connection(privateKey string, localSshPort int) error {
+func startSocks5Connection(podIP, privateKey string, localSshPort int) error {
 	var res = make(chan error)
+	var ticker *time.Ticker
+	sshAddress := fmt.Sprintf("127.0.0.1:%d", localSshPort)
+	socks5Address := fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort)
 	gone := false
 	go func() {
 		// will hang here if not error happen
-		err := sshchannel.Ins().StartSocks5Proxy(
-			privateKey,
-			fmt.Sprintf("127.0.0.1:%d", localSshPort),
-			fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort),
-		)
+		err := sshchannel.Ins().StartSocks5Proxy(privateKey, sshAddress, socks5Address)
 		log.Warn().Err(err).Msgf("Socks proxy broken")
 		if !gone {
 			res <-err
 		}
+		if ticker != nil {
+			ticker.Stop()
+		}
 		time.Sleep(10 * time.Second)
 		log.Debug().Msgf("Socks proxy reconnecting ...")
-		_ = startSocks5Connection(privateKey, localSshPort)
+		_ = startSocks5Connection(podIP, privateKey, localSshPort)
 	}()
 	select {
 	case err := <-res:
 		return err
 	case <-time.After(1 * time.Second):
+		ticker = setupSocks5HeartBeat(podIP, socks5Address)
+		log.Info().Msgf("Socks proxy established")
 		gone = true
 		return nil
 	}
+}
+
+func setupSocks5HeartBeat(podIP, socks5Address string) *time.Ticker {
+	dialer, err := proxy.SOCKS5("tcp", socks5Address, nil, proxy.Direct)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to create socks proxy heart beat ticker")
+	}
+	ticker := time.NewTicker(60 * time.Second)
+	go func() {
+	TickLoop:
+		for {
+			select {
+			case <-ticker.C:
+				if c, err2 := dialer.Dial("tcp", fmt.Sprintf("%s:%d", podIP, common.StandardSshPort)); err2 != nil {
+					log.Warn().Err(err2).Msgf("Heartbeat socks proxy ticked failed")
+				} else {
+					_ = c.Close()
+					log.Debug().Msgf("Heartbeat socks proxy ticked at %s", util.FormattedTime())
+				}
+			case <-time.After(2 * 60 * time.Second):
+				log.Debug().Msgf("Socks proxy heartbeat stopped")
+				break TickLoop
+			}
+		}
+	}()
+	return ticker
 }
 
 func showSetupSocksMessage(socksPort int) {

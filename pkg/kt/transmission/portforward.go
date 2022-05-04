@@ -23,10 +23,9 @@ func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
 		if err := portForward(podName, remotePort, localPort, ready); err != nil {
 			log.Error().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, podName, remotePort)
 			time.Sleep(time.Duration(opt.Get().PortForwardWaitTime) * time.Second)
-		} else {
-			if ticker != nil {
-				ticker.Stop()
-			}
+		}
+		if ticker != nil {
+			ticker.Stop()
 		}
 		log.Debug().Msgf("Port forward reconnecting ...")
 		_ = SetupPortForwardToLocal(podName, remotePort, localPort)

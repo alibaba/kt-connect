@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
@@ -120,6 +121,11 @@ func ParseTimestamp(timestamp string) int64 {
 		return -1
 	}
 	return unixTime
+}
+
+// FormattedTime get timestamp to print
+func FormattedTime() string {
+	return time.Now().Format(common.YyyyMmDdHhMmSs)
 }
 
 // GetLocalUserName get current username

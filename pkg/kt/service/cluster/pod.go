@@ -72,7 +72,7 @@ func (k *Kubernetes) WaitPodTerminate(name, namespace string) (*coreV1.Pod, erro
 }
 
 func (k *Kubernetes) UpdatePodHeartBeat(name, namespace string) {
-	log.Debug().Msgf("Heartbeat pod %s ticked at %s", name, formattedTime())
+	log.Debug().Msgf("Heartbeat pod %s ticked at %s", name, util.FormattedTime())
 	if _, err := k.Clientset.CoreV1().Pods(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
 		log.Warn().Err(err).Msgf("Failed to update pod heart beat")

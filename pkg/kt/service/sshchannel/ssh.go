@@ -24,7 +24,7 @@ func (s SocksLogger) Println(v ...any) {
 }
 
 // StartSocks5Proxy start socks5 proxy
-func (c *Cli) StartSocks5Proxy(privateKey string, sshAddress, socks5Address string) (err error) {
+func (c *Cli) StartSocks5Proxy(privateKey, sshAddress, socks5Address string) (err error) {
 	conn, err := createSshConnection(privateKey, sshAddress)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (c *Cli) StartSocks5Proxy(privateKey string, sshAddress, socks5Address stri
 }
 
 // RunScript run the script on remote host.
-func (c *Cli) RunScript(privateKey string, sshAddress, script string) (result string, err error) {
+func (c *Cli) RunScript(privateKey, sshAddress, script string) (result string, err error) {
 	conn, err := createSshConnection(privateKey, sshAddress)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
@@ -68,7 +68,7 @@ func (c *Cli) RunScript(privateKey string, sshAddress, script string) (result st
 }
 
 // ForwardRemoteToLocal forward remote request to local
-func (c *Cli) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint, localEndpoint string) error {
+func (c *Cli) ForwardRemoteToLocal(privateKey, sshAddress, remoteEndpoint, localEndpoint string) error {
 	// Handle incoming connections on reverse forwarded tunnel
 	conn, err := createSshConnection(privateKey, sshAddress)
 	if err != nil {
@@ -94,7 +94,7 @@ func (c *Cli) ForwardRemoteToLocal(privateKey string, sshAddress, remoteEndpoint
 	}
 }
 
-func disconnectRemotePort(privateKey string, sshAddress string, remoteEndpoint string, c *Cli) {
+func disconnectRemotePort(privateKey, sshAddress, remoteEndpoint string, c *Cli) {
 	remotePort := strings.Split(remoteEndpoint, ":")[1]
 	out, err := c.RunScript(privateKey, sshAddress, fmt.Sprintf("/disconnect.sh %s", remotePort))
 	if out != "" {
@@ -135,7 +135,7 @@ func handleRequest(listener net.Listener, localEndpoint string) error {
 	return nil
 }
 
-func createSshConnection(privateKey string, address string) (*ssh.Client, error) {
+func createSshConnection(privateKey, address string) (*ssh.Client, error) {
 	key, err := ioutil.ReadFile(privateKey)
 	if err != nil {
 		return nil, err

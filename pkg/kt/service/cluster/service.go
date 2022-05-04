@@ -71,7 +71,7 @@ func (k *Kubernetes) RemoveService(name, namespace string) (err error) {
 }
 
 func (k *Kubernetes) UpdateServiceHeartBeat(name, namespace string) {
-	log.Debug().Msgf("Heartbeat service %s ticked at %s", name, formattedTime())
+	log.Debug().Msgf("Heartbeat service %s ticked at %s", name, util.FormattedTime())
 	if _, err := k.Clientset.CoreV1().Services(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
 		log.Warn().Err(err).Msgf("Failed to update service heart beat")

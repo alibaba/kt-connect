@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
@@ -65,22 +64,18 @@ func SetupPortForwardHeartBeat(port int) *time.Ticker {
 			select {
 			case <-ticker.C:
 				if conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port)); err != nil {
-					log.Warn().Err(err).Msgf("Heartbeat port forward %d ticked failed: %s", port, err)
+					log.Warn().Err(err).Msgf("Heartbeat port forward %d ticked failed", port)
 				} else {
-					log.Debug().Msgf("Heartbeat port forward %d ticked at %s", port, formattedTime())
+					log.Debug().Msgf("Heartbeat port forward %d ticked at %s", port, util.FormattedTime())
 					_ = conn.Close()
 				}
 			case <-time.After(2 * portForwardHeartBeatIntervalSec * time.Second):
-				log.Debug().Msgf("Heartbeat port forward %d stopped", port)
+				log.Debug().Msgf("Port forward heartbeat %d stopped", port)
 				break TickLoop
 			}
 		}
 	}()
 	return ticker
-}
-
-func formattedTime() string {
-	return time.Now().Format(common.YyyyMmDdHhMmSs)
 }
 
 func resourceHeartbeatPatch() string {
