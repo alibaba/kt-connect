@@ -21,14 +21,21 @@ builds:
       - CGO_ENABLED=0
   - id: "shadow"
     main: ./cmd/shadow/main.go
-    binary: shadow
+    binary: artifacts/router/shadow-linux-amd64
     goos:
       - linux
     goarch:
       - amd64
   - id: "router"
     main: ./cmd/router/main.go
-    binary: router
+    binary: artifacts/router/router-linux-amd64
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: "navigator"
+    main: ./cmd/navigator/main.go
+    binary: artifacts/router/navigator-linux-amd64
     goos:
       - linux
     goarch:
@@ -42,7 +49,7 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
-    dockerfile: build/docker/shadow/Dockerfile_releaser
+    dockerfile: build/docker/shadow/Dockerfile
     skip_push: false
     extra_files:
       - build/docker/shadow/run.sh
@@ -55,7 +62,7 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v{{ .Major }}"
-    dockerfile: build/docker/router/Dockerfile_releaser
+    dockerfile: build/docker/router/Dockerfile
     skip_push: false
     extra_files:
       - build/docker/router/nginx.conf
@@ -67,7 +74,7 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:v{{ .Major }}"
-    dockerfile: build/docker/navigator/Dockerfile_releaser
+    dockerfile: build/docker/navigator/Dockerfile
     skip_push: false
     extra_files:
       - build/docker/navigator/setup_iptables.sh
