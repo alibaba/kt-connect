@@ -21,7 +21,7 @@ builds:
       - CGO_ENABLED=0
   - id: "shadow"
     main: ./cmd/shadow/main.go
-    binary: artifacts/router/shadow-linux-amd64
+    binary: artifacts/shadow/shadow-linux-amd64
     goos:
       - linux
     goarch:
@@ -35,7 +35,7 @@ builds:
       - amd64
   - id: "navigator"
     main: ./cmd/navigator/main.go
-    binary: artifacts/router/navigator-linux-amd64
+    binary: artifacts/navigator/navigator-linux-amd64
     goos:
       - linux
     goarch:
