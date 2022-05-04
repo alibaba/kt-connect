@@ -13,6 +13,7 @@ require (
 	github.com/wzshiming/socks5 v0.4.1
 	github.com/xjasonlyu/tun2socks/v2 v2.4.1
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
+	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b
 	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461
 	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
 	k8s.io/api v0.22.0
@@ -51,7 +52,6 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
