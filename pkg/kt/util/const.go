@@ -15,6 +15,13 @@ const (
 	// ComponentPreview preview command
 	ComponentPreview = "preview"
 
+	// ImageKtShadow default shadow image
+	ImageKtShadow = "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow"
+	// ImageKtRouter default router image
+	ImageKtRouter = "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router"
+	// ImageKtNavigator default navigator image
+	ImageKtNavigator = "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator"
+
 	// ConnectModeShuttle sshuttle mode
 	ConnectModeShuttle = "sshuttle"
 	// ConnectModeTun2Socks tun2socks mode

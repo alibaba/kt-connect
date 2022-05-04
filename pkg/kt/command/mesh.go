@@ -34,7 +34,7 @@ func NewMeshCommand(action ActionInterface) *cobra.Command {
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.Mode, "mode", util.MeshModeAuto, "Mesh method 'auto' or 'manual'")
 	cmd.Flags().StringVar(&opt.Get().MeshOptions.VersionMark, "versionMark", "", "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'")
-	cmd.Flags().StringVar(&opt.Get().MeshOptions.RouterImage, "routerImage", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v" + opt.Get().RuntimeStore.Version, "(auto method only) Customize router image")
+	cmd.Flags().StringVar(&opt.Get().MeshOptions.RouterImage, "routerImage", fmt.Sprintf("%s:v%s", util.ImageKtRouter, opt.Get().RuntimeStore.Version), "(auto method only) Customize router image")
 	_ = cmd.MarkFlagRequired("expose")
 	return cmd
 }

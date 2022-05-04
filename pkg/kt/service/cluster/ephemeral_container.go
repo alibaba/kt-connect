@@ -36,7 +36,7 @@ func (k *Kubernetes) AddEphemeralContainer(containerName string, name string,
 	ec := coreV1.EphemeralContainer{
 		EphemeralContainerCommon: coreV1.EphemeralContainerCommon{
 			Name:  containerName,
-			Image: opt.Get().Image,
+			Image: fmt.Sprintf("%s:v%s", util.ImageKtNavigator, opt.Get().RuntimeStore.Version),
 			Env: []coreV1.EnvVar{
 				{Name: util.SshAuthPrivateKey, Value: privateKey},
 			},

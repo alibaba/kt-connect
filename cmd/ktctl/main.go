@@ -53,7 +53,7 @@ func main() {
 	rootCmd.PersistentFlags().SortFlags = false
 	rootCmd.PersistentFlags().StringVarP(&opt.Get().Namespace, "namespace", "n", "", "Specify target namespace (otherwise follow kubeconfig current context)")
 	rootCmd.PersistentFlags().StringVarP(&opt.Get().KubeConfig, "kubeconfig", "c", "", "Specify path of KubeConfig file")
-	rootCmd.PersistentFlags().StringVarP(&opt.Get().Image, "image", "i", "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v" + opt.Get().RuntimeStore.Version, "Customize shadow image")
+	rootCmd.PersistentFlags().StringVarP(&opt.Get().Image, "image", "i", fmt.Sprintf("%s:v%s", util.ImageKtShadow, opt.Get().RuntimeStore.Version), "Customize shadow image")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().ImagePullSecret, "imagePullSecret", "", "Custom image pull secret")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().ServiceAccount, "serviceAccount", "default", "Specify ServiceAccount name for shadow pod")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().NodeSelector, "nodeSelector", "", "Specify location of shadow and route pod by node label, e.g. 'disk=ssd,region=hangzhou'")

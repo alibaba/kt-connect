@@ -14,7 +14,7 @@ func PrepareLogger(enable bool) {
 		return
 	}
 	if tmpFile, err := ioutil.TempFile(os.TempDir(), "kt-"); err != nil {
-		log.Warn().Msgf("Cannot create background log file", err)
+		log.Warn().Err(err).Msgf("Cannot create background log file")
 	} else {
 		log.Debug().Msgf("Background task log to %s", tmpFile.Name())
 		FixFileOwner(tmpFile.Name())
