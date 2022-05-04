@@ -46,7 +46,7 @@ dockers:
     skip_push: false
     extra_files:
       - build/docker/shadow/run.sh
-      - build/docker/shadow/setup_iptables.sh
+      - build/docker/shadow/disconnect.sh
   - goos: linux
     goarch: amd64
     ids:
@@ -59,6 +59,18 @@ dockers:
     skip_push: false
     extra_files:
       - build/docker/router/nginx.conf
+  - goos: linux
+    goarch: amd64
+    ids:
+      - navigator
+    image_templates:
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:latest"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:{{ .Tag }}"
+      - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:v{{ .Major }}"
+    dockerfile: build/docker/navigator/Dockerfile_releaser
+    skip_push: false
+    extra_files:
+      - build/docker/navigator/setup_iptables.sh
 archives:
   - id: ktctl
     builds:
