@@ -5,6 +5,7 @@ before:
   hooks:
     - make mod
     - bash build/scripts/wintun.sh
+    - bash build/scripts/docker.sh
 builds:
   - id: "ktctl"
     main: ./cmd/ktctl/main.go
@@ -49,7 +50,7 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:v{{ .Major }}"
-    dockerfile: build/docker/shadow/Dockerfile
+    dockerfile: artifacts/docker/shadow/Dockerfile
     skip_push: false
     extra_files:
       - build/docker/shadow/run.sh
@@ -62,7 +63,7 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:v{{ .Major }}"
-    dockerfile: build/docker/router/Dockerfile
+    dockerfile: artifacts/docker/router/Dockerfile
     skip_push: false
     extra_files:
       - build/docker/router/nginx.conf
@@ -74,7 +75,7 @@ dockers:
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:latest"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:{{ .Tag }}"
       - "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-navigator:v{{ .Major }}"
-    dockerfile: build/docker/navigator/Dockerfile
+    dockerfile: artifacts/docker/navigator/Dockerfile
     skip_push: false
     extra_files:
       - build/docker/navigator/setup_iptables.sh
