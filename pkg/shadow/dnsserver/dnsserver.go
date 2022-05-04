@@ -99,10 +99,10 @@ func (s *DnsServer) fetchAllPossibleDomains(name string) []string {
 		namesToLookup = append(namesToLookup, name)
 	case 2:
 		if len(domainSuffixes) > 1 {
-			// stateful-set-pod.service name
-			namesToLookup = append(namesToLookup, name+domainSuffixes[0])
 			// service.namespace name
 			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
+			// stateful-set-pod.service name
+			namesToLookup = append(namesToLookup, name+domainSuffixes[0])
 		}
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
@@ -158,7 +158,7 @@ func (s *DnsServer) lookup(domain string, qtype uint16, name string) ([]dns.RR, 
 	address, err := s.getResolveServer()
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch upstream dns")
-		return []dns.RR{}, nil
+		return []dns.RR{}, err
 	}
 	log.Debug().Msgf("Resolving domain %s (%d) via upstream %s", domain, qtype, address)
 
@@ -169,7 +169,7 @@ func (s *DnsServer) lookup(domain string, qtype uint16, name string) ([]dns.RR, 
 		} else {
 			log.Warn().Err(err).Msgf("Failed to answer name %s (%d) query for %s", name, qtype, domain)
 		}
-		return []dns.RR{}, nil
+		return []dns.RR{}, err
 	}
 
 	if len(res.Answer) == 0 {

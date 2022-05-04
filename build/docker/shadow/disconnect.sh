@@ -14,9 +14,8 @@ if [ "${pid}" = "" ]; then
 fi
 echo "process ${pid} is using port ${port}"
 
-kill -15 ${pid} 2>&1
-if [ ${?} -eq 0 ]; then
-  echo "port ${port} disconnected"
-else
+if ! kill -15 ${pid} 2>&1; then
   echo "fail to disconnected port ${port}"
+else
+  echo "port ${port} disconnected"
 fi
