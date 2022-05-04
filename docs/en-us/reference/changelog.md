@@ -1,6 +1,14 @@
 Changelog
 ---
 
+### 0.3.4
+
+> Release time: 2022-05-04
+
+- All of `connect`/`exchange`/`mesh`/`preview` commands support auto reconnection after network recover
+- Record background task log in debug mode as individual log file
+- Fixed an DNS resolving issue introduced in version 0.3.3
+
 ### 0.3.3
 
 > Release time: 2022-04-27
