@@ -104,8 +104,8 @@ func combineKubeOpts() error {
 		config.CurrentContext = opt.Get().KubeContext
 	}
 	if len(opt.Get().Namespace) == 0 {
-		ctx, ok := config.Contexts[config.CurrentContext]
-		if ok && len(ctx.Namespace) > 0 {
+		ctx, exists := config.Contexts[config.CurrentContext]
+		if exists && len(ctx.Namespace) > 0 {
 			opt.Get().Namespace = config.Contexts[config.CurrentContext].Namespace
 		} else {
 			opt.Get().Namespace = util.DefaultNamespace

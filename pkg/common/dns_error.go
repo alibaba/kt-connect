@@ -14,6 +14,6 @@ func (e DomainNotExistError) Error() string {
 
 // IsDomainNotExist check the error type
 func IsDomainNotExist(err error) bool {
-	_, ok := err.(DomainNotExistError)
-	return ok
+	_, exists := err.(DomainNotExistError)
+	return exists
 }

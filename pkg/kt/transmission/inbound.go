@@ -65,9 +65,11 @@ func sshReverseTunnel(privateKey, remoteEndpoint, localEndpoint, sshAddress stri
 	go func() {
 		err := sshchannel.Ins().ForwardRemoteToLocal(privateKey, remoteEndpoint, localEndpoint, sshAddress)
 		if err != nil {
-			log.Error().Err(err).Msgf("Reverse tunnel interrupted")
 			if res != nil {
+				log.Error().Err(err).Msgf("Failed to setup reverse tunnel")
 				res <-err
+			} else {
+				log.Debug().Err(err).Msgf("Reverse tunnel interrupted")
 			}
 		}
 

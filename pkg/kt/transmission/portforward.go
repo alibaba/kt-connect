@@ -17,18 +17,26 @@ import (
 
 // SetupPortForwardToLocal mapping local port to shadow pod ssh port
 func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
+	return setupPortForwardToLocal(podName, remotePort, localPort, true)
+}
+
+func setupPortForwardToLocal(podName string, remotePort, localPort int, isInitConnect bool) error {
 	ready := make(chan struct{})
 	var ticker *time.Ticker
 	go func() {
 		if err := portForward(podName, remotePort, localPort, ready); err != nil {
-			log.Error().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, podName, remotePort)
+			if isInitConnect {
+				log.Error().Err(err).Msgf("Failed to setup port forward local:%d -> pod %s:%d", localPort, podName, remotePort)
+			} else {
+				log.Debug().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, podName, remotePort)
+			}
 			time.Sleep(time.Duration(opt.Get().PortForwardWaitTime) * time.Second)
 		}
 		if ticker != nil {
 			ticker.Stop()
 		}
 		log.Debug().Msgf("Port forward reconnecting ...")
-		_ = SetupPortForwardToLocal(podName, remotePort, localPort)
+		_ = setupPortForwardToLocal(podName, remotePort, localPort, false)
 	}()
 
 	select {

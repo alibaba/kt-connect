@@ -83,10 +83,17 @@ func (k *Kubernetes) DecreaseDeploymentRef(name string, namespace string) (clean
 }
 
 func (k *Kubernetes) UpdateDeploymentHeartBeat(name, namespace string) {
-	log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, util.FormattedTime())
 	if _, err := k.Clientset.AppsV1().Deployments(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
-		log.Warn().Err(err).Msgf("Failed to update deployment heart beat")
+		if healthy, exists := LastHeartBeatStatus["deployment_" + name]; healthy || !exists {
+			log.Warn().Err(err).Msgf("Failed to update heart beat of deployment %s", name)
+		} else {
+			log.Debug().Err(err).Msgf("Deployment %s heart beat interrupted", name)
+		}
+		LastHeartBeatStatus["deployment_" + name] = false
+	} else {
+		log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, util.FormattedTime())
+		LastHeartBeatStatus["deployment_" + name] = true
 	}
 }
 

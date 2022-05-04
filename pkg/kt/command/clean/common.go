@@ -257,7 +257,7 @@ func analysisLockAndOrphanServices(svcs []coreV1.Service, resourceToClean *Resou
 		if svc.Annotations == nil {
 			continue
 		}
-		if lock, ok := svc.Annotations[util.KtLock]; ok && util.GetTime() - util.ParseTimestamp(lock) > general.LockTimeout {
+		if lock, exists := svc.Annotations[util.KtLock]; exists && util.GetTime() - util.ParseTimestamp(lock) > general.LockTimeout {
 			resourceToClean.ServicesToUnlock = append(resourceToClean.ServicesToUnlock, svc.Name)
 		}
 		if svc.Annotations[util.KtSelector] != "" {
@@ -288,7 +288,7 @@ func analysisConfigAnnotation(role string, config map[string]string, resourceToC
 	}
 	// auto mesh and selector exchange
 	if role == util.RoleRouter || role == util.RoleExchangeShadow {
-		if service, ok := config["service"]; ok {
+		if service, exists := config["service"]; exists {
 			resourceToClean.ServicesToRecover = append(resourceToClean.ServicesToRecover, service)
 		}
 	}

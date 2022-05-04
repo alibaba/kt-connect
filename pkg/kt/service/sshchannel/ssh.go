@@ -72,7 +72,7 @@ func (c *Cli) ForwardRemoteToLocal(privateKey, sshAddress, remoteEndpoint, local
 	// Handle incoming connections on reverse forwarded tunnel
 	conn, err := createSshConnection(privateKey, sshAddress)
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to create ssh tunnel")
+		log.Debug().Err(err).Msgf("Failed to create ssh tunnel")
 		return err
 	}
 
@@ -85,6 +85,7 @@ func (c *Cli) ForwardRemoteToLocal(privateKey, sshAddress, remoteEndpoint, local
 		return err
 	}
 
+	log.Info().Msgf("Reverse tunnel %s -> %s established", remoteEndpoint, localEndpoint)
 	for {
 		if err = handleRequest(listener, localEndpoint); errors.Is(err, io.EOF) {
 			_ = listener.Close()

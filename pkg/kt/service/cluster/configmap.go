@@ -31,10 +31,17 @@ func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
 }
 
 func (k *Kubernetes) UpdateConfigMapHeartBeat(name, namespace string) {
-	log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, util.FormattedTime())
 	if _, err := k.Clientset.CoreV1().ConfigMaps(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
-		log.Warn().Err(err).Msgf("Failed to update config map heart beat")
+		if healthy, exists := LastHeartBeatStatus["configmap_" + name]; healthy || !exists {
+			log.Warn().Err(err).Msgf("Failed to update heart beat of config map %s", name)
+		} else {
+			log.Debug().Err(err).Msgf("Config map %s heart beat interrupted", name)
+		}
+		LastHeartBeatStatus["configmap_" + name] = false
+	} else {
+		log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, util.FormattedTime())
+		LastHeartBeatStatus["configmap_" + name] = true
 	}
 }
 

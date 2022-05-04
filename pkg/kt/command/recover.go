@@ -72,7 +72,7 @@ func (action *Action) Recover(serviceName string) error {
 
 	needUnlock := checkAndMarkUnlock(serviceName, svc)
 
-	if originSelector, ok := svc.Annotations[util.KtSelector]; ok {
+	if originSelector, exists := svc.Annotations[util.KtSelector]; exists {
 		var selector map[string]string
 		if err = json.Unmarshal([]byte(originSelector), &selector); err != nil {
 			return fmt.Errorf("service %s has %s annotation, but selecting nothing", serviceName, util.KtSelector)
@@ -127,7 +127,7 @@ func fetchTargetRole(apps *appV1.DeploymentList, pods *coreV1.PodList) (*appV1.D
 }
 
 func checkAndMarkUnlock(serviceName string, svc *coreV1.Service) bool {
-	if _, ok := svc.Annotations[util.KtLock]; ok {
+	if _, exists := svc.Annotations[util.KtLock]; exists {
 		log.Info().Msgf("Unlocking service %s", serviceName)
 		delete(svc.Annotations, util.KtLock)
 		return true

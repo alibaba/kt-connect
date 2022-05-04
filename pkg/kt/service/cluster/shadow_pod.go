@@ -48,7 +48,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 			} else {
 				// TODO: assume port using http protocol for istio constraint, should support user-defined protocol
 				name = fmt.Sprintf("http-%d", port)
-				if n, ok := portNameDict[port]; ok {
+				if n, exists := portNameDict[port]; exists {
 					name = n
 				}
 				ports[name] = port

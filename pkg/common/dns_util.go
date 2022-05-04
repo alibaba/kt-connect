@@ -50,7 +50,7 @@ func NsLookup(domain string, qtype uint16, net, dnsServerAddr string) (*dns.Msg,
 
 // ReadCache fetch from cache
 func ReadCache(domain string, qtype uint16, ttl int64) []dns.RR {
-	if record, ok := nsCache.Load(getCacheKey(domain, qtype)); ok && notExpired(record.(NsEntry).timestamp, ttl) {
+	if record, exists := nsCache.Load(getCacheKey(domain, qtype)); exists && notExpired(record.(NsEntry).timestamp, ttl) {
 		return record.(NsEntry).answer
 	}
 	return nil

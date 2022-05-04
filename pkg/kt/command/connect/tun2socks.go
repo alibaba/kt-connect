@@ -25,7 +25,7 @@ func ByTun2Socks() error {
 	if err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
-	if err = startSocks5Connection(podIP, privateKeyPath, localSshPort); err != nil {
+	if err = startSocks5Connection(podIP, privateKeyPath, localSshPort, true); err != nil {
 		return err
 	}
 
@@ -76,7 +76,7 @@ func setupTunRoute() error {
 	return nil
 }
 
-func startSocks5Connection(podIP, privateKey string, localSshPort int) error {
+func startSocks5Connection(podIP, privateKey string, localSshPort int, isInitConnect bool) error {
 	var res = make(chan error)
 	var ticker *time.Ticker
 	sshAddress := fmt.Sprintf("127.0.0.1:%d", localSshPort)
@@ -85,19 +85,22 @@ func startSocks5Connection(podIP, privateKey string, localSshPort int) error {
 	go func() {
 		// will hang here if not error happen
 		err := sshchannel.Ins().StartSocks5Proxy(privateKey, sshAddress, socks5Address)
-		log.Warn().Err(err).Msgf("Socks proxy broken")
 		if !gone {
 			res <-err
 		}
+		log.Debug().Err(err).Msgf("Socks proxy interrupted")
 		if ticker != nil {
 			ticker.Stop()
 		}
 		time.Sleep(10 * time.Second)
 		log.Debug().Msgf("Socks proxy reconnecting ...")
-		_ = startSocks5Connection(podIP, privateKey, localSshPort)
+		_ = startSocks5Connection(podIP, privateKey, localSshPort, false)
 	}()
 	select {
 	case err := <-res:
+		if isInitConnect {
+			log.Warn().Err(err).Msgf("Failed to setup socks proxy connection")
+		}
 		return err
 	case <-time.After(1 * time.Second):
 		ticker = setupSocks5HeartBeat(podIP, socks5Address)
@@ -119,7 +122,7 @@ func setupSocks5HeartBeat(podIP, socks5Address string) *time.Ticker {
 			select {
 			case <-ticker.C:
 				if c, err2 := dialer.Dial("tcp", fmt.Sprintf("%s:%d", podIP, common.StandardSshPort)); err2 != nil {
-					log.Warn().Err(err2).Msgf("Heartbeat socks proxy ticked failed")
+					log.Debug().Err(err2).Msgf("Socks proxy heartbeat interrupted")
 				} else {
 					_ = c.Close()
 					log.Debug().Msgf("Heartbeat socks proxy ticked at %s", util.FormattedTime())

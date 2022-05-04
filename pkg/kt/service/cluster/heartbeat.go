@@ -14,6 +14,9 @@ import (
 const ResourceHeartBeatIntervalMinus = 2
 const portForwardHeartBeatIntervalSec = 60
 
+// LastHeartBeatStatus record last heart beat status to avoid verbose log
+var LastHeartBeatStatus = make(map[string]bool)
+
 // SetupTimeDifference get time difference between cluster and local
 func SetupTimeDifference() error {
 	rectifierPodName := fmt.Sprintf("%s%s", util.RectifierPodPrefix, strings.ToLower(util.RandomString(5)))

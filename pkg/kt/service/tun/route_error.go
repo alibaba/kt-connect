@@ -17,6 +17,6 @@ func (e AllRouteFailError) OriginalError() error {
 
 // IsAllRouteFailError check the error type
 func IsAllRouteFailError(err error) bool {
-	_, ok := err.(AllRouteFailError)
-	return ok
+	_, exists := err.(AllRouteFailError)
+	return exists
 }

@@ -2,13 +2,11 @@ package util
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/rs/zerolog/log"
 )
 
 const IpAddrPattern = "[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+"
@@ -49,23 +47,6 @@ func ParsePortMapping(exposePort string) (int, int, error) {
 		return -1, -1, fmt.Errorf("remote port '%s' is not a number", remotePort)
 	}
 	return lp, rp, nil
-}
-
-// WaitPortBeReady return true when port is ready
-// It waits at most waitTime seconds, then return false.
-func WaitPortBeReady(waitTime, port int) bool {
-	for i := 0; i < waitTime; i++ {
-		conn, err := net.Dial("tcp", fmt.Sprintf(":%d", port))
-		if err != nil {
-			log.Debug().Msgf("Waiting for port forward (%s), retry: %d", err, i+1)
-			time.Sleep(1 * time.Second)
-		} else {
-			_ = conn.Close()
-			log.Info().Msgf("Port forward connection established")
-			return true
-		}
-	}
-	return false
 }
 
 // FindBrokenLocalPort Check if all ports has process listening to

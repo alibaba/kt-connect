@@ -145,8 +145,8 @@ func RecoverOriginalService(svcName, namespace string) {
 			log.Warn().Msgf("No annotation found in service %s, skipping", svcName)
 			return
 		}
-		originSelector, ok := svc.Annotations[util.KtSelector]
-		if !ok {
+		originSelector, exists := svc.Annotations[util.KtSelector]
+		if !exists {
 			log.Warn().Msgf("No selector annotation found in service %s, skipping", svcName)
 			return
 		}
