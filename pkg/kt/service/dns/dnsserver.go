@@ -22,12 +22,21 @@ func SetupLocalDns(remoteDnsPort, localDnsPort int) error {
 	}()
 	go func() {
 		nameserver := GetNameServer()
-		log.Debug().Msgf("Setup local DNS with shadow pod %s:%d and upstream %s:%d",
-			common.Localhost, remoteDnsPort, nameserver, common.StandardDnsPort)
-		success <-common.SetupDnsServer(&DnsServer{
-			clusterDnsAddr: fmt.Sprintf("%s:%d", common.Localhost, remoteDnsPort),
-			upstreamDnsAddr: fmt.Sprintf("%s:%d", nameserver, common.StandardDnsPort),
-		}, localDnsPort, "udp")
+		if nameserver == "" {
+			log.Info().Msgf("Setup local DNS with shadow pod %s:%d and without upstream",
+				common.Localhost, remoteDnsPort)
+			success <- common.SetupDnsServer(&DnsServer{
+				clusterDnsAddr:  fmt.Sprintf("%s:%d", common.Localhost, remoteDnsPort),
+				upstreamDnsAddr: "",
+			}, localDnsPort, "udp")
+		} else {
+			log.Info().Msgf("Setup local DNS with shadow pod %s:%d and upstream %s:%d",
+				common.Localhost, remoteDnsPort, nameserver, common.StandardDnsPort)
+			success <- common.SetupDnsServer(&DnsServer{
+				clusterDnsAddr:  fmt.Sprintf("%s:%d", common.Localhost, remoteDnsPort),
+				upstreamDnsAddr: fmt.Sprintf("%s:%d", nameserver, common.StandardDnsPort),
+			}, localDnsPort, "udp")
+		}
 	}()
 	return <-success
 }
@@ -64,19 +73,21 @@ func query(req *dns.Msg, clusterDnsAddr, upstreamDnsAddr string) []dns.RR {
 			log.Debug().Err(err).Msgf("Failed to lookup %s (%d) in cluster dns (%s)", domain, qtype, clusterDnsAddr)
 		}
 
-		res, err = common.NsLookup(domain, qtype, "udp", upstreamDnsAddr)
-		if err != nil {
-			if common.IsDomainNotExist(err) {
-				log.Debug().Msgf(err.Error())
+		if upstreamDnsAddr != "" {
+			res, err = common.NsLookup(domain, qtype, "udp", upstreamDnsAddr)
+			if err != nil {
+				if common.IsDomainNotExist(err) {
+					log.Debug().Msgf(err.Error())
+				} else {
+					log.Warn().Err(err).Msgf("Failed to lookup %s (%d) in upstream dns (%s)", domain, qtype, upstreamDnsAddr)
+				}
+			} else if len(res.Answer) > 0 {
+				log.Debug().Msgf("Found domain %s (%d) in upstream dns (%s)", domain, qtype, upstreamDnsAddr)
+				common.WriteCache(domain, qtype, res.Answer)
+				return res.Answer
 			} else {
-				log.Warn().Err(err).Msgf("Failed to lookup %s (%d) in upstream dns (%s)", domain, qtype, upstreamDnsAddr)
+				log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
 			}
-		} else if len(res.Answer) > 0 {
-			log.Debug().Msgf("Found domain %s (%d) in upstream dns (%s)", domain, qtype, upstreamDnsAddr)
-			common.WriteCache(domain, qtype, res.Answer)
-			return res.Answer
-		} else {
-			log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
 		}
 	}
 	if err == nil || common.IsDomainNotExist(err) {

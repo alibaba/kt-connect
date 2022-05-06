@@ -2,6 +2,7 @@ package dns
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
@@ -14,7 +15,7 @@ func (s *Cli) SetNameServer(dnsServer string) (err error) {
 	// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
 	if _, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",
-		"ip",
+		"ipv4",
 		"set",
 		"dnsservers",
 		fmt.Sprintf("name=%s", util.TunNameWin),
@@ -42,14 +43,25 @@ func GetNameServer() string {
 	// run command: netsh interface ip show dnsservers
 	if out, _, err := util.RunAndWait(exec.Command("netsh",
 		"interface",
-		"ip",
+		"ipv4",
 		"show",
 		"dnsservers",
 	)); err != nil {
-		log.Error().Msgf("Failed to get dns server")
+		log.Error().Msgf("Failed to get upstream dns server")
 		return ""
 	} else {
 		r, _ := regexp.Compile(util.IpAddrPattern)
-		return r.FindString(out)
+		nsAddresses := r.FindAllString(out, 10)
+		if nsAddresses == nil {
+			log.Warn().Msgf("No upstream dns server available")
+			return ""
+		}
+		for _, addr := range nsAddresses {
+			if addr != common.Localhost {
+				return addr
+			}
+		}
+		log.Warn().Msgf("No upstream dns server available")
+		return ""
 	}
 }
