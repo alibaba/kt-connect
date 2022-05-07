@@ -100,12 +100,13 @@ func (s *Cli) RestoreRoute() error {
 		log.Warn().Msgf("failed to get route table")
 		return err
 	}
+	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
+
 	for _, line := range strings.Split(out, util.Eol) {
 		// Assume only kt using gateway address of x.x.x.0
 		if !strings.HasSuffix(line, ".0") {
 			continue
 		}
-		log.Debug().Msgf("Route recode: %s", line)
 		parts := strings.Split(line, " ")
 		ipRange := ""
 		iface := ""

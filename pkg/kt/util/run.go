@@ -16,12 +16,16 @@ func RunAndWait(cmd *exec.Cmd) (string, string, error) {
 	if stdout != nil && stderr != nil {
 		go io.Copy(outBuf, stdout)
 		go io.Copy(errBuf, stderr)
+	} else {
+		log.Warn().Msgf("Failed to fetch output of command %s", cmd.Path)
 	}
 
 	if err := runCmd(cmd, cmd.Path); err != nil {
 		return outBuf.String(), errBuf.String(), err
 	}
-	return outBuf.String(), errBuf.String(), cmd.Wait()
+	// must run command before fetch outputs
+	err := cmd.Wait()
+	return outBuf.String(), errBuf.String(), err
 }
 
 // BackgroundRun run cmd in background with context

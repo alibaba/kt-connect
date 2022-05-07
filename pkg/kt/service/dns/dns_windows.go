@@ -41,27 +41,29 @@ func GetLocalDomains() string {
 // GetNameServer get dns server of the default interface
 func GetNameServer() string {
 	// run command: netsh interface ip show dnsservers
-	if out, _, err := util.RunAndWait(exec.Command("netsh",
+	out, _, err := util.RunAndWait(exec.Command("netsh",
 		"interface",
 		"ipv4",
 		"show",
 		"dnsservers",
-	)); err != nil {
+	))
+	if err != nil {
 		log.Error().Msgf("Failed to get upstream dns server")
 		return ""
-	} else {
-		r, _ := regexp.Compile(util.IpAddrPattern)
-		nsAddresses := r.FindAllString(out, 10)
-		if nsAddresses == nil {
-			log.Warn().Msgf("No upstream dns server available")
-			return ""
-		}
-		for _, addr := range nsAddresses {
-			if addr != common.Localhost {
-				return addr
-			}
-		}
+	}
+	util.BackgroundLogger.Write([]byte(">> Get dns: " + out + util.Eol))
+
+	r, _ := regexp.Compile(util.IpAddrPattern)
+	nsAddresses := r.FindAllString(out, 10)
+	if nsAddresses == nil {
 		log.Warn().Msgf("No upstream dns server available")
 		return ""
 	}
+	for _, addr := range nsAddresses {
+		if addr != common.Localhost {
+			return addr
+		}
+	}
+	log.Warn().Msgf("No valid upstream dns server available")
+	return ""
 }

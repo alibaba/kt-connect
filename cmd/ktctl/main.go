@@ -64,7 +64,7 @@ func main() {
 	rootCmd.PersistentFlags().IntVar(&opt.Get().PodCreationWaitTime, "podCreationTimeout", 60, "Seconds to wait before shadow or router pod creation timeout")
 	rootCmd.PersistentFlags().BoolVar(&opt.Get().UseShadowDeployment, "useShadowDeployment", false, "Deploy shadow container as deployment")
 	rootCmd.PersistentFlags().BoolVar(&opt.Get().SkipTimeDiff, "useLocalTime", false, "Use local time for resource heartbeat timestamp")
-	rootCmd.PersistentFlags().BoolVarP(&opt.Get().AlwaysUpdateShadow, "forceUpdate", "f", false, "Always update shadow image")
+	rootCmd.PersistentFlags().BoolVarP(&opt.Get().AlwaysUpdateShadow, "forceUpdate", "f", false, "Always re-pull the latest shadow and router image")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().KubeContext, "context", "", "Specify current context of kubeconfig")
 	rootCmd.PersistentFlags().StringVar(&opt.Get().PodQuota, "podQuota", "", "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'")
 
