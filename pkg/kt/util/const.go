@@ -42,6 +42,10 @@ const (
 	DnsModePodDns = "podDNS"
 	// DnsModeHosts hosts dns mode
 	DnsModeHosts = "hosts"
+	// DnsOrderCluster proxy to cluster dns
+	DnsOrderCluster = "cluster"
+	// DnsOrderUpstream proxy to upstream dns
+	DnsOrderUpstream = "upstream"
 
 	// ControlBy label used for mark shadow pod
 	ControlBy = "control-by"

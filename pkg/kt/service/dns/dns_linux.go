@@ -28,11 +28,11 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 	go func() {
 		defer func() {
 			restoreResolvConf()
-			if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
+			if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
 				restoreIptables()
 			}
 		}()
-		if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
+		if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
 			if err := setupIptables(); err != nil {
 				dnsSignal <-err
 				return

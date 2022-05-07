@@ -33,7 +33,8 @@ func CleanupWorkspace() {
 }
 
 func recoverGlobalHostsAndProxy() {
-	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) || opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
+	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) ||
+		strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
 		log.Debug().Msg("Dropping hosts records ...")
 		dns.DropHosts()
 	}

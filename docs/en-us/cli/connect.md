@@ -28,7 +28,7 @@ Key options explanation:
 
 - `--mode` provides two ways to connect to the cluster. Modifying this parameter is not recommended unless the default `tun2socks` mode cannot be used for specific reasons or the routing of certain IP ranges needs to be excluded.
 - `--dnsMode` provides three ways to resolve the domain name of the cluster service.
-  The `localDNS` mode will start a temporary domain name resolution service locally, which can resolve both the service domain name of the cluster and other internal/external network domain names of the local environment;
-  The `podDNS` mode can only resolve the service domain name of the cluster,
+  The `localDNS` mode will start a temporary domain name resolution service locally, which can try resolve domain name in cluster first then follow with system upstream domain names service. You can specify a list of dns address to lookup with in `localDNS:<dns1>,<dns2>` format, the dns can be written as `IP:PORT` or use special value `upstream` and `cluster`;
+  The `podDNS` mode will use the domain name service of the cluster to resolve all domains,
   The `hosts` mode is used to limit the service domain names that are only allowed to access the specified Namespace locally. You can specify a list of accessible Namespaces in the `hosts:<namespaces>` format, separated by commas, such as `--dnsMode hosts:default,dev,test` , by default, only the services of the Namespace where the Shadow Pod is located can be accessed.
 - The `--shareShadow` parameter allows all developers working under the same Namespace to share a Shadow Pod, which can save cluster resources to a certain extent, but when the Shadow Pod crashes accidentally, it will affect all developers at the same time.

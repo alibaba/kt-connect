@@ -28,7 +28,7 @@ ktctl connect
 
 - `--mode`提供了两种连接集群的方式。除非由于特定原因无法使用默认的`tun2socks`模式或需要排除某些IP段的路由，否则不建议修改此参数。
 - `--dnsMode`提供了三种解析集群服务域名的方式。
- `localDNS`模式将在本地启动一个临时的域名解析服务，它既能解析集群的服务域名，也能解析本地环境的其他内/外网域名；
- `podDNS`模式仅能解析集群的服务域名，
+ `localDNS`模式将在本地启动临时的域名解析服务，它会先尝试在集群中查找目标域名，若未找到再通过系统的上游DNS查找，可通过`localDNS:<dns1>,<dns2>`格式指定查找顺序，其中<dns>值可以为`IP地址:端口`格式，或特殊值`upstream`(系统上游DNS)和`cluster`(集群DNS)；
+ `podDNS`模式将使用集群的DNS服务解析所有域名，
  `hosts`模式用于限定本地只允许访问指定Namespace的服务域名，可通过`hosts:<namespaces>`格式指定可访问的Namespace列表，逗号分隔，如`--dnsMode hosts:default,dev,test`，默认只能访问Shadow Pod所在Namespace的服务。
 - `--shareShadow`参数允许所有在同一个Namespace下工作的开发者共用一个Shadow Pod，这种方式能够在一定程度上节约集群资源，但在Shadow Pod偶然发生崩溃时，会同时影响到所有开发者。

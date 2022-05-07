@@ -28,7 +28,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
 		log.Info().Msgf("Setting up dns in pod mode")
 		return dns.Ins().SetNameServer(shadowPodIp)
-	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
+	} else if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
 		log.Info().Msgf("Setting up dns in local mode")
 		svcToIp, headlessPods := getServiceHosts(opt.Get().Namespace, true)
 		if err := dns.DumpHosts(svcToIp, ""); err != nil {
@@ -45,9 +45,9 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
 		}
-		// must setup name server before change dns config
+		// must set up name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux
-		if err := dns.SetupLocalDns(forwardedPodPort, dnsPort); err != nil {
+		if err := dns.SetupLocalDns(forwardedPodPort, dnsPort, getDnsOrder(opt.Get().ConnectOptions.DnsMode)); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
@@ -57,6 +57,13 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 			util.DnsModeLocalDns, util.DnsModePodDns, util.DnsModeHosts)
 	}
 	return nil
+}
+
+func getDnsOrder(dnsMode string) []string {
+	if ! strings.Contains(dnsMode, ":") {
+		return []string{ util.DnsOrderCluster, util.DnsOrderUpstream }
+	}
+	return strings.Split(strings.SplitN(dnsMode, ":", 2)[1], ",")
 }
 
 func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessPods []string, shortDomainOnly bool) {
@@ -162,7 +169,7 @@ func getEnvs() map[string]string {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
-	if opt.Get().ConnectOptions.DnsMode == util.DnsModeLocalDns {
+	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
 		envs[common.EnvVarDnsProtocol] = "tcp"
 	} else {
 		envs[common.EnvVarDnsProtocol] = "udp"
