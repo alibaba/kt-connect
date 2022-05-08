@@ -44,6 +44,10 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 
 // Prepare setup log level, time difference and kube config
 func Prepare() error {
+	// must merge config file before any other code which may use the option object
+	mergeConfigFile()
+
+	// then setup logs
 	if opt.Get().Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
@@ -55,6 +59,7 @@ func Prepare() error {
 	}
 	klog.SetOutput(util.BackgroundLogger)
 	klog.LogToStderr(false)
+
 	if err := combineKubeOpts(); err != nil {
 		return err
 	}
@@ -76,6 +81,12 @@ func SetupProcess(componentName string) (chan os.Signal, error) {
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
 	opt.Get().RuntimeStore.Component = componentName
 	return ch, util.WritePidFile(componentName, ch)
+}
+
+// mergeConfigFile merge config file and command line options
+func mergeConfigFile() {
+	// this method is invoke before logger setup, don't do any logging here
+	// TODO: read config file
 }
 
 // combineKubeOpts set default options of kubectl if not assign
