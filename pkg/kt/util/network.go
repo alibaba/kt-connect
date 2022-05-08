@@ -92,7 +92,7 @@ func ExtractHostIp(url string) string {
 		return ""
 	}
 	host := strings.Trim(strings.Split(url, ":")[1], "/")
-	if ok, err := regexp.Match(IpAddrPattern, []byte(host)); ok && err == nil {
+	if ok, err := regexp.MatchString(IpAddrPattern, host); ok && err == nil {
 		return host
 	}
 	ips, err := net.LookupIP(host)
@@ -101,7 +101,7 @@ func ExtractHostIp(url string) string {
 	}
 	for _, ip := range ips {
 		// skip ipv6
-		if ok, err2 := regexp.Match(IpAddrPattern, []byte(ip.String())); ok && err2 == nil {
+		if ok, err2 := regexp.MatchString(IpAddrPattern, ip.String()); ok && err2 == nil {
 			return ip.String()
 		}
 	}
