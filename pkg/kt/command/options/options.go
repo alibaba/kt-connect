@@ -40,6 +40,11 @@ type MeshOptions struct {
 	RouterImage string
 }
 
+// RecoverOptions ...
+type RecoverOptions struct {
+
+}
+
 // PreviewOptions ...
 type PreviewOptions struct {
 	External bool
@@ -87,6 +92,7 @@ type DaemonOptions struct {
 	ConnectOptions      *ConnectOptions
 	ExchangeOptions     *ExchangeOptions
 	MeshOptions         *MeshOptions
+	RecoverOptions      *RecoverOptions
 	CleanOptions        *CleanOptions
 	RunAsWorkerProcess  bool
 	KubeConfig          string

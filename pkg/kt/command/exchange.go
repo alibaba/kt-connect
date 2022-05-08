@@ -28,14 +28,7 @@ func NewExchangeCommand(action ActionInterface) *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
-	cmd.Long = cmd.Short
-
-	cmd.Flags().SortFlags = false
-	cmd.InheritedFlags().SortFlags = false
-	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
-	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Mode, "mode", util.ExchangeModeSelector, "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)")
-	cmd.Flags().IntVar(&opt.Get().ExchangeOptions.RecoverWaitTime, "recoverWaitTime", 120, "(scale method only) Seconds to wait for original deployment recover before turn off the shadow pod")
-	_ = cmd.MarkFlagRequired("expose")
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().ExchangeOptions, opt.ExchangeFlags())
 	return cmd
 }
 

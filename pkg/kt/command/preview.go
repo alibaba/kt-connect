@@ -27,13 +27,7 @@ func NewPreviewCommand(action ActionInterface) *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl preview <service-name> [command options]"))
-	cmd.Long = cmd.Short
-
-	cmd.Flags().SortFlags = false
-	cmd.InheritedFlags().SortFlags = false
-	cmd.Flags().StringVar(&opt.Get().PreviewOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
-	cmd.Flags().BoolVar(&opt.Get().PreviewOptions.External, "external", false, "If specified, a public, external service is created")
-	_ = cmd.MarkFlagRequired("expose")
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().PreviewOptions, opt.PreviewFlags())
 	return cmd
 }
 

@@ -1,12 +1,11 @@
-package connect
+package options
 
 import (
-	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 )
 
-func GetFlags() []general.OptionConfig {
-	flags := []general.OptionConfig{
+func ConnectFlags() []OptionConfig {
+	flags := []OptionConfig{
 		{
 			Target:      "Mode",
 			Name:        "mode",
@@ -81,7 +80,7 @@ func GetFlags() []general.OptionConfig {
 		},
 	}
 	if util.IsMacos() {
-		flags = append(flags, general.OptionConfig{
+		flags = append(flags, OptionConfig{
 			Target:      "DnsPort",
 			Name:        "dnsPort",
 			DefaultValue: util.AlternativeDnsPort,

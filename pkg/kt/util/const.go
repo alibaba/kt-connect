@@ -112,4 +112,10 @@ const (
 	TunNameMac = "utun"
 	// AlternativeDnsPort alternative port for local dns
 	AlternativeDnsPort = 10053
+
+	// ResourceHeartBeatIntervalMinus interval of resource heart beat
+	ResourceHeartBeatIntervalMinus = 2
+	// PortForwardHeartBeatIntervalSec interval of port-forward heart beat
+	PortForwardHeartBeatIntervalSec = 60
+
 )

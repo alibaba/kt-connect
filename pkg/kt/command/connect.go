@@ -29,11 +29,7 @@ func NewConnectCommand(action ActionInterface) *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl connect [command options]"))
-	cmd.Long = cmd.Short
-
-	cmd.InheritedFlags().SortFlags = false
-	general.SetOptions(cmd.Flags(), opt.Get().ConnectOptions, connect.GetFlags())
-
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().ConnectOptions, opt.ConnectFlags())
 	return cmd
 }
 

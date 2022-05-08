@@ -32,10 +32,7 @@ func NewRecoverCommand(action ActionInterface) *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl recover [command options]"))
-	cmd.Long = cmd.Short
-
-	cmd.Flags().SortFlags = false
-	cmd.InheritedFlags().SortFlags = false
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().RecoverOptions, opt.RecoverFlags())
 	return cmd
 }
 

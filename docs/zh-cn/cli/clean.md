@@ -12,6 +12,7 @@ ktctl clean
 ```
 --dryRun                  只打印要删除的Kubernetes资源名称，不删除资源
 --thresholdInMinus value  清理至少已失联超过多长时间的Kubernetes资源 (单位：分钟，默认值：15)
+--sweepLocalRoute         手工清理本地路由表中的KT相关内容
 ```
 
 关键参数说明：
