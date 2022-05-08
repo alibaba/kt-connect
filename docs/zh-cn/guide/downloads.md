@@ -7,14 +7,14 @@
 
 软件包:
 
-* [MacOS x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_MacOS_x86_64.tar.gz)
-* [MacOS ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_MacOS_arm_64.tar.gz)
+* [MacOS x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_MacOS_x86_64.tar.gz)
+* [MacOS ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_MacOS_arm_64.tar.gz)
 
 下载并安装KT（以x86 64位版本为例）
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_MacOS_x86_64.tar.gz
-$ tar zxf ktctl_0.3.4_MacOS_x86_64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_MacOS_x86_64.tar.gz
+$ tar zxf ktctl_0.3.5-beta1_MacOS_x86_64.tar.gz
 $ mv ktctl /usr/local/bin/ktctl
 $ ktctl help
 ```
@@ -23,15 +23,15 @@ $ ktctl help
 
 软件包:
 
-* [Linux x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_Linux_x86_64.tar.gz)
-* [Linux x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_linux_i386.tar.gz)
-* [Linux ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_Linux_arm_64.tar.gz)
+* [Linux x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_Linux_x86_64.tar.gz)
+* [Linux x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_linux_i386.tar.gz)
+* [Linux ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_Linux_arm_64.tar.gz)
 
 下载并安装KT（以x86 64位版本为例）
 
 ```
-$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_Linux_x86_64.tar.gz
-$ tar zxf ktctl_0.3.4_Linux_x86_64.tar.gz
+$ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_Linux_x86_64.tar.gz
+$ tar zxf ktctl_0.3.5-beta1_Linux_x86_64.tar.gz
 $ mv ktctl /usr/local/bin/ktctl
 $ ktctl help
 ```
@@ -40,9 +40,9 @@ $ ktctl help
 
 软件包:
 
-* [Windows x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_Windows_x86_64.zip)
-* [Windows x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_Windows_i386.zip)
-* [Windows ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.4/ktctl_0.3.4_Windows_arm_64.zip)
+* [Windows x86 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_Windows_x86_64.zip)
+* [Windows x86 32位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_Windows_i386.zip)
+* [Windows ARM 64位](https://github.com/alibaba/kt-connect/releases/download/v0.3.5-beta1/ktctl_0.3.5-beta1_Windows_arm_64.zip)
 
 下载并解压，将包中的`wintun.dll`和可执行文件`ktctl.exe`一起放到`PATH`环境变量指定的任意位置。
 
