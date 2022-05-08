@@ -88,7 +88,7 @@ func query(req *dns.Msg, dnsAddresses []string) []dns.RR {
 		if res != nil && len(res.Answer) > 0 {
 			// only record none-empty result of cluster dns
 			log.Debug().Msgf("Found domain %s (%d) in dns (%s)", domain, qtype, ipAndPort)
-			common.WriteCache(domain, qtype, res.Answer)
+			common.WriteCache(domain, qtype, res.Answer, time.Now().Unix())
 			return res.Answer
 		} else if err != nil && !common.IsDomainNotExist(err) {
 			// usually io timeout error
@@ -96,6 +96,6 @@ func query(req *dns.Msg, dnsAddresses []string) []dns.RR {
 		}
 	}
 	log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
-	common.WriteCache(domain, qtype, []dns.RR{})
+	common.WriteCache(domain, qtype, []dns.RR{}, time.Now().Unix() - opt.Get().ConnectOptions.DnsCacheTtl / 2)
 	return []dns.RR{}
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"net"
 	"strings"
+	"time"
 )
 
 // DnsServer nds server
@@ -77,7 +78,7 @@ func (s *DnsServer) query(req *dns.Msg) (rr []dns.RR) {
 			break
 		}
 	}
-	common.WriteCache(name, qtype, rr)
+	common.WriteCache(name, qtype, rr, time.Now().Unix())
 	return
 }
 

@@ -57,8 +57,8 @@ func ReadCache(domain string, qtype uint16, ttl int64) []dns.RR {
 }
 
 // WriteCache record to cache
-func WriteCache(domain string, qtype uint16, answer []dns.RR) {
-	nsCache.Store(getCacheKey(domain, qtype), NsEntry{answer, time.Now().Unix()})
+func WriteCache(domain string, qtype uint16, answer []dns.RR, timestamp int64) {
+	nsCache.Store(getCacheKey(domain, qtype), NsEntry{answer, timestamp})
 }
 
 func notExpired(timestamp int64, ttl int64) bool {
