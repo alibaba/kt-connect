@@ -31,23 +31,9 @@ func NewConnectCommand(action ActionInterface) *cobra.Command {
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl connect [command options]"))
 	cmd.Long = cmd.Short
 
-	cmd.Flags().SortFlags = false
 	cmd.InheritedFlags().SortFlags = false
-	cmd.Flags().StringVar(&opt.Get().ConnectOptions.Mode, "mode", util.ConnectModeTun2Socks, "Connect mode 'tun2socks' or 'sshuttle'")
-	cmd.Flags().StringVar(&opt.Get().ConnectOptions.DnsMode, "dnsMode", util.DnsModeLocalDns, "Specify how to resolve service domains, can be 'localDNS', 'podDNS', 'hosts' or 'hosts:<namespaces>', for multiple namespaces use ',' separation")
-	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.SharedShadow, "shareShadow", false, "Use shared shadow pod")
-	cmd.Flags().StringVar(&opt.Get().ConnectOptions.ClusterDomain, "clusterDomain", "cluster.local", "The cluster domain provided to kubernetes api-server")
-	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisablePodIp, "disablePodIp", false, "Disable access to pod IP address")
-	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.SkipCleanup, "skipCleanup", false, "Do not auto cleanup residual resources in cluster")
-	cmd.Flags().StringVar(&opt.Get().ConnectOptions.IncludeIps, "includeIps", "", "Specify extra IP ranges which should be route to cluster, e.g. '172.2.0.0/16', use ',' separated")
-	cmd.Flags().StringVar(&opt.Get().ConnectOptions.ExcludeIps, "excludeIps", "", "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated")
-	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisableTunDevice, "disableTunDevice", false, "(tun2socks mode only) Create socks5 proxy without tun device")
-	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisableTunRoute, "disableTunRoute", false, "(tun2socks mode only) Do not auto setup tun device route")
-	cmd.Flags().IntVar(&opt.Get().ConnectOptions.SocksPort, "proxyPort", 2223, "(tun2socks mode only) Specify the local port which socks5 proxy should use")
-	cmd.Flags().Int64Var(&opt.Get().ConnectOptions.DnsCacheTtl, "dnsCacheTtl", 60, "(local dns mode only) DNS cache refresh interval in seconds")
-	if util.IsMacos() {
-		cmd.Flags().IntVar(&opt.Get().ConnectOptions.DnsPort, "dnsPort", util.AlternativeDnsPort, "(local dns mode only) Specify local DNS port")
-	}
+	general.SetOptions(cmd.Flags(), opt.Get().ConnectOptions, connect.GetFlags())
+
 	return cmd
 }
 
