@@ -14,6 +14,7 @@ type ConnectOptions struct {
 	DisableTunDevice bool
 	DisableTunRoute  bool
 	SocksPort        int
+	DnsPort          int
 	DnsCacheTtl      int64
 	IncludeIps       string
 	ExcludeIps       string

@@ -44,6 +44,8 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		dnsPort := util.AlternativeDnsPort
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
+		} else if util.IsMacos() {
+			dnsPort = opt.Get().ConnectOptions.DnsPort
 		}
 		// must set up name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux

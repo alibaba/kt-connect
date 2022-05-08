@@ -155,7 +155,12 @@ func IsWindows() bool {
 	return runtime.GOOS == "windows"
 }
 
-// IsLinux check runtime is windows
+// IsMacos check runtime is macos
+func IsMacos() bool {
+	return runtime.GOOS == "darwin"
+}
+
+// IsLinux check runtime is linux
 func IsLinux() bool {
 	return runtime.GOOS == "linux"
 }

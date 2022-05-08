@@ -45,6 +45,9 @@ func NewConnectCommand(action ActionInterface) *cobra.Command {
 	cmd.Flags().BoolVar(&opt.Get().ConnectOptions.DisableTunRoute, "disableTunRoute", false, "(tun2socks mode only) Do not auto setup tun device route")
 	cmd.Flags().IntVar(&opt.Get().ConnectOptions.SocksPort, "proxyPort", 2223, "(tun2socks mode only) Specify the local port which socks5 proxy should use")
 	cmd.Flags().Int64Var(&opt.Get().ConnectOptions.DnsCacheTtl, "dnsCacheTtl", 60, "(local dns mode only) DNS cache refresh interval in seconds")
+	if util.IsMacos() {
+		cmd.Flags().IntVar(&opt.Get().ConnectOptions.DnsPort, "dnsPort", util.AlternativeDnsPort, "(local dns mode only) Specify local DNS port")
+	}
 	return cmd
 }
 
