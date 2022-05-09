@@ -52,6 +52,7 @@ func (action *Action) Mesh(resourceName string) error {
 		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
+	log.Info().Msgf("Using %s mode", opt.Get().MeshOptions.Mode)
 	if opt.Get().MeshOptions.Mode == util.MeshModeManual {
 		err = mesh.ManualMesh(svc)
 	} else if opt.Get().MeshOptions.Mode == util.MeshModeAuto {

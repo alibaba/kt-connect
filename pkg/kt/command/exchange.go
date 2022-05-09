@@ -43,6 +43,7 @@ func (action *Action) Exchange(resourceName string) error {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
+	log.Info().Msgf("Using %s mode", opt.Get().ExchangeOptions.Mode)
 	if opt.Get().ExchangeOptions.Mode == util.ExchangeModeScale {
 		err = exchange.ByScale(resourceName)
 	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeEphemeral {

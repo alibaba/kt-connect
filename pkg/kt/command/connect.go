@@ -44,6 +44,7 @@ func (action *Action) Connect() error {
 		go silenceCleanup()
 	}
 
+	log.Info().Msgf("Using %s mode", opt.Get().ConnectOptions.Mode)
 	if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks {
 		err = connect.ByTun2Socks()
 	} else if opt.Get().ConnectOptions.Mode == util.ConnectModeShuttle {
