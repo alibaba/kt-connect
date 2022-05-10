@@ -1,0 +1,57 @@
+# full permission role for all kt commands
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kt-cluster-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - patch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments/scale
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+      - pods/portforward
+    verbs:
+      - create
