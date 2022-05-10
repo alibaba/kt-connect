@@ -160,7 +160,7 @@ Mesh命令有两种运行模式，默认的`auto`模式不需要额外的服务�
 ```bash
 $ kubectl exec deployment/tomcat -c tomcat -- /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 
-$ ktctl mesh tomcat --expose 8080 --mode auto
+$ ktctl mesh tomcat --expose 8080
 00:00AM INF KtConnect start at <PID>
 ... ...
 --------------------------------------------------------------
