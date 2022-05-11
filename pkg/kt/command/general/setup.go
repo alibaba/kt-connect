@@ -95,6 +95,9 @@ func combineKubeOpts() error {
 		_ = os.Setenv(util.EnvKubeConfig, opt.Get().KubeConfig)
 	}
 	config, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
+	if len(customizeKubeConfig) > 50 {
+		config, err = clientcmd.Load([]byte(customizeKubeConfig))
+	}
 	if err != nil {
 		return fmt.Errorf("failed to parse kubeconfig: %s", err)
 	} else if config == nil {
