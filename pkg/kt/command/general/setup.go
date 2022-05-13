@@ -48,17 +48,7 @@ func Prepare() error {
 	mergeConfigFile()
 
 	// then setup logs
-	if opt.Get().Debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-	util.PrepareLogger(opt.Get().Debug)
-	k8sRuntime.ErrorHandlers = []func(error){
-		func(err error) {
-			_, _ = util.BackgroundLogger.Write([]byte(err.Error() + util.Eol))
-		},
-	}
-	klog.SetOutput(util.BackgroundLogger)
-	klog.LogToStderr(false)
+	SetupLogger()
 
 	if err := combineKubeOpts(); err != nil {
 		return err
@@ -73,6 +63,20 @@ func Prepare() error {
 		}
 	}
 	return nil
+}
+
+func SetupLogger() {
+	if opt.Get().Debug {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+	util.PrepareLogger(opt.Get().Debug)
+	k8sRuntime.ErrorHandlers = []func(error){
+		func(err error) {
+			_, _ = util.BackgroundLogger.Write([]byte(err.Error() + util.Eol))
+		},
+	}
+	klog.SetOutput(util.BackgroundLogger)
+	klog.LogToStderr(false)
 }
 
 // SetupProcess write pid file and set component type

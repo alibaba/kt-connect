@@ -10,7 +10,7 @@ import (
 )
 
 // NewCleanCommand return new connect command
-func NewCleanCommand(action ActionInterface) *cobra.Command {
+func NewCleanCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "clean",
 		Short: "Delete unavailing resources created by kt from kubernetes cluster",
@@ -18,7 +18,7 @@ func NewCleanCommand(action ActionInterface) *cobra.Command {
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return action.Clean()
+			return Clean()
 		},
 	}
 
@@ -28,7 +28,7 @@ func NewCleanCommand(action ActionInterface) *cobra.Command {
 }
 
 // Clean delete unavailing shadow pods
-func (action *Action) Clean() error {
+func Clean() error {
 	if resourceToClean, err := clean.CheckClusterResources(); err != nil {
 		log.Warn().Err(err).Msgf("Failed to clean up cluster resources")
 	} else {

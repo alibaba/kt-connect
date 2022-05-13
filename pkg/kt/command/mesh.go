@@ -11,7 +11,7 @@ import (
 )
 
 // NewMeshCommand return new mesh command
-func NewMeshCommand(action ActionInterface) *cobra.Command {
+func NewMeshCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "mesh",
 		Short: "Redirect marked requests of specified kubernetes service to local",
@@ -22,7 +22,7 @@ func NewMeshCommand(action ActionInterface) *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("name of service to mesh is required")
 			}
-			return action.Mesh(args[0])
+			return Mesh(args[0])
 		},
 	}
 
@@ -32,7 +32,7 @@ func NewMeshCommand(action ActionInterface) *cobra.Command {
 }
 
 //Mesh exchange kubernetes workload
-func (action *Action) Mesh(resourceName string) error {
+func Mesh(resourceName string) error {
 	ch, err := general.SetupProcess(util.ComponentMesh)
 	if err != nil {
 		return err

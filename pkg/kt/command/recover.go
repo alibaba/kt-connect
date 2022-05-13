@@ -15,7 +15,7 @@ import (
 )
 
 // NewRecoverCommand return new recover command
-func NewRecoverCommand(action ActionInterface) *cobra.Command {
+func NewRecoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "recover",
 		Short: "Restore traffic of specified kubernetes service changed by exchange or mesh",
@@ -27,7 +27,7 @@ func NewRecoverCommand(action ActionInterface) *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("name of service to recover is required")
 			}
-			return action.Recover(args[0])
+			return Recover(args[0])
 		},
 	}
 
@@ -37,7 +37,7 @@ func NewRecoverCommand(action ActionInterface) *cobra.Command {
 }
 
 // Recover delete unavailing shadow pods
-func (action *Action) Recover(serviceName string) error {
+func Recover(serviceName string) error {
 	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Namespace)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch service %s", serviceName)

@@ -11,7 +11,7 @@ import (
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(action ActionInterface) *cobra.Command {
+func NewPreviewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "preview",
 		Short: "Expose a local service to kubernetes cluster",
@@ -22,7 +22,7 @@ func NewPreviewCommand(action ActionInterface) *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("a service name must be specified")
 			}
-			return action.Preview(args[0])
+			return Preview(args[0])
 		},
 	}
 
@@ -32,7 +32,7 @@ func NewPreviewCommand(action ActionInterface) *cobra.Command {
 }
 
 // Preview create a new service in cluster
-func (action *Action) Preview(serviceName string) error {
+func Preview(serviceName string) error {
 	ch, err := general.SetupProcess(util.ComponentPreview)
 	if err != nil {
 		return err

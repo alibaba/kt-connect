@@ -33,19 +33,18 @@ func main() {
 		Use:   "ktctl",
 		Version: version,
 		Short: "A utility tool to help you work with Kubernetes dev environment more efficiently",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
 	}
 
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		_ = rootCmd.Help()
-	}
-
-	action := &command.Action{}
-	rootCmd.AddCommand(command.NewConnectCommand(action))
-	rootCmd.AddCommand(command.NewExchangeCommand(action))
-	rootCmd.AddCommand(command.NewMeshCommand(action))
-	rootCmd.AddCommand(command.NewPreviewCommand(action))
-	rootCmd.AddCommand(command.NewCleanCommand(action))
-	rootCmd.AddCommand(command.NewRecoverCommand(action))
+	rootCmd.AddCommand(command.NewConnectCommand())
+	rootCmd.AddCommand(command.NewExchangeCommand())
+	rootCmd.AddCommand(command.NewMeshCommand())
+	rootCmd.AddCommand(command.NewPreviewCommand())
+	rootCmd.AddCommand(command.NewCleanCommand())
+	rootCmd.AddCommand(command.NewRecoverCommand())
+	rootCmd.AddCommand(command.NewConfigCommand())
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
 	rootCmd.SilenceUsage = true

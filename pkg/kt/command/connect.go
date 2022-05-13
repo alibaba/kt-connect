@@ -13,7 +13,7 @@ import (
 )
 
 // NewConnectCommand return new connect command
-func NewConnectCommand(action ActionInterface) *cobra.Command {
+func NewConnectCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "connect",
 		Short: "Create a network tunnel to kubernetes cluster",
@@ -24,7 +24,7 @@ func NewConnectCommand(action ActionInterface) *cobra.Command {
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return action.Connect()
+			return Connect()
 		},
 	}
 
@@ -34,7 +34,7 @@ func NewConnectCommand(action ActionInterface) *cobra.Command {
 }
 
 // Connect setup vpn to kubernetes cluster
-func (action *Action) Connect() error {
+func Connect() error {
 	ch, err := general.SetupProcess(util.ComponentConnect)
 	if err != nil {
 		return err

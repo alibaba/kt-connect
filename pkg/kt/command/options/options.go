@@ -58,6 +58,11 @@ type CleanOptions struct {
 	SweepLocalRoute  bool
 }
 
+// ConfigOptions ...
+type ConfigOptions struct {
+
+}
+
 // RuntimeOptions ...
 type RuntimeOptions struct {
 	Clientset kubernetes.Interface
@@ -94,6 +99,7 @@ type DaemonOptions struct {
 	MeshOptions         *MeshOptions
 	RecoverOptions      *RecoverOptions
 	CleanOptions        *CleanOptions
+	ConfigOptions       *ConfigOptions
 	RunAsWorkerProcess  bool
 	KubeConfig          string
 	Namespace           string

@@ -12,7 +12,7 @@ import (
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(action ActionInterface) *cobra.Command {
+func NewExchangeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "exchange",
 		Short: "Redirect all requests of specified kubernetes service to local",
@@ -23,7 +23,7 @@ func NewExchangeCommand(action ActionInterface) *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("name of service to exchange is required")
 			}
-			return action.Exchange(args[0])
+			return Exchange(args[0])
 		},
 	}
 
@@ -33,7 +33,7 @@ func NewExchangeCommand(action ActionInterface) *cobra.Command {
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(resourceName string) error {
+func Exchange(resourceName string) error {
 	ch, err := general.SetupProcess(util.ComponentExchange)
 	if err != nil {
 		return err
