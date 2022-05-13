@@ -39,8 +39,10 @@ func Exchange(resourceName string) error {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().ExchangeOptions.Expose); port != "" {
-		return fmt.Errorf("no application is running on port %s", port)
+	if opt.Get().ListenCheck {
+		if port := util.FindBrokenLocalPort(opt.Get().ExchangeOptions.Expose); port != "" {
+			return fmt.Errorf("no application is running on port %s", port)
+		}
 	}
 
 	log.Info().Msgf("Using %s mode", opt.Get().ExchangeOptions.Mode)

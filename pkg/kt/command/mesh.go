@@ -38,10 +38,11 @@ func Mesh(resourceName string) error {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().MeshOptions.Expose); port != "" {
-		return fmt.Errorf("no application is running on port %s", port)
+	if opt.Get().ListenCheck {
+		if port := util.FindBrokenLocalPort(opt.Get().MeshOptions.Expose); port != "" {
+			return fmt.Errorf("no application is running on port %s", port)
+		}
 	}
-
 	// Get service to mesh
 	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
 	if err != nil {
