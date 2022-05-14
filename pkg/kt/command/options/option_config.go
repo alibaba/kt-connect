@@ -39,13 +39,6 @@ func SetOptions(cmd *cobra.Command, flags *flag.FlagSet, optionStore any, config
 			} else {
 				flags.IntVar(fieldPtr, c.Name, c.DefaultValue.(int), c.Description)
 			}
-		case int64:
-			fieldPtr := (*int64)(unsafe.Pointer(field.UnsafeAddr()))
-			if c.Alias != "" {
-				flags.Int64VarP(fieldPtr, c.Name, c.Alias, c.DefaultValue.(int64), c.Description)
-			} else {
-				flags.Int64Var(fieldPtr, c.Name, c.DefaultValue.(int64), c.Description)
-			}
 		case bool:
 			fieldPtr := (*bool)(unsafe.Pointer(field.UnsafeAddr()))
 			if c.Alias != "" {

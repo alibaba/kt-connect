@@ -75,7 +75,7 @@ func ConnectFlags() []OptionConfig {
 		{
 			Target:      "DnsCacheTtl",
 			Name:        "dnsCacheTtl",
-			DefaultValue: int64(60),
+			DefaultValue: 60,
 			Description: "(local dns mode only) DNS cache refresh interval in seconds",
 		},
 	}
