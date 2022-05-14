@@ -5,6 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/config"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,7 @@ func NewConfigCommand() *cobra.Command {
 		Short: "List, get or set default value for command options",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			for _, f := range opt.GlobalFlags() {
-				_ = cmd.InheritedFlags().MarkHidden(f.Name)
+				_ = cmd.InheritedFlags().MarkHidden(util.UnCapitalize(f.Target))
 			}
 			return cmd.Help()
 		},

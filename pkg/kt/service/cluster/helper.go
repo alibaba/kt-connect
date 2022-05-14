@@ -121,7 +121,7 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 		envVar = append(envVar, coreV1.EnvVar{Name: k, Value: v})
 	}
 	var pullPolicy coreV1.PullPolicy
-	if opt.Get().Global.AlwaysUpdateShadow {
+	if opt.Get().Global.ForceUpdate {
 		pullPolicy = "Always"
 	} else {
 		pullPolicy = "IfNotPresent"

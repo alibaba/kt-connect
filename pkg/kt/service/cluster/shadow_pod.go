@@ -20,10 +20,10 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 	opt.Store.Shadow = name
 
 	// extra labels must be applied after origin labels
-	for key, val := range util.String2Map(opt.Get().Global.WithLabels) {
+	for key, val := range util.String2Map(opt.Get().Global.WithLabel) {
 		labels[key] = val
 	}
-	for key, val := range util.String2Map(opt.Get().Global.WithAnnotations) {
+	for key, val := range util.String2Map(opt.Get().Global.WithAnnotation) {
 		annotations[key] = val
 	}
 	annotations[util.KtUser] = util.GetLocalUserName()
@@ -56,7 +56,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 		}
 	}
 
-	if opt.Store.Component == util.ComponentConnect && opt.Get().Connect.SharedShadow {
+	if opt.Store.Component == util.ComponentConnect && opt.Get().Connect.ShareShadow {
 		pod, generator, err2 := k.tryGetExistingShadows(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
@@ -103,7 +103,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 		}
 		log.Info().Msgf("Creating shadow deployment %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 		delete(metaAndSpec.Meta.Labels, util.ControlBy)
-		pods, err := k.WaitPodsReady(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace, opt.Get().Global.PodCreationWaitTime)
+		pods, err := k.WaitPodsReady(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace, opt.Get().Global.PodCreationTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 			return nil, err
 		}
 		log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
-		return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().Global.PodCreationWaitTime)
+		return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().Global.PodCreationTimeout)
 	}
 }
 

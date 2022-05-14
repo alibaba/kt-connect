@@ -10,14 +10,14 @@ type ConnectOptions struct {
 	DisablePodIp     bool
 	DisableTunDevice bool
 	DisableTunRoute  bool
-	SocksPort        int
+	ProxyPort        int
 	DnsPort          int
 	DnsCacheTtl      int
 	IncludeIps       string
 	ExcludeIps       string
 	Mode             string
 	DnsMode          string
-	SharedShadow     bool
+	ShareShadow      bool
 	ClusterDomain    string
 	SkipCleanup      bool
 }
@@ -62,22 +62,22 @@ type ConfigOptions struct {
 
 // GlobalOptions ...
 type GlobalOptions struct {
-	RunAsWorkerProcess  bool
-	KubeConfig          string
+	AsWorker            bool
+	Kubeconfig          string
 	Namespace           string
 	ServiceAccount      string
 	Debug               bool
 	Image               string
 	ImagePullSecret     string
 	NodeSelector        string
-	WithLabels          string
-	WithAnnotations     string
-	PortForwardWaitTime int
-	PodCreationWaitTime int
+	WithLabel           string
+	WithAnnotation      string
+	PortForwardTimeout  int
+	PodCreationTimeout  int
 	UseShadowDeployment bool
-	AlwaysUpdateShadow  bool
-	SkipTimeDiff        bool
-	KubeContext         string
+	ForceUpdate         bool
+	UseLocalTime        bool
+	Context             string
 	PodQuota            string
 }
 

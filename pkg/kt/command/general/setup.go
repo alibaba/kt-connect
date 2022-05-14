@@ -57,7 +57,7 @@ func Prepare() error {
 	log.Info().Msgf("KtConnect %s start at %d (%s %s)",
 		opt.Store.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
 
-	if !opt.Get().Global.SkipTimeDiff {
+	if !opt.Get().Global.UseLocalTime {
 		if err := cluster.SetupTimeDifference(); err != nil {
 			return err
 		}
@@ -95,8 +95,8 @@ func mergeConfigFile() {
 
 // combineKubeOpts set default options of kubectl if not assign
 func combineKubeOpts() error {
-	if opt.Get().Global.KubeConfig != ""{
-		_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.KubeConfig)
+	if opt.Get().Global.Kubeconfig != ""{
+		_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.Kubeconfig)
 	}
 	config, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	if len(customizeKubeConfig) > 50 {
@@ -108,18 +108,18 @@ func combineKubeOpts() error {
 		// should not happen, but issue-275 and issue-285 may cause by it
 		return fmt.Errorf("failed to parse kubeconfig")
 	}
-	if len(opt.Get().Global.KubeContext) > 0 {
+	if len(opt.Get().Global.Context) > 0 {
 		found := false
 		for name, _ := range config.Contexts {
-			if name == opt.Get().Global.KubeContext {
+			if name == opt.Get().Global.Context {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", opt.Get().Global.KubeContext)
+			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", opt.Get().Global.Context)
 		}
-		config.CurrentContext = opt.Get().Global.KubeContext
+		config.CurrentContext = opt.Get().Global.Context
 	}
 	if len(opt.Get().Global.Namespace) == 0 {
 		ctx, exists := config.Contexts[config.CurrentContext]
@@ -129,12 +129,12 @@ func combineKubeOpts() error {
 			opt.Get().Global.Namespace = util.DefaultNamespace
 		}
 	}
-	kubeconfigGetter := func() clientcmd.KubeconfigGetter {
+	kubeConfigGetter := func() clientcmd.KubeconfigGetter {
 		return func() (*clientcmdapi.Config, error) {
 			return config, nil
 		}
 	}
-	restConfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", kubeconfigGetter())
+	restConfig, err := clientcmd.BuildConfigFromKubeconfigGetter("", kubeConfigGetter())
 	if err != nil {
 		return err
 	}

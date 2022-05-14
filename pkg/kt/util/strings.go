@@ -90,3 +90,18 @@ func Capitalize(word string) string {
 		word)
 	return strings.ReplaceAll(capitalized, "-", "")
 }
+
+// UnCapitalize convert dash separated string to capitalized string
+// TODO: 0.4 - remove this method, use DashSeparated() instead
+func UnCapitalize(word string) string {
+	firstLetter := true
+	return strings.Map(
+		func(r rune) rune {
+			if firstLetter {
+				firstLetter = false
+				return unicode.ToLower(r)
+			}
+			return r
+		},
+		word)
+}

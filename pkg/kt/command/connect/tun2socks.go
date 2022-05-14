@@ -30,12 +30,12 @@ func ByTun2Socks() error {
 	}
 
 	if opt.Get().Connect.DisableTunDevice {
-		showSetupSocksMessage(opt.Get().Connect.SocksPort)
+		showSetupSocksMessage(opt.Get().Connect.ProxyPort)
 	} else {
 		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
-		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().Connect.SocksPort)
+		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().Connect.ProxyPort)
 		if err = tun.Ins().ToSocks(socksAddr); err != nil {
 			return err
 		}
@@ -80,7 +80,7 @@ func startSocks5Connection(podIP, privateKey string, localSshPort int, isInitCon
 	var res = make(chan error)
 	var ticker *time.Ticker
 	sshAddress := fmt.Sprintf("127.0.0.1:%d", localSshPort)
-	socks5Address := fmt.Sprintf("127.0.0.1:%d", opt.Get().Connect.SocksPort)
+	socks5Address := fmt.Sprintf("127.0.0.1:%d", opt.Get().Connect.ProxyPort)
 	gone := false
 	go func() {
 		// will hang here if not error happen

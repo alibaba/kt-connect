@@ -151,7 +151,7 @@ func getServiceHosts(namespace string, shortDomainOnly bool) (map[string]string,
 
 func getOrCreateShadow() (string, string, string, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
-	if opt.Get().Connect.SharedShadow {
+	if opt.Get().Connect.ShareShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 

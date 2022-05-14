@@ -28,7 +28,7 @@ func (k *Kubernetes) CreateRouterPod(name string, labels, annotations map[string
 	}
 	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdatePodHeartBeat)
 	log.Info().Msgf("Router pod %s created", name)
-	return k.WaitPodReady(name, opt.Get().Global.Namespace, opt.Get().Global.PodCreationWaitTime)
+	return k.WaitPodReady(name, opt.Get().Global.Namespace, opt.Get().Global.PodCreationTimeout)
 }
 
 // CreateRectifierPod create pod for rectify time difference
@@ -45,5 +45,5 @@ func (k *Kubernetes) CreateRectifierPod(name string) (*coreV1.Pod, error) {
 		return nil, err
 	}
 	log.Debug().Msgf("Rectify pod %s created", name)
-	return k.WaitPodReady(name, opt.Get().Global.Namespace, opt.Get().Global.PodCreationWaitTime)
+	return k.WaitPodReady(name, opt.Get().Global.Namespace, opt.Get().Global.PodCreationTimeout)
 }
