@@ -21,7 +21,7 @@ func NewConfigCommand() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(SubConfig("list", "Show all available options", config.List))
+	cmd.AddCommand(SubConfig("show", "List all available and configured options", config.List))
 	cmd.AddCommand(SubConfig("get", "Fetch default value of specified option", config.Get))
 	cmd.AddCommand(SubConfig("set", "Customize default value of specified option", config.Set))
 	cmd.AddCommand(SubConfig("reset", "Restore default value of specified option", config.Reset))

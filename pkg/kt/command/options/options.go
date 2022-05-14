@@ -83,10 +83,10 @@ type GlobalOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	Preview  *PreviewOptions
 	Connect  *ConnectOptions
 	Exchange *ExchangeOptions
 	Mesh     *MeshOptions
+	Preview  *PreviewOptions
 	Recover  *RecoverOptions
 	Clean    *CleanOptions
 	Config   *ConfigOptions

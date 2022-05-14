@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func init() {
@@ -72,4 +73,20 @@ func ExtractErrorMessage(msg string) string {
 		return errExp.FindStringSubmatch(msg)[1]
 	}
 	return ""
+}
+
+// Capitalize convert dash separated string to capitalized string
+func Capitalize(word string) string {
+	prev := '-'
+	capitalized := strings.Map(
+		func(r rune) rune {
+			if prev == '-' {
+				prev = r
+				return unicode.ToUpper(r)
+			}
+			prev = r
+			return unicode.ToLower(r)
+		},
+		word)
+	return strings.ReplaceAll(capitalized, "-", "")
 }
