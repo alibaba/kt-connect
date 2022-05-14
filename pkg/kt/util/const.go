@@ -1,5 +1,7 @@
 package util
 
+import "fmt"
+
 const (
 	// EnvKubeConfig environment variable for kube config file
 	EnvKubeConfig = "KUBECONFIG"
@@ -118,4 +120,8 @@ const (
 	// PortForwardHeartBeatIntervalSec interval of port-forward heart beat
 	PortForwardHeartBeatIntervalSec = 60
 
+)
+
+var (
+	KtHome = fmt.Sprintf("%s/.kt", UserHome)
 )

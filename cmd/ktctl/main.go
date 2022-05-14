@@ -23,6 +23,7 @@ func init() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: util.IsWindows()})
 	_ = util.CreateDirIfNotExist(util.KtHome)
 	util.FixFileOwner(util.KtHome)
+	// TODO: 0.4 - auto remove old kt home folder .ktctl
 }
 
 func main() {
