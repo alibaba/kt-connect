@@ -27,7 +27,7 @@ func NewPreviewCommand() *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl preview <service-name> [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().PreviewOptions, opt.PreviewFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Preview, opt.PreviewFlags())
 	return cmd
 }
 
@@ -38,7 +38,7 @@ func Preview(serviceName string) error {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().PreviewOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().Preview.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 

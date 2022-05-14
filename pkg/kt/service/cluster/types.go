@@ -67,7 +67,7 @@ var instance *Kubernetes
 func Ins() KubernetesInterface {
 	if instance == nil {
 		instance = &Kubernetes{
-			Clientset: opt.Get().RuntimeStore.Clientset,
+			Clientset: opt.Get().Runtime.Clientset,
 		}
 	}
 	return instance

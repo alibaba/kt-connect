@@ -23,7 +23,7 @@ func NewCleanCommand() *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl clean [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().CleanOptions, opt.CleanFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Clean, opt.CleanFlags())
 	return cmd
 }
 
@@ -35,14 +35,14 @@ func Clean() error {
 		if isEmpty(resourceToClean) {
 			log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
 		} else {
-			if opt.Get().CleanOptions.DryRun {
+			if opt.Get().Clean.DryRun {
 				clean.PrintClusterResourcesToClean(resourceToClean)
 			} else {
 				clean.TidyClusterResources(resourceToClean)
 			}
 		}
 	}
-	if !opt.Get().CleanOptions.DryRun {
+	if !opt.Get().Clean.DryRun {
 		clean.TidyLocalResources()
 	}
 	return nil

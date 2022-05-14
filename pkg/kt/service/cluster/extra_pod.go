@@ -17,10 +17,10 @@ func (k *Kubernetes) CreateRouterPod(name string, labels, annotations map[string
 	}
 	metaAndSpec := &PodMetaAndSpec{&ResourceMeta{
 		Name:        name,
-		Namespace:   opt.Get().Namespace,
+		Namespace:   opt.Get().Global.Namespace,
 		Labels:      labels,
 		Annotations: annotations,
-	}, opt.Get().MeshOptions.RouterImage, map[string]string{}, targetPorts, true}
+	}, opt.Get().Mesh.RouterImage, map[string]string{}, targetPorts, true}
 	pod := createPod(metaAndSpec)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
@@ -28,22 +28,22 @@ func (k *Kubernetes) CreateRouterPod(name string, labels, annotations map[string
 	}
 	SetupHeartBeat(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, k.UpdatePodHeartBeat)
 	log.Info().Msgf("Router pod %s created", name)
-	return k.WaitPodReady(name, opt.Get().Namespace, opt.Get().PodCreationWaitTime)
+	return k.WaitPodReady(name, opt.Get().Global.Namespace, opt.Get().Global.PodCreationWaitTime)
 }
 
 // CreateRectifierPod create pod for rectify time difference
 func (k *Kubernetes) CreateRectifierPod(name string) (*coreV1.Pod, error) {
 	metaAndSpec := &PodMetaAndSpec{&ResourceMeta{
 		Name:        name,
-		Namespace:   opt.Get().Namespace,
+		Namespace:   opt.Get().Global.Namespace,
 		Labels:      map[string]string{},
 		Annotations: map[string]string{},
-	}, opt.Get().Image, map[string]string{}, map[string]int{}, true}
+	}, opt.Get().Global.Image, map[string]string{}, map[string]int{}, true}
 	pod := createPod(metaAndSpec)
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return nil, err
 	}
 	log.Debug().Msgf("Rectify pod %s created", name)
-	return k.WaitPodReady(name, opt.Get().Namespace, opt.Get().PodCreationWaitTime)
+	return k.WaitPodReady(name, opt.Get().Global.Namespace, opt.Get().Global.PodCreationWaitTime)
 }

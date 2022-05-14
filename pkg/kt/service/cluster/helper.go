@@ -97,19 +97,19 @@ func createPod(metaAndSpec *PodMetaAndSpec) *coreV1.Pod {
 			Annotations: metaAndSpec.Meta.Annotations,
 		},
 		Spec: coreV1.PodSpec{
-			ServiceAccountName: opt.Get().ServiceAccount,
+			ServiceAccountName: opt.Get().Global.ServiceAccount,
 			Containers: []coreV1.Container{
 				createContainer(metaAndSpec.Image, []string{}, metaAndSpec.Envs, metaAndSpec.Ports),
 			},
 		},
 	}
 
-	if opt.Get().ImagePullSecret != "" {
-		addImagePullSecret(pod, opt.Get().ImagePullSecret)
+	if opt.Get().Global.ImagePullSecret != "" {
+		addImagePullSecret(pod, opt.Get().Global.ImagePullSecret)
 	}
 
-	if opt.Get().NodeSelector != "" {
-		pod.Spec.NodeSelector = util.String2Map(opt.Get().NodeSelector)
+	if opt.Get().Global.NodeSelector != "" {
+		pod.Spec.NodeSelector = util.String2Map(opt.Get().Global.NodeSelector)
 	}
 
 	return pod
@@ -121,7 +121,7 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 		envVar = append(envVar, coreV1.EnvVar{Name: k, Value: v})
 	}
 	var pullPolicy coreV1.PullPolicy
-	if opt.Get().AlwaysUpdateShadow {
+	if opt.Get().Global.AlwaysUpdateShadow {
 		pullPolicy = "Always"
 	} else {
 		pullPolicy = "IfNotPresent"
@@ -145,8 +145,8 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 			Requests: coreV1.ResourceList{},
 		},
 	}
-	if opt.Get().PodQuota != "" {
-		addResourceLimit(&container, opt.Get().PodQuota)
+	if opt.Get().Global.PodQuota != "" {
+		addResourceLimit(&container, opt.Get().Global.PodQuota)
 	}
 	for name, port := range ports {
 		container.Ports = append(container.Ports, coreV1.ContainerPort{

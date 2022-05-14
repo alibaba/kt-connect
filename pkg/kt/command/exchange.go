@@ -28,7 +28,7 @@ func NewExchangeCommand() *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().ExchangeOptions, opt.ExchangeFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Exchange, opt.ExchangeFlags())
 	return cmd
 }
 
@@ -39,19 +39,19 @@ func Exchange(resourceName string) error {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().ExchangeOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().Exchange.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	log.Info().Msgf("Using %s mode", opt.Get().ExchangeOptions.Mode)
-	if opt.Get().ExchangeOptions.Mode == util.ExchangeModeScale {
+	log.Info().Msgf("Using %s mode", opt.Get().Exchange.Mode)
+	if opt.Get().Exchange.Mode == util.ExchangeModeScale {
 		err = exchange.ByScale(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeEphemeral {
+	} else if opt.Get().Exchange.Mode == util.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeSelector {
+	} else if opt.Get().Exchange.Mode == util.ExchangeModeSelector {
 		err = exchange.BySelector(resourceName)
 	} else {
-		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
+		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().Exchange.Mode,
 			util.ExchangeModeSelector, util.ExchangeModeScale, util.ExchangeModeEphemeral)
 	}
 	if err != nil {

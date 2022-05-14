@@ -27,7 +27,7 @@ func NewConfigCommand() *cobra.Command {
 	cmd.AddCommand(SubConfig("reset", "Restore default value of specified option", config.Reset))
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl config [list | get key | set key=value | reset key]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().ConfigOptions, opt.ConfigFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Config, opt.ConfigFlags())
 	return cmd
 }
 

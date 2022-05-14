@@ -63,8 +63,29 @@ type ConfigOptions struct {
 
 }
 
-// RuntimeOptions ...
-type RuntimeOptions struct {
+// GlobalOptions ...
+type GlobalOptions struct {
+	RunAsWorkerProcess  bool
+	KubeConfig          string
+	Namespace           string
+	ServiceAccount      string
+	Debug               bool
+	Image               string
+	ImagePullSecret     string
+	NodeSelector        string
+	WithLabels          string
+	WithAnnotations     string
+	PortForwardWaitTime int
+	PodCreationWaitTime int
+	UseShadowDeployment bool
+	AlwaysUpdateShadow  bool
+	SkipTimeDiff        bool
+	KubeContext         string
+	PodQuota            string
+}
+
+// RuntimeStore ...
+type RuntimeStore struct {
 	Clientset kubernetes.Interface
 	// Version ktctl version
 	Version string
@@ -92,31 +113,15 @@ type RuntimeOptions struct {
 
 // DaemonOptions cli options
 type DaemonOptions struct {
-	RuntimeStore        *RuntimeOptions
-	PreviewOptions      *PreviewOptions
-	ConnectOptions      *ConnectOptions
-	ExchangeOptions     *ExchangeOptions
-	MeshOptions         *MeshOptions
-	RecoverOptions      *RecoverOptions
-	CleanOptions        *CleanOptions
-	ConfigOptions       *ConfigOptions
-	RunAsWorkerProcess  bool
-	KubeConfig          string
-	Namespace           string
-	ServiceAccount      string
-	Debug               bool
-	Image               string
-	ImagePullSecret     string
-	NodeSelector        string
-	WithLabels          string
-	WithAnnotations     string
-	PortForwardWaitTime int
-	PodCreationWaitTime int
-	UseShadowDeployment bool
-	AlwaysUpdateShadow  bool
-	SkipTimeDiff        bool
-	KubeContext         string
-	PodQuota            string
+	Runtime  *RuntimeStore
+	Preview  *PreviewOptions
+	Connect  *ConnectOptions
+	Exchange *ExchangeOptions
+	Mesh     *MeshOptions
+	Recover  *RecoverOptions
+	Clean    *CleanOptions
+	Config   *ConfigOptions
+	Global   *GlobalOptions
 }
 
 var opt *DaemonOptions
@@ -125,16 +130,18 @@ var opt *DaemonOptions
 func Get() *DaemonOptions {
 	if opt == nil {
 		opt = &DaemonOptions{
-			Namespace:  util.DefaultNamespace,
-			RuntimeStore: &RuntimeOptions{
+			Global: &GlobalOptions {
+				Namespace:  util.DefaultNamespace,
+			},
+			Runtime: &RuntimeStore{
 				UserHome: util.UserHome,
 				AppHome:  util.KtHome,
 			},
-			ConnectOptions:  &ConnectOptions{},
-			ExchangeOptions: &ExchangeOptions{},
-			MeshOptions:     &MeshOptions{},
-			PreviewOptions:  &PreviewOptions{},
-			CleanOptions:    &CleanOptions{},
+			Connect:  &ConnectOptions{},
+			Exchange: &ExchangeOptions{},
+			Mesh:     &MeshOptions{},
+			Preview:  &PreviewOptions{},
+			Clean:    &CleanOptions{},
 		}
 	}
 	return opt

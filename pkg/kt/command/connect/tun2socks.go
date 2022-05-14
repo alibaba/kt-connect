@@ -29,19 +29,19 @@ func ByTun2Socks() error {
 		return err
 	}
 
-	if opt.Get().ConnectOptions.DisableTunDevice {
-		showSetupSocksMessage(opt.Get().ConnectOptions.SocksPort)
+	if opt.Get().Connect.DisableTunDevice {
+		showSetupSocksMessage(opt.Get().Connect.SocksPort)
 	} else {
 		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
-		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort)
+		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().Connect.SocksPort)
 		if err = tun.Ins().ToSocks(socksAddr); err != nil {
 			return err
 		}
 		log.Info().Msgf("Tun device %s is ready", tun.Ins().GetName())
 
-		if !opt.Get().ConnectOptions.DisableTunRoute {
+		if !opt.Get().Connect.DisableTunRoute {
 			if err = setupTunRoute(); err != nil {
 				return err
 			}
@@ -52,7 +52,7 @@ func ByTun2Socks() error {
 }
 
 func setupTunRoute() error {
-	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Namespace)
+	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Global.Namespace)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func startSocks5Connection(podIP, privateKey string, localSshPort int, isInitCon
 	var res = make(chan error)
 	var ticker *time.Ticker
 	sshAddress := fmt.Sprintf("127.0.0.1:%d", localSshPort)
-	socks5Address := fmt.Sprintf("127.0.0.1:%d", opt.Get().ConnectOptions.SocksPort)
+	socks5Address := fmt.Sprintf("127.0.0.1:%d", opt.Get().Connect.SocksPort)
 	gone := false
 	go func() {
 		// will hang here if not error happen

@@ -20,7 +20,7 @@ func NewRecoverCommand() *cobra.Command {
 		Use:  "recover",
 		Short: "Restore traffic of specified kubernetes service changed by exchange or mesh",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			opt.Get().SkipTimeDiff = true
+			opt.Get().Global.SkipTimeDiff = true
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -32,13 +32,13 @@ func NewRecoverCommand() *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl recover [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().RecoverOptions, opt.RecoverFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Recover, opt.RecoverFlags())
 	return cmd
 }
 
 // Recover delete unavailing shadow pods
 func Recover(serviceName string) error {
-	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Namespace)
+	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Global.Namespace)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch service %s", serviceName)
 	}

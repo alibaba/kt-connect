@@ -42,7 +42,7 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 			dnsPort = preferredDnsInfo[1]
 		}
 
-		createResolverFile("local", opt.Get().ConnectOptions.ClusterDomain, dnsIp, dnsPort)
+		createResolverFile("local", opt.Get().Connect.ClusterDomain, dnsIp, dnsPort)
 		for _, ns := range namespaces.Items {
 			createResolverFile(fmt.Sprintf("%s.local", ns.Name), ns.Name, dnsIp, dnsPort)
 		}

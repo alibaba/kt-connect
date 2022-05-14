@@ -27,7 +27,7 @@ func NewMeshCommand() *cobra.Command {
 	}
 
 	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl mesh <service-name> [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().MeshOptions, opt.MeshFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Mesh, opt.MeshFlags())
 	return cmd
 }
 
@@ -38,27 +38,27 @@ func Mesh(resourceName string) error {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().MeshOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().Mesh.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
 	// Get service to mesh
-	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
+	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Global.Namespace)
 	if err != nil {
 		return err
 	}
 
-	if port := util.FindInvalidRemotePort(opt.Get().MeshOptions.Expose, general.GetTargetPorts(svc)); port != "" {
+	if port := util.FindInvalidRemotePort(opt.Get().Mesh.Expose, general.GetTargetPorts(svc)); port != "" {
 		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
-	log.Info().Msgf("Using %s mode", opt.Get().MeshOptions.Mode)
-	if opt.Get().MeshOptions.Mode == util.MeshModeManual {
+	log.Info().Msgf("Using %s mode", opt.Get().Mesh.Mode)
+	if opt.Get().Mesh.Mode == util.MeshModeManual {
 		err = mesh.ManualMesh(svc)
-	} else if opt.Get().MeshOptions.Mode == util.MeshModeAuto {
+	} else if opt.Get().Mesh.Mode == util.MeshModeAuto {
 		err = mesh.AutoMesh(svc)
 	} else {
-		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().MeshOptions.Mode,
+		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().Mesh.Mode,
 			util.MeshModeAuto, util.MeshModeManual)
 	}
 	if err != nil {

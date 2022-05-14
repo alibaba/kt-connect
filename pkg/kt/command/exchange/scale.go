@@ -12,25 +12,25 @@ import (
 )
 
 func ByScale(resourceName string) error {
-	app, err := general.GetDeploymentByResourceName(resourceName, opt.Get().Namespace)
+	app, err := general.GetDeploymentByResourceName(resourceName, opt.Get().Global.Namespace)
 	if err != nil {
 		return err
 	}
 
 	// record context inorder to remove after command exit
-	opt.Get().RuntimeStore.Origin = app.Name
-	opt.Get().RuntimeStore.Replicas = *app.Spec.Replicas
+	opt.Get().Runtime.Origin = app.Name
+	opt.Get().Runtime.Replicas = *app.Spec.Replicas
 
 	shadowPodName := app.Name + util.ExchangePodInfix + strings.ToLower(util.RandomString(5))
 
-	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Namespace)
-	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().ExchangeOptions.Expose,
+	log.Info().Msgf("Creating exchange shadow %s in namespace %s", shadowPodName, opt.Get().Global.Namespace)
+	if err = general.CreateShadowAndInbound(shadowPodName, opt.Get().Exchange.Expose,
 		getExchangeLabels(app), getExchangeAnnotation(), map[int]string{}); err != nil {
 		return err
 	}
 
 	down := int32(0)
-	if err = cluster.Ins().ScaleTo(app.Name, opt.Get().Namespace, &down); err != nil {
+	if err = cluster.Ins().ScaleTo(app.Name, opt.Get().Global.Namespace, &down); err != nil {
 		return err
 	}
 
@@ -40,7 +40,7 @@ func ByScale(resourceName string) error {
 func getExchangeAnnotation() map[string]string {
 	return map[string]string{
 		util.KtConfig: fmt.Sprintf("app=%s,replicas=%d",
-			opt.Get().RuntimeStore.Origin, opt.Get().RuntimeStore.Replicas),
+			opt.Get().Runtime.Origin, opt.Get().Runtime.Replicas),
 	}
 }
 

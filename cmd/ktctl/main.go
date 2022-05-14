@@ -28,7 +28,7 @@ func init() {
 
 func main() {
 	// this line must go first
-	opt.Get().RuntimeStore.Version = version
+	opt.Get().Runtime.Version = version
 
 	var rootCmd = &cobra.Command{
 		Use:   "ktctl",

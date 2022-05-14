@@ -15,26 +15,26 @@ import (
 )
 
 func setupDns(shadowPodName, shadowPodIp string) error {
-	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeHosts) {
+	if strings.HasPrefix(opt.Get().Connect.DnsMode, util.DnsModeHosts) {
 		log.Info().Msgf("Setting up dns in hosts mode")
 		dump2HostsNamespaces := ""
 		pos := len(util.DnsModeHosts)
-		if len(opt.Get().ConnectOptions.DnsMode) > pos + 1 && opt.Get().ConnectOptions.DnsMode[pos:pos+1] == ":" {
-			dump2HostsNamespaces = opt.Get().ConnectOptions.DnsMode[pos+1:]
+		if len(opt.Get().Connect.DnsMode) > pos + 1 && opt.Get().Connect.DnsMode[pos:pos+1] == ":" {
+			dump2HostsNamespaces = opt.Get().Connect.DnsMode[pos+1:]
 		}
 		if err := dumpToHost(dump2HostsNamespaces); err != nil {
 			return err
 		}
-	} else if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
+	} else if opt.Get().Connect.DnsMode == util.DnsModePodDns {
 		log.Info().Msgf("Setting up dns in pod mode")
 		return dns.Ins().SetNameServer(shadowPodIp)
-	} else if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
+	} else if strings.HasPrefix(opt.Get().Connect.DnsMode, util.DnsModeLocalDns) {
 		log.Info().Msgf("Setting up dns in local mode")
-		svcToIp, headlessPods := getServiceHosts(opt.Get().Namespace, true)
+		svcToIp, headlessPods := getServiceHosts(opt.Get().Global.Namespace, true)
 		if err := dns.DumpHosts(svcToIp, ""); err != nil {
 			return err
 		}
-		watchServicesAndPods(opt.Get().Namespace, svcToIp, headlessPods, true)
+		watchServicesAndPods(opt.Get().Global.Namespace, svcToIp, headlessPods, true)
 
 		forwardedPodPort := util.GetRandomTcpPort()
 		if err := transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort); err != nil {
@@ -45,17 +45,17 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		if util.IsWindows() {
 			dnsPort = common.StandardDnsPort
 		} else if util.IsMacos() {
-			dnsPort = opt.Get().ConnectOptions.DnsPort
+			dnsPort = opt.Get().Connect.DnsPort
 		}
 		// must set up name server before change dns config
 		// otherwise the upstream name server address will be incorrect in linux
-		if err := dns.SetupLocalDns(forwardedPodPort, dnsPort, getDnsOrder(opt.Get().ConnectOptions.DnsMode)); err != nil {
+		if err := dns.SetupLocalDns(forwardedPodPort, dnsPort, getDnsOrder(opt.Get().Connect.DnsMode)); err != nil {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
 		return dns.Ins().SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
-		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().ConnectOptions.DnsMode,
+		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().Connect.DnsMode,
 			util.DnsModeLocalDns, util.DnsModePodDns, util.DnsModeHosts)
 	}
 	return nil
@@ -93,7 +93,7 @@ func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessP
 }
 
 func dumpToHost(targetNamespaces string) error {
-	namespacesToDump := []string{opt.Get().Namespace}
+	namespacesToDump := []string{opt.Get().Global.Namespace}
 	if targetNamespaces != "" {
 		namespacesToDump = []string{}
 		for _, ns := range strings.Split(targetNamespaces, ",") {
@@ -138,11 +138,11 @@ func getServiceHosts(namespace string, shortDomainOnly bool) (map[string]string,
 			if shortDomainOnly {
 				hosts[service.Name] = ip
 			} else {
-				if namespace == opt.Get().Namespace {
+				if namespace == opt.Get().Global.Namespace {
 					hosts[service.Name] = ip
 				}
 				hosts[fmt.Sprintf("%s.%s", service.Name, namespace)] = ip
-				hosts[fmt.Sprintf("%s.%s.svc.%s", service.Name, namespace, opt.Get().ConnectOptions.ClusterDomain)] = ip
+				hosts[fmt.Sprintf("%s.%s.svc.%s", service.Name, namespace, opt.Get().Connect.ClusterDomain)] = ip
 			}
 		}
 	}
@@ -151,7 +151,7 @@ func getServiceHosts(namespace string, shortDomainOnly bool) (map[string]string,
 
 func getOrCreateShadow() (string, string, string, error) {
 	shadowPodName := fmt.Sprintf("kt-connect-shadow-%s", strings.ToLower(util.RandomString(5)))
-	if opt.Get().ConnectOptions.SharedShadow {
+	if opt.Get().Connect.SharedShadow {
 		shadowPodName = fmt.Sprintf("kt-connect-shadow-daemon")
 	}
 
@@ -171,12 +171,12 @@ func getEnvs() map[string]string {
 		log.Debug().Msgf("Found local domains: %s", localDomains)
 		envs[common.EnvVarLocalDomains] = localDomains
 	}
-	if strings.HasPrefix(opt.Get().ConnectOptions.DnsMode, util.DnsModeLocalDns) {
+	if strings.HasPrefix(opt.Get().Connect.DnsMode, util.DnsModeLocalDns) {
 		envs[common.EnvVarDnsProtocol] = "tcp"
 	} else {
 		envs[common.EnvVarDnsProtocol] = "udp"
 	}
-	if opt.Get().Debug {
+	if opt.Get().Global.Debug {
 		envs[common.EnvVarLogLevel] = "debug"
 	} else {
 		envs[common.EnvVarLogLevel] = "info"
@@ -188,7 +188,7 @@ func getLabels() map[string]string {
 	labels := map[string]string{
 		util.KtRole:    util.RoleConnectShadow,
 	}
-	if opt.Get().UseShadowDeployment {
+	if opt.Get().Global.UseShadowDeployment {
 		labels[util.KtTarget] = util.RandomString(20)
 	}
 	return labels

@@ -119,7 +119,7 @@ func (k *Kubernetes) ExecInPod(containerName, podName, namespace string, cmd ...
 
 	var stdout, stderr bytes.Buffer
 	log.Debug().Msgf("Execute command %v in %s:%s", cmd, podName, containerName)
-	err := execute("POST", req.URL(), opt.Get().RuntimeStore.RestConfig, nil, &stdout, &stderr, false)
+	err := execute("POST", req.URL(), opt.Get().Runtime.RestConfig, nil, &stdout, &stderr, false)
 	stdoutMsg := util.RemoveColor(strings.TrimSpace(stdout.String()))
 	stderrMsg := util.RemoveColor(strings.TrimSpace(stderr.String()))
 	rawErrMsg := util.ExtractErrorMessage(stderrMsg)

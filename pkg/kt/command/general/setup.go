@@ -55,9 +55,9 @@ func Prepare() error {
 	}
 
 	log.Info().Msgf("KtConnect %s start at %d (%s %s)",
-		opt.Get().RuntimeStore.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
+		opt.Get().Runtime.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
 
-	if !opt.Get().SkipTimeDiff {
+	if !opt.Get().Global.SkipTimeDiff {
 		if err := cluster.SetupTimeDifference(); err != nil {
 			return err
 		}
@@ -66,10 +66,10 @@ func Prepare() error {
 }
 
 func SetupLogger() {
-	if opt.Get().Debug {
+	if opt.Get().Global.Debug {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
-	util.PrepareLogger(opt.Get().Debug)
+	util.PrepareLogger(opt.Get().Global.Debug)
 	k8sRuntime.ErrorHandlers = []func(error){
 		func(err error) {
 			_, _ = util.BackgroundLogger.Write([]byte(err.Error() + util.Eol))
@@ -83,7 +83,7 @@ func SetupLogger() {
 func SetupProcess(componentName string) (chan os.Signal, error) {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
-	opt.Get().RuntimeStore.Component = componentName
+	opt.Get().Runtime.Component = componentName
 	return ch, util.WritePidFile(componentName, ch)
 }
 
@@ -95,8 +95,8 @@ func mergeConfigFile() {
 
 // combineKubeOpts set default options of kubectl if not assign
 func combineKubeOpts() error {
-	if opt.Get().KubeConfig != ""{
-		_ = os.Setenv(util.EnvKubeConfig, opt.Get().KubeConfig)
+	if opt.Get().Global.KubeConfig != ""{
+		_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.KubeConfig)
 	}
 	config, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	if len(customizeKubeConfig) > 50 {
@@ -108,25 +108,25 @@ func combineKubeOpts() error {
 		// should not happen, but issue-275 and issue-285 may cause by it
 		return fmt.Errorf("failed to parse kubeconfig")
 	}
-	if len(opt.Get().KubeContext) > 0 {
+	if len(opt.Get().Global.KubeContext) > 0 {
 		found := false
 		for name, _ := range config.Contexts {
-			if name == opt.Get().KubeContext {
+			if name == opt.Get().Global.KubeContext {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", opt.Get().KubeContext)
+			return fmt.Errorf("context '%s' not exist, check your kubeconfig file please", opt.Get().Global.KubeContext)
 		}
-		config.CurrentContext = opt.Get().KubeContext
+		config.CurrentContext = opt.Get().Global.KubeContext
 	}
-	if len(opt.Get().Namespace) == 0 {
+	if len(opt.Get().Global.Namespace) == 0 {
 		ctx, exists := config.Contexts[config.CurrentContext]
 		if exists && len(ctx.Namespace) > 0 {
-			opt.Get().Namespace = config.Contexts[config.CurrentContext].Namespace
+			opt.Get().Global.Namespace = config.Contexts[config.CurrentContext].Namespace
 		} else {
-			opt.Get().Namespace = util.DefaultNamespace
+			opt.Get().Global.Namespace = util.DefaultNamespace
 		}
 	}
 	kubeconfigGetter := func() clientcmd.KubeconfigGetter {
@@ -142,8 +142,8 @@ func combineKubeOpts() error {
 	if err != nil {
 		return err
 	}
-	opt.Get().RuntimeStore.Clientset = clientSet
-	opt.Get().RuntimeStore.RestConfig = restConfig
+	opt.Get().Runtime.Clientset = clientSet
+	opt.Get().Runtime.RestConfig = restConfig
 
 	clusterName := "none"
 	for name, context := range config.Contexts {

@@ -17,19 +17,19 @@ import (
 func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string, exposePorts string, portNameDict map[int]string) (
 	string, string, string, error) {
 	// record context data
-	opt.Get().RuntimeStore.Shadow = name
+	opt.Get().Runtime.Shadow = name
 
 	// extra labels must be applied after origin labels
-	for key, val := range util.String2Map(opt.Get().WithLabels) {
+	for key, val := range util.String2Map(opt.Get().Global.WithLabels) {
 		labels[key] = val
 	}
-	for key, val := range util.String2Map(opt.Get().WithAnnotations) {
+	for key, val := range util.String2Map(opt.Get().Global.WithAnnotations) {
 		annotations[key] = val
 	}
 	annotations[util.KtUser] = util.GetLocalUserName()
 	resourceMeta := ResourceMeta{
 		Name:        name,
-		Namespace:   opt.Get().Namespace,
+		Namespace:   opt.Get().Global.Namespace,
 		Labels:      labels,
 		Annotations: annotations,
 	}
@@ -56,7 +56,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 		}
 	}
 
-	if opt.Get().RuntimeStore.Component == util.ComponentConnect && opt.Get().ConnectOptions.SharedShadow {
+	if opt.Get().Runtime.Component == util.ComponentConnect && opt.Get().Connect.SharedShadow {
 		pod, generator, err2 := k.tryGetExistingShadows(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
@@ -68,7 +68,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 
 	podMeta := PodMetaAndSpec{
 		Meta:  &resourceMeta,
-		Image: opt.Get().Image,
+		Image: opt.Get().Global.Image,
 		Envs:  envs,
 		Ports: ports,
 	}
@@ -97,13 +97,13 @@ func (k *Kubernetes) createShadow(metaAndSpec *PodMetaAndSpec, sshKeyMeta *SSHke
 }
 
 func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) (*coreV1.Pod, error) {
-	if opt.Get().UseShadowDeployment {
+	if opt.Get().Global.UseShadowDeployment {
 		if err := k.createShadowDeployment(metaAndSpec, sshcm); err != nil {
 			return nil, err
 		}
 		log.Info().Msgf("Creating shadow deployment %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
 		delete(metaAndSpec.Meta.Labels, util.ControlBy)
-		pods, err := k.WaitPodsReady(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+		pods, err := k.WaitPodsReady(metaAndSpec.Meta.Labels, metaAndSpec.Meta.Namespace, opt.Get().Global.PodCreationWaitTime)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +113,7 @@ func (k *Kubernetes) createAndGetPod(metaAndSpec *PodMetaAndSpec, sshcm string) 
 			return nil, err
 		}
 		log.Info().Msgf("Deploying shadow pod %s in namespace %s", metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace)
-		return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().PodCreationWaitTime)
+		return k.WaitPodReady(metaAndSpec.Meta.Name, metaAndSpec.Meta.Namespace, opt.Get().Global.PodCreationWaitTime)
 	}
 }
 
@@ -166,7 +166,7 @@ func (k *Kubernetes) appendSshVolume(podSpec *coreV1.PodSpec, sshcm string) {
 func (k *Kubernetes) tryGetExistingShadows(resourceMeta *ResourceMeta, sshKeyMeta *SSHkeyMeta) (*coreV1.Pod, *util.SSHGenerator, error) {
 	var app *appV1.Deployment
 	var pod *coreV1.Pod
-	if opt.Get().UseShadowDeployment {
+	if opt.Get().Global.UseShadowDeployment {
 		app2, err := k.GetDeployment(resourceMeta.Name, resourceMeta.Namespace)
 		if err != nil {
 			// shared deployment not found is ok, return without error
@@ -213,7 +213,7 @@ func (k *Kubernetes) tryGetExistingShadows(resourceMeta *ResourceMeta, sshKeyMet
 		return nil, nil, err
 	}
 
-	if opt.Get().UseShadowDeployment {
+	if opt.Get().Global.UseShadowDeployment {
 		log.Info().Msgf("Found shadow daemon deployment, reuse it")
 		if err = k.IncreaseDeploymentRef(resourceMeta.Name, resourceMeta.Namespace); err != nil {
 			return nil, nil, err

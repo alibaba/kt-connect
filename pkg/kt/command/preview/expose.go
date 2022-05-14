@@ -30,13 +30,13 @@ func exposeLocalService(serviceName, shadowPodName string, labels, annotations m
 
 	envs := make(map[string]string)
 	_, podName, privateKeyPath, err := cluster.Ins().GetOrCreateShadow(shadowPodName, labels, annotations, envs,
-		opt.Get().PreviewOptions.Expose, map[int]string{})
+		opt.Get().Preview.Expose, map[int]string{})
 	if err != nil {
 		return err
 	}
 	log.Info().Msgf("Created shadow pod %s", podName)
 
-	portPairs := strings.Split(opt.Get().PreviewOptions.Expose, ",")
+	portPairs := strings.Split(opt.Get().Preview.Expose, ",")
 	ports := make(map[int]int)
 	for _, exposePort := range portPairs {
 		_, remotePort, err2 := util.ParsePortMapping(exposePort)
@@ -49,22 +49,22 @@ func exposeLocalService(serviceName, shadowPodName string, labels, annotations m
 	if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 		Meta: &cluster.ResourceMeta{
 			Name:        serviceName,
-			Namespace:   opt.Get().Namespace,
+			Namespace:   opt.Get().Global.Namespace,
 			Labels:      map[string]string{},
 			Annotations: map[string]string{},
 		},
-		External:  opt.Get().PreviewOptions.External,
+		External:  opt.Get().Preview.External,
 		Ports:     ports,
 		Selectors: labels,
 	}); err != nil {
 		return err
 	}
-	opt.Get().RuntimeStore.Service = serviceName
+	opt.Get().Runtime.Service = serviceName
 
-	if _, err = transmission.ForwardPodToLocal(opt.Get().PreviewOptions.Expose, podName, privateKeyPath); err != nil {
+	if _, err = transmission.ForwardPodToLocal(opt.Get().Preview.Expose, podName, privateKeyPath); err != nil {
 		return err
 	}
 
-	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podName, opt.Get().PreviewOptions.Expose, opt.Get().PreviewOptions.Expose)
+	log.Info().Msgf("Forward remote %s:%v -> 127.0.0.1:%v", podName, opt.Get().Preview.Expose, opt.Get().Preview.Expose)
 	return nil
 }
