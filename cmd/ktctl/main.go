@@ -54,7 +54,7 @@ func main() {
 
 	// process will hang here
 	if err := rootCmd.Execute(); err != nil {
-		log.Error().Msgf("Failed to start: %s", err)
+		log.Error().Msgf("Exit: %s", err)
 	}
 	general.CleanupWorkspace()
 }
