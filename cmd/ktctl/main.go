@@ -28,7 +28,7 @@ func init() {
 
 func main() {
 	// this line must go first
-	opt.Get().Runtime.Version = version
+	opt.Store.Version = version
 
 	var rootCmd = &cobra.Command{
 		Use:   "ktctl",
@@ -50,7 +50,7 @@ func main() {
 	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
-	opt.SetOptions(rootCmd, rootCmd.PersistentFlags(), opt.Get(), opt.GlobalFlags())
+	opt.SetOptions(rootCmd, rootCmd.PersistentFlags(), opt.Get().Global, opt.GlobalFlags())
 
 	// process will hang here
 	if err := rootCmd.Execute(); err != nil {

@@ -55,7 +55,7 @@ func Prepare() error {
 	}
 
 	log.Info().Msgf("KtConnect %s start at %d (%s %s)",
-		opt.Get().Runtime.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
+		opt.Store.Version, os.Getpid(), runtime.GOOS, runtime.GOARCH)
 
 	if !opt.Get().Global.SkipTimeDiff {
 		if err := cluster.SetupTimeDifference(); err != nil {
@@ -83,7 +83,7 @@ func SetupLogger() {
 func SetupProcess(componentName string) (chan os.Signal, error) {
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGQUIT)
-	opt.Get().Runtime.Component = componentName
+	opt.Store.Component = componentName
 	return ch, util.WritePidFile(componentName, ch)
 }
 
@@ -142,8 +142,8 @@ func combineKubeOpts() error {
 	if err != nil {
 		return err
 	}
-	opt.Get().Runtime.Clientset = clientSet
-	opt.Get().Runtime.RestConfig = restConfig
+	opt.Store.Clientset = clientSet
+	opt.Store.RestConfig = restConfig
 
 	clusterName := "none"
 	for name, context := range config.Contexts {

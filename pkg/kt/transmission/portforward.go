@@ -52,10 +52,10 @@ func setupPortForwardToLocal(podName string, remotePort, localPort int, isInitCo
 // PortForward call port forward api
 func portForward(podName string, remotePort, localPort int, ready chan struct{}) error {
 	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", opt.Get().Global.Namespace, podName)
-	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Get().Runtime.RestConfig.Host)
-	apiUrl, err := parseReqHost(opt.Get().Runtime.RestConfig.Host, apiPath)
+	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Store.RestConfig.Host)
+	apiUrl, err := parseReqHost(opt.Store.RestConfig.Host, apiPath)
 
-	transport, upgrader, err := spdy.RoundTripperFor(opt.Get().Runtime.RestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(opt.Store.RestConfig)
 	if err != nil {
 		return err
 	}

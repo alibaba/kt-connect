@@ -31,7 +31,7 @@ func AutoMesh(svc *coreV1.Service) error {
 	// Parse or generate mesh kv
 	meshKey, meshVersion := getVersion(opt.Get().Mesh.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
-	opt.Get().Runtime.Mesh = versionMark
+	opt.Store.Mesh = versionMark
 
 	portToNames := general.GetTargetPorts(svc)
 	ports := make(map[int]int)
@@ -94,7 +94,7 @@ func AutoMesh(svc *coreV1.Service) error {
 	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Global.Namespace, routerLabels); err != nil {
 		return err
 	}
-	opt.Get().Runtime.Origin = svc.Name
+	opt.Store.Origin = svc.Name
 
 	// Create shadow pod
 	annotations := map[string]string{
@@ -157,7 +157,7 @@ func createShadowService(shadowSvcName string, ports map[int]int,
 		return err
 	}
 
-	opt.Get().Runtime.Service = shadowSvcName
+	opt.Store.Service = shadowSvcName
 	log.Info().Msgf("Service %s created", shadowSvcName)
 	return nil
 }
@@ -211,7 +211,7 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")
-	opt.Get().Runtime.Router = routerPodName
+	opt.Store.Router = routerPodName
 	return nil
 }
 

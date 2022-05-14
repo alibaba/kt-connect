@@ -53,7 +53,7 @@ func BySelector(resourceName string) error {
 	}
 
 	// Let target service select shadow pod
-	opt.Get().Runtime.Origin = svc.Name
+	opt.Store.Origin = svc.Name
 	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Global.Namespace, shadowLabels); err != nil {
 		return err
 	}

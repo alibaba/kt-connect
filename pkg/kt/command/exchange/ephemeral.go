@@ -31,7 +31,7 @@ func ByEphemeralContainer(resourceName string) error {
 		}
 
 		// record data
-		opt.Get().Runtime.Shadow = util.Append(opt.Get().Runtime.Shadow, pod.Name)
+		opt.Store.Shadow = util.Append(opt.Store.Shadow, pod.Name)
 
 		localSSHPort, err2 := transmission.ForwardPodToLocal(opt.Get().Exchange.Expose, pod.Name, privateKey)
 		if err2 != nil {

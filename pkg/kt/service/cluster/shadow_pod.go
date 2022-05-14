@@ -17,7 +17,7 @@ import (
 func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs map[string]string, exposePorts string, portNameDict map[int]string) (
 	string, string, string, error) {
 	// record context data
-	opt.Get().Runtime.Shadow = name
+	opt.Store.Shadow = name
 
 	// extra labels must be applied after origin labels
 	for key, val := range util.String2Map(opt.Get().Global.WithLabels) {
@@ -56,7 +56,7 @@ func (k *Kubernetes) GetOrCreateShadow(name string, labels, annotations, envs ma
 		}
 	}
 
-	if opt.Get().Runtime.Component == util.ComponentConnect && opt.Get().Connect.SharedShadow {
+	if opt.Store.Component == util.ComponentConnect && opt.Get().Connect.SharedShadow {
 		pod, generator, err2 := k.tryGetExistingShadows(&resourceMeta, &sshKeyMeta)
 		if err2 != nil {
 			return "", "", "", err2
