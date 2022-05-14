@@ -1,9 +1,5 @@
 package options
 
-import (
-	"github.com/alibaba/kt-connect/pkg/kt/util"
-)
-
 // ConnectOptions ...
 type ConnectOptions struct {
 	Global           bool
@@ -57,7 +53,6 @@ type CleanOptions struct {
 
 // ConfigOptions ...
 type ConfigOptions struct {
-
 }
 
 // GlobalOptions ...
@@ -99,14 +94,14 @@ var opt *DaemonOptions
 func Get() *DaemonOptions {
 	if opt == nil {
 		opt = &DaemonOptions{
-			Global: &GlobalOptions {
-				Namespace:  util.DefaultNamespace,
-			},
+			Global:   &GlobalOptions{},
 			Connect:  &ConnectOptions{},
 			Exchange: &ExchangeOptions{},
 			Mesh:     &MeshOptions{},
 			Preview:  &PreviewOptions{},
+			Recover:  &RecoverOptions{},
 			Clean:    &CleanOptions{},
+			Config:   &ConfigOptions{},
 		}
 	}
 	return opt

@@ -24,12 +24,12 @@ func Set(args []string) error {
 	}
 	err = setConfigValue(config, key, value)
 	if err != nil {
-		return fmt.Errorf("%s, please check available config items with 'ktctl config show'", err)
+		return fmt.Errorf("%s, please check available config items with 'ktctl config show --all'", err)
 	}
 	return saveConfig(config)
 }
 
-func setConfigValue(config map[interface{}]interface{}, key string, value string) error {
+func setConfigValue(config map[string]interface{}, key string, value string) error {
 	group, item, err := parseConfigItem(key)
 	if err != nil {
 		return err

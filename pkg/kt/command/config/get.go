@@ -15,7 +15,7 @@ func Get(args []string) error {
 	for _, item := range args {
 		v, err2 := getConfigValue(config, item)
 		if err2 != nil {
-			return fmt.Errorf("config item '%s' is invalid, please check available config items with 'ktctl config show'", item)
+			return fmt.Errorf("config item '%s' is invalid, please check available config items with 'ktctl config show --all'", item)
 		}
 		if v != nil {
 			fmt.Printf("%s = %v\n", item, v)
@@ -26,7 +26,7 @@ func Get(args []string) error {
 	return nil
 }
 
-func getConfigValue(config map[interface{}]interface{}, key string) (interface{}, error) {
+func getConfigValue(config map[string]interface{}, key string) (interface{}, error) {
 	group, item, err := parseConfigItem(key)
 	if err != nil {
 		return nil, err

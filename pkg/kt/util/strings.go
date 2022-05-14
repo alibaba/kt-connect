@@ -91,6 +91,14 @@ func Capitalize(word string) string {
 	return strings.ReplaceAll(capitalized, "-", "")
 }
 
+// DashSeparated convert capitalized string to dash separated string
+func DashSeparated(word string) string {
+	pos := regexp.MustCompile("([^-])([A-Z])")
+	dashSeparated := pos.ReplaceAllString(word, "$1-$2")
+	dashSeparated = pos.ReplaceAllString(dashSeparated, "$1-$2")
+	return strings.ToLower(dashSeparated)
+}
+
 // UnCapitalize convert dash separated string to capitalized string
 // TODO: 0.4 - remove this method, use DashSeparated() instead
 func UnCapitalize(word string) string {

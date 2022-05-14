@@ -10,7 +10,7 @@ func GlobalFlags() []OptionConfig {
 		{
 			Target:       "Namespace",
 			Alias:        "n",
-			DefaultValue: "",
+			DefaultValue: util.DefaultNamespace,
 			Description:  "Specify target namespace (otherwise follow kubeconfig current context)",
 		},
 		{

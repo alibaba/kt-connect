@@ -52,3 +52,10 @@ func Test_Capitalize(t *testing.T) {
 	require.Equal(t, "TextWord", Capitalize("TeXt-wOrD"))
 	require.Equal(t, "TextWord", Capitalize("TEXT-WORD"))
 }
+
+func Test_DashSeparated(t *testing.T) {
+	require.Equal(t, "text", DashSeparated("Text"))
+	require.Equal(t, "text-word", DashSeparated("TextWord"))
+	require.Equal(t, "text-word", DashSeparated("text-word"))
+	require.Equal(t, "t-e-x-t-w-o-r-d", DashSeparated("TEXT-WORD"))
+}

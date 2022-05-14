@@ -12,9 +12,17 @@ import (
 	"strings"
 )
 
-func loadConfig() (map[interface{}]interface{}, error) {
-	m := make(map[interface{}]interface{})
-	data, err := ioutil.ReadFile(fmt.Sprintf("%s/config", util.KtHome))
+func configFile() string {
+	return fmt.Sprintf("%s/config", util.KtHome)
+}
+
+func profileFile(profile string) string {
+	return fmt.Sprintf("%s/profile/%s", util.KtHome, profile)
+}
+
+func loadConfig() (map[string]interface{}, error) {
+	m := make(map[string]interface{})
+	data, err := ioutil.ReadFile(configFile())
 	if err != nil {
 		log.Debug().Msgf("Failed to read config file: %s", err)
 		if os.IsNotExist(err) {
@@ -30,17 +38,17 @@ func loadConfig() (map[interface{}]interface{}, error) {
 	return m, nil
 }
 
-func saveConfig(config map[interface{}]interface{}) error {
+func saveConfig(config map[string]interface{}) error {
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(fmt.Sprintf("%s/config", util.KtHome), data, 0644)
+	return ioutil.WriteFile(configFile(), data, 0644)
 }
 
 func parseConfigItem(key string) (string, string, error) {
 	if strings.Count(key, ".") != 1 {
-		return "", "", fmt.Errorf("config item %s is invalid", key)
+		return "", "", fmt.Errorf("config item '%s' is invalid", key)
 	}
 	parts := strings.Split(key, ".")
 	group, exist := reflect.TypeOf(opt.DaemonOptions{}).FieldByName(util.Capitalize(parts[0]))
