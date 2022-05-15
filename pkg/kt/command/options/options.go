@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"reflect"
+	"strconv"
 )
 
 // ConnectOptions ...
@@ -122,29 +123,38 @@ func Get() *DaemonOptions {
 }
 
 func mergeOptions(opt *DaemonOptions, data []byte) {
-	config := make(map[string]interface{})
+	config := make(map[string]map[string]string)
 	err := yaml.Unmarshal(data, &config)
 	if err != nil {
 		log.Warn().Msgf("Invalid config content, skipping ...")
 		return
 	}
 	for group, item := range config {
-		for k, v := range item.(map[string]interface{}) {
+		for key, value := range item {
 			groupField := reflect.ValueOf(opt).Elem().FieldByName(util.Capitalize(group))
 			if groupField.IsValid() {
-				itemField := groupField.Elem().FieldByName(util.Capitalize(k))
+				itemField := groupField.Elem().FieldByName(util.Capitalize(key))
 				if itemField.IsValid() {
 					switch itemField.Kind() {
 					case reflect.String:
-						itemField.SetString(v.(string))
+						itemField.SetString(value)
 					case reflect.Int:
-						itemField.SetInt(int64(v.(int)))
+						if v, err2 := strconv.Atoi(value); err2 == nil {
+							itemField.SetInt(int64(v))
+						} else {
+							log.Warn().Msgf("Config item '%s.%s' value is not integer: %s", group, key, value)
+						}
 					case reflect.Bool:
-						itemField.SetBool(v.(bool))
+						if v, err2 := strconv.ParseBool(value); err2 == nil {
+							itemField.SetBool(v)
+						} else {
+							log.Warn().Msgf("Config item '%s.%s' value is not bool: %s", group, key, value)
+						}
 					default:
 						log.Warn().Msgf("Config item '%s.%s' of invalid type: %s",
-							group, k, itemField.Kind().String())
+							group, key, itemField.Kind().String())
 					}
+					log.Debug().Msgf("Loaded %s.%s = %s", group, key, value)
 				}
 			}
 		}
