@@ -8,6 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // NewPreviewCommand return new preview command
@@ -16,12 +17,14 @@ func NewPreviewCommand() *cobra.Command {
 		Use:  "preview",
 		Short: "Expose a local service to kubernetes cluster",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("a service name must be specified")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("a service name must be specified")
-			}
 			return Preview(args[0])
 		},
 	}

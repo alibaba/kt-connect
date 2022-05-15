@@ -17,12 +17,14 @@ func NewExchangeCommand() *cobra.Command {
 		Use:  "exchange",
 		Short: "Redirect all requests of specified kubernetes service to local",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to exchange is required")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("name of service to exchange is required")
-			}
 			return Exchange(args[0])
 		},
 	}

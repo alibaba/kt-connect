@@ -8,6 +8,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // NewMeshCommand return new mesh command
@@ -16,12 +17,14 @@ func NewMeshCommand() *cobra.Command {
 		Use:  "mesh",
 		Short: "Redirect marked requests of specified kubernetes service to local",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to mesh is required")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("name of service to mesh is required")
-			}
 			return Mesh(args[0])
 		},
 	}

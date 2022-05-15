@@ -7,6 +7,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // NewCleanCommand return new connect command
@@ -15,6 +16,9 @@ func NewCleanCommand() *cobra.Command {
 		Use:  "clean",
 		Short: "Delete unavailing resources created by kt from kubernetes cluster",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 {
+				return fmt.Errorf("too many options specified (%s)", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
