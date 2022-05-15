@@ -12,30 +12,26 @@ import (
 	"strings"
 )
 
-func configFile() string {
-	return fmt.Sprintf("%s/config", util.KtHome)
-}
-
 func profileFile(profile string) string {
 	return fmt.Sprintf("%s/profile/%s", util.KtHome, profile)
 }
 
 func loadConfig() (map[string]interface{}, error) {
-	m := make(map[string]interface{})
-	data, err := ioutil.ReadFile(configFile())
+	config := make(map[string]interface{})
+	data, err := ioutil.ReadFile(util.KtConfigFile)
 	if err != nil {
 		log.Debug().Msgf("Failed to read config file: %s", err)
 		if os.IsNotExist(err) {
-			return m, nil
+			return config, nil
 		}
-		return m, err
+		return config, err
 	}
-	err = yaml.Unmarshal(data, &m)
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		log.Debug().Msgf("Invalid config content: %s", err)
-		return m, err
+		return config, err
 	}
-	return m, nil
+	return config, nil
 }
 
 func saveConfig(config map[string]interface{}) error {
@@ -43,7 +39,7 @@ func saveConfig(config map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(configFile(), data, 0644)
+	return ioutil.WriteFile(util.KtConfigFile, data, 0644)
 }
 
 func parseConfigItem(key string) (string, string, error) {

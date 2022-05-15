@@ -14,12 +14,6 @@ func GlobalFlags() []OptionConfig {
 			Description:  "Specify target namespace (otherwise follow kubeconfig current context)",
 		},
 		{
-			Target:       "Kubeconfig",
-			Alias:        "c",
-			DefaultValue: "",
-			Description:  "Specify path of KubeConfig file",
-		},
-		{
 			Target:       "Image",
 			Alias:        "i",
 			DefaultValue: fmt.Sprintf("%s:v%s", util.ImageKtShadow, Store.Version),
@@ -84,21 +78,33 @@ func GlobalFlags() []OptionConfig {
 			Description:  "Always re-pull the latest shadow and router image",
 		},
 		{
-			Target:       "Context",
-			DefaultValue: "",
-			Description:  "Specify current context of kubeconfig",
-		},
-		{
-			Target:       "PodQuota",
-			DefaultValue: "",
-			Description:  "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'",
-		},
-		{
 			Target:       "AsWorker",
 			DefaultValue: false,
 			Description:  "Run as worker process",
 			Hidden:       true,
 		},
 	}
+	if _, exist := GetCustomizeKubeConfig(); !exist {
+		flags = append(flags, []OptionConfig{
+			{
+				Target:       "Kubeconfig",
+				Alias:        "c",
+				DefaultValue: "",
+				Description:  "Specify path of KubeConfig file",
+			},
+			{
+				Target:       "Context",
+				DefaultValue: "",
+				Description:  "Specify current context of kubeconfig",
+			},
+		}...)
+	}
+	flags = append(flags, []OptionConfig{
+		{
+			Target:       "PodQuota",
+			DefaultValue: "",
+			Description:  "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'",
+		},
+	}...)
 	return flags
 }

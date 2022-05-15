@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -18,7 +19,7 @@ func Save(args []string) error {
 	if _, err := os.Stat(profile); err == nil && !overwrite {
 		return fmt.Errorf("profile '%s' already exists, '--overwrite' option is required", args[0])
 	}
-	bytesRead, err := ioutil.ReadFile(configFile())
+	bytesRead, err := ioutil.ReadFile(util.KtConfigFile)
 	if err != nil {
 		return fmt.Errorf("unable to read config file: %s", err)
 	}

@@ -1,5 +1,13 @@
 package options
 
+import (
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
+	"reflect"
+)
+
 // ConnectOptions ...
 type ConnectOptions struct {
 	Global           bool
@@ -103,6 +111,42 @@ func Get() *DaemonOptions {
 			Clean:    &CleanOptions{},
 			Config:   &ConfigOptions{},
 		}
+		if customize, exist := GetCustomizeKtConfig(); exist {
+			mergeOptions(opt, []byte(customize))
+		}
+		if configData, err := ioutil.ReadFile(util.KtConfigFile); err == nil {
+			mergeOptions(opt, configData)
+		}
 	}
 	return opt
+}
+
+func mergeOptions(opt *DaemonOptions, data []byte) {
+	config := make(map[string]interface{})
+	err := yaml.Unmarshal(data, &config)
+	if err != nil {
+		log.Warn().Msgf("Invalid config content, skipping ...")
+		return
+	}
+	for group, item := range config {
+		for k, v := range item.(map[string]interface{}) {
+			groupField := reflect.ValueOf(opt).Elem().FieldByName(util.Capitalize(group))
+			if groupField.IsValid() {
+				itemField := groupField.Elem().FieldByName(util.Capitalize(k))
+				if itemField.IsValid() {
+					switch itemField.Kind() {
+					case reflect.String:
+						itemField.SetString(v.(string))
+					case reflect.Int:
+						itemField.SetInt(int64(v.(int)))
+					case reflect.Bool:
+						itemField.SetBool(v.(bool))
+					default:
+						log.Warn().Msgf("Config item '%s.%s' of invalid type: %s",
+							group, k, itemField.Kind().String())
+					}
+				}
+			}
+		}
+	}
 }

@@ -44,9 +44,6 @@ Use "{{.CommandPath}} [command] --help" for more information about a command.{{e
 
 // Prepare setup log level, time difference and kube config
 func Prepare() error {
-	// must merge config file before any other code which may use the option object
-	mergeConfigFile()
-
 	// then setup logs
 	SetupLogger()
 
@@ -87,20 +84,16 @@ func SetupProcess(componentName string) (chan os.Signal, error) {
 	return ch, util.WritePidFile(componentName, ch)
 }
 
-// mergeConfigFile merge config file and command line options
-func mergeConfigFile() {
-	// this method is invoke before logger setup, don't do any logging here
-	// TODO: read config file
-}
-
 // combineKubeOpts set default options of kubectl if not assign
-func combineKubeOpts() error {
-	if opt.Get().Global.Kubeconfig != ""{
-		_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.Kubeconfig)
-	}
-	config, err := clientcmd.NewDefaultClientConfigLoadingRules().Load()
-	if len(customizeKubeConfig) > 50 {
-		config, err = clientcmd.Load([]byte(customizeKubeConfig))
+func combineKubeOpts() (err error) {
+	var config *clientcmdapi.Config
+	if customize, exist := opt.GetCustomizeKubeConfig(); exist {
+		config, err = clientcmd.Load([]byte(customize))
+	} else {
+		if opt.Get().Global.Kubeconfig != ""{
+			_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.Kubeconfig)
+		}
+		config, err = clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	}
 	if err != nil {
 		return fmt.Errorf("failed to parse kubeconfig: %s", err)

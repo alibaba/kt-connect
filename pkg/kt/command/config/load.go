@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"io/ioutil"
 	"os"
@@ -19,7 +20,7 @@ func Load(args []string) error {
 	if err != nil {
 		return fmt.Errorf("unable to read profile file: %s", err)
 	}
-	err = ioutil.WriteFile(configFile(), bytesRead, 0644)
+	err = ioutil.WriteFile(util.KtConfigFile, bytesRead, 0644)
 	if err != nil {
 		return fmt.Errorf("unable to save config file: %s", err)
 	}

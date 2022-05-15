@@ -124,4 +124,5 @@ const (
 
 var (
 	KtHome = fmt.Sprintf("%s/.kt", UserHome)
+	KtConfigFile = fmt.Sprintf("%s/config", KtHome)
 )

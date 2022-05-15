@@ -6,7 +6,7 @@ import (
 )
 
 func Set(args []string) error {
-	if len(args) > 2 || (len(args) == 1 && !strings.Contains(args[0], "=")) {
+	if len(args) < 1 || len(args) > 2 || (len(args) == 1 && !strings.Contains(args[0], "=")) {
 		return fmt.Errorf("please use either 'set <item>=<value>' or 'set <item> <value>' format")
 	}
 	config, err := loadConfig()
