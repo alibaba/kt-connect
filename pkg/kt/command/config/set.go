@@ -29,15 +29,15 @@ func Set(args []string) error {
 	return saveConfig(config)
 }
 
-func setConfigValue(config map[string]interface{}, key string, value string) error {
+func setConfigValue(config map[string]map[string]string, key string, value string) error {
 	group, item, err := parseConfigItem(key)
 	if err != nil {
 		return err
 	}
 	if _, exist := config[group]; exist {
-		config[group].(map[string]interface{})[item] = value
+		config[group][item] = value
 	} else {
-		config[group] = map[string]interface{} { item: value }
+		config[group] = map[string]string { item: value }
 	}
 	return nil
 }

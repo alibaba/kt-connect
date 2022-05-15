@@ -16,8 +16,8 @@ func profileFile(profile string) string {
 	return fmt.Sprintf("%s/profile/%s", util.KtHome, profile)
 }
 
-func loadConfig() (map[string]interface{}, error) {
-	config := make(map[string]interface{})
+func loadConfig() (map[string]map[string]string, error) {
+	config := make(map[string]map[string]string)
 	data, err := ioutil.ReadFile(util.KtConfigFile)
 	if err != nil {
 		log.Debug().Msgf("Failed to read config file: %s", err)
@@ -34,7 +34,7 @@ func loadConfig() (map[string]interface{}, error) {
 	return config, nil
 }
 
-func saveConfig(config map[string]interface{}) error {
+func saveConfig(config map[string]map[string]string) error {
 	data, err := yaml.Marshal(config)
 	if err != nil {
 		return err

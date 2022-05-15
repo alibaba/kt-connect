@@ -25,7 +25,7 @@ func Show(args []string) error {
 			item := group.Type.Elem().Field(j)
 			itemName := util.DashSeparated(item.Name)
 			if groupValue, groupExist := config[groupName]; groupExist {
-				if itemValue, itemExist := groupValue.(map[string]interface{})[itemName]; itemExist {
+				if itemValue, itemExist := groupValue[itemName]; itemExist {
 					fmt.Printf("%s.%s = %v\n", groupName, itemName, itemValue)
 					continue
 				}
