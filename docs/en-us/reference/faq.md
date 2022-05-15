@@ -7,7 +7,7 @@ A: `ktctl` will access cluster according to local configuration of `kubectl` too
 
 #### Q: What is the minimal RBAC permission required by `ktctl` client ?
 
-A: Please check out this [cluster role yaml](https://github.com/alibaba/kt-connect/blob/feature/minimum-permissions/docs/deploy/rbac/clusterrole.yaml). 
+A: Please check out this [cluster role yaml](https://github.com/alibaba/kt-connect/blob/feature/minimum-permissions/docs/deploy/rbac/all-commands-mini.yaml). 
 
 #### Q: Encounter error of "too many open files" under MacOS/Linux ?
 
@@ -21,3 +21,9 @@ If the above error still exists after the switch, please check why the `VirtualS
 #### Q: Encounter error of "unable to do port forwarding: socat not found" when executing `ktctl` command ?
 
 A: The port mapping function of `Ktctl` depends on the `socat` tool on the cluster host, please pre-install it on each node of the cluster (Debian/Ubuntu distribution installation command: `apt-get install socat`, CentOS/RedHat distribution installation command: `yum install socat`)
+
+#### Q: After running `ktctl connect`, still got "could not resolve host" issue when accessing service domain name in cluster ?
+
+A: Rerun the `ktctl connect` command with `--debug` parameter, and observe whether there is a related domain name checking log output on the `ktctl` console when accessing it.
+If there is an error of "domain <domain-name-you-are-visiting> not exists", please check whether the cluster you are connected to and the service domain name you are visiting is correct (you can verify it by accessing the domain name from a pod in the cluster);
+If no relevant output is printed, it means that the system DNS configuration is not setting to the DNS server of kt correctly. Please raise an [issue](https://github.com/golang/go/issues) with your local operating system version and the ktctl version information, we'll look into it further.
