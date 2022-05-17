@@ -29,10 +29,15 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 		return err
 	}
 	go func() {
+		var nsList []string
 		namespaces, err := cluster.Ins().GetAllNamespaces()
 		if err != nil {
-			dnsSignal <-err
-			return
+			log.Info().Msgf("Cannot list all namespaces, set dns for '%s' only", opt.Get().Global.Namespace)
+			nsList = append(nsList, opt.Get().Global.Namespace)
+		} else {
+			for _, ns := range namespaces.Items {
+				nsList = append(nsList, ns.Name)
+			}
 		}
 
 		preferredDnsInfo := strings.Split(dnsServer, ":")
@@ -43,8 +48,8 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 		}
 
 		createResolverFile("local", opt.Get().Connect.ClusterDomain, dnsIp, dnsPort)
-		for _, ns := range namespaces.Items {
-			createResolverFile(fmt.Sprintf("%s.local", ns.Name), ns.Name, dnsIp, dnsPort)
+		for _, ns := range nsList {
+			createResolverFile(fmt.Sprintf("%s.local", ns), ns, dnsIp, dnsPort)
 		}
 		dnsSignal <- nil
 
