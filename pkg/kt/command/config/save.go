@@ -32,5 +32,5 @@ func Save(args []string) error {
 }
 
 func SaveHandle(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&overwrite, "overwrite", false, "Save even profile with the same name already exists")
+	cmd.Flags().BoolVar(&overwrite, "force", false, "Save even profile with the same name already exists")
 }

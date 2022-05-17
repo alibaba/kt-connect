@@ -13,7 +13,7 @@ import (
 )
 
 func profileFile(profile string) string {
-	return fmt.Sprintf("%s/profile/%s", util.KtHome, profile)
+	return fmt.Sprintf("%s/%s", util.KtProfileDir, profile)
 }
 
 func loadConfig() (map[string]map[string]string, error) {

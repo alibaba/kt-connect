@@ -44,7 +44,7 @@ func cleanLocalFiles() {
 	if opt.Store.Component == "" {
 		return
 	}
-	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtHome, opt.Store.Component, os.Getpid())
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", util.KtPidDir, opt.Store.Component, os.Getpid())
 	if err := os.Remove(pidFile); os.IsNotExist(err) {
 		log.Debug().Msgf("Pid file %s not exist", pidFile)
 	} else if err != nil {

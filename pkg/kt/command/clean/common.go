@@ -181,7 +181,7 @@ func TidyLocalResources() {
 }
 
 func cleanPidFiles() {
-	files, _ := ioutil.ReadDir(util.KtHome)
+	files, _ := ioutil.ReadDir(util.KtPidDir)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".pid") {
 			component, pid := parseComponentAndPid(f.Name())
@@ -189,7 +189,7 @@ func cleanPidFiles() {
 				log.Debug().Msgf("Find kt %s instance with pid %d", component, pid)
 			} else {
 				log.Info().Msgf("Removing remnant pid file %s", f.Name())
-				if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
+				if err := os.Remove(fmt.Sprintf("%s/%s", util.KtPidDir, f.Name())); err != nil {
 					log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
 				}
 			}

@@ -21,8 +21,11 @@ var (
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: util.IsWindows()})
-	_ = util.CreateDirIfNotExist(util.KtHome)
-	util.FixFileOwner(util.KtHome)
+	for _, dir := range []string{util.KtKeyDir, util.KtPidDir, util.KtLockDir, util.KtProfileDir} {
+		_ = util.CreateDirIfNotExist(dir)
+		_ = util.FixFileOwner(dir)
+	}
+	_ = util.FixFileOwner(util.KtConfigFile)
 	// TODO: 0.4 - auto remove old kt home folder .ktctl
 }
 

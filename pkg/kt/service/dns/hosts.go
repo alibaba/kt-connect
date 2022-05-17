@@ -156,7 +156,7 @@ func loadHostsFile() ([]string, error) {
 }
 
 func updateHostsFile(lines []string) error {
-	lock := flock.New(fmt.Sprintf("%s/%s", util.KtHome, util.DumpHostsLock))
+	lock := flock.New(fmt.Sprintf("%s/hosts.lock", util.KtLockDir))
 	timeoutContext, cancel := context.WithTimeout(context.TODO(), 2 * time.Second)
 	defer cancel()
 	if ok, err := lock.TryLockContext(timeoutContext, 100 * time.Millisecond); !ok {
