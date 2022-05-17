@@ -189,7 +189,7 @@ func (s *DnsServer) convertAnswer(name string, answer []dns.RR) []dns.RR {
 		}
 	}
 	for _, item := range answer {
-		if !util.Contains(item.Header().Name, cnames) {
+		if !util.Contains(cnames, item.Header().Name) {
 			item.Header().Name = name
 		}
 	}

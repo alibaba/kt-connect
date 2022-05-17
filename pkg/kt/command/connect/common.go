@@ -83,7 +83,7 @@ func watchServicesAndPods(namespace string, svcToIp map[string]string, headlessP
 			_ = dns.DumpHosts(svcToIp, namespace)
 		}, nil)
 	go cluster.Ins().WatchPod("", namespace, nil, func(pod *coreV1.Pod) {
-		if util.Contains(pod.Name, headlessPods) {
+		if util.Contains(headlessPods, pod.Name) {
 			// it may take some time for new pod get assign an ip
 			time.Sleep(5 * time.Second)
 			svcToIp, headlessPods = getServiceHosts(namespace, shortDomainOnly)

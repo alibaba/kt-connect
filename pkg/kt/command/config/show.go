@@ -10,6 +10,10 @@ import (
 
 var showAll bool
 
+var hiddenOptions = []string{
+	"global.as-worker",
+}
+
 func Show(args []string) error {
 	if len(args) > 0 {
 		return fmt.Errorf("parameter '%s' is invalid", args[0])
@@ -24,6 +28,9 @@ func Show(args []string) error {
 		for j := 0; j < group.Type.Elem().NumField(); j ++ {
 			item := group.Type.Elem().Field(j)
 			itemName := util.DashSeparated(item.Name)
+			if util.Contains(hiddenOptions, fmt.Sprintf("%s.%s", groupName, itemName)) {
+				continue
+			}
 			if groupValue, groupExist := config[groupName]; groupExist {
 				if itemValue, itemExist := groupValue[itemName]; itemExist {
 					fmt.Printf("%s.%s = %v\n", groupName, itemName, itemValue)
