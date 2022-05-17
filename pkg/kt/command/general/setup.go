@@ -87,12 +87,15 @@ func SetupProcess(componentName string) (chan os.Signal, error) {
 // combineKubeOpts set default options of kubectl if not assign
 func combineKubeOpts() (err error) {
 	var config *clientcmdapi.Config
-	if customize, exist := opt.GetCustomizeKubeConfig(); exist {
+	if opt.Get().Global.Kubeconfig != ""{
+		// if kubeconfig specified, always read from it
+		_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.Kubeconfig)
+		config, err = clientcmd.NewDefaultClientConfigLoadingRules().Load()
+	} else if customize, exist := opt.GetCustomizeKubeConfig(); exist {
+		// when has customized kubeconfig, use it
 		config, err = clientcmd.Load([]byte(customize))
 	} else {
-		if opt.Get().Global.Kubeconfig != ""{
-			_ = os.Setenv(util.EnvKubeConfig, opt.Get().Global.Kubeconfig)
-		}
+		// otherwise, fellow default kubeconfig load rule
 		config, err = clientcmd.NewDefaultClientConfigLoadingRules().Load()
 	}
 	if err != nil {
