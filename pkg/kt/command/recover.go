@@ -32,9 +32,10 @@ func NewRecoverCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Recover(args[0])
 		},
+		Example: "ktctl recover [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl recover [command options]"))
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Recover, opt.RecoverFlags())
 	return cmd
 }

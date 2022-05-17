@@ -24,9 +24,10 @@ func NewCleanCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Clean()
 		},
+		Example: "ktctl clean [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl clean [command options]"))
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Clean, opt.CleanFlags())
 	return cmd
 }

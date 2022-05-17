@@ -27,9 +27,10 @@ func NewMeshCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Mesh(args[0])
 		},
+		Example: "ktctl mesh <service-name> [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl mesh <service-name> [command options]"))
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Mesh, opt.MeshFlags())
 	return cmd
 }

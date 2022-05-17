@@ -30,9 +30,10 @@ func NewConnectCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Connect()
 		},
+		Example: "ktctl connect [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl connect [command options]"))
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Connect, opt.ConnectFlags())
 	return cmd
 }

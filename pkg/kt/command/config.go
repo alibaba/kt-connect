@@ -1,7 +1,6 @@
 package command
 
 import (
-	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command/config"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
@@ -18,6 +17,7 @@ func NewConfigCommand() *cobra.Command {
 			hideGlobalFlags(cmd)
 			return cmd.Help()
 		},
+		Example: "ktctl config [list | get key | set key=value | reset key]",
 	}
 
 	cmd.AddCommand(SubConfig("show", "List all available and configured options", config.Show, config.ShowHandle))
@@ -27,7 +27,7 @@ func NewConfigCommand() *cobra.Command {
 	cmd.AddCommand(SubConfig("save", "Save current configured options as a profile", config.Save, config.SaveHandle))
 	cmd.AddCommand(SubConfig("load", "Show profiles or load config from a profile", config.Load, nil))
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl config [list | get key | set key=value | reset key]"))
+	cmd.SetUsageTemplate(general.UsageTemplate(false))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Config, opt.ConfigFlags())
 	return cmd
 }
@@ -51,5 +51,6 @@ func SubConfig(name, usage string, action func(args []string) error, postHandler
 	if postHandler != nil {
 		postHandler(cmd)
 	}
+	cmd.SetUsageTemplate(general.UsageTemplate(false))
 	return cmd
 }

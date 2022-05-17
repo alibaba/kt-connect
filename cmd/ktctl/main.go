@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
@@ -32,6 +31,7 @@ func init() {
 func main() {
 	// this line must go first
 	opt.Store.Version = version
+	cobra.EnableCommandSorting = false
 
 	var rootCmd = &cobra.Command{
 		Use:   "ktctl",
@@ -40,17 +40,18 @@ func main() {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return cmd.Help()
 		},
+		Example: "ktctl <command> [command options]",
 	}
 
 	rootCmd.AddCommand(command.NewConnectCommand())
 	rootCmd.AddCommand(command.NewExchangeCommand())
 	rootCmd.AddCommand(command.NewMeshCommand())
 	rootCmd.AddCommand(command.NewPreviewCommand())
-	rootCmd.AddCommand(command.NewCleanCommand())
 	rootCmd.AddCommand(command.NewRecoverCommand())
+	rootCmd.AddCommand(command.NewCleanCommand())
 	rootCmd.AddCommand(command.NewConfigCommand())
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
+	rootCmd.SetUsageTemplate(general.UsageTemplate(false))
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
 	opt.SetOptions(rootCmd, rootCmd.PersistentFlags(), opt.Get().Global, opt.GlobalFlags())

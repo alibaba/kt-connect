@@ -27,9 +27,10 @@ func NewExchangeCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return Exchange(args[0])
 		},
+		Example: "ktctl exchange <service-name> [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Exchange, opt.ExchangeFlags())
 	return cmd
 }
