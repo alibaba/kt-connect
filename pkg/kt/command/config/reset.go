@@ -5,10 +5,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var resetAll bool
+var unsetAll bool
 
-func Reset(args []string) error {
-	if resetAll {
+func Unset(args []string) error {
+	if unsetAll {
 		return saveConfig(make(map[string]map[string]string))
 	}
 	if len(args) < 1 {
@@ -16,10 +16,10 @@ func Reset(args []string) error {
 	}
 	config, err := loadConfig()
 	if err != nil {
-		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config reset --all'")
+		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config unset --all'")
 	}
 	for _, item := range args {
-		err = resetConfigValue(config, item)
+		err = unsetConfigValue(config, item)
 		if err != nil {
 			return fmt.Errorf("%s, please check available config items with 'ktctl config show --all'", err)
 		}
@@ -27,11 +27,11 @@ func Reset(args []string) error {
 	return saveConfig(config)
 }
 
-func ResetHandle(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&resetAll, "all", false, "Reset all config options")
+func UnsetHandle(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&unsetAll, "all", false, "Unset all config options")
 }
 
-func resetConfigValue(config map[string]map[string]string, key string) error {
+func unsetConfigValue(config map[string]map[string]string, key string) error {
 	group, item, err := parseConfigItem(key)
 	if err != nil {
 		return err

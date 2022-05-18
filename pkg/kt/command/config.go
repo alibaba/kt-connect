@@ -17,13 +17,13 @@ func NewConfigCommand() *cobra.Command {
 			hideGlobalFlags(cmd)
 			return cmd.Help()
 		},
-		Example: "ktctl config [list | get key | set key=value | reset key]",
+		Example: "ktctl config [list | get key | set key=value | unset key]",
 	}
 
 	cmd.AddCommand(SubConfig("show", "List all available and configured options", config.Show, config.ShowHandle))
 	cmd.AddCommand(SubConfig("get", "Fetch default value of specified option", config.Get, nil))
 	cmd.AddCommand(SubConfig("set", "Customize default value of specified option", config.Set, nil))
-	cmd.AddCommand(SubConfig("reset", "Restore default value of specified option", config.Reset, config.ResetHandle))
+	cmd.AddCommand(SubConfig("unset", "Restore default value of specified option", config.Unset, config.UnsetHandle))
 	cmd.AddCommand(SubConfig("save", "Save current configured options as a profile", config.Save, config.SaveHandle))
 	cmd.AddCommand(SubConfig("load", "Show profiles or load config from a profile", config.Load, nil))
 

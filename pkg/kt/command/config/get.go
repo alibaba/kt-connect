@@ -10,7 +10,7 @@ func Get(args []string) error {
 	}
 	config, err := loadConfig()
 	if err != nil {
-		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config reset --all'")
+		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config unset --all'")
 	}
 	for _, item := range args {
 		v, err2 := getConfigValue(config, item)
