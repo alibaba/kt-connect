@@ -28,7 +28,7 @@ func Unset(args []string) error {
 }
 
 func UnsetHandle(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&unsetAll, "all", false, "Unset all config options")
+	cmd.Flags().BoolVarP(&unsetAll, "all", "a", false, "Unset all config options")
 }
 
 func unsetConfigValue(config map[string]map[string]string, key string) error {

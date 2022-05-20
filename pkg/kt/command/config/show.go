@@ -53,5 +53,5 @@ func Show(args []string) error {
 }
 
 func ShowHandle(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&showAll, "all", false, "Show all available config options")
+	cmd.Flags().BoolVarP(&showAll, "all", "a", false, "Show all available config options")
 }
