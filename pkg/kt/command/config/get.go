@@ -8,6 +8,7 @@ func Get(args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("must specifiy a config item")
 	}
+	customConfig := loadCustomConfig()
 	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config unset --all'")
@@ -19,8 +20,10 @@ func Get(args []string) error {
 		}
 		if v != "" {
 			fmt.Printf("%s = %v\n", item, v)
+		} else if cv, _ := getConfigValue(customConfig, item); cv != "" {
+			fmt.Printf("%s = %v  (build-in)\n", item, cv)
 		} else {
-			fmt.Printf("%s not defined\n", item)
+			fmt.Printf("%s = <empty>\n", item)
 		}
 	}
 	return nil

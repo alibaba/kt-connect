@@ -18,6 +18,7 @@ func Show(args []string) error {
 	if len(args) > 0 {
 		return fmt.Errorf("parameter '%s' is invalid", args[0])
 	}
+	customConfig := loadCustomConfig()
 	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config unset --all'")
@@ -34,6 +35,12 @@ func Show(args []string) error {
 			if groupValue, groupExist := config[groupName]; groupExist {
 				if itemValue, itemExist := groupValue[itemName]; itemExist {
 					fmt.Printf("%s.%s = %v\n", groupName, itemName, itemValue)
+					continue
+				}
+			}
+			if groupValue, groupExist := customConfig[groupName]; groupExist {
+				if itemValue, itemExist := groupValue[itemName]; itemExist {
+					fmt.Printf("%s.%s = %v  (build-in)\n", groupName, itemName, itemValue)
 					continue
 				}
 			}

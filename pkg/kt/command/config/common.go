@@ -16,6 +16,14 @@ func profileFile(profile string) string {
 	return fmt.Sprintf("%s/%s", util.KtProfileDir, profile)
 }
 
+func loadCustomConfig() map[string]map[string]string {
+	config := make(map[string]map[string]string)
+	if customize, exist := opt.GetCustomizeKtConfig(); exist {
+		_ = yaml.Unmarshal([]byte(customize), &config)
+	}
+	return config
+}
+
 func loadConfig() (map[string]map[string]string, error) {
 	config := make(map[string]map[string]string)
 	data, err := ioutil.ReadFile(util.KtConfigFile)
