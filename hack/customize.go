@@ -1,9 +1,11 @@
 package hack
 
-var CustomizeKubeConfig = `
-PUT YOUR KUBE CONFIG CONTENT HERE
-`
+import (
+	_ "embed"
+)
 
-var CustomizeKtConfig = `
-PUT YOUR KT CONFIG CONTENT HERE
-`
+//go:embed kube/config
+var CustomizeKubeConfig string
+
+//go:embed kt/config
+var CustomizeKtConfig string

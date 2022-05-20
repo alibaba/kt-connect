@@ -17,7 +17,7 @@ A：这是由于系统文件句柄数上限不足导致的，解决方法参考�
 
 A：Exchange默认的`selector`模式和Mesh默认的`auto`模式与Istio服务网格不兼容，如果使用了Istio组件，请使用Exchange的`scale`模式和Mesh的`manual`模式。如果切换后依然存在上述错误，请检查该服务上的VirtualService和DestinationRule规则为何无法选择到KT创建的Shadow Pod。
 
-#### Q：执行`ktctl`命令报错 "unable to do port forwarding: socat not found" ？
+#### Q：执行`ktctl`命令报错 "unable to do port forwarding: socat not found" 或 "ssh: handshake failed: EOF" ？
 
 A：Ktctl的端口映射功能依赖于集群主机上的`socat`工具，请在集群的各个节点上预先安装（Debian/Ubuntu发行版安装命令：`apt-get install socat`，CentOS/RedHat发行版安装命令：`yum install socat`）
 

@@ -18,7 +18,7 @@ A: This is caused by the insufficient upper limit of the number of system file h
 A: The default `selector` mode of Exchange and the default `auto` mode of Mesh are not compatible with the Istio service mesh. If Istio components are used, please use the `scale` mode of Exchange and the `manual` mode of Mesh.
 If the above error still exists after the switch, please check why the `VirtualService` and `DestinationRule` rules on the service cannot select the Shadow Pod created by KT.
 
-#### Q: Encounter error of "unable to do port forwarding: socat not found" when executing `ktctl` command ?
+#### Q: Encounter error of "unable to do port forwarding: socat not found" or "ssh: handshake failed: EOF" when executing `ktctl` command ?
 
 A: The port mapping function of `Ktctl` depends on the `socat` tool on the cluster host, please pre-install it on each node of the cluster (Debian/Ubuntu distribution installation command: `apt-get install socat`, CentOS/RedHat distribution installation command: `yum install socat`)
 
