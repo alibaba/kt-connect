@@ -12,9 +12,8 @@ mod:
 # run unit test
 test:
 	mkdir -p artifacts/report/coverage
-	go test -v -cover -coverprofile c.out.tmp ./...
-	cat c.out.tmp | grep -v "_mock.go" > c.out
-	go tool cover -html=c.out -o artifacts/report/coverage/index.html
+	go test -v -cover -coverprofile artifacts/report/coverage/c.out ./...
+	go tool cover -html=artifacts/report/coverage/c.out -o artifacts/report/coverage/index.html
 
 # build kt project
 compile:
