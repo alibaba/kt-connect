@@ -2,8 +2,6 @@
 *.iml
 .idea/
 .vscode/
-.jvmrc
-.DS_Store
 
 # Generated files
 vendor/
@@ -12,3 +10,5 @@ artifacts/
 dist/
 node_modules/
 note/
+.jvmrc
+.DS_Store

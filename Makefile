@@ -15,8 +15,8 @@ test:
 	go test -v -cover -coverprofile artifacts/report/coverage/c.out ./...
 	go tool cover -html=artifacts/report/coverage/c.out -o artifacts/report/coverage/index.html
 
-# build kt project
-compile:
+# build kt release package
+release:
 	goreleaser --snapshot --skip-publish --rm-dist
 
 # check the style
@@ -67,4 +67,4 @@ navigator-local:
 
 # clean up workspace
 clean:
-	rm -fr artifacts dist
+	rm -fr artifacts output dist
