@@ -1,5 +1,5 @@
 PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
-TAG				  ?= $(shell date +%s)
+TAG				  ?= dev
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 ROUTER_IMAGE	  =  kt-connect-router
@@ -25,9 +25,9 @@ check:
 
 # build ktctl
 ktctl:
-	GOARCH=amd64 GOOS=linux go build -o artifacts/ktctl/ktctl-linux ./cmd/ktctl
-	GOARCH=amd64 GOOS=darwin go build -o artifacts/ktctl/ktctl-darwin ./cmd/ktctl
-	GOARCH=amd64 GOOS=windows go build -o artifacts/ktctl/ktctl-windows ./cmd/ktctl
+	GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-linux ./cmd/ktctl
+	GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-darwin ./cmd/ktctl
+	GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-windows ./cmd/ktctl
 
 # build this image before shadow
 shadow-base:
