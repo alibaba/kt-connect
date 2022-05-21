@@ -15,6 +15,9 @@ import (
 // ClusterCidrs get cluster Cidrs
 func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	ips := getServiceIps(k.Clientset, namespace)
+	if opt.Get().Global.Debug {
+		log.Debug().Msgf("Service CIDR are: %v", calculateMinimalIpRange(ips))
+	}
 	if !opt.Get().Connect.DisablePodIp {
 		ips = append(ips, getPodIps(k.Clientset, namespace)...)
 	}
