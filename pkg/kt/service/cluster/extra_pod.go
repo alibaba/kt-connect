@@ -40,6 +40,7 @@ func (k *Kubernetes) CreateRectifierPod(name string) (*coreV1.Pod, error) {
 		Annotations: map[string]string{},
 	}, opt.Get().Global.Image, map[string]string{}, map[string]int{}, true}
 	pod := createPod(metaAndSpec)
+	pod.Spec.Containers[0].Command = []string{"tail", "-f", "/dev/null"}
 	if _, err := k.Clientset.CoreV1().Pods(metaAndSpec.Meta.Namespace).
 		Create(context.TODO(), pod, metav1.CreateOptions{}); err != nil {
 		return nil, err
