@@ -71,6 +71,7 @@ func FindInvalidRemotePort(exposePorts string, svcPorts map[int]string) string {
 	for p := range svcPorts {
 		validPorts = append(validPorts, strconv.Itoa(p))
 	}
+	log.Debug().Msgf("Service target ports: %v", validPorts)
 
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
@@ -79,7 +80,7 @@ func FindInvalidRemotePort(exposePorts string, svcPorts map[int]string) string {
 		if len(splitPorts) > 1 {
 			remotePort = splitPorts[1]
 		}
-		if !Contains(remotePort, validPorts) {
+		if !Contains(validPorts, remotePort) {
 			return remotePort
 		}
 	}

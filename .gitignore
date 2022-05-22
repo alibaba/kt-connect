@@ -1,16 +1,14 @@
-output
-output/**
-
+# IDE files
+*.iml
 .idea/
 .vscode/
+
+# Generated files
+vendor/
+output/
 artifacts/
 dist/
-
 node_modules/
 note/
-
 .jvmrc
 .DS_Store
-vendor/
-c.out
-c.out.tmp

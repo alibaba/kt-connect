@@ -17,11 +17,11 @@ import (
 
 func AutoMesh(svc *coreV1.Service) error {
 	// Lock service to avoid conflict, must be first step
-	svc, err := general.LockService(svc.Name, opt.Get().Namespace, 0)
+	svc, err := general.LockService(svc.Name, opt.Get().Global.Namespace, 0)
 	if err != nil {
 		return err
 	}
-	defer general.UnlockService(svc.Name, opt.Get().Namespace)
+	defer general.UnlockService(svc.Name, opt.Get().Global.Namespace)
 
 	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" && svc.Spec.Selector[util.KtRole] == util.RoleExchangeShadow {
 		return fmt.Errorf("another user%s is exchanging service '%s', cannot apply mesh",
@@ -29,9 +29,9 @@ func AutoMesh(svc *coreV1.Service) error {
 	}
 
 	// Parse or generate mesh kv
-	meshKey, meshVersion := getVersion(opt.Get().MeshOptions.VersionMark)
+	meshKey, meshVersion := getVersion(opt.Get().Mesh.VersionMark)
 	versionMark := meshKey + ":" + meshVersion
-	opt.Get().RuntimeStore.Mesh = versionMark
+	opt.Store.Mesh = versionMark
 
 	portToNames := general.GetTargetPorts(svc)
 	ports := make(map[int]int)
@@ -91,16 +91,16 @@ func AutoMesh(svc *coreV1.Service) error {
 
 	// Let target service select router pod
 	// Must after router pod created, otherwise request will be interrupted
-	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Namespace, routerLabels); err != nil {
+	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Global.Namespace, routerLabels); err != nil {
 		return err
 	}
-	opt.Get().RuntimeStore.Origin = svc.Name
+	opt.Store.Origin = svc.Name
 
 	// Create shadow pod
 	annotations := map[string]string{
 		util.KtConfig: fmt.Sprintf("service=%s", shadowName),
 	}
-	if err = general.CreateShadowAndInbound(shadowName, opt.Get().MeshOptions.Expose,
+	if err = general.CreateShadowAndInbound(shadowName, opt.Get().Mesh.Expose,
 		shadowLabels, annotations, portToNames); err != nil {
 		return err
 	}
@@ -115,10 +115,10 @@ func isNameUsable(name, meshVersion string, times int) error {
 		return fmt.Errorf("meshing pod for service %s still terminating, please try again later", name)
 	}
 	shadowName := name + util.MeshPodInfix + meshVersion
-	if pod, err := cluster.Ins().GetPod(shadowName, opt.Get().Namespace); err == nil {
+	if pod, err := cluster.Ins().GetPod(shadowName, opt.Get().Global.Namespace); err == nil {
 		if pod.DeletionTimestamp == nil {
 			msg := fmt.Sprintf("Another user is meshing service '%s' via version '%s'", name, meshVersion)
-			if opt.Get().MeshOptions.VersionMark != "" {
+			if opt.Get().Mesh.VersionMark != "" {
 				return fmt.Errorf("%s, please specify a different version mark", msg)
 			}
 			return fmt.Errorf( "%s, please retry or use '--versionMark' parameter to spcify an uniq one", msg)
@@ -146,7 +146,7 @@ func createShadowService(shadowSvcName string, ports map[int]int,
 	if _, err := cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 		Meta: &cluster.ResourceMeta{
 			Name:        shadowSvcName,
-			Namespace:   opt.Get().Namespace,
+			Namespace:   opt.Get().Global.Namespace,
 			Labels:      map[string]string{},
 			Annotations: map[string]string{},
 		},
@@ -157,13 +157,13 @@ func createShadowService(shadowSvcName string, ports map[int]int,
 		return err
 	}
 
-	opt.Get().RuntimeStore.Service = shadowSvcName
+	opt.Store.Service = shadowSvcName
 	log.Info().Msgf("Service %s created", shadowSvcName)
 	return nil
 }
 
 func createRouter(routerPodName string, svcName string, ports map[int]int, labels map[string]string, versionMark string) error {
-	namespace := opt.Get().Namespace
+	namespace := opt.Get().Global.Namespace
 	routerPod, err := cluster.Ins().GetPod(routerPodName, namespace)
 	if err == nil && routerPod.DeletionTimestamp != nil {
 		routerPod, err = cluster.Ins().WaitPodTerminate(routerPodName, namespace)
@@ -211,13 +211,13 @@ func createRouter(routerPodName string, svcName string, ports map[int]int, label
 		}
 	}
 	log.Info().Msgf("Router pod configuration done")
-	opt.Get().RuntimeStore.Router = routerPodName
+	opt.Store.Router = routerPodName
 	return nil
 }
 
 func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 	stuntmanSvcName := svc.Name + util.StuntmanServiceSuffix
-	namespace := opt.Get().Namespace
+	namespace := opt.Get().Global.Namespace
 	if stuntmanSvc, err := cluster.Ins().GetService(stuntmanSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err

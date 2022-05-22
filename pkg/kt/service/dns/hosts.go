@@ -72,8 +72,8 @@ func dropHosts(rawLines []string, namespaceToDrop string) ([]string, []string, e
 	escapeBegin := -1
 	escapeEnd := -1
 	midDomain := fmt.Sprintf(".%s", namespaceToDrop)
-	fullDomain := fmt.Sprintf(".%s.svc.%s", namespaceToDrop, opt.Get().ConnectOptions.ClusterDomain)
-	keepShortDomain := namespaceToDrop != opt.Get().Namespace
+	fullDomain := fmt.Sprintf(".%s.svc.%s", namespaceToDrop, opt.Get().Connect.ClusterDomain)
+	keepShortDomain := namespaceToDrop != opt.Get().Global.Namespace
 	recordsToKeep := make([]string, 0)
 	for i, l := range rawLines {
 		if l == ktHostsEscapeBegin {
@@ -156,7 +156,7 @@ func loadHostsFile() ([]string, error) {
 }
 
 func updateHostsFile(lines []string) error {
-	lock := flock.New(fmt.Sprintf("%s/%s", util.KtHome, util.DumpHostsLock))
+	lock := flock.New(fmt.Sprintf("%s/hosts.lock", util.KtLockDir))
 	timeoutContext, cancel := context.WithTimeout(context.TODO(), 2 * time.Second)
 	defer cancel()
 	if ok, err := lock.TryLockContext(timeoutContext, 100 * time.Millisecond); !ok {

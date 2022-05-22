@@ -15,30 +15,33 @@ import (
 // ClusterCidrs get cluster Cidrs
 func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 	ips := getServiceIps(k.Clientset, namespace)
-	if !opt.Get().ConnectOptions.DisablePodIp {
+	if opt.Get().Global.Debug {
+		log.Debug().Msgf("Service CIDR are: %v", calculateMinimalIpRange(ips))
+	}
+	if !opt.Get().Connect.DisablePodIp {
 		ips = append(ips, getPodIps(k.Clientset, namespace)...)
 	}
 
 	cidrs := calculateMinimalIpRange(ips)
 	log.Debug().Msgf("Cluster CIDR are: %v", cidrs)
 
-	apiServerIp := util.ExtractHostIp(opt.Get().RuntimeStore.RestConfig.Host)
+	apiServerIp := util.ExtractHostIp(opt.Store.RestConfig.Host)
 	log.Debug().Msgf("Using cluster ip %s", apiServerIp)
 	if apiServerIp != "" {
 		cidrs = removeCidrOf(cidrs, apiServerIp + "/32")
 	}
 
-	if opt.Get().ConnectOptions.IncludeIps != "" {
-		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.IncludeIps, ",") {
-			if opt.Get().ConnectOptions.Mode == util.ConnectModeTun2Socks && isSingleIp(ipRange) {
+	if opt.Get().Connect.IncludeIps != "" {
+		for _, ipRange := range strings.Split(opt.Get().Connect.IncludeIps, ",") {
+			if opt.Get().Connect.Mode == util.ConnectModeTun2Socks && isSingleIp(ipRange) {
 				log.Warn().Msgf("Includes single IP '%s' is not allow in %s mode", ipRange, util.ConnectModeTun2Socks)
 			} else {
 				cidrs = append(cidrs, ipRange)
 			}
 		}
 	}
-	if opt.Get().ConnectOptions.ExcludeIps != "" {
-		for _, ipRange := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {
+	if opt.Get().Connect.ExcludeIps != "" {
+		for _, ipRange := range strings.Split(opt.Get().Connect.ExcludeIps, ",") {
 			cidrs = util.ArrayDelete(cidrs, ipRange)
 		}
 	}

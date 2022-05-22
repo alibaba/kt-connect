@@ -29,7 +29,7 @@ type ResourceToClean struct {
 
 
 func CheckClusterResources() (*ResourceToClean, error) {
-	pods, cfs, apps, svcs, err := cluster.Ins().GetKtResources(opt.Get().Namespace)
+	pods, cfs, apps, svcs, err := cluster.Ins().GetKtResources(opt.Get().Global.Namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -44,18 +44,18 @@ func CheckClusterResources() (*ResourceToClean, error) {
 		ServicesToUnlock:    make([]string, 0),
 	}
 	for _, pod := range pods {
-		analysisExpiredPods(pod, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+		analysisExpiredPods(pod, opt.Get().Clean.ThresholdInMinus, &resourceToClean)
 	}
 	for _, cf := range cfs {
-		analysisExpiredConfigmaps(cf, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+		analysisExpiredConfigmaps(cf, opt.Get().Clean.ThresholdInMinus, &resourceToClean)
 	}
 	for _, app := range apps {
-		analysisExpiredDeployments(app, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+		analysisExpiredDeployments(app, opt.Get().Clean.ThresholdInMinus, &resourceToClean)
 	}
 	for _, svc := range svcs {
-		analysisExpiredServices(svc, opt.Get().CleanOptions.ThresholdInMinus, &resourceToClean)
+		analysisExpiredServices(svc, opt.Get().Clean.ThresholdInMinus, &resourceToClean)
 	}
-	svcList, err := cluster.Ins().GetAllServiceInNamespace(opt.Get().Namespace)
+	svcList, err := cluster.Ins().GetAllServiceInNamespace(opt.Get().Global.Namespace)
 	analysisLockAndOrphanServices(svcList.Items, &resourceToClean)
 	return &resourceToClean, nil
 }
@@ -63,7 +63,7 @@ func CheckClusterResources() (*ResourceToClean, error) {
 func TidyClusterResources(r *ResourceToClean) {
 	log.Info().Msgf("Deleting %d unavailing kt pods", len(r.PodsToDelete))
 	for _, name := range r.PodsToDelete {
-		err := cluster.Ins().RemovePod(name, opt.Get().Namespace)
+		err := cluster.Ins().RemovePod(name, opt.Get().Global.Namespace)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to delete pods %s", name)
 		} else {
@@ -72,7 +72,7 @@ func TidyClusterResources(r *ResourceToClean) {
 	}
 	log.Info().Msgf("Deleting %d unavailing config maps", len(r.ConfigMapsToDelete))
 	for _, name := range r.ConfigMapsToDelete {
-		err := cluster.Ins().RemoveConfigMap(name, opt.Get().Namespace)
+		err := cluster.Ins().RemoveConfigMap(name, opt.Get().Global.Namespace)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to delete config map %s", name)
 		} else {
@@ -81,7 +81,7 @@ func TidyClusterResources(r *ResourceToClean) {
 	}
 	log.Info().Msgf("Deleting %d unavailing deployments", len(r.DeploymentsToDelete))
 	for _, name := range r.DeploymentsToDelete {
-		err := cluster.Ins().RemoveDeployment(name, opt.Get().Namespace)
+		err := cluster.Ins().RemoveDeployment(name, opt.Get().Global.Namespace)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to delete deployment %s", name)
 		} else {
@@ -90,7 +90,7 @@ func TidyClusterResources(r *ResourceToClean) {
 	}
 	log.Info().Msgf("Recovering %d scaled deployments", len(r.DeploymentsToScale))
 	for name, replica := range r.DeploymentsToScale {
-		err := cluster.Ins().ScaleTo(name, opt.Get().Namespace, &replica)
+		err := cluster.Ins().ScaleTo(name, opt.Get().Global.Namespace, &replica)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to scale deployment %s to %d", name, replica)
 		} else {
@@ -99,7 +99,7 @@ func TidyClusterResources(r *ResourceToClean) {
 	}
 	log.Info().Msgf("Deleting %d unavailing services", len(r.ServicesToDelete))
 	for _, name := range r.ServicesToDelete {
-		err := cluster.Ins().RemoveService(name, opt.Get().Namespace)
+		err := cluster.Ins().RemoveService(name, opt.Get().Global.Namespace)
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to delete service %s", name)
 		} else {
@@ -108,12 +108,12 @@ func TidyClusterResources(r *ResourceToClean) {
 	}
 	log.Info().Msgf("Recovering %d meshed services", len(r.ServicesToRecover))
 	for _, name := range r.ServicesToRecover {
-		general.RecoverOriginalService(name, opt.Get().Namespace)
+		general.RecoverOriginalService(name, opt.Get().Global.Namespace)
 		log.Info().Msgf(" * %s", name)
 	}
 	log.Info().Msgf("Recovering %d locked services", len(r.ServicesToUnlock))
 	for _, name := range r.ServicesToUnlock {
-		if app, err := cluster.Ins().GetService(name, opt.Get().Namespace); err == nil {
+		if app, err := cluster.Ins().GetService(name, opt.Get().Global.Namespace); err == nil {
 			delete(app.Annotations, util.KtLock)
 			_, err = cluster.Ins().UpdateService(app)
 			if err != nil {
@@ -162,13 +162,15 @@ func TidyLocalResources() {
 	cleanPidFiles()
 	log.Debug().Msg("Cleaning up unused local rsa keys")
 	util.CleanRsaKeys()
+	log.Debug().Msg("Cleaning up background logs")
+	util.CleanBackgroundLogs()
 	if util.GetDaemonRunning(util.ComponentConnect) < 0 {
 		if util.IsRunAsAdmin() {
 			log.Debug().Msg("Cleaning up hosts file")
 			dns.DropHosts()
 			log.Debug().Msg("Cleaning DNS configuration")
 			dns.Ins().RestoreNameServer()
-			if opt.Get().CleanOptions.SweepLocalRoute {
+			if opt.Get().Clean.SweepLocalRoute {
 				log.Info().Msgf("Cleaning route table")
 				if err := tun.Ins().RestoreRoute(); err != nil {
 					log.Warn().Err(err).Msgf("Unable to clean up route table")
@@ -181,7 +183,7 @@ func TidyLocalResources() {
 }
 
 func cleanPidFiles() {
-	files, _ := ioutil.ReadDir(util.KtHome)
+	files, _ := ioutil.ReadDir(util.KtPidDir)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), ".pid") {
 			component, pid := parseComponentAndPid(f.Name())
@@ -189,7 +191,7 @@ func cleanPidFiles() {
 				log.Debug().Msgf("Find kt %s instance with pid %d", component, pid)
 			} else {
 				log.Info().Msgf("Removing remnant pid file %s", f.Name())
-				if err := os.Remove(fmt.Sprintf("%s/%s", util.KtHome, f.Name())); err != nil {
+				if err := os.Remove(fmt.Sprintf("%s/%s", util.KtPidDir, f.Name())); err != nil {
 					log.Error().Err(err).Msgf("Delete pid file %s failed", f.Name())
 				}
 			}

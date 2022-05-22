@@ -116,7 +116,7 @@ func updateRoute(header, version, action string) error {
 		return err
 	}
 	if ktConf.Header != header {
-		return fmt.Errorf("specfied header '%s' no match mesh pod header '%s'", header, ktConf.Header)
+		return fmt.Errorf("specified header '%s' no match mesh pod header '%s'", header, ktConf.Header)
 	}
 	switch action {
 	case actionAdd:

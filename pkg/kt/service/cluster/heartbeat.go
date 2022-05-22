@@ -21,12 +21,12 @@ func SetupTimeDifference() error {
 	if err != nil {
 		return err
 	}
-	stdout, stderr, err := Ins().ExecInPod(util.DefaultContainer, rectifierPodName, opt.Get().Namespace, "date", "+%s")
+	stdout, stderr, err := Ins().ExecInPod(util.DefaultContainer, rectifierPodName, opt.Get().Global.Namespace, "date", "+%s")
 	if err != nil {
 		return err
 	}
 	go func() {
-		if err2 := Ins().RemovePod(rectifierPodName, opt.Get().Namespace); err2 != nil {
+		if err2 := Ins().RemovePod(rectifierPodName, opt.Get().Global.Namespace); err2 != nil {
 			log.Debug().Err(err).Msgf("Failed to remove pod %s", rectifierPodName)
 		}
 	}()

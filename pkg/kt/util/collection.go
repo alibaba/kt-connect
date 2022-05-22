@@ -4,18 +4,18 @@ import (
 	"reflect"
 )
 
-// Contains check whether obj exist in target, the type of target can be an array, slice or map
-func Contains(obj any, target any) bool {
-	targetValue := reflect.ValueOf(target)
-	switch reflect.TypeOf(target).Kind() {
+// Contains check whether target exist in container, the type of container can be an array, slice or map
+func Contains(container any, target any) bool {
+	targetValue := reflect.ValueOf(container)
+	switch reflect.TypeOf(container).Kind() {
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < targetValue.Len(); i++ {
-			if targetValue.Index(i).Interface() == obj {
+			if targetValue.Index(i).Interface() == target {
 				return true
 			}
 		}
 	case reflect.Map:
-		if targetValue.MapIndex(reflect.ValueOf(obj)).IsValid() {
+		if targetValue.MapIndex(reflect.ValueOf(target)).IsValid() {
 			return true
 		}
 	}

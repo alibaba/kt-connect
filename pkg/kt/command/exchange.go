@@ -17,18 +17,21 @@ func NewExchangeCommand() *cobra.Command {
 		Use:  "exchange",
 		Short: "Redirect all requests of specified kubernetes service to local",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to exchange is required")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("name of service to exchange is required")
-			}
 			return Exchange(args[0])
 		},
+		Example: "ktctl exchange <service-name> [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().ExchangeOptions, opt.ExchangeFlags())
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Exchange, opt.ExchangeFlags())
 	return cmd
 }
 
@@ -39,21 +42,21 @@ func Exchange(resourceName string) error {
 		return err
 	}
 
-	if opt.Get().ListenCheck {
-		if port := util.FindBrokenLocalPort(opt.Get().ExchangeOptions.Expose); port != "" {
+	if opt.Get().Exchange.SkipPortChecking {
+		if port := util.FindBrokenLocalPort(opt.Get().Exchange.Expose); port != "" {
 			return fmt.Errorf("no application is running on port %s", port)
 		}
 	}
 
-	log.Info().Msgf("Using %s mode", opt.Get().ExchangeOptions.Mode)
-	if opt.Get().ExchangeOptions.Mode == util.ExchangeModeScale {
+	log.Info().Msgf("Using %s mode", opt.Get().Exchange.Mode)
+	if opt.Get().Exchange.Mode == util.ExchangeModeScale {
 		err = exchange.ByScale(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeEphemeral {
+	} else if opt.Get().Exchange.Mode == util.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeSelector {
+	} else if opt.Get().Exchange.Mode == util.ExchangeModeSelector {
 		err = exchange.BySelector(resourceName)
 	} else {
-		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
+		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().Exchange.Mode,
 			util.ExchangeModeSelector, util.ExchangeModeScale, util.ExchangeModeEphemeral)
 	}
 	if err != nil {

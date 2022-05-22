@@ -90,7 +90,7 @@ func query(req *dns.Msg, dnsAddresses []string) []dns.RR {
 	domain := req.Question[0].Name
 	qtype := req.Question[0].Qtype
 
-	answer := common.ReadCache(domain, qtype, opt.Get().ConnectOptions.DnsCacheTtl)
+	answer := common.ReadCache(domain, qtype, int64(opt.Get().Connect.DnsCacheTtl))
 	if answer != nil {
 		log.Debug().Msgf("Found domain %s (%d) in cache", domain, qtype)
 		return answer
@@ -117,6 +117,6 @@ func query(req *dns.Msg, dnsAddresses []string) []dns.RR {
 		}
 	}
 	log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
-	common.WriteCache(domain, qtype, []dns.RR{}, time.Now().Unix() - opt.Get().ConnectOptions.DnsCacheTtl / 2)
+	common.WriteCache(domain, qtype, []dns.RR{}, time.Now().Unix() - int64(opt.Get().Connect.DnsCacheTtl) / 2)
 	return []dns.RR{}
 }

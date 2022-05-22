@@ -1,5 +1,5 @@
 PREFIX			  ?= registry.cn-hangzhou.aliyuncs.com/rdc-incubator
-TAG				  ?= $(shell date +%s)
+TAG				  ?= dev
 SHADOW_IMAGE	  =  kt-connect-shadow
 SHADOW_BASE_IMAGE =  shadow-base
 ROUTER_IMAGE	  =  kt-connect-router
@@ -12,12 +12,11 @@ mod:
 # run unit test
 test:
 	mkdir -p artifacts/report/coverage
-	go test -v -cover -coverprofile c.out.tmp ./...
-	cat c.out.tmp | grep -v "_mock.go" > c.out
-	go tool cover -html=c.out -o artifacts/report/coverage/index.html
+	go test -v -cover -coverprofile artifacts/report/coverage/c.out ./...
+	go tool cover -html=artifacts/report/coverage/c.out -o artifacts/report/coverage/index.html
 
-# build kt project
-compile:
+# build kt release package
+release:
 	goreleaser --snapshot --skip-publish --rm-dist
 
 # check the style
@@ -26,9 +25,9 @@ check:
 
 # build ktctl
 ktctl:
-	GOARCH=amd64 GOOS=linux go build -o artifacts/ktctl/ktctl-linux ./cmd/ktctl
-	GOARCH=amd64 GOOS=darwin go build -o artifacts/ktctl/ktctl-darwin ./cmd/ktctl
-	GOARCH=amd64 GOOS=windows go build -o artifacts/ktctl/ktctl-windows ./cmd/ktctl
+	GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-linux ./cmd/ktctl
+	GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-darwin ./cmd/ktctl
+	GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-windows ./cmd/ktctl
 
 # build this image before shadow
 shadow-base:
@@ -68,4 +67,4 @@ navigator-local:
 
 # clean up workspace
 clean:
-	rm -fr artifacts dist
+	rm -fr artifacts output dist

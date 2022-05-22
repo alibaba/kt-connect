@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	"strings"
 )
 
 // NewRecoverCommand return new recover command
@@ -20,25 +21,28 @@ func NewRecoverCommand() *cobra.Command {
 		Use:  "recover",
 		Short: "Restore traffic of specified kubernetes service changed by exchange or mesh",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			opt.Get().SkipTimeDiff = true
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to recover is required")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
+			opt.Get().Global.UseLocalTime = true
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("name of service to recover is required")
-			}
 			return Recover(args[0])
 		},
+		Example: "ktctl recover [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl recover [command options]"))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().RecoverOptions, opt.RecoverFlags())
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Recover, opt.RecoverFlags())
 	return cmd
 }
 
 // Recover delete unavailing shadow pods
 func Recover(serviceName string) error {
-	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Namespace)
+	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Global.Namespace)
 	if err != nil {
 		log.Error().Err(err).Msgf("Failed to fetch service %s", serviceName)
 	}

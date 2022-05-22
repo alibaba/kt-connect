@@ -30,7 +30,7 @@ func setupPortForwardToLocal(podName string, remotePort, localPort int, isInitCo
 			} else {
 				log.Debug().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, podName, remotePort)
 			}
-			time.Sleep(time.Duration(opt.Get().PortForwardWaitTime) * time.Second)
+			time.Sleep(time.Duration(opt.Get().Global.PortForwardTimeout) * time.Second)
 		}
 		if ticker != nil {
 			ticker.Stop()
@@ -44,18 +44,18 @@ func setupPortForwardToLocal(podName string, remotePort, localPort int, isInitCo
 		ticker = cluster.SetupPortForwardHeartBeat(localPort)
 		log.Info().Msgf("Port forward local:%d -> pod %s:%d established", localPort, podName, remotePort)
 		return nil
-	case <-time.After(time.Duration(opt.Get().PortForwardWaitTime) * time.Second):
+	case <-time.After(time.Duration(opt.Get().Global.PortForwardTimeout) * time.Second):
 		return fmt.Errorf("connect to port-forward failed")
 	}
 }
 
 // PortForward call port forward api
 func portForward(podName string, remotePort, localPort int, ready chan struct{}) error {
-	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", opt.Get().Namespace, podName)
-	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Get().RuntimeStore.RestConfig.Host)
-	apiUrl, err := parseReqHost(opt.Get().RuntimeStore.RestConfig.Host, apiPath)
+	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", opt.Get().Global.Namespace, podName)
+	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Store.RestConfig.Host)
+	apiUrl, err := parseReqHost(opt.Store.RestConfig.Host, apiPath)
 
-	transport, upgrader, err := spdy.RoundTripperFor(opt.Get().RuntimeStore.RestConfig)
+	transport, upgrader, err := spdy.RoundTripperFor(opt.Store.RestConfig)
 	if err != nil {
 		return err
 	}

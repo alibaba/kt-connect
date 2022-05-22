@@ -41,7 +41,21 @@ func TestString2Map(t *testing.T) {
 }
 
 func Test_ExtractErrorMessage(t *testing.T) {
-	require.Equal(t, "specfied header 'kt_version' no match mesh pod header 'vvvv'",
-		ExtractErrorMessage("4:00PM ERR Update route with add failed error=\"specfied header 'kt_version' no match mesh pod header 'vvvv'\""))
+	require.Equal(t, "specified header 'kt_version' no match mesh pod header 'vvvv'",
+		ExtractErrorMessage("4:00PM ERR Update route with add failed error=\"specified header 'kt_version' no match mesh pod header 'vvvv'\""))
 	require.Empty(t, ExtractErrorMessage("4:00PM INFO Route updated."))
+}
+
+func Test_Capitalize(t *testing.T) {
+	require.Equal(t, "Text", Capitalize("text"))
+	require.Equal(t, "TextWord", Capitalize("text-word"))
+	require.Equal(t, "TextWord", Capitalize("TeXt-wOrD"))
+	require.Equal(t, "TextWord", Capitalize("TEXT-WORD"))
+}
+
+func Test_DashSeparated(t *testing.T) {
+	require.Equal(t, "text", DashSeparated("Text"))
+	require.Equal(t, "text-word", DashSeparated("TextWord"))
+	require.Equal(t, "text-word", DashSeparated("text-word"))
+	require.Equal(t, "t-e-x-t-w-o-r-d", DashSeparated("TEXT-WORD"))
 }

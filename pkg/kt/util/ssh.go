@@ -55,16 +55,15 @@ func Generate(privateKeyPath string) (*SSHGenerator, error) {
 
 // PrivateKeyPath ...
 func PrivateKeyPath(name string) string {
-	return fmt.Sprintf("%s/pk/%s%s", KtHome, name, PostfixRsaKey)
+	return fmt.Sprintf("%s/%s%s", KtKeyDir, name, PostfixRsaKey)
 }
 
 // CleanRsaKeys ...
 func CleanRsaKeys() {
-	dir := fmt.Sprintf("%s/pk/", KtHome)
-	files, _ := ioutil.ReadDir(dir)
+	files, _ := ioutil.ReadDir(KtKeyDir)
 	for _, f := range files {
 		if strings.HasSuffix(f.Name(), PostfixRsaKey) {
-			rsaKey := fmt.Sprintf("%s/%s", dir, f.Name())
+			rsaKey := fmt.Sprintf("%s/%s", KtKeyDir, f.Name())
 			err := os.Remove(rsaKey)
 			if err != nil {
 				log.Debug().Msgf("Failed to remove rsa key file: %s", rsaKey)

@@ -55,8 +55,8 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			opt.Get().ConnectOptions.IncludeIps = strings.Join(tt.args.IncludeIps, ",")
-			opt.Get().RuntimeStore.RestConfig = &rest.Config{ Host: "" }
+			opt.Get().Connect.IncludeIps = strings.Join(tt.args.IncludeIps, ",")
+			opt.Store.RestConfig = &rest.Config{ Host: "" }
 			gotCidrs, err := k.ClusterCidrs("default")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
