@@ -24,7 +24,7 @@ func (s SocksLogger) Println(v ...any) {
 
 // StartSocks5Proxy start socks5 proxy
 func (c *Cli) StartSocks5Proxy(privateKey, sshAddress, socks5Address string) (err error) {
-	dialer, err := sshproxy.NewDialer("ssh://root@" + sshAddress + "?identity_file=" + privateKey)
+	dialer, err := sshproxy.NewDialer(getSshTunnelAddress(privateKey, sshAddress))
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (c *Cli) StartSocks5Proxy(privateKey, sshAddress, socks5Address string) (er
 
 // RunScript run the script on remote host.
 func (c *Cli) RunScript(privateKey, sshAddress, script string) (result string, err error) {
-	dialer, err := sshproxy.NewDialer("ssh://root@" + sshAddress + "?identity_file=" + privateKey)
+	dialer, err := sshproxy.NewDialer(getSshTunnelAddress(privateKey, sshAddress))
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +73,7 @@ func (c *Cli) RunScript(privateKey, sshAddress, script string) (result string, e
 // ForwardRemoteToLocal forward remote request to local
 func (c *Cli) ForwardRemoteToLocal(privateKey, sshAddress, remoteEndpoint, localEndpoint string) error {
 	// Handle incoming connections on reverse forwarded tunnel
-	dialer, err := sshproxy.NewDialer("ssh://root@" + sshAddress + "?identity_file=" + privateKey)
+	dialer, err := sshproxy.NewDialer(getSshTunnelAddress(privateKey, sshAddress))
 	if err != nil {
 		return err
 	}
@@ -100,6 +100,10 @@ func (c *Cli) ForwardRemoteToLocal(privateKey, sshAddress, remoteEndpoint, local
 			return err
 		}
 	}
+}
+
+func getSshTunnelAddress(privateKey string, sshAddress string) string {
+	return fmt.Sprintf("ssh://root@%s?identity_file=%s", sshAddress, privateKey)
 }
 
 func disconnectRemotePort(privateKey, sshAddress, remoteEndpoint string, c *Cli) {
