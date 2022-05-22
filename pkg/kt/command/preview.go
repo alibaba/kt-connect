@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/command/preview"
@@ -14,7 +15,7 @@ import (
 // NewPreviewCommand return new preview command
 func NewPreviewCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "preview",
+		Use:   "preview",
 		Short: "Expose a local service to kubernetes cluster",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -42,8 +43,10 @@ func Preview(serviceName string) error {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().Preview.Expose); port != "" {
-		return fmt.Errorf("no application is running on port %s", port)
+	if opt.Get().Mesh.SkipPortChecking {
+		if port := util.FindBrokenLocalPort(opt.Get().Preview.Expose); port != "" {
+			return fmt.Errorf("no application is running on port %s", port)
+		}
 	}
 
 	if err = preview.Expose(serviceName); err != nil {

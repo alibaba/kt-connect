@@ -29,22 +29,23 @@ type ConnectOptions struct {
 
 // ExchangeOptions ...
 type ExchangeOptions struct {
-	Mode            string
-	Expose          string
-	RecoverWaitTime int
+	Mode             string
+	Expose           string
+	RecoverWaitTime  int
+  SkipPortChecking bool
 }
 
 // MeshOptions ...
 type MeshOptions struct {
-	Mode        string
-	Expose      string
-	VersionMark string
-	RouterImage string
+	Mode             string
+	Expose           string
+	VersionMark      string
+	RouterImage      string
+  SkipPortChecking bool
 }
 
 // RecoverOptions ...
 type RecoverOptions struct {
-
 }
 
 // PreviewOptions ...
@@ -84,6 +85,7 @@ type GlobalOptions struct {
 	UseLocalTime        bool
 	Context             string
 	PodQuota            string
+	ListenCheck         bool
 }
 
 // DaemonOptions cli options
