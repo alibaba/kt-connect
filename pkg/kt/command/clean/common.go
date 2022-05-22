@@ -162,6 +162,8 @@ func TidyLocalResources() {
 	cleanPidFiles()
 	log.Debug().Msg("Cleaning up unused local rsa keys")
 	util.CleanRsaKeys()
+	log.Debug().Msg("Cleaning up background logs")
+	util.CleanBackgroundLogs()
 	if util.GetDaemonRunning(util.ComponentConnect) < 0 {
 		if util.IsRunAsAdmin() {
 			log.Debug().Msg("Cleaning up hosts file")

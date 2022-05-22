@@ -57,6 +57,7 @@ type PreviewOptions struct {
 type CleanOptions struct {
 	DryRun           bool
 	ThresholdInMinus int64
+	LocalOnly        bool
 	SweepLocalRoute  bool
 }
 

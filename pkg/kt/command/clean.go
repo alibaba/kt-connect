@@ -34,17 +34,15 @@ func NewCleanCommand() *cobra.Command {
 
 // Clean delete unavailing shadow pods
 func Clean() error {
-	if resourceToClean, err := clean.CheckClusterResources(); err != nil {
-		log.Warn().Err(err).Msgf("Failed to clean up cluster resources")
-	} else {
-		if isEmpty(resourceToClean) {
+	if !opt.Get().Clean.LocalOnly {
+		if resourceToClean, err := clean.CheckClusterResources(); err != nil {
+			log.Warn().Err(err).Msgf("Failed to clean up cluster resources")
+		} else if isEmpty(resourceToClean) {
 			log.Info().Msg("No unavailing kt resource found (^.^)YYa!!")
+		} else if opt.Get().Clean.DryRun {
+			clean.PrintClusterResourcesToClean(resourceToClean)
 		} else {
-			if opt.Get().Clean.DryRun {
-				clean.PrintClusterResourcesToClean(resourceToClean)
-			} else {
-				clean.TidyClusterResources(resourceToClean)
-			}
+			clean.TidyClusterResources(resourceToClean)
 		}
 	}
 	if !opt.Get().Clean.DryRun {

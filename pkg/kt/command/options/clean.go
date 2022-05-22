@@ -17,9 +17,14 @@ func CleanFlags() []OptionConfig {
 			Description:  "Only print name of resources to be deleted",
 		},
 		{
+			Target:       "LocalOnly",
+			DefaultValue: false,
+			Description:  "Only check and restore local changes made by kt",
+		},
+		{
 			Target:       "SweepLocalRoute",
 			DefaultValue: false,
-			Description:  "Also clean up local route table record created by kt",
+			Description:  "(Beta) Also clean up local route table record created by kt",
 		},
 	}
 	return flags
