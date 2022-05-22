@@ -21,7 +21,7 @@ var TimeDifference int64 = 0
 
 // GetDaemonRunning fetch daemon pid if exist
 func GetDaemonRunning(componentName string) int {
-	files, _ := ioutil.ReadDir(KtHome)
+	files, _ := ioutil.ReadDir(KtPidDir)
 	for _, f := range files {
 		if strings.HasPrefix(f.Name(), componentName) && strings.HasSuffix(f.Name(), ".pid") {
 			from := len(componentName) + 1
@@ -57,7 +57,7 @@ func CreateDirIfNotExist(dir string) error {
 
 // WritePidFile write pid to file
 func WritePidFile(componentName string, ch chan os.Signal) error {
-	pidFile := fmt.Sprintf("%s/%s-%d.pid", KtHome, componentName, os.Getpid())
+	pidFile := fmt.Sprintf("%s/%s-%d.pid", KtPidDir, componentName, os.Getpid())
 	if err := ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0644); err != nil {
 		return err
 	}
@@ -86,22 +86,26 @@ func watchPidFile(pidFile string, ch chan os.Signal) {
 }
 
 // FixFileOwner set owner to original user when run with sudo
-func FixFileOwner(path string) {
+func FixFileOwner(path string) (err error) {
 	var uid int
 	var gid int
 	sudoUid := os.Getenv("SUDO_UID")
 	if sudoUid == "" {
 		uid = os.Getuid()
 	} else {
-		uid, _ = strconv.Atoi(sudoUid)
+		if uid, err = strconv.Atoi(sudoUid); err != nil {
+			return err
+		}
 	}
 	sudoGid := os.Getenv("SUDO_GID")
 	if sudoGid == "" {
 		gid = os.Getuid()
 	} else {
-		gid, _ = strconv.Atoi(sudoGid)
+		if gid, err = strconv.Atoi(sudoGid); err != nil {
+			return err
+		}
 	}
-	_ = os.Chown(path, uid, gid)
+	return os.Chown(path, uid, gid)
 }
 
 // GetTime get time with rectification

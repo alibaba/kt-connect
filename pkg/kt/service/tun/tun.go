@@ -16,7 +16,7 @@ import (
 func (s *Cli) ToSocks(sockAddr string) error {
 	tunSignal := make(chan error)
 	logLevel := "warning"
-	if opt.Get().Debug {
+	if opt.Get().Global.Debug {
 		logLevel = "debug"
 	}
 	go func() {

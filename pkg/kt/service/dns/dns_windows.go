@@ -12,6 +12,18 @@ import (
 
 // SetNameServer set dns server records
 func (s *Cli) SetNameServer(dnsServer string) (err error) {
+	// run command: netsh interface ip set interface KtConnectTunnel metric=2
+	if _, _, err = util.RunAndWait(exec.Command("netsh",
+		"interface",
+		"ipv4",
+		"set",
+		"interface",
+		util.TunNameWin,
+		"metric=2",
+	)); err != nil {
+		log.Error().Msgf("Failed to set tun device order")
+		return err
+	}
 	// run command: netsh interface ip set dnsservers name=KtConnectTunnel source=static address=8.8.8.8
 	if _, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",

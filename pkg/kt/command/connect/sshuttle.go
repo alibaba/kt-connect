@@ -19,7 +19,7 @@ func BySshuttle() error {
 		return err
 	}
 
-	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Namespace)
+	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Global.Namespace)
 	if err != nil {
 		return err
 	}

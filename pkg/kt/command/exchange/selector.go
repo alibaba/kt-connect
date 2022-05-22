@@ -11,20 +11,20 @@ import (
 
 func BySelector(resourceName string) error {
 	// Get service to exchange
-	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Namespace)
+	svc, err := general.GetServiceByResourceName(resourceName, opt.Get().Global.Namespace)
 	if err != nil {
 		return err
 	}
-	if port := util.FindInvalidRemotePort(opt.Get().ExchangeOptions.Expose, general.GetTargetPorts(svc)); port != "" {
+	if port := util.FindInvalidRemotePort(opt.Get().Exchange.Expose, general.GetTargetPorts(svc)); port != "" {
 		return fmt.Errorf("target port %s not exists in service %s", port, svc.Name)
 	}
 
 	// Lock service to avoid conflict, must be first step
-	svc, err = general.LockService(svc.Name, opt.Get().Namespace, 0);
+	svc, err = general.LockService(svc.Name, opt.Get().Global.Namespace, 0);
 	if err != nil {
 		return err
 	}
-	defer general.UnlockService(svc.Name, opt.Get().Namespace)
+	defer general.UnlockService(svc.Name, opt.Get().Global.Namespace)
 
 	if svc.Annotations != nil && svc.Annotations[util.KtSelector] != "" {
 		if svc.Spec.Selector[util.KtRole] == util.RoleExchangeShadow {
@@ -47,14 +47,14 @@ func BySelector(resourceName string) error {
 	annotation := map[string]string{
 		util.KtConfig: fmt.Sprintf("service=%s", svc.Name),
 	}
-	if err = general.CreateShadowAndInbound(shadowName, opt.Get().ExchangeOptions.Expose,
+	if err = general.CreateShadowAndInbound(shadowName, opt.Get().Exchange.Expose,
 		shadowLabels, annotation, general.GetTargetPorts(svc)); err != nil {
 		return err
 	}
 
 	// Let target service select shadow pod
-	opt.Get().RuntimeStore.Origin = svc.Name
-	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Namespace, shadowLabels); err != nil {
+	opt.Store.Origin = svc.Name
+	if err = general.UpdateServiceSelector(svc.Name, opt.Get().Global.Namespace, shadowLabels); err != nil {
 		return err
 	}
 

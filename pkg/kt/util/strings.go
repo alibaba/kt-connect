@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func init() {
@@ -72,4 +73,43 @@ func ExtractErrorMessage(msg string) string {
 		return errExp.FindStringSubmatch(msg)[1]
 	}
 	return ""
+}
+
+// Capitalize convert dash separated string to capitalized string
+func Capitalize(word string) string {
+	prev := '-'
+	capitalized := strings.Map(
+		func(r rune) rune {
+			if prev == '-' {
+				prev = r
+				return unicode.ToUpper(r)
+			}
+			prev = r
+			return unicode.ToLower(r)
+		},
+		word)
+	return strings.ReplaceAll(capitalized, "-", "")
+}
+
+// DashSeparated convert capitalized string to dash separated string
+func DashSeparated(word string) string {
+	pos := regexp.MustCompile("([^-])([A-Z])")
+	dashSeparated := pos.ReplaceAllString(word, "$1-$2")
+	dashSeparated = pos.ReplaceAllString(dashSeparated, "$1-$2")
+	return strings.ToLower(dashSeparated)
+}
+
+// UnCapitalize convert dash separated string to capitalized string
+// TODO: 0.4 - remove this method, use DashSeparated() instead
+func UnCapitalize(word string) string {
+	firstLetter := true
+	return strings.Map(
+		func(r rune) rune {
+			if firstLetter {
+				firstLetter = false
+				return unicode.ToLower(r)
+			}
+			return r
+		},
+		word)
 }

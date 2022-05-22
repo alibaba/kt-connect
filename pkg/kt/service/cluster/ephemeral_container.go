@@ -13,7 +13,7 @@ import (
 // AddEphemeralContainer add ephemeral container to specified pod
 func (k *Kubernetes) AddEphemeralContainer(containerName string, name string,
 	envs map[string]string) (string, error) {
-	pod, err := k.GetPod(name, opt.Get().Namespace)
+	pod, err := k.GetPod(name, opt.Get().Global.Namespace)
 	if err != nil {
 		return "", err
 	}
@@ -23,7 +23,7 @@ func (k *Kubernetes) AddEphemeralContainer(containerName string, name string,
 	if err != nil {
 		return "", err
 	}
-	configMap, err2 := k.createConfigMapWithSshKey(map[string]string{}, name, opt.Get().Namespace, generator)
+	configMap, err2 := k.createConfigMapWithSshKey(map[string]string{}, name, opt.Get().Global.Namespace, generator)
 
 	if err2 != nil {
 		return "", fmt.Errorf("found shadow pod but no configMap. Please delete the pod %s", pod.Name)
@@ -36,7 +36,7 @@ func (k *Kubernetes) AddEphemeralContainer(containerName string, name string,
 	ec := coreV1.EphemeralContainer{
 		EphemeralContainerCommon: coreV1.EphemeralContainerCommon{
 			Name:  containerName,
-			Image: fmt.Sprintf("%s:v%s", util.ImageKtNavigator, opt.Get().RuntimeStore.Version),
+			Image: fmt.Sprintf("%s:v%s", util.ImageKtNavigator, opt.Store.Version),
 			Env: []coreV1.EnvVar{
 				{Name: util.SshAuthPrivateKey, Value: privateKey},
 			},

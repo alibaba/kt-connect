@@ -1,0 +1,38 @@
+# minimal permission role for connect command can run
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kt-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - list
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+      - pods/portforward
+    verbs:
+      - create

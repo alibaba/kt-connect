@@ -71,6 +71,7 @@ func FindInvalidRemotePort(exposePorts string, svcPorts map[int]string) string {
 	for p := range svcPorts {
 		validPorts = append(validPorts, strconv.Itoa(p))
 	}
+	log.Debug().Msgf("Service target ports: %v", validPorts)
 
 	portPairs := strings.Split(exposePorts, ",")
 	for _, exposePort := range portPairs {
@@ -79,7 +80,7 @@ func FindInvalidRemotePort(exposePorts string, svcPorts map[int]string) string {
 		if len(splitPorts) > 1 {
 			remotePort = splitPorts[1]
 		}
-		if !Contains(remotePort, validPorts) {
+		if !Contains(validPorts, remotePort) {
 			return remotePort
 		}
 	}
@@ -92,7 +93,7 @@ func ExtractHostIp(url string) string {
 		return ""
 	}
 	host := strings.Trim(strings.Split(url, ":")[1], "/")
-	if ok, err := regexp.Match(IpAddrPattern, []byte(host)); ok && err == nil {
+	if ok, err := regexp.MatchString(IpAddrPattern, host); ok && err == nil {
 		return host
 	}
 	ips, err := net.LookupIP(host)
@@ -101,7 +102,7 @@ func ExtractHostIp(url string) string {
 	}
 	for _, ip := range ips {
 		// skip ipv6
-		if ok, err2 := regexp.Match(IpAddrPattern, []byte(ip.String())); ok && err2 == nil {
+		if ok, err2 := regexp.MatchString(IpAddrPattern, ip.String()); ok && err2 == nil {
 			return ip.String()
 		}
 	}

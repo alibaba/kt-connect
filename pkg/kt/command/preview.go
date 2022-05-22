@@ -8,43 +8,41 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 // NewPreviewCommand return new preview command
-func NewPreviewCommand(action ActionInterface) *cobra.Command {
+func NewPreviewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "preview",
 		Short: "Expose a local service to kubernetes cluster",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("a service name must be specified")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("a service name must be specified")
-			}
-			return action.Preview(args[0])
+			return Preview(args[0])
 		},
+		Example: "ktctl preview <service-name> [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl preview <service-name> [command options]"))
-	cmd.Long = cmd.Short
-
-	cmd.Flags().SortFlags = false
-	cmd.InheritedFlags().SortFlags = false
-	cmd.Flags().StringVar(&opt.Get().PreviewOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
-	cmd.Flags().BoolVar(&opt.Get().PreviewOptions.External, "external", false, "If specified, a public, external service is created")
-	_ = cmd.MarkFlagRequired("expose")
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Preview, opt.PreviewFlags())
 	return cmd
 }
 
 // Preview create a new service in cluster
-func (action *Action) Preview(serviceName string) error {
+func Preview(serviceName string) error {
 	ch, err := general.SetupProcess(util.ComponentPreview)
 	if err != nil {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().PreviewOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().Preview.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 

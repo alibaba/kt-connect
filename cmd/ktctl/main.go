@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/command"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
@@ -21,61 +20,45 @@ var (
 func init() {
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, NoColor: util.IsWindows()})
-	_ = util.CreateDirIfNotExist(util.KtHome)
-	util.FixFileOwner(util.KtHome)
+	for _, dir := range []string{util.KtKeyDir, util.KtPidDir, util.KtLockDir, util.KtProfileDir} {
+		_ = util.CreateDirIfNotExist(dir)
+		_ = util.FixFileOwner(dir)
+	}
+	_ = util.FixFileOwner(util.KtConfigFile)
+	// TODO: 0.4 - auto remove old kt home folder .ktctl
 }
 
 func main() {
 	// this line must go first
-	opt.Get().RuntimeStore.Version = version
+	opt.Store.Version = version
+	cobra.EnableCommandSorting = false
 
 	var rootCmd = &cobra.Command{
 		Use:   "ktctl",
 		Version: version,
-		Long: "A utility tool to help you work with Kubernetes dev environment more efficiently",
+		Short: "A utility tool to help you work with Kubernetes dev environment more efficiently",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return cmd.Help()
+		},
+		Example: "ktctl <command> [command options]",
 	}
 
-	rootCmd.Run = func(cmd *cobra.Command, args []string) {
-		_ = rootCmd.Help()
-	}
-
-	action := &command.Action{}
-	rootCmd.AddCommand(command.NewConnectCommand(action))
-	rootCmd.AddCommand(command.NewExchangeCommand(action))
-	rootCmd.AddCommand(command.NewMeshCommand(action))
-	rootCmd.AddCommand(command.NewPreviewCommand(action))
-	rootCmd.AddCommand(command.NewCleanCommand(action))
-	rootCmd.AddCommand(command.NewRecoverCommand(action))
+	rootCmd.AddCommand(command.NewConnectCommand())
+	rootCmd.AddCommand(command.NewExchangeCommand())
+	rootCmd.AddCommand(command.NewMeshCommand())
+	rootCmd.AddCommand(command.NewPreviewCommand())
+	rootCmd.AddCommand(command.NewRecoverCommand())
+	rootCmd.AddCommand(command.NewCleanCommand())
+	rootCmd.AddCommand(command.NewConfigCommand())
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
-	rootCmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl <command> [command options]"))
-
-	rootCmd.Flags().SortFlags = false
-	rootCmd.PersistentFlags().SortFlags = false
-	rootCmd.PersistentFlags().StringVarP(&opt.Get().Namespace, "namespace", "n", "", "Specify target namespace (otherwise follow kubeconfig current context)")
-	rootCmd.PersistentFlags().StringVarP(&opt.Get().KubeConfig, "kubeconfig", "c", "", "Specify path of KubeConfig file")
-	rootCmd.PersistentFlags().StringVarP(&opt.Get().Image, "image", "i", fmt.Sprintf("%s:v%s", util.ImageKtShadow, opt.Get().RuntimeStore.Version), "Customize shadow image")
-	rootCmd.PersistentFlags().StringVar(&opt.Get().ImagePullSecret, "imagePullSecret", "", "Custom image pull secret")
-	rootCmd.PersistentFlags().StringVar(&opt.Get().ServiceAccount, "serviceAccount", "default", "Specify ServiceAccount name for shadow pod")
-	rootCmd.PersistentFlags().StringVar(&opt.Get().NodeSelector, "nodeSelector", "", "Specify location of shadow and route pod by node label, e.g. 'disk=ssd,region=hangzhou'")
-	rootCmd.PersistentFlags().BoolVarP(&opt.Get().Debug, "debug", "d", false, "Print debug log")
-	rootCmd.PersistentFlags().StringVarP(&opt.Get().WithLabels, "withLabel", "l", "", "Extra labels on shadow pod e.g. 'label1=val1,label2=val2'")
-	rootCmd.PersistentFlags().StringVar(&opt.Get().WithAnnotations, "withAnnotation", "", "Extra annotation on shadow pod e.g. 'annotation1=val1,annotation2=val2'")
-	rootCmd.PersistentFlags().IntVar(&opt.Get().PortForwardWaitTime, "portForwardTimeout", 10, "Seconds to wait before port-forward connection timeout")
-	rootCmd.PersistentFlags().IntVar(&opt.Get().PodCreationWaitTime, "podCreationTimeout", 60, "Seconds to wait before shadow or router pod creation timeout")
-	rootCmd.PersistentFlags().BoolVar(&opt.Get().UseShadowDeployment, "useShadowDeployment", false, "Deploy shadow container as deployment")
-	rootCmd.PersistentFlags().BoolVar(&opt.Get().SkipTimeDiff, "useLocalTime", false, "Use local time for resource heartbeat timestamp")
-	rootCmd.PersistentFlags().BoolVarP(&opt.Get().AlwaysUpdateShadow, "forceUpdate", "f", false, "Always re-pull the latest shadow and router image")
-	rootCmd.PersistentFlags().StringVar(&opt.Get().KubeContext, "context", "", "Specify current context of kubeconfig")
-	rootCmd.PersistentFlags().StringVar(&opt.Get().PodQuota, "podQuota", "", "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'")
-
-	rootCmd.PersistentFlags().BoolVar(&opt.Get().RunAsWorkerProcess, "asWorker", false, "Run as worker process")
-	_ = rootCmd.PersistentFlags().MarkHidden("asWorker")
+	rootCmd.SetUsageTemplate(general.UsageTemplate(false))
 	rootCmd.SilenceUsage = true
 	rootCmd.SilenceErrors = true
+	opt.SetOptions(rootCmd, rootCmd.PersistentFlags(), opt.Get().Global, opt.GlobalFlags())
 
 	// process will hang here
 	if err := rootCmd.Execute(); err != nil {
-		log.Error().Msgf("Failed to start: %s", err)
+		log.Error().Msgf("Exit: %s", err)
 	}
 	general.CleanupWorkspace()
 }

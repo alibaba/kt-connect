@@ -1,0 +1,34 @@
+# minimal permission role for all kt commands can run
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: kt-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+      - delete
+      - get
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+      - pods/portforward
+    verbs:
+      - create

@@ -1,12 +1,15 @@
-output
-.github
-.git
-docs
+# IDE files
+*.iml
+.idea/
+.vscode/
 
-.vscode
-bin
+# Unused files
+output/
+.github/
+.git/
+docs/
+testing/
+cmd/
+pkg/
+hack/
 .DS_Store
-
-# web build and modules
-web/build
-web/node_modules

@@ -12,52 +12,49 @@ import (
 )
 
 // NewExchangeCommand return new exchange command
-func NewExchangeCommand(action ActionInterface) *cobra.Command {
+func NewExchangeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "exchange",
 		Short: "Redirect all requests of specified kubernetes service to local",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				return fmt.Errorf("name of service to exchange is required")
+			} else if len(args) > 1 {
+				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+			}
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 {
-				return fmt.Errorf("name of service to exchange is required")
-			}
-			return action.Exchange(args[0])
+			return Exchange(args[0])
 		},
+		Example: "ktctl exchange <service-name> [command options]",
 	}
 
-	cmd.SetUsageTemplate(fmt.Sprintf(general.UsageTemplate, "ktctl exchange <service-name> [command options]"))
-	cmd.Long = cmd.Short
-
-	cmd.Flags().SortFlags = false
-	cmd.InheritedFlags().SortFlags = false
-	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Expose, "expose", "", "Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80")
-	cmd.Flags().StringVar(&opt.Get().ExchangeOptions.Mode, "mode", util.ExchangeModeSelector, "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)")
-	cmd.Flags().IntVar(&opt.Get().ExchangeOptions.RecoverWaitTime, "recoverWaitTime", 120, "(scale method only) Seconds to wait for original deployment recover before turn off the shadow pod")
-	_ = cmd.MarkFlagRequired("expose")
+	cmd.SetUsageTemplate(general.UsageTemplate(true))
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Exchange, opt.ExchangeFlags())
 	return cmd
 }
 
 //Exchange exchange kubernetes workload
-func (action *Action) Exchange(resourceName string) error {
+func Exchange(resourceName string) error {
 	ch, err := general.SetupProcess(util.ComponentExchange)
 	if err != nil {
 		return err
 	}
 
-	if port := util.FindBrokenLocalPort(opt.Get().ExchangeOptions.Expose); port != "" {
+	if port := util.FindBrokenLocalPort(opt.Get().Exchange.Expose); port != "" {
 		return fmt.Errorf("no application is running on port %s", port)
 	}
 
-	if opt.Get().ExchangeOptions.Mode == util.ExchangeModeScale {
+	log.Info().Msgf("Using %s mode", opt.Get().Exchange.Mode)
+	if opt.Get().Exchange.Mode == util.ExchangeModeScale {
 		err = exchange.ByScale(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeEphemeral {
+	} else if opt.Get().Exchange.Mode == util.ExchangeModeEphemeral {
 		err = exchange.ByEphemeralContainer(resourceName)
-	} else if opt.Get().ExchangeOptions.Mode == util.ExchangeModeSelector {
+	} else if opt.Get().Exchange.Mode == util.ExchangeModeSelector {
 		err = exchange.BySelector(resourceName)
 	} else {
-		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().ExchangeOptions.Mode,
+		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().Exchange.Mode,
 			util.ExchangeModeSelector, util.ExchangeModeScale, util.ExchangeModeEphemeral)
 	}
 	if err != nil {

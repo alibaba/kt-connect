@@ -29,24 +29,24 @@ func (s *Cli) Install() *exec.Cmd {
 // Connect ssh-based vpn connect
 func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	var args []string
-	if opt.Get().ConnectOptions.DnsMode == util.DnsModePodDns {
+	if opt.Get().Connect.DnsMode == util.DnsModePodDns {
 		args = append(args, "--dns", "--to-ns", req.RemoteDNSServerAddress)
 	}
-	if opt.Get().Debug {
+	if opt.Get().Global.Debug {
 		args = append(args, "--verbose")
 	}
 
 	subCommand := fmt.Sprintf("ssh -oStrictHostKeyChecking=no -oUserKnownHostsFile=/dev/null -i %s", req.RemoteSSHPKPath)
 	remoteAddr := fmt.Sprintf("root@%s:%d", common.Localhost, req.LocalSshPort)
 	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", common.Localhost)
-	if opt.Get().ConnectOptions.ExcludeIps != "" {
-		for _, ip := range strings.Split(opt.Get().ConnectOptions.ExcludeIps, ",") {
+	if opt.Get().Connect.ExcludeIps != "" {
+		for _, ip := range strings.Split(opt.Get().Connect.ExcludeIps, ",") {
 			args = append(args, "--exclude", ip)
 		}
 	}
 	args = append(args, req.CustomCIDR...)
 	cmd := exec.Command("sshuttle", args...)
-	if !opt.Get().Debug {
+	if !opt.Get().Global.Debug {
 		stdoutPipe, _ := cmd.StdoutPipe()
 		stderrPipe, _ := cmd.StderrPipe()
 		if stdoutPipe != nil && stderrPipe != nil {

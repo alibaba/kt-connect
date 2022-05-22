@@ -1,5 +1,7 @@
 package util
 
+import "fmt"
+
 const (
 	// EnvKubeConfig environment variable for kube config file
 	EnvKubeConfig = "KUBECONFIG"
@@ -67,11 +69,9 @@ const (
 	KtLock = "kt-lock"
 
 	// PostfixRsaKey postfix of local private key name
-	PostfixRsaKey = "_id_rsa"
+	PostfixRsaKey = ".key"
 	// RouterBin path to router executable
 	RouterBin = "/usr/sbin/router"
-	// DumpHostsLock path to lock file for dump hosts
-	DumpHostsLock = "hosts.lock"
 	// SshBitSize ssh bit size
 	SshBitSize = 2048
 	// SshAuthKey auth key name
@@ -112,4 +112,19 @@ const (
 	TunNameMac = "utun"
 	// AlternativeDnsPort alternative port for local dns
 	AlternativeDnsPort = 10053
+
+	// ResourceHeartBeatIntervalMinus interval of resource heart beat
+	ResourceHeartBeatIntervalMinus = 2
+	// PortForwardHeartBeatIntervalSec interval of port-forward heart beat
+	PortForwardHeartBeatIntervalSec = 60
+
+)
+
+var (
+	KtHome = fmt.Sprintf("%s/.kt", UserHome)
+	KtKeyDir = fmt.Sprintf("%s/key", KtHome)
+	KtPidDir = fmt.Sprintf("%s/pid", KtHome)
+	KtLockDir = fmt.Sprintf("%s/lock", KtHome)
+	KtProfileDir = fmt.Sprintf("%s/profile", KtHome)
+	KtConfigFile = fmt.Sprintf("%s/config", KtHome)
 )

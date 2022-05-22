@@ -1,10 +1,12 @@
 package options
 
 import (
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-
 	"github.com/alibaba/kt-connect/pkg/kt/util"
+	"github.com/rs/zerolog/log"
+	"gopkg.in/yaml.v3"
+	"io/ioutil"
+	"reflect"
+	"strconv"
 )
 
 // ConnectOptions ...
@@ -13,14 +15,14 @@ type ConnectOptions struct {
 	DisablePodIp     bool
 	DisableTunDevice bool
 	DisableTunRoute  bool
-	SocksPort        int
+	ProxyPort        int
 	DnsPort          int
-	DnsCacheTtl      int64
+	DnsCacheTtl      int
 	IncludeIps       string
 	ExcludeIps       string
 	Mode             string
 	DnsMode          string
-	SharedShadow     bool
+	ShareShadow      bool
 	ClusterDomain    string
 	SkipCleanup      bool
 }
@@ -40,6 +42,11 @@ type MeshOptions struct {
 	RouterImage string
 }
 
+// RecoverOptions ...
+type RecoverOptions struct {
+
+}
+
 // PreviewOptions ...
 type PreviewOptions struct {
 	External bool
@@ -50,61 +57,45 @@ type PreviewOptions struct {
 type CleanOptions struct {
 	DryRun           bool
 	ThresholdInMinus int64
+	LocalOnly        bool
 	SweepLocalRoute  bool
 }
 
-// RuntimeOptions ...
-type RuntimeOptions struct {
-	Clientset kubernetes.Interface
-	// Version ktctl version
-	Version string
-	// UserHome path of user home, same as ${HOME}
-	UserHome string
-	// AppHome path of kt config folder, default to ${UserHome}/.ktctl
-	AppHome string
-	// Component current sub-command (connect, exchange, mesh or preview)
-	Component string
-	// Shadow pod name
-	Shadow string
-	// Router pod name
-	Router string
-	// Mesh version of mesh pod
-	Mesh string
-	// Origin the origin deployment or service name
-	Origin string
-	// Replicas the origin replicas
-	Replicas int32
-	// Service exposed service name
-	Service string
-	// RestConfig kubectl config
-	RestConfig *rest.Config
+// ConfigOptions ...
+type ConfigOptions struct {
 }
 
-// DaemonOptions cli options
-type DaemonOptions struct {
-	RuntimeStore        *RuntimeOptions
-	PreviewOptions      *PreviewOptions
-	ConnectOptions      *ConnectOptions
-	ExchangeOptions     *ExchangeOptions
-	MeshOptions         *MeshOptions
-	CleanOptions        *CleanOptions
-	RunAsWorkerProcess  bool
-	KubeConfig          string
+// GlobalOptions ...
+type GlobalOptions struct {
+	AsWorker            bool
+	Kubeconfig          string
 	Namespace           string
 	ServiceAccount      string
 	Debug               bool
 	Image               string
 	ImagePullSecret     string
 	NodeSelector        string
-	WithLabels          string
-	WithAnnotations     string
-	PortForwardWaitTime int
-	PodCreationWaitTime int
+	WithLabel           string
+	WithAnnotation      string
+	PortForwardTimeout  int
+	PodCreationTimeout  int
 	UseShadowDeployment bool
-	AlwaysUpdateShadow  bool
-	SkipTimeDiff        bool
-	KubeContext         string
+	ForceUpdate         bool
+	UseLocalTime        bool
+	Context             string
 	PodQuota            string
+}
+
+// DaemonOptions cli options
+type DaemonOptions struct {
+	Connect  *ConnectOptions
+	Exchange *ExchangeOptions
+	Mesh     *MeshOptions
+	Preview  *PreviewOptions
+	Recover  *RecoverOptions
+	Clean    *CleanOptions
+	Config   *ConfigOptions
+	Global   *GlobalOptions
 }
 
 var opt *DaemonOptions
@@ -113,17 +104,60 @@ var opt *DaemonOptions
 func Get() *DaemonOptions {
 	if opt == nil {
 		opt = &DaemonOptions{
-			Namespace:  util.DefaultNamespace,
-			RuntimeStore: &RuntimeOptions{
-				UserHome: util.UserHome,
-				AppHome:  util.KtHome,
-			},
-			ConnectOptions:  &ConnectOptions{},
-			ExchangeOptions: &ExchangeOptions{},
-			MeshOptions:     &MeshOptions{},
-			PreviewOptions:  &PreviewOptions{},
-			CleanOptions:    &CleanOptions{},
+			Global:   &GlobalOptions{},
+			Connect:  &ConnectOptions{},
+			Exchange: &ExchangeOptions{},
+			Mesh:     &MeshOptions{},
+			Preview:  &PreviewOptions{},
+			Recover:  &RecoverOptions{},
+			Clean:    &CleanOptions{},
+			Config:   &ConfigOptions{},
+		}
+		if customize, exist := GetCustomizeKtConfig(); exist {
+			mergeOptions(opt, []byte(customize))
+		}
+		if configData, err := ioutil.ReadFile(util.KtConfigFile); err == nil {
+			mergeOptions(opt, configData)
 		}
 	}
 	return opt
+}
+
+func mergeOptions(opt *DaemonOptions, data []byte) {
+	config := make(map[string]map[string]string)
+	err := yaml.Unmarshal(data, &config)
+	if err != nil {
+		log.Warn().Msgf("Invalid config content, skipping ...")
+		return
+	}
+	for group, item := range config {
+		for key, value := range item {
+			groupField := reflect.ValueOf(opt).Elem().FieldByName(util.Capitalize(group))
+			if groupField.IsValid() {
+				itemField := groupField.Elem().FieldByName(util.Capitalize(key))
+				if itemField.IsValid() {
+					switch itemField.Kind() {
+					case reflect.String:
+						itemField.SetString(value)
+					case reflect.Int:
+						if v, err2 := strconv.Atoi(value); err2 == nil {
+							itemField.SetInt(int64(v))
+						} else {
+							log.Warn().Msgf("Config item '%s.%s' value is not integer: %s", group, key, value)
+						}
+					case reflect.Bool:
+						if v, err2 := strconv.ParseBool(value); err2 == nil {
+							itemField.SetBool(v)
+						} else {
+							log.Warn().Msgf("Config item '%s.%s' value is not bool: %s", group, key, value)
+						}
+					default:
+						log.Warn().Msgf("Config item '%s.%s' of invalid type: %s",
+							group, key, itemField.Kind().String())
+					}
+					log.Debug().Msgf("Loaded %s.%s = %s", group, key, value)
+				}
+			}
+		}
+	}
 }

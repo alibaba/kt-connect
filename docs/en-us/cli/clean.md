@@ -10,8 +10,9 @@ ktctl clean
 Available options:
 
 ```
---dryRun                  Only print name of deployments to be deleted
+--dryRun                  Only print name of resources to be deleted
 --thresholdInMinus value  Length of allowed disconnection time before a unavailing shadow pod be deleted (default: 15)
+--sweepLocalRoute         Also clean up local route table record created by kt
 ```
 
 Key options explanation:

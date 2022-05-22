@@ -11,9 +11,6 @@ import (
 	"time"
 )
 
-const ResourceHeartBeatIntervalMinus = 2
-const portForwardHeartBeatIntervalSec = 60
-
 // LastHeartBeatStatus record last heart beat status to avoid verbose log
 var LastHeartBeatStatus = make(map[string]bool)
 
@@ -24,12 +21,12 @@ func SetupTimeDifference() error {
 	if err != nil {
 		return err
 	}
-	stdout, stderr, err := Ins().ExecInPod(util.DefaultContainer, rectifierPodName, opt.Get().Namespace, "date", "+%s")
+	stdout, stderr, err := Ins().ExecInPod(util.DefaultContainer, rectifierPodName, opt.Get().Global.Namespace, "date", "+%s")
 	if err != nil {
 		return err
 	}
 	go func() {
-		if err2 := Ins().RemovePod(rectifierPodName, opt.Get().Namespace); err2 != nil {
+		if err2 := Ins().RemovePod(rectifierPodName, opt.Get().Global.Namespace); err2 != nil {
 			log.Debug().Err(err).Msgf("Failed to remove pod %s", rectifierPodName)
 		}
 	}()
@@ -50,7 +47,7 @@ func SetupTimeDifference() error {
 
 // SetupHeartBeat setup heartbeat watcher
 func SetupHeartBeat(name, namespace string, updater func(string, string)) {
-	ticker := time.NewTicker(time.Minute *ResourceHeartBeatIntervalMinus - util.RandomSeconds(0, 10))
+	ticker := time.NewTicker(time.Minute *util.ResourceHeartBeatIntervalMinus - util.RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			updater(name, namespace)
@@ -60,7 +57,7 @@ func SetupHeartBeat(name, namespace string, updater func(string, string)) {
 
 // SetupPortForwardHeartBeat setup heartbeat watcher for port forward
 func SetupPortForwardHeartBeat(port int) *time.Ticker {
-	ticker := time.NewTicker(portForwardHeartBeatIntervalSec * time.Second - util.RandomSeconds(0, 5))
+	ticker := time.NewTicker(util.PortForwardHeartBeatIntervalSec * time.Second - util.RandomSeconds(0, 5))
 	go func() {
 		TickLoop:
 		for {
@@ -72,7 +69,7 @@ func SetupPortForwardHeartBeat(port int) *time.Ticker {
 					log.Debug().Msgf("Heartbeat port forward %d ticked at %s", port, util.FormattedTime())
 					_ = conn.Close()
 				}
-			case <-time.After(2 * portForwardHeartBeatIntervalSec * time.Second):
+			case <-time.After(2 * util.PortForwardHeartBeatIntervalSec * time.Second):
 				log.Debug().Msgf("Port forward heartbeat %d stopped", port)
 				break TickLoop
 			}
