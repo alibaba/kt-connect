@@ -24,6 +24,11 @@ func MeshFlags() []OptionConfig {
 			Description:  "Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'",
 		},
 		{
+			Target:       "SkipPortChecking",
+			DefaultValue: false,
+			Description:  "Do not check whether specified local port is listened",
+		},
+		{
 			Target:       "RouterImage",
 			DefaultValue: fmt.Sprintf("%s:v%s", util.ImageKtRouter, Store.Version),
 			Description:  "(auto method only) Customize router image",

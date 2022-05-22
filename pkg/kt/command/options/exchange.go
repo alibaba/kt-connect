@@ -16,6 +16,11 @@ func ExchangeFlags() []OptionConfig {
 			Description:  "Exchange method 'selector', 'scale' or 'ephemeral'(experimental)",
 		},
 		{
+			Target:       "SkipPortChecking",
+			DefaultValue: false,
+			Description:  "Do not check whether specified local port is listened",
+		},
+		{
 			Target:       "RecoverWaitTime",
 			DefaultValue: 120,
 			Description:  "(scale method only) Seconds to wait for original deployment recover before turn off the shadow pod",

@@ -32,7 +32,7 @@ type ExchangeOptions struct {
 	Mode             string
 	Expose           string
 	RecoverWaitTime  int
-  SkipPortChecking bool
+	SkipPortChecking bool
 }
 
 // MeshOptions ...
@@ -41,7 +41,7 @@ type MeshOptions struct {
 	Expose           string
 	VersionMark      string
 	RouterImage      string
-  SkipPortChecking bool
+	SkipPortChecking bool
 }
 
 // RecoverOptions ...
@@ -52,6 +52,7 @@ type RecoverOptions struct {
 type PreviewOptions struct {
 	External bool
 	Expose   string
+	SkipPortChecking bool
 }
 
 // CleanOptions ...

@@ -13,6 +13,11 @@ func PreviewFlags() []OptionConfig {
 			DefaultValue: false,
 			Description:  "If specified, a public, external service is created",
 		},
+		{
+			Target:       "SkipPortChecking",
+			DefaultValue: false,
+			Description:  "Do not check whether specified local port is listened",
+		},
 	}
 	return flags
 }
