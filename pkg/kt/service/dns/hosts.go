@@ -172,6 +172,11 @@ func updateHostsFile(lines []string) error {
 		return err
 	}
 
+	// fix sometimes update windows system hosts file but not effective immediately on existed in linesBeforeDump
+	// because hosts not closed immediately
+	// for example 10.110.55.200 vip-apiserver.test.com, this domain not existed in dns
+	defer file.Close()
+
 	w := bufio.NewWriter(file)
 	continualEmptyLine := false
 	for _, l := range lines {
