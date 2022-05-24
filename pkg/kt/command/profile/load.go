@@ -1,12 +1,15 @@
-package config
+package profile
 
 import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 )
+
+var dryRun bool
 
 func Load(args []string) error {
 	if len(args) != 1 {
@@ -20,10 +23,18 @@ func Load(args []string) error {
 	if err != nil {
 		return fmt.Errorf("unable to read profile file: %s", err)
 	}
-	err = ioutil.WriteFile(util.KtConfigFile, bytesRead, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to save config file: %s", err)
+	if dryRun {
+		fmt.Println(bytesRead)
+	} else {
+		err = ioutil.WriteFile(util.KtConfigFile, bytesRead, 0644)
+		if err != nil {
+			return fmt.Errorf("unable to save config file: %s", err)
+		}
+		log.Info().Msgf("Profile '%s' loaded", args[0])
 	}
-	log.Info().Msgf("Profile '%s' loaded", args[0])
 	return nil
+}
+
+func LoadHandle(cmd *cobra.Command) {
+	cmd.Flags().BoolVar(&dryRun, "dryRun", false, "Print profile content without load it")
 }

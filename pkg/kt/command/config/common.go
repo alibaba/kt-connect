@@ -12,10 +12,6 @@ import (
 	"strings"
 )
 
-func profileFile(profile string) string {
-	return fmt.Sprintf("%s/%s", util.KtProfileDir, profile)
-}
-
 func loadCustomConfig() map[string]map[string]string {
 	config := make(map[string]map[string]string)
 	if customize, exist := opt.GetCustomizeKtConfig(); exist {

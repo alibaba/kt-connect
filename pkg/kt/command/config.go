@@ -4,7 +4,6 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/config"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
-	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/spf13/cobra"
 )
 
@@ -14,43 +13,18 @@ func NewConfigCommand() *cobra.Command {
 		Use:  "config",
 		Short: "List, get or set default value for command options",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			hideGlobalFlags(cmd)
+			opt.HideGlobalFlags(cmd)
 			return cmd.Help()
 		},
-		Example: "ktctl config [list | get key | set key=value | unset key]",
+		Example: "ktctl config [show | get <key> | set <key> <value> | unset <key>]",
 	}
 
-	cmd.AddCommand(SubConfig("show", "List all available and configured options", config.Show, config.ShowHandle))
-	cmd.AddCommand(SubConfig("get", "Fetch default value of specified option", config.Get, nil))
-	cmd.AddCommand(SubConfig("set", "Customize default value of specified option", config.Set, nil))
-	cmd.AddCommand(SubConfig("unset", "Restore default value of specified option", config.Unset, config.UnsetHandle))
-	cmd.AddCommand(SubConfig("save", "Save current configured options as a profile", config.Save, config.SaveHandle))
-	cmd.AddCommand(SubConfig("load", "Show profiles or load config from a profile", config.Load, nil))
+	cmd.AddCommand(general.SimpleSubCommand("show", "Show all available and configured options", config.Show, config.ShowHandle))
+	cmd.AddCommand(general.SimpleSubCommand("get", "Fetch default value of specified option", config.Get, nil))
+	cmd.AddCommand(general.SimpleSubCommand("set", "Customize default value of specified option", config.Set, nil))
+	cmd.AddCommand(general.SimpleSubCommand("unset", "Restore default value of specified option", config.Unset, config.UnsetHandle))
 
 	cmd.SetUsageTemplate(general.UsageTemplate(false))
 	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Config, opt.ConfigFlags())
-	return cmd
-}
-
-func hideGlobalFlags(cmd *cobra.Command) {
-	for _, f := range opt.GlobalFlags() {
-		_ = cmd.InheritedFlags().MarkHidden(util.UnCapitalize(f.Target))
-	}
-}
-
-func SubConfig(name, usage string, action func(args []string) error, postHandler func(cmd *cobra.Command)) *cobra.Command {
-	cmd := &cobra.Command{
-		Use: name,
-		Short: usage,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			hideGlobalFlags(cmd)
-			return action(args)
-		},
-	}
-	cmd.Long = cmd.Short
-	if postHandler != nil {
-		postHandler(cmd)
-	}
-	cmd.SetUsageTemplate(general.UsageTemplate(false))
 	return cmd
 }
