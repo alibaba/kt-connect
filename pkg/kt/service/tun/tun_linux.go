@@ -51,6 +51,11 @@ func (s *Cli) SetRoute(ipRange []string) error {
 	return lastErr
 }
 
+// CheckRoute check whether all route rule setup properly
+func (s *Cli) CheckRoute(ipRange []string) []string {
+	return []string{}
+}
+
 // RestoreRoute delete route rules made by kt
 func (s *Cli) RestoreRoute() error {
 	return nil
