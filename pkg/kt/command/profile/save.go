@@ -4,20 +4,23 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
+	"strings"
 )
-
-var overwrite bool
 
 func Save(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("must specifiy a profile name")
 	}
 	profile := profileFile(args[0])
-	if _, err := os.Stat(profile); err == nil && !overwrite {
-		return fmt.Errorf("profile '%s' already exists, '--overwrite' option is required", args[0])
+	if _, err := os.Stat(profile); err == nil {
+		var answer string
+		fmt.Printf("Profile '%s' already exists, overwrite ? (Y/N) ", args[0])
+		_, err = fmt.Scanln(&answer)
+		if err != nil || !strings.HasPrefix(strings.ToUpper(answer), "Y") {
+			return nil
+		}
 	}
 	bytesRead, err := ioutil.ReadFile(util.KtConfigFile)
 	if err != nil {
@@ -29,8 +32,4 @@ func Save(args []string) error {
 	}
 	log.Info().Msgf("Profile '%s' saved", args[0])
 	return nil
-}
-
-func SaveHandle(cmd *cobra.Command) {
-	cmd.Flags().BoolVar(&overwrite, "force", false, "Save even profile with the same name already exists")
 }

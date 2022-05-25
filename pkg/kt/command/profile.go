@@ -20,7 +20,7 @@ func NewProfileCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(general.SimpleSubCommand("list", "List all pre-saved profiles", profile.List, nil))
-	cmd.AddCommand(general.SimpleSubCommand("save", "Save current configured options as a profile", profile.Save, profile.SaveHandle))
+	cmd.AddCommand(general.SimpleSubCommand("save", "Save current configured options as a profile", profile.Save, nil))
 	cmd.AddCommand(general.SimpleSubCommand("load", "Load config from a profile", profile.Load, profile.LoadHandle))
 	cmd.AddCommand(general.SimpleSubCommand("remove", "Delete a profile", profile.Remove, nil))
 
