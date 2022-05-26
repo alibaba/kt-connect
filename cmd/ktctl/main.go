@@ -50,7 +50,6 @@ func main() {
 	rootCmd.AddCommand(command.NewRecoverCommand())
 	rootCmd.AddCommand(command.NewCleanCommand())
 	rootCmd.AddCommand(command.NewConfigCommand())
-	rootCmd.AddCommand(command.NewProfileCommand())
 	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	rootCmd.SetUsageTemplate(general.UsageTemplate(false))
 	rootCmd.SilenceUsage = true

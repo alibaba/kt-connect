@@ -1,4 +1,4 @@
-package profile
+package config
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func Save(args []string) error {
+func SaveProfile(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("must specifiy a profile name")
 	}

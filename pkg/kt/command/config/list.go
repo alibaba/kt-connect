@@ -1,4 +1,4 @@
-package profile
+package config
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 )
 
-func List(args []string) error {
+func ListProfile(args []string) error {
 	if len(args) > 0 {
 		return fmt.Errorf("parameter '%s' is invalid", args[0])
 	}

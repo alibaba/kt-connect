@@ -1,4 +1,4 @@
-package profile
+package config
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func Remove(args []string) error {
+func DropProfile(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("must specifiy a profile name")
 	}

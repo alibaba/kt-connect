@@ -1,4 +1,4 @@
-package profile
+package config
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 
 var dryRun bool
 
-func Load(args []string) error {
+func LoadProfile(args []string) error {
 	if len(args) != 1 {
 		return fmt.Errorf("must specifiy a profile name")
 	}
@@ -35,6 +35,6 @@ func Load(args []string) error {
 	return nil
 }
 
-func LoadHandle(cmd *cobra.Command) {
+func LoadProfileHandle(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&dryRun, "dryRun", false, "Print profile content without load it")
 }
