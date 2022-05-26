@@ -3,28 +3,17 @@ package util
 import (
 	"bytes"
 	"github.com/rs/zerolog/log"
-	"io"
 	"os/exec"
 )
 
 // RunAndWait run cmd
 func RunAndWait(cmd *exec.Cmd) (string, string, error) {
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-	outBuf := bytes.NewBufferString("")
-	errBuf := bytes.NewBufferString("")
-	if stdout != nil && stderr != nil {
-		go io.Copy(outBuf, stdout)
-		go io.Copy(errBuf, stderr)
-	} else {
-		log.Warn().Msgf("Failed to fetch output of command %s", cmd.Path)
-	}
-
-	if err := runCmd(cmd, cmd.Path); err != nil {
-		return outBuf.String(), errBuf.String(), err
-	}
-	// must run command before fetch outputs
-	err := cmd.Wait()
+	var outBuf bytes.Buffer
+	var errBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+	log.Debug().Msgf("Task %s with args %+v", cmd.Path, cmd.Args)
+	err := cmd.Run()
 	return outBuf.String(), errBuf.String(), err
 }
 
@@ -32,7 +21,8 @@ func RunAndWait(cmd *exec.Cmd) (string, string, error) {
 func BackgroundRun(cmd *exec.Cmd, name string, res chan error) error {
 	cmd.Stderr = BackgroundLogger
 	cmd.Stdout = BackgroundLogger
-	if err := runCmd(cmd, name); err != nil {
+	log.Debug().Msgf("Task %s with args %+v", name, cmd.Args)
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 
@@ -52,9 +42,4 @@ func BackgroundRun(cmd *exec.Cmd, name string, res chan error) error {
 // CanRun check whether a command can execute successful
 func CanRun(cmd *exec.Cmd) bool {
 	return cmd.Run() == nil
-}
-
-func runCmd(cmd *exec.Cmd, name string) error {
-	log.Debug().Msgf("Task %s with args %+v", name, cmd.Args)
-	return cmd.Start()
 }

@@ -69,10 +69,11 @@ func (s *Cli) CheckRoute(ipRange []string) []string {
 	}
 	_, _ = util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
 
+	nameWithPadding := fmt.Sprintf(" %s ", s.GetName())
 	for _, ir := range ipRange {
 		found := false
 		for _, line := range strings.Split(out, util.Eol) {
-			if strings.HasPrefix(line, ir) && strings.HasSuffix(strings.TrimSpace(line), s.GetName()) {
+			if strings.HasPrefix(line, ir) && strings.Contains(line, nameWithPadding) {
 				found = true
 				break
 			}
