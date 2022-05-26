@@ -74,7 +74,7 @@ func setupTunRoute() error {
 		}
 	}
 	if failedRoutes := tun.Ins().CheckRoute(cidrs); len(failedRoutes) > 0 {
-		log.Warn().Msgf("Cannot establish route to %v", failedRoutes)
+		log.Warn().Msgf("Skipped route to %v", failedRoutes)
 	}
 	return nil
 }

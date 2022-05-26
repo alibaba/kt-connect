@@ -69,10 +69,8 @@ func (s *Cli) CheckRoute(ipRange []string) []string {
 	for _, ir := range ipRange {
 		found := false
 		for _, line := range strings.Split(out, util.Eol) {
-			if strings.HasPrefix(line, ir) {
-				if strings.HasSuffix(line, s.GetName()) {
-					found = true
-				}
+			if strings.HasPrefix(line, ir) && strings.HasSuffix(strings.TrimSpace(line), s.GetName()) {
+				found = true
 				break
 			}
 		}

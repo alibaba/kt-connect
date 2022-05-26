@@ -18,7 +18,7 @@ require (
 	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b
 	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461
 	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
-	gopkg.in/yaml.v3 v3.0.0-20220512140231-539c8e751b99
+	gopkg.in/yaml.v3 v3.0.0
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
 	k8s.io/client-go v0.22.0
