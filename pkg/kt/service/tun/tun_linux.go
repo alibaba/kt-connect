@@ -1,6 +1,7 @@
 package tun
 
 import (
+	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
@@ -9,7 +10,9 @@ import (
 
 // CheckContext check everything needed for tun setup
 func (s *Cli) CheckContext() error {
-	// TODO: check whether ip command exists
+	if !util.CanRun(exec.Command("which", "ip")) {
+		return fmt.Errorf("failed to found 'ip' command")
+	}
 	return nil
 }
 
@@ -62,9 +65,9 @@ func (s *Cli) CheckRoute(ipRange []string) []string {
 	))
 	if err != nil {
 		log.Warn().Msgf("Failed to get route table")
-		return failedIpRange
+		return []string{}
 	}
-	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
+	_, _ = util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
 
 	for _, ir := range ipRange {
 		found := false

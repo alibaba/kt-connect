@@ -22,6 +22,9 @@ func (s *Cli) CheckContext() (err error) {
 			err = fmt.Errorf("failed to found tun driver: %v", r)
 		}
 	}()
+	if !util.CanRun(exec.Command("netsh")) {
+		return fmt.Errorf("failed to found 'netsh' command")
+	}
 	wintun.RunningVersion()
 	return
 }
@@ -165,7 +168,7 @@ func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
 		log.Error().Msgf("failed to get network interfaces")
 		return nil, err
 	}
-	util.BackgroundLogger.Write([]byte(">> Get interfaces: " + out + util.Eol))
+	_, _ = util.BackgroundLogger.Write([]byte(">> Get interfaces: " + out + util.Eol))
 
 	for _, line := range strings.Split(out, util.Eol) {
 		if strings.HasSuffix(line, s.GetName()) {
@@ -189,7 +192,7 @@ func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
 		log.Warn().Msgf("failed to get route table")
 		return nil, err
 	}
-	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
+	_, _ = util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
 
 	reachRecord := false
 	for _, line := range strings.Split(out, util.Eol) {

@@ -63,7 +63,7 @@ func GetNameServer() string {
 		log.Error().Msgf("Failed to get upstream dns server")
 		return ""
 	}
-	util.BackgroundLogger.Write([]byte(">> Get dns: " + out + util.Eol))
+	_, _ = util.BackgroundLogger.Write([]byte(">> Get dns: " + out + util.Eol))
 
 	r, _ := regexp.Compile(util.IpAddrPattern)
 	nsAddresses := r.FindAllString(out, 10)

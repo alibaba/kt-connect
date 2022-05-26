@@ -12,7 +12,15 @@ import (
 
 // CheckContext check everything needed for tun setup
 func (s *Cli) CheckContext() error {
-	// TODO: check whether ifconfig, route and netstat command exists
+	if !util.CanRun(exec.Command("which", "ifconfig")) {
+		return fmt.Errorf("failed to found 'ifconfig' command")
+	}
+	if !util.CanRun(exec.Command("which", "route")) {
+		return fmt.Errorf("failed to found 'route' command")
+	}
+	if !util.CanRun(exec.Command("which", "netstat")) {
+		return fmt.Errorf("failed to found 'netstat' command")
+	}
 	return nil
 }
 
@@ -77,9 +85,9 @@ func (s *Cli) CheckRoute(ipRange []string) []string {
 	))
 	if err != nil {
 		log.Warn().Msgf("Failed to get route table")
-		return failedIpRange
+		return []string{}
 	}
-	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
+	_, _ = util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
 
 	for _, ir := range ipRange {
 		found := false
