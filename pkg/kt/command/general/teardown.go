@@ -6,6 +6,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/service/dns"
+	"github.com/alibaba/kt-connect/pkg/kt/service/tun"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os"
@@ -37,6 +38,11 @@ func recoverGlobalHostsAndProxy() {
 		strings.HasPrefix(opt.Get().Connect.DnsMode, util.DnsModeLocalDns) {
 		log.Debug().Msg("Dropping hosts records ...")
 		dns.DropHosts()
+	}
+	if strings.HasPrefix(opt.Get().Connect.DnsMode, util.DnsModeLocalDns) {
+		if err := tun.Ins().RestoreRoute(); err != nil {
+			log.Debug().Err(err).Msgf("Failed to restore route table")
+		}
 	}
 }
 

@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+type RouteRecord struct {
+	TargetRange string
+	InterfaceIndex string
+	InterfaceName string
+}
+
 // CheckContext check everything needed for tun setup
 func (s *Cli) CheckContext() (err error) {
 	defer func() {
@@ -87,14 +93,92 @@ func (s *Cli) SetRoute(ipRange []string) error {
 
 // CheckRoute check whether all route rule setup properly
 func (s *Cli) CheckRoute(ipRange []string) []string {
-	return []string{}
+	var failedIpRange []string
+	records, err := getKtRouteRecords(s)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Route check skipped")
+		return []string{}
+	}
+
+	for _, ir := range ipRange {
+		found := false
+		for _, r := range records {
+			if ir == r.TargetRange {
+				found = true
+				break
+			}
+		}
+		if !found {
+			failedIpRange = append(failedIpRange, ir)
+		}
+	}
+
+	return failedIpRange
 }
 
 // RestoreRoute delete route rules made by kt
 func (s *Cli) RestoreRoute() error {
 	var lastErr error
-	// run command: netsh interface ipv4 show route store=persistent
+	records, err := getKtRouteRecords(s)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range records {
+		// run command: netsh interface ipv4 delete route store=persistent 172.20.0.0/16 29 172.20.0.0
+		_, _, err = util.RunAndWait(exec.Command("netsh",
+			"interface",
+			"ipv4",
+			"delete",
+			"route",
+			"store=persistent",
+			r.TargetRange,
+			r.InterfaceIndex,
+			r.InterfaceName,
+		))
+		if err != nil {
+			log.Warn().Msgf("Failed to clean route to %s", r.TargetRange)
+			lastErr = err
+		} else {
+			log.Info().Msgf(" * %s", r.TargetRange)
+		}
+	}
+	return lastErr
+}
+
+func (s *Cli) GetName() string {
+	return util.TunNameWin
+}
+
+func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
+	records := []RouteRecord{}
+	var ktIdx string
+
+	// run command: netsh interface ipv4 show interfaces
 	out, _, err := util.RunAndWait(exec.Command("netsh",
+		"interface",
+		"ipv4",
+		"show",
+		"interfaces",
+	))
+	if err != nil {
+		log.Error().Msgf("failed to get network interfaces")
+		return nil, err
+	}
+	util.BackgroundLogger.Write([]byte(">> Get interfaces: " + out + util.Eol))
+
+	for _, line := range strings.Split(out, util.Eol) {
+		if strings.HasSuffix(line, s.GetName()) {
+			ktIdx = strings.SplitN(strings.TrimPrefix(line, " "), " ", 2)[0]
+			break
+		}
+	}
+	if ktIdx == "" {
+		return nil, fmt.Errorf("failed to found kt network interface")
+	}
+
+	// run command: netsh interface ipv4 show route store=persistent
+	out, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",
 		"ipv4",
 		"show",
@@ -103,57 +187,47 @@ func (s *Cli) RestoreRoute() error {
 	))
 	if err != nil {
 		log.Warn().Msgf("failed to get route table")
-		return err
+		return nil, err
 	}
 	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
 
+	reachRecord := false
 	for _, line := range strings.Split(out, util.Eol) {
-		// Assume only kt using gateway address of x.x.x.0
-		if !strings.HasSuffix(line, ".0") {
+		if strings.HasPrefix(line, "--") && strings.HasSuffix(line, "--") {
+			reachRecord = true
+			continue
+		}
+		if !reachRecord {
 			continue
 		}
 		parts := strings.Split(line, " ")
 		ipRange := ""
+		idx := ""
 		iface := ""
-		gateway := ""
 		index := 0
-		for i := len(parts) - 1; i >= 0; i-- {
+		for i := 0; i < len(parts); i++ {
 			if parts[i] != "" {
-				index++
 				if index == 3 {
 					ipRange = parts[i]
 					break
-				} else if index == 2 {
+				} else if index == 4 {
+					idx = parts[i]
+				} else if index == 5 {
 					iface = parts[i]
-				} else if index == 1 {
-					gateway = parts[i]
+				} else if index > 5 {
+					iface = fmt.Sprintf("%s %s", iface, parts[i])
 				}
+				index++
 			}
 		}
-		if ipRange == "" {
+		if ktIdx != idx && ipRange != "" && iface != "" {
 			continue
 		}
-		// run command: netsh interface ipv4 delete route store=persistent 172.20.0.0/16 29 172.20.0.0
-		_, _, err = util.RunAndWait(exec.Command("netsh",
-			"interface",
-			"ipv4",
-			"delete",
-			"route",
-			"store=persistent",
-			ipRange,
-			iface,
-			gateway,
-		))
-		if err != nil {
-			log.Warn().Msgf("Failed to clean route to %s", ipRange)
-			lastErr = err
-		} else {
-			log.Info().Msgf(" * %s", ipRange)
-		}
+		records = append(records, RouteRecord{
+			TargetRange: ipRange,
+			InterfaceIndex: idx,
+			InterfaceName: iface,
+		})
 	}
-	return lastErr
-}
-
-func (s *Cli) GetName() string {
-	return util.TunNameWin
+	return records, nil
 }

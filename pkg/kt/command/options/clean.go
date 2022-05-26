@@ -21,11 +21,6 @@ func CleanFlags() []OptionConfig {
 			DefaultValue: false,
 			Description:  "Only check and restore local changes made by kt",
 		},
-		{
-			Target:       "SweepLocalRoute",
-			DefaultValue: false,
-			Description:  "(Beta) Also clean up local route table record created by kt",
-		},
 	}
 	return flags
 }

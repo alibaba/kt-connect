@@ -12,7 +12,7 @@ import (
 
 // CheckContext check everything needed for tun setup
 func (s *Cli) CheckContext() error {
-	// TODO: check whether ifconfig and route command exists
+	// TODO: check whether ifconfig, route and netstat command exists
 	return nil
 }
 
@@ -70,11 +70,38 @@ func (s *Cli) SetRoute(ipRange []string) error {
 
 // CheckRoute check whether all route rule setup properly
 func (s *Cli) CheckRoute(ipRange []string) []string {
-	return []string{}
+	var failedIpRange []string
+	// run command: netstat -rn
+	out, _, err := util.RunAndWait(exec.Command("netstat",
+		"-rn",
+	))
+	if err != nil {
+		log.Warn().Msgf("Failed to get route table")
+		return failedIpRange
+	}
+	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
+
+	for _, ir := range ipRange {
+		found := false
+		for _, line := range strings.Split(out, util.Eol) {
+			ip := strings.Split(ir, "/")[0]
+			if strings.HasPrefix(line, ip) {
+				if strings.HasSuffix(line, s.GetName()) {
+					found = true
+				}
+				break
+			}
+		}
+		if !found {
+			failedIpRange = append(failedIpRange, ir)
+		}
+	}
+	return failedIpRange
 }
 
 // RestoreRoute delete route rules made by kt
 func (s *Cli) RestoreRoute() error {
+	// Route will be auto removed when tun device destroyed
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"os/exec"
+	"strings"
 )
 
 // CheckContext check everything needed for tun setup
@@ -53,11 +54,38 @@ func (s *Cli) SetRoute(ipRange []string) error {
 
 // CheckRoute check whether all route rule setup properly
 func (s *Cli) CheckRoute(ipRange []string) []string {
-	return []string{}
+	var failedIpRange []string
+	// run command: ip route show
+	out, _, err := util.RunAndWait(exec.Command("ip",
+		"route",
+		"show",
+	))
+	if err != nil {
+		log.Warn().Msgf("Failed to get route table")
+		return failedIpRange
+	}
+	util.BackgroundLogger.Write([]byte(">> Get route: " + out + util.Eol))
+
+	for _, ir := range ipRange {
+		found := false
+		for _, line := range strings.Split(out, util.Eol) {
+			if strings.HasPrefix(line, ir) {
+				if strings.HasSuffix(line, s.GetName()) {
+					found = true
+				}
+				break
+			}
+		}
+		if !found {
+			failedIpRange = append(failedIpRange, ir)
+		}
+	}
+	return failedIpRange
 }
 
 // RestoreRoute delete route rules made by kt
 func (s *Cli) RestoreRoute() error {
+	// Route will be auto removed when tun device destroyed
 	return nil
 }
 
