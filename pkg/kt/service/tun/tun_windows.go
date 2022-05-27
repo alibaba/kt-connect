@@ -97,6 +97,12 @@ func (s *Cli) SetRoute(ipRange []string) error {
 // CheckRoute check whether all route rule setup properly
 func (s *Cli) CheckRoute(ipRange []string) []string {
 	var failedIpRange []string
+
+	ktIdx, _, err := getInterfaceIndex(s)
+	if err != nil || ktIdx == "" {
+		log.Warn().Msgf("Failed to found kt network interface")
+	}
+
 	records, err := getKtRouteRecords(s)
 	if err != nil {
 		log.Warn().Err(err).Msgf("Route check skipped")
@@ -106,7 +112,7 @@ func (s *Cli) CheckRoute(ipRange []string) []string {
 	for _, ir := range ipRange {
 		found := false
 		for _, r := range records {
-			if ir == r.TargetRange {
+			if ir == r.TargetRange && ktIdx == r.InterfaceIndex {
 				found = true
 				break
 			}
@@ -122,12 +128,21 @@ func (s *Cli) CheckRoute(ipRange []string) []string {
 // RestoreRoute delete route rules made by kt
 func (s *Cli) RestoreRoute() error {
 	var lastErr error
+
+	_, otherIdx, err := getInterfaceIndex(s)
+	if err != nil {
+		return err
+	}
+
 	records, err := getKtRouteRecords(s)
 	if err != nil {
 		return err
 	}
 
 	for _, r := range records {
+		if util.Contains(otherIdx, r.InterfaceIndex) {
+			continue
+		}
 		// run command: netsh interface ipv4 delete route store=persistent 172.20.0.0/16 29 172.20.0.0
 		_, _, err = util.RunAndWait(exec.Command("netsh",
 			"interface",
@@ -143,7 +158,7 @@ func (s *Cli) RestoreRoute() error {
 			log.Warn().Msgf("Failed to clean route to %s", r.TargetRange)
 			lastErr = err
 		} else {
-			log.Info().Msgf(" * %s", r.TargetRange)
+			log.Debug().Msgf("Drop route to %s", r.TargetRange)
 		}
 	}
 	return lastErr
@@ -153,9 +168,9 @@ func (s *Cli) GetName() string {
 	return util.TunNameWin
 }
 
-func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
-	records := []RouteRecord{}
+func getInterfaceIndex(s *Cli) (string, []string, error) {
 	var ktIdx string
+	var otherIdx []string
 
 	// run command: netsh interface ipv4 show interfaces
 	out, _, err := util.RunAndWait(exec.Command("netsh",
@@ -165,23 +180,35 @@ func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
 		"interfaces",
 	))
 	if err != nil {
-		log.Error().Msgf("failed to get network interfaces")
-		return nil, err
+		log.Error().Msgf("Failed to get network interfaces")
+		return "", nil, err
 	}
 	_, _ = util.BackgroundLogger.Write([]byte(">> Get interfaces: " + out + util.Eol))
 
+	reachRecord := false
 	for _, line := range strings.Split(out, util.Eol) {
+		if strings.HasPrefix(line, "--") && strings.HasSuffix(line, "--") {
+			reachRecord = true
+			continue
+		}
+		if !reachRecord {
+			continue
+		}
+		idx := strings.SplitN(strings.TrimPrefix(line, " "), " ", 2)[0]
 		if strings.HasSuffix(line, s.GetName()) {
-			ktIdx = strings.SplitN(strings.TrimPrefix(line, " "), " ", 2)[0]
-			break
+			ktIdx = idx
+		} else {
+			otherIdx = append(otherIdx, idx)
 		}
 	}
-	if ktIdx == "" {
-		return nil, fmt.Errorf("failed to found kt network interface")
-	}
+	return ktIdx, otherIdx, nil
+}
+
+func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
+	records := []RouteRecord{}
 
 	// run command: netsh interface ipv4 show route store=persistent
-	out, _, err = util.RunAndWait(exec.Command("netsh",
+	out, _, err := util.RunAndWait(exec.Command("netsh",
 		"interface",
 		"ipv4",
 		"show",
@@ -212,7 +239,6 @@ func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
 			if parts[i] != "" {
 				if index == 3 {
 					ipRange = parts[i]
-					break
 				} else if index == 4 {
 					idx = parts[i]
 				} else if index == 5 {
@@ -223,7 +249,7 @@ func getKtRouteRecords(s *Cli) ([]RouteRecord, error) {
 				index++
 			}
 		}
-		if ktIdx != idx && ipRange != "" && iface != "" {
+		if idx == "" || ipRange == "" || iface == "" {
 			continue
 		}
 		records = append(records, RouteRecord{
