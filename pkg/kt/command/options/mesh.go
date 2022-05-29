@@ -26,7 +26,7 @@ func MeshFlags() []OptionConfig {
 		{
 			Target:       "SkipPortChecking",
 			DefaultValue: false,
-			Description:  "Do not check whether specified local port is listened",
+			Description:  "Do not check whether specified local ports are listened",
 		},
 		{
 			Target:       "RouterImage",

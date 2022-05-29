@@ -12,6 +12,7 @@ Available options:
 ```
 --mode value             Exchange method 'selector', 'scale' or 'ephemeral'(experimental) (default: "selector")
 --expose value           Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80
+--skipPortChecking       Do not check whether specified local ports are listened
 --recoverWaitTime value  (scale method only) Seconds to wait for original deployment recover before turn off the shadow pod (default: 120)
 ```
 

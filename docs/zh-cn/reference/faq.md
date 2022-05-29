@@ -3,11 +3,7 @@
 
 #### Q：有多个测试集群时，如何选择连接到哪个集群 ？
 
-A：`ktctl`采用本地`kubectl`工具的集群配置，默认为`~/.kube/config`文件中配置的集群。可通过`KUBECONFIG`环境变量或`--kubeconfig`运行参数指定使用其他配置文件路径。
-
-#### Q：ktctl命令行工具所需的最小RBAC权限 ？
-
-A：配置在`~/.kube/config`中的账户需要具有对Pod、Deployment、Service、ConfigMap资源类型的操作权限，[这个YAML配置](https://github.com/alibaba/kt-connect/blob/master/docs/deploy/rbac/all-commands-mini.yaml) 展示了`ktctl`工具所需的最小可用权限 。
+A：`ktctl`采用本地`kubectl`工具的集群配置，默认为用户主目录下的`.kube/config`文件中配置的集群。可通过`KUBECONFIG`环境变量或`--kubeconfig`运行参数指定使用其他配置文件路径。
 
 #### Q：在MacOS/Linux下遇到`too many open files`报错 ？
 
@@ -23,4 +19,4 @@ A：Ktctl的端口映射功能依赖于集群主机上的`socat`工具，请在�
 
 #### Q：启动`ktctl connect`以后，使用域名访问集群中的服务提示 "Could not resolve host" ?
 
-A：使用`--debug`参数重新启动`ktctl connect`命令，在访问域名时观察`ktctl`控制台上是否有相关的域名检查日志输出。若有 "domain <你访问的域名> not exists" 错误，请检查您所连接的集群和使用的服务域名是否正确（可到集群中的Pod访问该域名进行验证）；若无任何与所查域名相关的输出，则说明系统DNS配置未生效，请提交 [issue](https://github.com/golang/go/issues) 告诉我们，并写明本地操作系统版本和使用的ktctl版本信息。
+A：使用`--debug`参数重新启动`ktctl connect`命令，在访问域名时观察`ktctl`控制台上是否有相关的域名检查日志输出。若有 "domain <你访问的域名> not exists" 错误，请检查您所连接的集群和使用的服务域名是否正确（可到集群中的Pod访问该域名进行验证）；若无任何与所查域名相关的输出，则说明系统DNS配置未生效，请提交 [issue](https://github.com/golang/go/issues) 告诉我们，并写明本地操作系统版本和使用的`ktctl`版本信息。

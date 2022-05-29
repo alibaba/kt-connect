@@ -25,9 +25,13 @@ check:
 
 # build ktctl
 ktctl:
-	GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-linux ./cmd/ktctl
-	GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-darwin ./cmd/ktctl
-	GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/ktctl/ktctl-windows ./cmd/ktctl
+	GOARCH=amd64 GOOS=linux go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/linux/ktctl ./cmd/ktctl
+	GOARCH=amd64 GOOS=darwin go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/macos/ktctl ./cmd/ktctl
+	GOARCH=amd64 GOOS=windows go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/windows/ktctl.exe ./cmd/ktctl
+
+# minimize binary size
+upx:
+	upx -9 artifacts/linux/ktctl artifacts/macos/ktctl artifacts/windows/ktctl.exe
 
 # build this image before shadow
 shadow-base:

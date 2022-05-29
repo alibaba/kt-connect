@@ -1,6 +1,21 @@
 更新日志
 ---
 
+### 0.3.5
+
+> 发布时间：2022-05-30
+
+- 增加`config`命令用于支持全局默认配置
+- `exchange`/`mesh`/`preview`命令支持跳过本地端口检查（感谢 @[wuxs](https://github.com/wuxs)）
+- 增加对本地路由只有部分设置成功情况的检查
+- 去除`connect`命令对集群Namespace查询权限的依赖
+- 支持自定义本地DNS的代理目标地址和顺序
+- 支持定制嵌入kubeconfig配置
+- 本地配置目录由`.ktctl`更名为`.kt`
+- 修复一处hosts文件修改影响内网域名访问的问题（感谢 @[cryice](https://github.com/cryice)）
+- 修复Windows下与OpenVPN共存时的DNS顺序问题
+- 修复某些Windows环境本地路由未正确移除的问题（issue-294）
+
 ### 0.3.4
 
 > 发布时间：2022-05-04

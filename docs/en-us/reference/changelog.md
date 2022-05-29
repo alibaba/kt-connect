@@ -1,6 +1,21 @@
 Changelog
 ---
 
+### 0.3.5
+
+> Release time: 2022-05-30
+
+- Add new command `config` to support global default parameter value
+- `exchange`/`mesh`/`preview` commands support skip local port checking (thanks to @[wuxs](https://github.com/wuxs))
+- Add a check on the result of local route table setting in case of half-done
+- `connect` command remove the permission requirement of listing cluster namespaces
+- Support custom local DNS proxy addresses and order
+- Support embedded kubeconfig configuration into `ktctl` binary
+- The local configuration directory was renamed from `.ktctl` to `.kt`
+- Fixed an issue that modification of hosts file may affect access to intranet domain names (thanks to @[cryice](https://github.com/cryice))
+- Fixed a DNS order issue when coexisting with OpenVPN under Windows
+- Fixed an issue of local routes were not removed correctly in some Windows environments
+
 ### 0.3.4
 
 > Release time: 2022-05-04

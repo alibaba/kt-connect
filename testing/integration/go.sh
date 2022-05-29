@@ -45,7 +45,7 @@ function success() {
 # Clean everything up
 function cleanup() {
   log "cleaning up ..."
-  rm -f ${HOME}/.ktctl/*.pid
+  rm -f ${HOME}/.kt/pid/*.pid
   if [ "${DOCKER_HOST}" != "" ]; then
     PID=`ps aux | grep 'CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
     if [ "${PID}" != "" ]; then
@@ -95,7 +95,7 @@ function check_job() {
 
 # Check if ktctl pid file exists
 function check_pid_file() {
-  pidFile=`ls -t ${HOME}/.ktctl/${1}-*.pid | head -1`
+  pidFile=`ls -t ${HOME}/.kt/pid/${1}-*.pid | head -1`
   pid=`cat ${pidFile}`
   log "ktctl ${1} pid: ${pid}"
 }

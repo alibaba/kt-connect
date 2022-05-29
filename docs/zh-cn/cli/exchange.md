@@ -10,9 +10,10 @@ ktctl exchange <目标服务名> --expose <本地端口>:<目标服务端口>
 命令可选参数：
 
 ```text
---mode value            重定向网络请求的方法，可选值为 "selector"（默认），"scale" 和 "ephemeral"（实验性功能）
---expose value          指定置换服务的一个或多个端口，格式为`port`或`local:remote`，多个端口用逗号分隔，例如：7001,8080:80
---recoverWaitTime value （仅用于scale模式）指定退出时等待原Pod启动完成的最长秒数（默认值为120）
+--mode value             重定向网络请求的方法，可选值为 "selector"（默认），"scale" 和 "ephemeral"（实验性功能）
+--expose value           指定置换服务的一个或多个端口，格式为`port`或`local:remote`，多个端口用逗号分隔，例如：7001,8080:80
+--skipPortChecking       不必检查指定的本地端口是否有服务监听
+--recoverWaitTime value  （仅用于scale模式）指定退出时等待原Pod启动完成的最长秒数（默认值为120）
 ```
 
 关键参数说明：

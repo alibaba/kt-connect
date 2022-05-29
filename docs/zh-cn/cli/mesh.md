@@ -10,10 +10,11 @@ ktctl mesh <目标服务名> --expose <本地端口>:<目标服务端口>
 命令可选参数：
 
 ```
---mode value        实现流量重定向的路由方式，可选值为 "auto"（默认）和 "manual"
---expose value      指定目标服务的一个或多个端口，格式为`port`或`local:remote`，多个端口用逗号分隔，例如：7001,8080:80
---versionMark value 指定本地服务路由的版本标签值，格式可以是 `<标签值>`，`<标签名>:` 或 `<标签名>:<标签值>`
---routerImage value （仅用于auto模式）指定Router Pod使用的镜像地址
+--mode value         实现流量重定向的路由方式，可选值为 "auto"（默认）和 "manual"
+--expose value       指定目标服务的一个或多个端口，格式为`port`或`local:remote`，多个端口用逗号分隔，例如：7001,8080:80
+--versionMark value  指定本地服务路由的版本标签值，格式可以是 `<标签值>`，`<标签名>:` 或 `<标签名>:<标签值>`
+--skipPortChecking   不必检查指定的本地端口是否有服务监听
+--routerImage value  （仅用于auto模式）指定Router Pod使用的镜像地址
 ```
 
 关键参数说明：

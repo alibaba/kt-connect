@@ -10,8 +10,9 @@ ktctl preview <NewService> --expose <LocalPort>:<NewServicePort>
 Available options:
 
 ```
---expose value  Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80
---external      If specified, a public, external service is created
+--expose value      Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80
+--external          If specified, a public, external service is created
+--skipPortChecking  Do not check whether specified local ports are listened
 ```
 
 Key options explanation:

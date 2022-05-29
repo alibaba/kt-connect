@@ -13,6 +13,7 @@ Available options:
 --mode value         Mesh method 'auto' or 'manual' (default: "auto")
 --expose value       Ports to expose, use ',' separated, in [port] or [local:remote] format, e.g. 7001,8080:80
 --versionMark value  Specify the version of mesh service, e.g. '0.0.1' or 'mark:local'
+--skipPortChecking   Do not check whether specified local ports are listened
 --routerImage value  (auto method only) Customize router image (default: "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:vdev")
 ```
 

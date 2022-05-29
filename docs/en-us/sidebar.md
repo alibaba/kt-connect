@@ -10,10 +10,13 @@
   - [Ktctl Preview](en-us/cli/preview.md)
   - [Ktctl Recover](en-us/cli/recover.md)
   - [Ktctl Clean](en-us/cli/clean.md)
+  - [Ktctl Config](en-us/cli/config.md)
 
 - Tech References
   - [Tech Mechanism](en-us/reference/mechanism.md)
   - [Manual Mesh Example](en-us/reference/manual_mesh.md)
+  - [Cluster Permission](en-us/reference/authorization.md)
+  - [Customization](en-us/reference/customize.md)
   - [FAQ](en-us/reference/faq.md)
   - [Changelog](en-us/reference/changelog.md)
 
