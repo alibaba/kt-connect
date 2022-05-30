@@ -28,8 +28,9 @@
           hook.beforeEach(function (html) {
             return html
               + '\n\n----\n\n'
-              + '<a href="https://www.aliyun.com/product/yunxiao" target="_blank" style="color: inherit; font-weight: normal; text-decoration: none;">Powered by 云效</a>'
-              + '<a href="https://github.com/alibaba/kt-connect/issues/new/choose" target="_blank" style="font-weight: normal; text-decoration: none;">Feedback & Issue</a>'
+              + '<a href="https://www.aliyun.com/product/yunxiao" target="_blank" style="font-weight: normal; text-decoration: none;">Powered by 云效</a>'
+              + '<span style="padding: 0 1rem;"> | </span>'
+              + '<a href="https://github.com/alibaba/kt-connect/issues/new/choose" target="_blank" style="color: inherit; font-weight: normal; text-decoration: none;">Feedback & Issue</a>'
           })
         }
       ]
@@ -38,12 +39,6 @@
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
   <script async defer src="https://buttons.github.io/buttons.js"></script>
-  <script>
-    ((window.gitter = {}).chat = {}).options = {
-      room: 'kt-develop/community'
-    };
-    </script>
-  <script src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer></script>
 </body>
 
 </html>
