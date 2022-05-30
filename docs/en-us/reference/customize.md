@@ -47,7 +47,7 @@ Required tools: [go](https://go.dev/dl), [upx](https://github.com/upx/upx/releas
 Under MacOS and Linux systems, it is recommended to use the Make toolkit, with following `make` command:
 
 ```bash
-make mod
+go mod download
 TAG=0.3.5 make ktctl
 make upx
 ````
@@ -66,7 +66,7 @@ For example, compile the binary execution file of Windows 64bit environment:
 set TAG=0.3.5
 set GOARCH=amd64
 set GOOS=windows
-go mod tidy -compat=1.17
+go mod download
 go build -ldflags "-s -w -X main.version=%TAG%" -o artifacts\windows\ktctl.exe .\cmd\ktctl
 upx -9 artifacts\windows\ktctl.exe
 ````
@@ -77,7 +77,7 @@ upx -9 artifacts\windows\ktctl.exe
 $env:TAG="0.3.5"
 $env:GOARCH="amd64"
 $env:GOOS="windows"
-go mod tidy -compat=1.17
+go mod download
 go build -ldflags "-s -w -X main.version=$env:TAG" -o artifacts\windows\ktctl.exe .\cmd\ktctl
 upx -9 artifacts\windows\ktctl.exe
 ````
@@ -88,7 +88,7 @@ upx -9 artifacts\windows\ktctl.exe
 export TAG=0.3.5
 export GOARCH=amd64
 export GOOS=windows
-go mod tidy -compat=1.17
+go mod download
 go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/windows/ktctl.exe ./cmd/ktctl
 upx -9 artifacts/windows/ktctl.exe
 ````

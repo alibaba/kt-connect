@@ -47,7 +47,7 @@ hack
 在MacOS和Linux系统下，推荐使用Make工具打包，执行以下`make`命令：
 
 ```bash
-make mod
+go mod download
 TAG=0.3.5 make ktctl
 make upx
 ```
@@ -66,7 +66,7 @@ Windows环境下的Make工具使用起来相对繁琐，建议直接使用`go`�
 set TAG=0.3.5
 set GOARCH=amd64
 set GOOS=windows
-go mod tidy -compat=1.17
+go mod download
 go build -ldflags "-s -w -X main.version=%TAG%" -o artifacts\windows\ktctl.exe .\cmd\ktctl
 upx -9 artifacts\windows\ktctl.exe
 ```
@@ -77,7 +77,7 @@ upx -9 artifacts\windows\ktctl.exe
 $env:TAG="0.3.5"
 $env:GOARCH="amd64"
 $env:GOOS="windows"
-go mod tidy -compat=1.17
+go mod download
 go build -ldflags "-s -w -X main.version=$env:TAG" -o artifacts\windows\ktctl.exe .\cmd\ktctl
 upx -9 artifacts\windows\ktctl.exe
 ```
@@ -88,7 +88,7 @@ upx -9 artifacts\windows\ktctl.exe
 export TAG=0.3.5
 export GOARCH=amd64
 export GOOS=windows
-go mod tidy -compat=1.17
+go mod download
 go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/windows/ktctl.exe ./cmd/ktctl
 upx -9 artifacts/windows/ktctl.exe
 ```
