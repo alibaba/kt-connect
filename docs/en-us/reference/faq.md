@@ -5,10 +5,6 @@ Frequency Asked Questions
 
 A: `ktctl` will access cluster according to local configuration of `kubectl` tool, which usually lay on `~/.kube/config`.
 
-#### Q: What is the minimal RBAC permission required by `ktctl` client ?
-
-A: Please check out this [cluster role yaml](https://github.com/alibaba/kt-connect/blob/feature/minimum-permissions/docs/deploy/rbac/all-commands-mini.yaml). 
-
 #### Q: Encounter error of "too many open files" under MacOS/Linux ?
 
 A: This is caused by the insufficient upper limit of the number of system file handles. For solutions, please refer to: [MacOS](https://www.jianshu.com/p/d6f7d1557f20) / [Linux](https://zhuanlan.zhihu.com/p/75897823)

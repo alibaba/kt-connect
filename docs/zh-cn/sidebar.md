@@ -10,7 +10,7 @@
   - [ktctl preview](zh-cn/cli/preview.md)
   - [Ktctl recover](zh-cn/cli/recover.md)
   - [ktctl clean](zh-cn/cli/clean.md)
-  - [Ktctl Config](en-us/cli/config.md)
+  - [ktctl config](zh-cn/cli/config.md)
 
 - 技术参考
   - [技术原理](zh-cn/reference/mechanism.md)

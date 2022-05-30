@@ -10,7 +10,7 @@
   - [Ktctl Preview](en-us/cli/preview.md)
   - [Ktctl Recover](en-us/cli/recover.md)
   - [Ktctl Clean](en-us/cli/clean.md)
-  - [Ktctl Config](en-us/cli/config.md)
+  - [ktctl config](en-us/cli/config.md)
 
 - Tech References
   - [Tech Mechanism](en-us/reference/mechanism.md)

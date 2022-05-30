@@ -3,11 +3,9 @@ Customized KT
 
 As part of DevOps practices, we always believe that developers should have self-service access to manage test environments. However, in reality, due to information security and process control reasons, some companies cannot hand over the kubeconfig configuration with cluster resource editing permissions to every developer.
 
-Is it possible to directly bind a specific cluster permission to the `ktctl` command to achieve cluster network connectivity and service replacement without distributing kubeconfig files ?
-
 Not only that, in some enterprises, the test environments may not able to access the public network (so the shadow pod image address needs to be changed), or have special resource audit rules (e.g. pod must have CpuLimit attribute), or special resource usage specifications (e.g. each pod must have NodeSelector uniformly) ... In those cases, every developer needs to configure a series of parameters before they can use the `ktctl` tool normally.
 
-Can the default values of the parameters of `ktctl` be preset so that developers can use it out of the box without configuration ?
+Is it possible to directly bind a specific cluster permission to the `ktctl` command to achieve cluster network connectivity and service replacement without distributing kubeconfig files ? And can the default values of the parameters of `ktctl` be preset so that developers can use it out of the box without configuration ?
 
 To solve these problems, you can start from the source code and customize an exclusive KT version within the enterprise.
 
@@ -26,7 +24,7 @@ git clone https://github.com/alibaba/kt-connect.git
 cd kt-connect
 ````
 
-Currently, the `ktctl` tool provides two quick customization points. There is a config file in both "kt" and "kube" subdirectories of the "hack" directory of the kt-connect code.
+Currently, the `ktctl` tool provides two quick customization points. There is a config file in both `kt` and `kube` subdirectories of the `hack` directory of the kt-connect code.
 
 ```sql
 hack
@@ -37,8 +35,8 @@ hack
     └── config  <-- global kube-config custom file
 ````
 
-- Encapsulate cluster permissions: Copy the kubeconfig file with configured permissions (the ".kube/config" file in the user's home directory by default) to the "kube" subdirectory under the "hack" directory, overwriting the original one
-- Modify the default value of ktctl command parameters: generate or manually edit the `ktctl` configuration file (".kt/config" file in the user's home directory) through `ktctl config`, copy it to the "kt" subdirectory under the "hack" directory , overwrite the original one
+- Encapsulate cluster permissions: Copy the kubeconfig file with configured permissions (the ".kube/config" file in the user's home directory by default) to the `kube` subdirectory under the `hack` directory, overwriting the original one
+- Modify the default value of ktctl command parameters: generate or manually edit the ktctl configuration file (".kt/config" file in the user's home directory) through `ktctl config`, copy it to the `kt` subdirectory under the `hack` directory , overwrite the original one
 
 This completes the built-in permissions and configuration customization. Next, you need to repackage and generate the `ktctl` executable file.
 

@@ -3,11 +3,9 @@
 
 虽然我们始终认为，作为DevOps实践的一部分，开发者应当对测试环境具有自助访问和管理的权限。然而现实中，由于信息安全和流程管控的原因，有些企业并不能将带有集群资源编辑权限的kubeconfig配置交给每一位开发者。
 
-能否直接将特定的集群权限与`ktctl`命令绑定，在无需分发kubeconfig文件的情况下，实现集群网络打通、服务置换功能呢？
-
 不仅如此，在一些企业中还存在测试环境无法访问公网（需要改ShadowPod镜像地址）、特殊的资源审核规则（如Pod必须有CpuLimit属性）或特殊的资源使用规范（如需统一设定NodeSelector）等情况，使得每位开发者都需要先进行一连串参数配置才能正常使用`ktctl`工具。
 
-能否调整`ktctl`的参数的默认值，让开发者开箱即用无需配置呢？
+那么，能否直接将特定的集群权限与`ktctl`命令绑定，在无需分发kubeconfig文件的情况下，实现集群网络打通、服务置换功能，同时调整`ktctl`的参数的默认值，让开发者开箱即用无需配置呢？
 
 需要解决这些问题，可以从源码入手，定制一个企业内部的专属KT版本。
 
@@ -26,7 +24,7 @@ git clone https://github.com/alibaba/kt-connect.git
 cd kt-connect
 ```
 
-目前，`ktctl`工具提供了两个快速定制点。在kt-connect代码的"hack"目录的"kt"和"kube"子目录中分别有一个config文件。
+目前，`ktctl`工具提供了两个快速定制点。在kt-connect代码的`hack`目录的`kt`和`kube`子目录中分别有一个config文件。
 
 ```sql
 hack
@@ -37,8 +35,8 @@ hack
     └── config   <-- 全局kube-config定制文件
 ```
 
-- 封装集群权限：将已配置好权限的kubeconfig文件（默认是用户主目录下的".kube/config"文件）复制到"hack"目录下的"kube"子目录中，覆盖原本的config文件
-- 修改ktctl命令参数默认值：通过`ktctl config`生成或手工编辑`ktctl`配置文件（用户主目录下的".kt/config"文件），复制到"hack"目录下的"kt"子目录中，覆盖原本的config文件
+- 封装集群权限：将已配置好权限的kubeconfig文件（默认是用户主目录下的".kube/config"文件）复制到`hack`目录下的`kube`子目录中，覆盖原本的config文件
+- 修改ktctl命令参数默认值：通过`ktctl config`生成或手工编辑ktctl配置文件（用户主目录下的".kt/config"文件），复制到`hack`目录下的`kt`子目录中，覆盖原本的config文件
 
 这样就完成了权限内置和配置定制化，接下来需要重新打包生成`ktctl`可执行文件。
 
