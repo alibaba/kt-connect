@@ -44,45 +44,30 @@ This completes the built-in permissions and configuration customization. Next, y
 
 Required tools: [go](https://go.dev/dl), [upx](https://github.com/upx/upx/releases/latest), [make](https://cmake.org/install/) (optional)
 
-Under MacOS and Linux systems, it is recommended to use the Make toolkit, with following `make` command:
+Under MacOS and Linux systems, you can simply use the Make toolkit, with following `make` command:
 
 ```bash
-go mod download
 TAG=0.3.5 make ktctl
 make upx
 ````
 
 After execution, binary files for MacOS/Linux/Windows systems will be generated in the `artifacts` directory at one time.
 
-The Make toolkit in the Windows environment is relatively cumbersome to use. It is recommended to use the `go` and `upx` commands to complete packaging directly. For specific commands, please refer to the `ktctl` and `upx` tasks in [Makefile](https://github.com/alibaba/kt-connect/blob/master/Makefile).
+The Make toolkit in the Windows environment is relatively cumbersome to use, it is recommended to use below raw commands to create the executable binary.
+
+For more precise compilation control, you can also directly use the `go` and `upx` commands to complete the packaging. For more details, please refer to the `ktctl` and `upx` tasks in [Makefile](https://github.com/alibaba/kt-connect/blob/master/Makefile).
+
+It contains three configurable variables:
+
+- `TAG`: It is recommended to be consistent with the latest release version of kt-connect, unless you have customized both `global.image` and `mesh.router-image` configurations to the internal image address of the enterprise, otherwise using an unofficial version of the `TAG` value will cause `ktctl` fail to pull required image.
+- `GOARCH`: The target processor type for compilation, common values are: `386` (32-bit CPU) / `amd64` (32-bit CPU) / `arm64` (64-bit ARM CPU), etc.
+- `GOOS`: The target operating system for compilation, common values are: `darwin` (MacOS) / `linux` (Linux) / `windows` (Windows), etc.
 
 For example, compile the binary execution file of Windows 64bit environment:
 
 <!-- tabs:start -->
 
-####**cmd**
-
-```bash
-set TAG=0.3.5
-set GOARCH=amd64
-set GOOS=windows
-go mod download
-go build -ldflags "-s -w -X main.version=%TAG%" -o artifacts\windows\ktctl.exe .\cmd\ktctl
-upx -9 artifacts\windows\ktctl.exe
-````
-
-#### **PowerShell**
-
-```bash
-$env:TAG="0.3.5"
-$env:GOARCH="amd64"
-$env:GOOS="windows"
-go mod download
-go build -ldflags "-s -w -X main.version=$env:TAG" -o artifacts\windows\ktctl.exe .\cmd\ktctl
-upx -9 artifacts\windows\ktctl.exe
-````
-
-####**MINGW**
+#### ** MacOS Shell / Linux Shell / Windows MINGW **
 
 ```bash
 export TAG=0.3.5
@@ -93,9 +78,29 @@ go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/windows/ktctl.exe 
 upx -9 artifacts/windows/ktctl.exe
 ````
 
-<!-- tabs:end -->
+#### ** Windows CMD **
 
-Note: The value of the `TAG` variable in the above command is recommended to be consistent with the latest release version of kt-connect, unless you have customized both `global.image` and `mesh.router-image` configurations to the internal image address of the enterprise, otherwise using an unofficial version of the `TAG` value will cause `ktctl` fail to pull required image.
+```bash
+set TAG=0.3.5
+set GOARCH=amd64
+set GOOS=windows
+go mod download
+go build -ldflags "-s -w -X main.version=%TAG%" -o artifacts\windows\ktctl.exe .\cmd\ktctl
+upx -9 artifacts\windows\ktctl.exe
+````
+
+#### ** Windows PowerShell **
+
+```bash
+$env:TAG="0.3.5"
+$env:GOARCH="amd64"
+$env:GOOS="windows"
+go mod download
+go build -ldflags "-s -w -X main.version=$env:TAG" -o artifacts\windows\ktctl.exe .\cmd\ktctl
+upx -9 artifacts\windows\ktctl.exe
+````
+
+<!-- tabs:end -->
 
 After the generated binary file has been tested and verified, it can be directly distributed to the developer for use : )
 

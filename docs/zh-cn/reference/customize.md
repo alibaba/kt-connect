@@ -44,45 +44,30 @@ hack
 
 所需工具：[go](https://go.dev/dl)、[upx](https://github.com/upx/upx/releases/latest)、[make](https://cmake.org/install/)（可选）
 
-在MacOS和Linux系统下，推荐使用Make工具打包，执行以下`make`命令：
+在MacOS和Linux系统下，可以使用Make工具打包，执行以下`make`命令：
 
 ```bash
-go mod download
 TAG=0.3.5 make ktctl
 make upx
 ```
 
 执行后将在`artifacts`目录下一次性生成MacOS/Linux/Windows系统所用的二进制文件。
 
-Windows环境下的Make工具使用起来相对繁琐，建议直接使用`go`和`upx`命令来完成打包，具体命令可以参考[Makefile](https://github.com/alibaba/kt-connect/blob/master/Makefile)中的`ktctl`和`upx`任务。
+Windows环境下的Make工具使用起来相对繁琐，建议采用下述原始命令方式打包。
 
-以打Windows环境的二进制包为例：
+如需进行更精细的编译控制，也可以直接使用`go`和`upx`命令来完成打包，具体命令可以参考[Makefile](https://github.com/alibaba/kt-connect/blob/master/Makefile)中的`ktctl`和`upx`任务。
+
+其中包含三个配置变量：
+
+- `TAG`：建议与kt-connect的最新发行版本保持一致，除非您已经将`global.image`和`mesh.router-image`配置都定制为了企业内部镜像地址，否则使用非正式版本的`TAG`值会导致运行时无法拉取所需的镜像。
+- `GOARCH`：编译的目标处理器类型，常用值为：`386`（32位CPU） / `amd64`（32位CPU） / `arm64`（64位ARM CPU）等
+- `GOOS`：编译包的目标系统，常用值为：`darwin`（MacOS） / `linux`（Linux） / `windows`（Windows）等
+
+以打64位Windows环境的二进制包为例：
 
 <!-- tabs:start -->
 
-#### ** CMD **
-
-```bash
-set TAG=0.3.5
-set GOARCH=amd64
-set GOOS=windows
-go mod download
-go build -ldflags "-s -w -X main.version=%TAG%" -o artifacts\windows\ktctl.exe .\cmd\ktctl
-upx -9 artifacts\windows\ktctl.exe
-```
-
-#### ** PowerShell **
-
-```bash
-$env:TAG="0.3.5"
-$env:GOARCH="amd64"
-$env:GOOS="windows"
-go mod download
-go build -ldflags "-s -w -X main.version=$env:TAG" -o artifacts\windows\ktctl.exe .\cmd\ktctl
-upx -9 artifacts\windows\ktctl.exe
-```
-
-#### ** MINGW **
+#### ** MacOS Shell / Linux Shell / Windows MINGW **
 
 ```bash
 export TAG=0.3.5
@@ -93,9 +78,29 @@ go build -ldflags "-s -w -X main.version=${TAG}" -o artifacts/windows/ktctl.exe 
 upx -9 artifacts/windows/ktctl.exe
 ```
 
-<!-- tabs:end -->
+#### ** Windows CMD **
 
-注意：上述命令中的`TAG`变量值建议与kt-connect的最新发行版本保持一致，除非您已经将`global.image`和`mesh.router-image`配置都定制为了企业内部镜像地址，否则使用非正式版本的`TAG`值会导致运行时无法拉取所需的镜像。
+```bash
+set TAG=0.3.5
+set GOARCH=amd64
+set GOOS=windows
+go mod download
+go build -ldflags "-s -w -X main.version=%TAG%" -o artifacts\windows\ktctl.exe .\cmd\ktctl
+upx -9 artifacts\windows\ktctl.exe
+```
+
+#### ** Windows PowerShell **
+
+```bash
+$env:TAG="0.3.5"
+$env:GOARCH="amd64"
+$env:GOOS="windows"
+go mod download
+go build -ldflags "-s -w -X main.version=$env:TAG" -o artifacts\windows\ktctl.exe .\cmd\ktctl
+upx -9 artifacts\windows\ktctl.exe
+```
+
+<!-- tabs:end -->
 
 生成二进制文件在经过测试验证无误后，就可以分发给开发同学使用啦 : )
 
