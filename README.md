@@ -11,7 +11,7 @@ KT-Connect
 
 English | [简体中文](./README_CN.md)
 
-KtConnect (short for "Kubernetes Toolkit Connect") is a utility tool to help you work with Kubernetes dev environment more efficiently.
+KtConnect ("Kt" is short for "Kubernetes Toolkit") is a utility tool to help you work with Kubernetes dev environment more efficiently.
 
 ![Arch](./docs/media/arch.png)
 

@@ -60,7 +60,7 @@ Windows环境下的Make工具使用起来相对繁琐，建议采用下述原始
 其中包含三个配置变量：
 
 - `TAG`：建议与kt-connect的最新发行版本保持一致，除非您已经将`global.image`和`mesh.router-image`配置都定制为了企业内部镜像地址，否则使用非正式版本的`TAG`值会导致运行时无法拉取所需的镜像。
-- `GOARCH`：编译的目标处理器类型，常用值为：`386`（32位CPU） / `amd64`（32位CPU） / `arm64`（64位ARM CPU）等
+- `GOARCH`：编译的目标处理器类型，常用值为：`386`（32位CPU） / `amd64`（64位CPU） / `arm64`（64位ARM CPU）等
 - `GOOS`：编译包的目标系统，常用值为：`darwin`（MacOS） / `linux`（Linux） / `windows`（Windows）等
 
 以打64位Windows环境的二进制包为例：

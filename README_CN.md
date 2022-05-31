@@ -11,7 +11,7 @@ KT-Connect
 
 [English](./README.md) | 简体中文
 
-KtConnect（全称Kubernetes Toolkit Connect）是一款基于Kubernetes环境用于提高本地测试联调效率的小工具。
+KtConnect（Kt为Kubernetes Toolkit集群工具包的简写）是一款基于Kubernetes环境用于提高本地测试联调效率的小工具。
 
 ![Arch](./docs/media/arch.png)
 

@@ -60,7 +60,7 @@ For more precise compilation control, you can also directly use the `go` and `up
 It contains three configurable variables:
 
 - `TAG`: It is recommended to be consistent with the latest release version of kt-connect, unless you have customized both `global.image` and `mesh.router-image` configurations to the internal image address of the enterprise, otherwise using an unofficial version of the `TAG` value will cause `ktctl` fail to pull required image.
-- `GOARCH`: The target processor type for compilation, common values are: `386` (32-bit CPU) / `amd64` (32-bit CPU) / `arm64` (64-bit ARM CPU), etc.
+- `GOARCH`: The target processor type for compilation, common values are: `386` (32-bit CPU) / `amd64` (64-bit CPU) / `arm64` (64-bit ARM CPU), etc.
 - `GOOS`: The target operating system for compilation, common values are: `darwin` (MacOS) / `linux` (Linux) / `windows` (Windows), etc.
 
 For example, compile the binary execution file of Windows 64bit environment:
