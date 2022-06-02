@@ -16,7 +16,7 @@ Install (use x86 64 edition as example):
 $ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.5/ktctl_0.3.5_MacOS_x86_64.tar.gz
 $ tar zxf ktctl_0.3.5_MacOS_x86_64.tar.gz
 $ mv ktctl /usr/local/bin/ktctl
-$ ktctl help
+$ ktctl --version
 ```
 
 #### ** Linux **
@@ -33,7 +33,7 @@ Install (use x86 64 edition as example):
 $ curl -OL https://github.com/alibaba/kt-connect/releases/download/v0.3.5/ktctl_0.3.5_Linux_x86_64.tar.gz
 $ tar zxf ktctl_0.3.5_Linux_x86_64.tar.gz
 $ mv ktctl /usr/local/bin/ktctl
-$ ktctl help
+$ ktctl --version
 ```
 
 #### ** Windows **
