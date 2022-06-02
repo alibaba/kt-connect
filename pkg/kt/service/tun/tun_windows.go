@@ -194,7 +194,7 @@ func getInterfaceIndex(s *Cli) (string, []string, error) {
 		if !reachRecord {
 			continue
 		}
-		idx := strings.SplitN(strings.TrimPrefix(line, " "), " ", 2)[0]
+		idx := strings.SplitN(strings.TrimLeft(line, " "), " ", 2)[0]
 		if strings.HasSuffix(line, s.GetName()) {
 			ktIdx = idx
 		} else {
