@@ -1,6 +1,6 @@
 package options
 
-func ConfigFlags() []OptionConfig {
+func BirdseyeFlags() []OptionConfig {
 	flags := []OptionConfig{
 	}
 	return flags

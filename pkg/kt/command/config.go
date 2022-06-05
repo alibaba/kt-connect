@@ -29,6 +29,6 @@ func NewConfigCommand() *cobra.Command {
 	cmd.AddCommand(general.SimpleSubCommand("drop-profile", "Delete a profile", config.DropProfile, nil))
 
 	cmd.SetUsageTemplate(general.UsageTemplate(false))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Config, opt.ConfigFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Config, []opt.OptionConfig{})
 	return cmd
 }
