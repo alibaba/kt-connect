@@ -66,6 +66,13 @@ type CleanOptions struct {
 type ConfigOptions struct {
 }
 
+// BirdseyeOptions ...
+type BirdseyeOptions struct {
+	SortBy             string
+	ShowConnector      bool
+	HideNaturalService bool
+}
+
 // GlobalOptions ...
 type GlobalOptions struct {
 	AsWorker            bool
@@ -97,6 +104,7 @@ type DaemonOptions struct {
 	Recover  *RecoverOptions
 	Clean    *CleanOptions
 	Config   *ConfigOptions
+	Birdseye *BirdseyeOptions
 	Global   *GlobalOptions
 }
 
@@ -113,6 +121,7 @@ func Get() *DaemonOptions {
 			Preview:  &PreviewOptions{},
 			Recover:  &RecoverOptions{},
 			Clean:    &CleanOptions{},
+			Birdseye: &BirdseyeOptions{},
 			Config:   &ConfigOptions{},
 		}
 		if customize, exist := GetCustomizeKtConfig(); exist {

@@ -243,8 +243,8 @@ func getDeploymentByService(svc *coreV1.Service, namespace string) (*appV1.Deplo
 }
 
 func GetOccupiedUser(labels map[string]string) string {
-	podList, err3 := cluster.Ins().GetPodsByLabel(labels, opt.Get().Global.Namespace)
-	if err3 == nil && len(podList.Items) > 0 && podList.Items[0].Annotations != nil && podList.Items[0].Annotations[util.KtUser] != "" {
+	podList, err := cluster.Ins().GetPodsByLabel(labels, opt.Get().Global.Namespace)
+	if err == nil && len(podList.Items) > 0 && podList.Items[0].Annotations != nil && podList.Items[0].Annotations[util.KtUser] != "" {
 		return " (" + podList.Items[0].Annotations[util.KtUser] + ")"
 	}
 	appList, err := cluster.Ins().GetDeploymentsByLabel(labels, opt.Get().Global.Namespace)
