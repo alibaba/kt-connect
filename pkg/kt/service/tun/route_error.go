@@ -12,6 +12,9 @@ func (e AllRouteFailError) Error() string {
 }
 
 func (e AllRouteFailError) OriginalError() error {
+	if e.originalError == nil {
+		return fmt.Errorf("no route available")
+	}
 	return e.originalError
 }
 
