@@ -2,9 +2,9 @@ package command
 
 import (
 	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/command/birdseye"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
-	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -34,50 +34,43 @@ func NewBirdseyeCommand() *cobra.Command {
 }
 
 func Birdseye() error {
-	if opt.Get().Birdseye.ShowConnector {
-		pods, err := cluster.Ins().GetPodsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit},
-			opt.Get().Global.Namespace)
-		if err != nil {
-			return err
-		}
-		unknownUserCount := 0
-		for _, pod := range pods.Items {
-			if role, exists := pod.Labels[util.KtRole]; !exists || role != util.RoleConnectShadow {
-				continue
-			}
-			if user, exists := pod.Annotations[util.KtUser]; exists {
-				lastHeartBeat := util.ParseTimestamp(pod.Annotations[util.KtLastHeartBeat])
-				if lastHeartBeat > 0 {
-					lastActiveInMin := (util.GetTime() - lastHeartBeat) / 60
-					log.Info().Msgf("%s (last active %d min ago)", user, lastActiveInMin)
-				} else {
-					log.Info().Msgf("%s", user)
-				}
-			} else {
-				unknownUserCount++
-			}
-		}
-		if unknownUserCount > 0 {
-			log.Info().Msgf("%d unknown users", unknownUserCount)
-		}
-	}
-	svcs, err := cluster.Ins().GetAllServiceInNamespace(opt.Get().Global.Namespace)
+	pods, apps, svcs, err := birdseye.GetKtPodsAndAllServices(opt.Get().Global.Namespace)
 	if err != nil {
 		return err
 	}
-	allServices := make([]string, 0)
-	//exchangedServices := make([]string, 0)
-	//meshedServices := make([]string, 0)
-	//previewingServices := make([]string, 0)
-	for _, svc := range svcs.Items {
-		if cb, exists := svc.Annotations[util.ControlBy]; exists && cb == util.KubernetesToolkit {
 
+	if opt.Get().Birdseye.ShowConnector {
+		birdseye.ShowConnectors(pods, apps)
+	}
+
+	// service-name, service-description
+	allServices := make([][]string, 0)
+	for _, svc := range svcs {
+		if cb, exists := svc.Labels[util.ControlBy]; exists && cb == util.KubernetesToolkit {
+			for _, p := range pods {
+				if util.MapContains(svc.Spec.Selector, p.Labels) {
+					if role := p.Labels[util.KtRole]; role == util.RolePreviewShadow {
+						allServices = append(allServices, []string{svc.Name, "previewing"})
+						continue
+					} else if role == util.RoleExchangeShadow {
+						user := p.Annotations[util.KtUser]
+						if user == "" {
+							user = "unknown user"
+						}
+						allServices = append(allServices, []string{svc.Name, "exchanged by " + user})
+						continue
+					} else if role == util.RoleMeshShadow {
+						allServices = append(allServices, []string{svc.Name, "meshed"})
+						continue
+					}
+				}
+			}
 		} else if !opt.Get().Birdseye.HideNaturalService {
-			allServices = append(allServices, svc.Name)
+			allServices = append(allServices, []string{svc.Name, "normal"})
 		}
 	}
 	for _, svc := range allServices {
-		log.Info().Msgf("%s", svc)
+		log.Info().Msgf("%s - %s", svc[0], svc[1])
 	}
 	return nil
 }
