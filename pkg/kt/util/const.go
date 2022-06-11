@@ -53,7 +53,7 @@ const (
 	ControlBy = "control-by"
 	// KtTarget label used for service selecting shadow or route pod
 	KtTarget = "kt-target"
-	// KtRole label used for auto mesh roles
+	// KtRole label used for mark kt pod role
 	KtRole = "kt-role"
 	// KtConfig annotation used for clean up context
 	KtConfig = "kt-config"

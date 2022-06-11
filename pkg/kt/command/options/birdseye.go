@@ -4,8 +4,8 @@ func BirdseyeFlags() []OptionConfig {
 	flags := []OptionConfig{
 		{
 			Target:      "SortBy",
-			DefaultValue: "name",
-			Description: "Sort service by 'name' or 'create-time'",
+			DefaultValue: "status",
+			Description: "Sort service by 'status' or 'name'",
 		},
 		{
 			Target:      "ShowConnector",

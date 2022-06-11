@@ -23,6 +23,9 @@ func Contains(container any, target any) bool {
 }
 
 func MapContains(subset, fullset map[string]string) bool {
+	if subset == nil {
+		return false
+	}
 	for sk, sv := range subset {
 		if fullset[sk] != sv {
 			return false
