@@ -59,11 +59,6 @@ func AutoMesh(svc *coreV1.Service) error {
 		return err
 	}
 
-	// Check service in sanity status
-	if err = sanityCheck(svc); err != nil {
-		return err
-	}
-
 	// Create stuntman service
 	if err = createStuntmanService(svc, ports); err != nil {
 		return err
@@ -221,7 +216,13 @@ func createStuntmanService(svc *coreV1.Service, ports map[int]int) error {
 	if stuntmanSvc, err := cluster.Ins().GetService(stuntmanSvcName, namespace); err != nil {
 		if !k8sErrors.IsNotFound(err) {
 			return err
-		} else if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
+		}
+		// Check service in sanity status
+		if err = sanityCheck(svc); err != nil {
+			return err
+		}
+		// Stuntman service not exist yet, create it
+		if _, err = cluster.Ins().CreateService(&cluster.SvcMetaAndSpec{
 			Meta: &cluster.ResourceMeta{
 				Name:        stuntmanSvcName,
 				Namespace:   namespace,
