@@ -57,7 +57,7 @@ func GetServiceStatus(ktSvcs []coreV1.Service, pods []coreV1.Pod, svcs []coreV1.
 	for _, svc := range ktSvcs {
 		for _, p := range pods {
 			if p.Labels[util.KtRole] == util.RolePreviewShadow && util.MapContains(svc.Spec.Selector, p.Labels) {
-				allServices = append(allServices, []string{svc.Name, "previewing by " + getUserName(p)})
+				allServices = append(allServices, []string{svc.Name, fmt.Sprintf("previewing by [%s]", getUserName(p))})
 				break
 			}
 		}
@@ -67,7 +67,7 @@ func GetServiceStatus(ktSvcs []coreV1.Service, pods []coreV1.Pod, svcs []coreV1.
 		for _, p := range pods {
 			if util.MapContains(svc.Spec.Selector, p.Labels) {
 				if role := p.Labels[util.KtRole]; role == util.RoleExchangeShadow {
-					allServices = append(allServices, []string{svc.Name, "exchanged by " + getUserName(p)})
+					allServices = append(allServices, []string{svc.Name, fmt.Sprintf("exchanged by [%s]", getUserName(p))})
 					continue svcLoop
 				} else if role == util.RoleRouter {
 					allServices = append(allServices, []string{svc.Name, "meshed (auto) by " +
@@ -113,7 +113,7 @@ func getMeshedUserNames(svcs []coreV1.Service, pods []coreV1.Pod, namePrefix str
 	if len(users) == 0 {
 		return UnknownUser
 	}
-	return strings.Join(users, ", ")
+	return "[" + strings.Join(users, "], [") + "]"
 }
 
 func checkConnector(labels map[string]string, annotations map[string]string) string {

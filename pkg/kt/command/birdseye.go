@@ -39,24 +39,29 @@ func Birdseye() error {
 	}
 
 	if opt.Get().Birdseye.ShowConnector {
+		log.Info().Msgf("---- User connecting to cluster ----")
 		unknownUserCount := 0
 		users := birdseye.GetConnectors(pods, apps)
 		for _, user := range users {
 			if user == birdseye.UnknownUser {
 				unknownUserCount++
 			} else {
-				log.Info().Msgf(user)
+				log.Info().Msgf("> %s", user)
 			}
 		}
 		if unknownUserCount > 0 {
-			log.Info().Msgf("%d unknown users", unknownUserCount)
+			log.Info().Msgf("%d users in total (including %d unknown users)",
+				len(users) + unknownUserCount, unknownUserCount)
+		} else {
+			log.Info().Msgf("%d users in total", len(users))
 		}
 	}
 
 	// service-name, service-description
 	allServices := birdseye.GetServiceStatus(ktSvcs, pods, svcs)
+	log.Info().Msgf("---- Service in namespace %s ----", opt.Get().Global.Namespace)
 	for _, svc := range allServices {
-		log.Info().Msgf("%s - %s", svc[0], svc[1])
+		log.Info().Msgf("> %s - %s", svc[0], svc[1])
 	}
 	return nil
 }
