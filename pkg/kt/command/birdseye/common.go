@@ -70,8 +70,12 @@ func GetServiceStatus(ktSvcs []coreV1.Service, pods []coreV1.Pod, svcs []coreV1.
 					allServices = append(allServices, []string{svc.Name, "exchanged by " + getUserName(p)})
 					continue svcLoop
 				} else if role == util.RoleRouter {
-					allServices = append(allServices, []string{svc.Name, "meshed by " +
-						getMeshedUserNames(ktSvcs, pods, svc.Name)})
+					allServices = append(allServices, []string{svc.Name, "meshed (auto) by " +
+						getMeshedUserNames(ktSvcs, pods, svc.Name + util.MeshPodInfix)})
+					continue svcLoop
+				} else if role == util.RoleMeshShadow {
+					allServices = append(allServices, []string{svc.Name, "meshed (manual) by " +
+						getMeshedUserNames([]coreV1.Service{svc}, pods, svc.Name)})
 					continue svcLoop
 				}
 			}
@@ -91,10 +95,10 @@ func getUserName(p coreV1.Pod) string {
 	return user
 }
 
-func getMeshedUserNames(svcs []coreV1.Service, pods []coreV1.Pod, svcName string) string {
+func getMeshedUserNames(svcs []coreV1.Service, pods []coreV1.Pod, namePrefix string) string {
 	users := make([]string, 0)
 	for _, s := range svcs {
-		if strings.HasPrefix(s.Name, svcName+util.MeshPodInfix) {
+		if strings.HasPrefix(s.Name, namePrefix) {
 			for _, p := range pods {
 				if p.Labels[util.KtRole] == util.RoleMeshShadow && util.MapContains(s.Spec.Selector, p.Labels) {
 					user := p.Annotations[util.KtUser]
