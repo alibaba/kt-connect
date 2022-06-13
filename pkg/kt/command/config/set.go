@@ -6,21 +6,23 @@ import (
 )
 
 func Set(args []string) error {
-	if len(args) < 1 || len(args) > 2 || (len(args) == 1 && !strings.Contains(args[0], "=")) {
+	var key, value string
+	if len(args) == 1 && !strings.Contains(args[0], "=") {
+		parts := strings.SplitN(args[0], "=", 2)
+		key = parts[0]
+		value = parts[1]
+	} else if len(args) == 2 {
+		key = args[0]
+		value = args[1]
+	} else if len(args) == 3 && args[1] == "=" {
+		key = args[0]
+		value = args[2]
+	} else {
 		return fmt.Errorf("please use either 'set <item>=<value>' or 'set <item> <value>' format")
 	}
 	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("config file is damaged, please try repair it or use 'ktctl config unset --all'")
-	}
-	var key, value string
-	if len(args) == 1 {
-		parts := strings.SplitN(args[0], "=", 2)
-		key = parts[0]
-		value = parts[1]
-	} else {
-		key = args[0]
-		value = args[1]
 	}
 	err = setConfigValue(config, key, value)
 	if err != nil {
