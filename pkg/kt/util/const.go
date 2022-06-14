@@ -104,6 +104,10 @@ const (
 	RolePreviewShadow = "shadow-preview"
 	// RoleRouter router role
 	RoleRouter = "router"
+	// SortByName birdseye sort
+	SortByName = "name"
+	// SortByStatus birdseye sort
+	SortByStatus = "status"
 	// TunNameWin tun device name in windows
 	TunNameWin = "KtConnectTunnel"
 	// TunNameLinux tun device name in linux

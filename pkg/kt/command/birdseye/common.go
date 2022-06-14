@@ -12,18 +12,14 @@ import (
 
 const UnknownUser = "unknown user"
 
-func GetKtPodsAndAllServices(namespace string) ([]coreV1.Pod, []appV1.Deployment, []coreV1.Service, []coreV1.Service, error) {
+func GetKtPodsAndAllServices(namespace string) ([]coreV1.Pod, []coreV1.Service, []coreV1.Service, error) {
 	pods, err := cluster.Ins().GetPodsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
 	if err != nil {
-		return nil, nil, nil, nil, err
-	}
-	apps, err := cluster.Ins().GetDeploymentsByLabel(map[string]string{util.ControlBy: util.KubernetesToolkit}, namespace)
-	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, err
 	}
 	svcs, err := cluster.Ins().GetAllServiceInNamespace(opt.Get().Global.Namespace)
 	if err != nil {
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, err
 	}
 	ktSvcs := make([]coreV1.Service, 0)
 	otherSvcs := make([]coreV1.Service, 0)
@@ -34,18 +30,31 @@ func GetKtPodsAndAllServices(namespace string) ([]coreV1.Pod, []appV1.Deployment
 			otherSvcs = append(otherSvcs, svc)
 		}
 	}
-	return pods.Items, apps.Items, ktSvcs, otherSvcs, nil
+	return pods.Items, ktSvcs, otherSvcs, nil
+}
+
+func GetKtPodsAndDeployments() ([]coreV1.Pod, []appV1.Deployment, error) {
+	ktConnectLabel := map[string]string{util.ControlBy: util.KubernetesToolkit, util.KtRole: util.RoleConnectShadow}
+	pods, err := cluster.Ins().GetPodsByLabel(ktConnectLabel, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	apps, err := cluster.Ins().GetDeploymentsByLabel(ktConnectLabel, "")
+	if err != nil {
+		return nil, nil, err
+	}
+	return pods.Items, apps.Items, nil
 }
 
 func GetConnectors(pods []coreV1.Pod, apps []appV1.Deployment) []string {
 	users:= make([]string, 0)
 	for _, pod := range pods {
-		if user := checkConnector(pod.Labels, pod.Annotations); user != "" {
+		if user := checkConnector(pod.Annotations); user != "" {
 			users = append(users, user)
 		}
 	}
 	for _, app := range apps {
-		if user := checkConnector(app.Labels, app.Annotations); user != "" {
+		if user := checkConnector(app.Annotations); user != "" {
 			users = append(users, user)
 		}
 	}
@@ -116,10 +125,7 @@ func getMeshedUserNames(svcs []coreV1.Service, pods []coreV1.Pod, namePrefix str
 	return "[" + strings.Join(users, "], [") + "]"
 }
 
-func checkConnector(labels map[string]string, annotations map[string]string) string {
-	if role, exists := labels[util.KtRole]; !exists || role != util.RoleConnectShadow {
-		return ""
-	}
+func checkConnector(annotations map[string]string) string {
 	if user, exists := annotations[util.KtUser]; exists {
 		lastHeartBeat := util.ParseTimestamp(annotations[util.KtLastHeartBeat])
 		if lastHeartBeat > 0 {

@@ -1,11 +1,16 @@
 package options
 
+import (
+	"fmt"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
+)
+
 func BirdseyeFlags() []OptionConfig {
 	flags := []OptionConfig{
 		{
 			Target:      "SortBy",
-			DefaultValue: "status",
-			Description: "Sort service by 'status' or 'name'",
+			DefaultValue: util.SortByStatus,
+			Description: fmt.Sprintf("Sort service by '%s' or '%s'", util.SortByStatus, util.SortByName),
 		},
 		{
 			Target:      "ShowConnector",

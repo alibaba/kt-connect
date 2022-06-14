@@ -5,6 +5,7 @@ import (
 	"github.com/alibaba/kt-connect/pkg/kt/command/birdseye"
 	"github.com/alibaba/kt-connect/pkg/kt/command/general"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
+	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"strings"
@@ -33,35 +34,63 @@ func NewBirdseyeCommand() *cobra.Command {
 }
 
 func Birdseye() error {
-	pods, apps, ktSvcs, svcs, err := birdseye.GetKtPodsAndAllServices(opt.Get().Global.Namespace)
+	err := showServiceStatus()
 	if err != nil {
 		return err
 	}
 
 	if opt.Get().Birdseye.ShowConnector {
-		log.Info().Msgf("---- User connecting to cluster ----")
-		unknownUserCount := 0
-		users := birdseye.GetConnectors(pods, apps)
-		for _, user := range users {
-			if user == birdseye.UnknownUser {
-				unknownUserCount++
-			} else {
-				log.Info().Msgf("> %s", user)
-			}
+		err = showConnectors()
+		if err != nil {
+			return err
 		}
-		if unknownUserCount > 0 {
-			log.Info().Msgf("%d users in total (including %d unknown users)",
-				len(users) + unknownUserCount, unknownUserCount)
-		} else {
-			log.Info().Msgf("%d users in total", len(users))
-		}
+	}
+	return nil
+}
+
+func showServiceStatus() error {
+	ktPods, ktSvcs, svcs, err := birdseye.GetKtPodsAndAllServices(opt.Get().Global.Namespace)
+	if err != nil {
+		return err
 	}
 
 	// service-name, service-description
-	allServices := birdseye.GetServiceStatus(ktSvcs, pods, svcs)
+	allServices := birdseye.GetServiceStatus(ktSvcs, ktPods, svcs)
+	if opt.Get().Birdseye.SortBy == util.SortByName {
+		birdseye.SortServiceArray(allServices, 0)
+	} else if opt.Get().Birdseye.SortBy == util.SortByStatus {
+		birdseye.SortServiceArray(allServices, 1)
+	} else {
+		return fmt.Errorf("invalid sort method: %s", opt.Get().Birdseye.SortBy)
+	}
 	log.Info().Msgf("---- Service in namespace %s ----", opt.Get().Global.Namespace)
 	for _, svc := range allServices {
 		log.Info().Msgf("> %s - %s", svc[0], svc[1])
+	}
+	return nil
+}
+
+func showConnectors() error {
+	pods, apps, err := birdseye.GetKtPodsAndDeployments()
+	if err != nil {
+		return err
+	}
+
+	unknownUserCount := 0
+	users := birdseye.GetConnectors(pods, apps)
+	log.Info().Msgf("---- User connecting to cluster ----")
+	for _, user := range users {
+		if user == birdseye.UnknownUser {
+			unknownUserCount++
+		} else {
+			log.Info().Msgf("> %s", user)
+		}
+	}
+	if unknownUserCount > 0 {
+		log.Info().Msgf("%d users in total (including %d unknown users)",
+			len(users)+unknownUserCount, unknownUserCount)
+	} else {
+		log.Info().Msgf("%d users in total", len(users))
 	}
 	return nil
 }
