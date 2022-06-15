@@ -3,7 +3,7 @@ Downloads And Install
 
 <!-- tabs:start -->
 
-#### ** Mac **
+#### ** MacOS **
 
 Downloads:
 

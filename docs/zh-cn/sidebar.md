@@ -11,6 +11,8 @@
   - [Ktctl recover](zh-cn/cli/recover.md)
   - [ktctl clean](zh-cn/cli/clean.md)
   - [ktctl config](zh-cn/cli/config.md)
+  - [ktctl birdseye](zh-cn/cli/birdseye.md)
+  - [ktctl completion](zh-cn/cli/completion.md)
 
 - 技术参考
   - [技术原理](zh-cn/reference/mechanism.md)

@@ -1,7 +1,7 @@
 Ktctl Config
 ---
 
-List, get or set default value for command options. It contains 8 sub-commands:
+List, get or set default value for command options. Contains 8 sub-commands:
 
 - `show`: Show all available and configured options
 - `get`: Fetch default value of specified option
