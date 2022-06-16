@@ -4,6 +4,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	appV1 "k8s.io/api/apps/v1"
 	coreV1 "k8s.io/api/core/v1"
+	extV1 "k8s.io/api/extensions/v1beta1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -49,6 +50,8 @@ type KubernetesInterface interface {
 	GetConfigMapsByLabel(labels map[string]string, namespace string) (*coreV1.ConfigMapList, error)
 	RemoveConfigMap(name, namespace string) (err error)
 	UpdateConfigMapHeartBeat(name, namespace string)
+
+	GetAllIngressInNamespace(namespace string) (*extV1.IngressList, error)
 
 	GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []appV1.Deployment, []coreV1.Service, error)
 	GetAllNamespaces() (*coreV1.NamespaceList, error)

@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/common"
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
+	"github.com/alibaba/kt-connect/pkg/kt/service/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/miekg/dns"
 	"github.com/rs/zerolog/log"
+	"net"
 	"regexp"
 	"strconv"
 	"strings"
@@ -15,14 +17,16 @@ import (
 
 type DnsServer struct {
 	dnsAddresses []string
+	extraDomains map[string]string
 }
 
 func SetupLocalDns(remoteDnsPort, localDnsPort int, dnsOrder []string) error {
 	var res = make(chan error)
 	go func() {
 		upstreamDnsAddresses := getDnsAddresses(dnsOrder, GetNameServer(), remoteDnsPort)
+		extraDomains := getIngressDomains()
 		log.Info().Msgf("Setup local DNS with upstream %v", upstreamDnsAddresses)
-		res <-common.SetupDnsServer(&DnsServer{upstreamDnsAddresses}, localDnsPort, "udp")
+		res <-common.SetupDnsServer(&DnsServer{upstreamDnsAddresses, extraDomains}, localDnsPort, "udp")
 	}()
 	select {
 	case err := <-res:
@@ -30,6 +34,23 @@ func SetupLocalDns(remoteDnsPort, localDnsPort int, dnsOrder []string) error {
 	case <-time.After(1 * time.Second):
 		return nil
 	}
+}
+
+func getIngressDomains() map[string]string {
+	if opt.Get().Connect.IngressIp == "" {
+		return map[string]string{}
+	}
+	ingressDomains := make(map[string]string)
+	if ingresses, err := cluster.Ins().GetAllIngressInNamespace(opt.Get().Global.Namespace); err != nil {
+		log.Warn().Err(err).Msgf("Failed to found ingress instances")
+	} else {
+		for _, ingress := range ingresses.Items {
+			for _, rule := range ingress.Spec.Rules {
+				ingressDomains[rule.Host] = opt.Get().Connect.IngressIp
+			}
+		}
+	}
+	return ingressDomains
 }
 
 func getDnsAddresses(dnsOrder []string, upstreamDns string, clusterDnsPort int) []string {
@@ -80,15 +101,19 @@ func getDnsAddresses(dnsOrder []string, upstreamDns string, clusterDnsPort int) 
 func (s *DnsServer) ServeDNS(w dns.ResponseWriter, req *dns.Msg) {
 	msg := (&dns.Msg{}).SetReply(req)
 	msg.Authoritative = true
-	msg.Answer = query(req, s.dnsAddresses)
+	msg.Answer = query(req, s.dnsAddresses, s.extraDomains)
 	if err := w.WriteMsg(msg); err != nil {
 		log.Warn().Err(err).Msgf("Failed to reply dns request")
 	}
 }
 
-func query(req *dns.Msg, dnsAddresses []string) []dns.RR {
+func query(req *dns.Msg, dnsAddresses []string, extraDomains map[string]string) []dns.RR {
 	domain := req.Question[0].Name
 	qtype := req.Question[0].Qtype
+
+	if ip, exists := extraDomains[domain]; exists {
+		return []dns.RR{toARecord(domain, ip) }
+	}
 
 	answer := common.ReadCache(domain, qtype, int64(opt.Get().Connect.DnsCacheTtl))
 	if answer != nil {
@@ -119,4 +144,17 @@ func query(req *dns.Msg, dnsAddresses []string) []dns.RR {
 	log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
 	common.WriteCache(domain, qtype, []dns.RR{}, time.Now().Unix() - int64(opt.Get().Connect.DnsCacheTtl) / 2)
 	return []dns.RR{}
+}
+
+func toARecord(domain, ip string) dns.RR {
+	return &dns.A {
+		Hdr: dns.RR_Header {
+			Name: domain,
+			Rrtype: dns.TypeA,
+			Class: dns.ClassINET,
+			Ttl: 5,
+			Rdlength: 4,
+		},
+		A: net.ParseIP(ip),
+	}
 }

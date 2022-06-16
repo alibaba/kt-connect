@@ -20,6 +20,7 @@ type ConnectOptions struct {
 	DnsCacheTtl      int
 	IncludeIps       string
 	ExcludeIps       string
+	IngressIp        string
 	Mode             string
 	DnsMode          string
 	ShareShadow      bool

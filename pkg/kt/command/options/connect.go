@@ -47,6 +47,11 @@ func ConnectFlags() []OptionConfig {
 			Description: "Do not route specified IPs to cluster, e.g. '192.168.64.2' or '192.168.64.0/24', use ',' separated",
 		},
 		{
+			Target:      "IngressIp",
+			DefaultValue: "",
+			Description: "Specify an IP address which all ingress domains should be resolve to",
+		},
+		{
 			Target:      "DisableTunDevice",
 			DefaultValue: false,
 			Description: "(tun2socks mode only) Create socks5 proxy without tun device",
