@@ -87,13 +87,21 @@ func FindInvalidRemotePort(exposePorts string, svcPorts map[int]string) string {
 	return ""
 }
 
+// IsValidIp check if specified ip address valid
+func IsValidIp(ip string) bool {
+	if ok, err := regexp.MatchString("^" + IpAddrPattern + "$", ip); ok && err == nil {
+		return true
+	}
+	return false
+}
+
 // ExtractHostIp Get host ip address from url
 func ExtractHostIp(url string) string {
 	if !strings.Contains(url, ":") {
 		return ""
 	}
 	host := strings.Trim(strings.Split(url, ":")[1], "/")
-	if ok, err := regexp.MatchString(IpAddrPattern, host); ok && err == nil {
+	if IsValidIp(host) {
 		return host
 	}
 	ips, err := net.LookupIP(host)
@@ -102,7 +110,7 @@ func ExtractHostIp(url string) string {
 	}
 	for _, ip := range ips {
 		// skip ipv6
-		if ok, err2 := regexp.MatchString(IpAddrPattern, ip.String()); ok && err2 == nil {
+		if IsValidIp(ip.String()) {
 			return ip.String()
 		}
 	}

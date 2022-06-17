@@ -40,13 +40,20 @@ func getIngressDomains() map[string]string {
 	if opt.Get().Connect.IngressIp == "" {
 		return map[string]string{}
 	}
+	if !util.IsValidIp(opt.Get().Connect.IngressIp) {
+		log.Warn().Msgf("Ingress Ip '" + opt.Get().Connect.IngressIp + "' is invalid")
+		return map[string]string{}
+	}
 	ingressDomains := make(map[string]string)
 	if ingresses, err := cluster.Ins().GetAllIngressInNamespace(opt.Get().Global.Namespace); err != nil {
 		log.Warn().Err(err).Msgf("Failed to found ingress instances")
 	} else {
 		for _, ingress := range ingresses.Items {
 			for _, rule := range ingress.Spec.Rules {
-				ingressDomains[rule.Host] = opt.Get().Connect.IngressIp
+				if rule.Host != "" {
+					log.Debug().Msgf("Find ingress domain " + rule.Host)
+					ingressDomains[rule.Host + "."] = opt.Get().Connect.IngressIp
+				}
 			}
 		}
 	}
