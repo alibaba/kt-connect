@@ -22,7 +22,7 @@ const (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(dnsServer string) error {
+func SetNameServer(dnsServer string) error {
 	dnsSignal := make(chan error)
 	if err := util.CreateDirIfNotExist(resolverDir); err != nil {
 		log.Error().Err(err).Msgf("Failed to create resolver dir")
@@ -53,12 +53,31 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 		}
 		dnsSignal <- nil
 
-		defer s.RestoreNameServer()
+		defer RestoreNameServer()
 		sigCh := make(chan os.Signal, 1)
 		signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 		<-sigCh
 	}()
 	return <-dnsSignal
+}
+
+// HandleExtraDomainMapping handle extra domain change
+func HandleExtraDomainMapping(extraDomains map[string]string, localDnsPort int) {
+	for _, suffix := range getAllDomainSuffixes(extraDomains) {
+		createResolverFile(fmt.Sprintf("%s.local", suffix), suffix, common.Localhost, fmt.Sprintf("%d", localDnsPort))
+	}
+}
+
+// RestoreNameServer remove the nameservers added by ktctl
+func RestoreNameServer() {
+	rd, _ := ioutil.ReadDir(resolverDir)
+	for _, f := range rd {
+		if !f.IsDir() && strings.HasPrefix(f.Name(), ktResolverPrefix) {
+			if err := os.Remove(fmt.Sprintf("%s/%s", resolverDir, f.Name())); err != nil {
+				log.Warn().Err(err).Msgf("Failed to remove resolver file %s", f.Name())
+			}
+		}
+	}
 }
 
 func createResolverFile(postfix, domain, dnsIp, dnsPort string) {
@@ -73,14 +92,17 @@ func createResolverFile(postfix, domain, dnsIp, dnsPort string) {
 	}
 }
 
-// RestoreNameServer remove the nameservers added by ktctl
-func (s *Cli) RestoreNameServer() {
-	rd, _ := ioutil.ReadDir(resolverDir)
-	for _, f := range rd {
-		if !f.IsDir() && strings.HasPrefix(f.Name(), ktResolverPrefix) {
-			if err := os.Remove(fmt.Sprintf("%s/%s", resolverDir, f.Name())); err != nil {
-				log.Warn().Err(err).Msgf("Failed to remove resolver file %s", f.Name())
-			}
+func getAllDomainSuffixes(extraDomains map[string]string) []string {
+	var suffixes []string
+	for domain, _ := range extraDomains {
+		i := strings.LastIndex(domain, ".")
+		if i < 0 {
+			continue
+		}
+		suffix := domain[i+1:]
+		if !util.Contains(suffixes, suffix) {
+			suffixes = append(suffixes, suffix)
 		}
 	}
+	return suffixes
 }

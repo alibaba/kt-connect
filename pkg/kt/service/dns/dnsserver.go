@@ -24,8 +24,10 @@ func SetupLocalDns(remoteDnsPort, localDnsPort int, dnsOrder []string) error {
 	var res = make(chan error)
 	go func() {
 		upstreamDnsAddresses := getDnsAddresses(dnsOrder, GetNameServer(), remoteDnsPort)
+		// domain-name -> ip
 		extraDomains := getIngressDomains()
 		log.Info().Msgf("Setup local DNS with upstream %v", upstreamDnsAddresses)
+		HandleExtraDomainMapping(extraDomains, localDnsPort)
 		res <-common.SetupDnsServer(&DnsServer{upstreamDnsAddresses, extraDomains}, localDnsPort, "udp")
 	}()
 	select {
@@ -52,7 +54,7 @@ func getIngressDomains() map[string]string {
 			for _, rule := range ingress.Spec.Rules {
 				if rule.Host != "" {
 					log.Debug().Msgf("Find ingress domain " + rule.Host)
-					ingressDomains[rule.Host + "."] = opt.Get().Connect.IngressIp
+					ingressDomains[rule.Host] = opt.Get().Connect.IngressIp
 				}
 			}
 		}
@@ -118,14 +120,16 @@ func query(req *dns.Msg, dnsAddresses []string, extraDomains map[string]string) 
 	domain := req.Question[0].Name
 	qtype := req.Question[0].Qtype
 
-	if ip, exists := extraDomains[domain]; exists {
-		return []dns.RR{toARecord(domain, ip) }
-	}
-
 	answer := common.ReadCache(domain, qtype, int64(opt.Get().Connect.DnsCacheTtl))
 	if answer != nil {
 		log.Debug().Msgf("Found domain %s (%d) in cache", domain, qtype)
 		return answer
+	}
+
+	for host, ip := range extraDomains {
+		if wildcardMatch(host, domain) {
+			return []dns.RR{toARecord(domain, ip)}
+		}
 	}
 
 	for _, dnsAddr := range dnsAddresses {
@@ -149,8 +153,20 @@ func query(req *dns.Msg, dnsAddresses []string, extraDomains map[string]string) 
 		}
 	}
 	log.Debug().Msgf("Empty answer for domain lookup %s (%d)", domain, qtype)
-	common.WriteCache(domain, qtype, []dns.RR{}, time.Now().Unix() - int64(opt.Get().Connect.DnsCacheTtl) / 2)
+	common.WriteCache(domain, qtype, []dns.RR{}, time.Now().Unix()-int64(opt.Get().Connect.DnsCacheTtl)/2)
 	return []dns.RR{}
+}
+
+func wildcardMatch(pattenDomain, targetDomain string) bool {
+	if !strings.HasSuffix(pattenDomain, ".") {
+		pattenDomain = pattenDomain + "."
+	}
+	if strings.Contains(pattenDomain, "*") {
+		ok, err := regexp.MatchString("^" + strings.ReplaceAll(strings.ReplaceAll(pattenDomain, ".", "\\."), "*", ".*") + "$", targetDomain)
+		return ok && err == nil
+	} else {
+		return pattenDomain == targetDomain
+	}
 }
 
 func toARecord(domain, ip string) dns.RR {

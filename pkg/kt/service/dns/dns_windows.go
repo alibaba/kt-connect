@@ -11,7 +11,7 @@ import (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(dnsServer string) (err error) {
+func SetNameServer(dnsServer string) (err error) {
 	// run command: netsh interface ip set interface KtConnectTunnel metric=2
 	if _, _, err = util.RunAndWait(exec.Command("netsh",
 		"interface",
@@ -40,8 +40,13 @@ func (s *Cli) SetNameServer(dnsServer string) (err error) {
 	return nil
 }
 
+// HandleExtraDomainMapping handle extra domain change
+func HandleExtraDomainMapping(extraDomains map[string]string, localDnsPort int) {
+	// pass
+}
+
 // RestoreNameServer ...
-func (s *Cli) RestoreNameServer() {
+func RestoreNameServer() {
 	// Windows dns config is set on device, so explicit removal is unnecessary
 }
 

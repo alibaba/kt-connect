@@ -169,7 +169,7 @@ func TidyLocalResources() {
 			log.Debug().Msg("Cleaning up hosts file")
 			dns.DropHosts()
 			log.Debug().Msg("Cleaning DNS configuration")
-			dns.Ins().RestoreNameServer()
+			dns.RestoreNameServer()
 			log.Info().Msgf("Cleaning route table")
 			if err := tun.Ins().RestoreRoute(); err != nil {
 				log.Warn().Err(err).Msgf("Unable to clean up route table")

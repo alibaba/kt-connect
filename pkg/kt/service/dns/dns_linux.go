@@ -23,7 +23,7 @@ const (
 )
 
 // SetNameServer set dns server records
-func (s *Cli) SetNameServer(dnsServer string) error {
+func SetNameServer(dnsServer string) error {
 	dnsSignal := make(chan error)
 	go func() {
 		defer func() {
@@ -47,8 +47,13 @@ func (s *Cli) SetNameServer(dnsServer string) error {
 	return <-dnsSignal
 }
 
+// HandleExtraDomainMapping handle extra domain change
+func HandleExtraDomainMapping(extraDomains map[string]string, localDnsPort int) {
+	// pass
+}
+
 // RestoreNameServer remove the nameservers added by ktctl
-func (s *Cli) RestoreNameServer() {
+func RestoreNameServer() {
 	restoreResolvConf()
 	restoreIptables()
 }

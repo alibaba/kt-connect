@@ -48,3 +48,63 @@ func Test_getDnsAddresses(t *testing.T) {
 		})
 	}
 }
+
+func Test_wildcardMatch(t *testing.T) {
+	type args struct {
+		pattenDomain string
+		targetDomain string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "string match",
+			args: args{
+				pattenDomain: "a.b.c.com.",
+				targetDomain: "a.b.c.com.",
+			},
+			want: true,
+		},
+		{
+			name: "string match without dot",
+			args: args{
+				pattenDomain: "a.b.c.com",
+				targetDomain: "a.b.c.com.",
+			},
+			want: true,
+		},
+		{
+			name: "wildcard match without dot",
+			args: args{
+				pattenDomain: "a.*.*.com",
+				targetDomain: "a.b.cd.com.",
+			},
+			want: true,
+		},
+		{
+			name: "",
+			args: args{
+				pattenDomain: "a.b.a.com",
+				targetDomain: "a.b.c.com.",
+			},
+			want: false,
+		},
+		{
+			name: "",
+			args: args{
+				pattenDomain: "a.*.com.",
+				targetDomain: "ab.cd.com.",
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := wildcardMatch(tt.args.pattenDomain, tt.args.targetDomain); got != tt.want {
+				t.Errorf("wildcardMatch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

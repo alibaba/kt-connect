@@ -27,7 +27,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		}
 	} else if opt.Get().Connect.DnsMode == util.DnsModePodDns {
 		log.Info().Msgf("Setting up dns in pod mode")
-		return dns.Ins().SetNameServer(shadowPodIp)
+		return dns.SetNameServer(shadowPodIp)
 	} else if strings.HasPrefix(opt.Get().Connect.DnsMode, util.DnsModeLocalDns) {
 		log.Info().Msgf("Setting up dns in local mode")
 		svcToIp, headlessPods := getServiceHosts(opt.Get().Global.Namespace, true)
@@ -53,7 +53,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 			log.Error().Err(err).Msgf("Failed to setup local dns server")
 			return err
 		}
-		return dns.Ins().SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
+		return dns.SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
 		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().Connect.DnsMode,
 			util.DnsModeLocalDns, util.DnsModePodDns, util.DnsModeHosts)
