@@ -24,7 +24,7 @@ func NewRecoverCommand() *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("name of service to recover is required")
 			} else if len(args) > 1 {
-				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+				return fmt.Errorf("too many service names are spcified (%s), should be one", strings.Join(args, ",") )
 			}
 			opt.Get().Global.UseLocalTime = true
 			return general.Prepare()
@@ -44,7 +44,7 @@ func NewRecoverCommand() *cobra.Command {
 func Recover(serviceName string) error {
 	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Global.Namespace)
 	if err != nil {
-		log.Error().Err(err).Msgf("Failed to fetch service %s", serviceName)
+		log.Error().Err(err).Msgf("Failed to fetch service '%s'", serviceName)
 	}
 
 	apps, err := cluster.Ins().GetDeploymentsByLabel(svc.Spec.Selector, svc.Namespace)

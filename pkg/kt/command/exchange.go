@@ -20,7 +20,7 @@ func NewExchangeCommand() *cobra.Command {
 			if len(args) == 0 {
 				return fmt.Errorf("name of service to exchange is required")
 			} else if len(args) > 1 {
-				return fmt.Errorf("too many service name are spcified (%s), should be one", strings.Join(args, ",") )
+				return fmt.Errorf("too many service names are spcified (%s), should be one", strings.Join(args, ",") )
 			}
 			return general.Prepare()
 		},

@@ -56,6 +56,10 @@ type PreviewOptions struct {
 	SkipPortChecking bool
 }
 
+// ReceiveOptions ...
+type ReceiveOptions struct {
+}
+
 // CleanOptions ...
 type CleanOptions struct {
 	DryRun           bool
@@ -102,6 +106,7 @@ type DaemonOptions struct {
 	Exchange *ExchangeOptions
 	Mesh     *MeshOptions
 	Preview  *PreviewOptions
+	Receive  *ReceiveOptions
 	Recover  *RecoverOptions
 	Clean    *CleanOptions
 	Config   *ConfigOptions
@@ -120,6 +125,7 @@ func Get() *DaemonOptions {
 			Exchange: &ExchangeOptions{},
 			Mesh:     &MeshOptions{},
 			Preview:  &PreviewOptions{},
+			Receive:  &ReceiveOptions{},
 			Recover:  &RecoverOptions{},
 			Clean:    &CleanOptions{},
 			Birdseye: &BirdseyeOptions{},
