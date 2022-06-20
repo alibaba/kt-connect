@@ -51,13 +51,14 @@ type RecoverOptions struct {
 
 // PreviewOptions ...
 type PreviewOptions struct {
-	External bool
-	Expose   string
+	External         bool
+	Expose           string
 	SkipPortChecking bool
 }
 
-// ReceiveOptions ...
-type ReceiveOptions struct {
+// ForwardOptions ...
+type ForwardOptions struct {
+	Port string
 }
 
 // CleanOptions ...
@@ -106,7 +107,7 @@ type DaemonOptions struct {
 	Exchange *ExchangeOptions
 	Mesh     *MeshOptions
 	Preview  *PreviewOptions
-	Receive  *ReceiveOptions
+	Forward  *ForwardOptions
 	Recover  *RecoverOptions
 	Clean    *CleanOptions
 	Config   *ConfigOptions
@@ -125,7 +126,7 @@ func Get() *DaemonOptions {
 			Exchange: &ExchangeOptions{},
 			Mesh:     &MeshOptions{},
 			Preview:  &PreviewOptions{},
-			Receive:  &ReceiveOptions{},
+			Forward:  &ForwardOptions{},
 			Recover:  &RecoverOptions{},
 			Clean:    &CleanOptions{},
 			Birdseye: &BirdseyeOptions{},

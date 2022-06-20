@@ -47,7 +47,7 @@ func main() {
 	rootCmd.AddCommand(command.NewExchangeCommand())
 	rootCmd.AddCommand(command.NewMeshCommand())
 	rootCmd.AddCommand(command.NewPreviewCommand())
-	rootCmd.AddCommand(command.NewReceiveCommand())
+	rootCmd.AddCommand(command.NewForwardCommand())
 	rootCmd.AddCommand(command.NewRecoverCommand())
 	rootCmd.AddCommand(command.NewCleanCommand())
 	rootCmd.AddCommand(command.NewConfigCommand())

@@ -8,11 +8,11 @@ import (
 	"strings"
 )
 
-// NewReceiveCommand return new Receive command
-func NewReceiveCommand() *cobra.Command {
+// NewForwardCommand return new Forward command
+func NewForwardCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "receive",
-		Short: "Redirect a local port to specified kubernetes service, domain or ip address",
+		Use:   "forward",
+		Short: "Redirect local port to a service or any remote address",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return fmt.Errorf("a service name or target address must be specified")
@@ -22,16 +22,16 @@ func NewReceiveCommand() *cobra.Command {
 			return general.Prepare()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return Receive(args[0])
+			return Forward(args[0])
 		},
-		Example: "ktctl receive <domain|ip> [command options]",
+		Example: "ktctl forward <service-name|address:port> [command options]",
 	}
 
 	cmd.SetUsageTemplate(general.UsageTemplate(true))
-	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Receive, opt.ReceiveFlags())
+	opt.SetOptions(cmd, cmd.Flags(), opt.Get().Forward, opt.ForwardFlags())
 	return cmd
 }
 
-func Receive(host string) error {
+func Forward(target string) error {
 	return nil
 }
