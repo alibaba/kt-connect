@@ -16,6 +16,8 @@ const (
 	ComponentMesh = "mesh"
 	// ComponentPreview preview command
 	ComponentPreview = "preview"
+	// ComponentForward forward command
+	ComponentForward = "forward"
 
 	// ImageKtShadow default shadow image
 	ImageKtShadow = "registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow"

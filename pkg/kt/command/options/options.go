@@ -58,7 +58,6 @@ type PreviewOptions struct {
 
 // ForwardOptions ...
 type ForwardOptions struct {
-	Port string
 }
 
 // CleanOptions ...
