@@ -81,19 +81,19 @@ func forwardTo(target, port string) (err error) {
 	return forwardFromTo(target, localPort, remotePort)
 }
 
-func forwardFromTo(target string, fromPort, toPort int) error {
+func forwardFromTo(target string, localPort, remotePort int) error {
 	ch, err := general.SetupProcess(util.ComponentForward)
 	if err != nil {
 		return err
 	}
 
 	if strings.Contains(target, ".") {
-		err = forward.RedirectAddress(target, fromPort, toPort)
+		err = forward.RedirectAddress(target, localPort, remotePort)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = forward.RedirectService(target, fromPort, toPort)
+		err = forward.RedirectService(target, localPort, remotePort)
 		if err != nil {
 			return err
 		}

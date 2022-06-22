@@ -188,7 +188,7 @@ func GetTargetPorts(svc *coreV1.Service) map[int]string {
 			}
 			for _, c := range pod.Spec.Containers {
 				for _, cp := range c.Ports {
-					if cp.Name == p.TargetPort.String() {
+					if cp.Name == p.TargetPort.StrVal {
 						targetPorts[int(cp.ContainerPort)] = cp.Name
 						continue
 					}
