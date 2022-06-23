@@ -94,16 +94,16 @@ func (s *DnsServer) fetchAllPossibleDomains(name string) []string {
 		log.Warn().Msgf("Received invalid domain query %s", name)
 	case 1:
 		if len(domainSuffixes) > 0 {
-			// service name
+			// <service-name>
 			namesToLookup = append(namesToLookup, name+domainSuffixes[0])
 		}
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
 	case 2:
 		if len(domainSuffixes) > 1 {
-			// service.namespace name
+			// <service-name>.<namespace>
 			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
-			// stateful-set-pod.service name
+			// <stateful-set-pod>.<service-name>
 			namesToLookup = append(namesToLookup, name+domainSuffixes[0])
 		}
 		// raw domain
@@ -112,18 +112,18 @@ func (s *DnsServer) fetchAllPossibleDomains(name string) []string {
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
 		if len(domainSuffixes) > 1 {
-			// stateful-set-pod.service.namespace name
+			// <stateful-set-pod>.<service-name>.<namespace>
 			namesToLookup = append(namesToLookup, name+domainSuffixes[1])
 		}
 		if len(domainSuffixes) > 2 {
-			// service.namespace.svc name
+			// <service-name>.<namespace>.svc
 			namesToLookup = append(namesToLookup, name+domainSuffixes[2])
 		}
 	case 4:
 		// raw domain
 		namesToLookup = append(namesToLookup, name)
 		if len(domainSuffixes) > 2 {
-			// stateful-set-pod.service.namespace.svc name
+			// <stateful-set-pod>.<service-name>.<namespace>.svc
 			namesToLookup = append(namesToLookup, name+domainSuffixes[2])
 		}
 	default:
@@ -134,6 +134,9 @@ func (s *DnsServer) fetchAllPossibleDomains(name string) []string {
 }
 
 // Convert short domain to fully qualified domain name
+// suffixes[0] = default.svc.cluster.local
+// suffixes[1] = svc.cluster.local
+// suffixes[2] = cluster.local
 func (s *DnsServer) getSuffixes() (suffixes []string) {
 	for _, s := range s.config.Search {
 		// @see https://github.com/alibaba/kt-connect/issues/153
