@@ -92,11 +92,17 @@ func forwardFromTo(target string, localPort, remotePort int) error {
 		if err != nil {
 			return err
 		}
+		log.Info().Msg("---------------------------------------------------------------")
+		log.Info().Msgf(" Now you can access to '%s:%d' via 'localhost:%d'", target, remotePort, localPort)
+		log.Info().Msg("---------------------------------------------------------------")
 	} else {
 		err = forward.RedirectService(target, localPort, remotePort)
 		if err != nil {
 			return err
 		}
+		log.Info().Msg("---------------------------------------------------------------")
+		log.Info().Msgf(" Now you can access port %d of service '%s' via 'localhost:%d'", remotePort, target, localPort)
+		log.Info().Msg("---------------------------------------------------------------")
 	}
 
 	// watch background process, clean the workspace and exit if background process occur exception
