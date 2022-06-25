@@ -48,6 +48,7 @@ func SetNameServer(dnsServer string) error {
 		}
 
 		createResolverFile("local", opt.Get().Connect.ClusterDomain, dnsIp, dnsPort)
+		createResolverFile("svc.local", "svc", dnsIp, dnsPort)
 		for _, ns := range nsList {
 			createResolverFile(fmt.Sprintf("%s.local", ns), ns, dnsIp, dnsPort)
 		}
