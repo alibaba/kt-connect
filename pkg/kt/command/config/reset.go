@@ -29,6 +29,7 @@ func Unset(args []string) error {
 
 func UnsetHandle(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&unsetAll, "all", "a", false, "Unset all config options")
+	cmd.ValidArgsFunction = configValidator
 }
 
 func unsetConfigValue(config map[string]map[string]string, key string) error {

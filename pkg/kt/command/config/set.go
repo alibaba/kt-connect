@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"strings"
 )
 
@@ -31,6 +32,10 @@ func Set(args []string) error {
 	return saveConfig(config)
 }
 
+func SetHandle(cmd *cobra.Command) {
+	cmd.ValidArgsFunction = setConfigValidator
+}
+
 func setConfigValue(config map[string]map[string]string, key string, value string) error {
 	group, item, err := parseConfigItem(key)
 	if err != nil {
@@ -42,4 +47,8 @@ func setConfigValue(config map[string]map[string]string, key string, value strin
 		config[group] = map[string]string { item: value }
 	}
 	return nil
+}
+
+func setConfigValidator(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }

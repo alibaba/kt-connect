@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -32,4 +33,8 @@ func SaveProfile(args []string) error {
 	}
 	log.Info().Msgf("Profile '%s' saved", args[0])
 	return nil
+}
+
+func SaveProfileHandle(cmd *cobra.Command) {
+	cmd.ValidArgsFunction = profileValidator
 }

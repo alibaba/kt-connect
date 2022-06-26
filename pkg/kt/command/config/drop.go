@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	"os"
 )
 
@@ -23,3 +24,6 @@ func DropProfile(args []string) error {
 	return nil
 }
 
+func DropProfileHandle(cmd *cobra.Command) {
+	cmd.ValidArgsFunction = profileValidator
+}

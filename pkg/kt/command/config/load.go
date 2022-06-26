@@ -37,4 +37,5 @@ func LoadProfile(args []string) error {
 
 func LoadProfileHandle(cmd *cobra.Command) {
 	cmd.Flags().BoolVar(&dryRun, "dryRun", false, "Print profile content without load it")
+	cmd.ValidArgsFunction = profileValidator
 }

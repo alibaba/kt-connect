@@ -5,6 +5,7 @@ import (
 	opt "github.com/alibaba/kt-connect/pkg/kt/command/options"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
 	"os"
@@ -64,4 +65,12 @@ func parseConfigItem(key string) (string, string, error) {
 		return "", "", fmt.Errorf("config item '%s' not exist in group '%s'", parts[1], parts[0])
 	}
 	return parts[0], parts[1], nil
+}
+
+func configValidator(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
+
+func profileValidator(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }

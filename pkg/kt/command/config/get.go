@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 )
 
 func Get(args []string) error {
@@ -27,6 +28,10 @@ func Get(args []string) error {
 		}
 	}
 	return nil
+}
+
+func GetHandle(cmd *cobra.Command) {
+	cmd.ValidArgsFunction = configValidator
 }
 
 func getConfigValue(config map[string]map[string]string, key string) (string, error) {
