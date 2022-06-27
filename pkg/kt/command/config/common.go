@@ -10,8 +10,11 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 )
+
+var profileNamePattern, _ = regexp.Compile("^[a-zA-Z0-9-_.]+$")
 
 func profileFile(profile string) string {
 	return fmt.Sprintf("%s/%s", util.KtProfileDir, profile)
@@ -67,10 +70,38 @@ func parseConfigItem(key string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
+func travelConfigItem(callback func(string, string)) {
+	for i := 0; i < reflect.TypeOf(opt.DaemonOptions{}).NumField(); i++ {
+		group := reflect.TypeOf(opt.DaemonOptions{}).Field(i)
+		groupName := util.DashSeparated(group.Name)
+		for j := 0; j < group.Type.Elem().NumField(); j ++ {
+			item := group.Type.Elem().Field(j)
+			itemName := util.DashSeparated(item.Name)
+			callback(groupName, itemName)
+		}
+	}
+}
+
 func configValidator(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	var items []string
+	if content, err := loadConfig(); err == nil {
+		for t, kv := range content {
+			for k, _ := range kv {
+				items = append(items, t + "." + k)
+			}
+		}
+	}
+	return items, cobra.ShellCompDirectiveNoFileComp
 }
 
 func profileValidator(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	var profiles []string
+	if files, err := ioutil.ReadDir(util.KtProfileDir); err == nil {
+		for _, f := range files {
+			if profileNamePattern.MatchString(f.Name()) {
+				profiles = append(profiles, f.Name())
+			}
+		}
+	}
+	return profiles, cobra.ShellCompDirectiveNoFileComp
 }

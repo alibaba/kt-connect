@@ -50,5 +50,11 @@ func setConfigValue(config map[string]map[string]string, key string, value strin
 }
 
 func setConfigValidator(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return nil, cobra.ShellCompDirectiveNoFileComp
+	var items []string
+	if len(args) == 0 {
+		travelConfigItem(func(groupName string, itemName string) {
+			items = append(items, groupName + "." + itemName)
+		})
+	}
+	return items, cobra.ShellCompDirectiveNoFileComp
 }

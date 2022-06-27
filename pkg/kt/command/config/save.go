@@ -15,6 +15,9 @@ func SaveProfile(args []string) error {
 		return fmt.Errorf("must specifiy a profile name")
 	}
 	profile := profileFile(args[0])
+	if !profileNamePattern.MatchString(profile) {
+		return fmt.Errorf("invalid profile name, must only contains letter, number, underline, hyphen or dot")
+	}
 	if _, err := os.Stat(profile); err == nil {
 		var answer string
 		fmt.Printf("Profile '%s' already exists, overwrite ? (Y/N) ", args[0])
