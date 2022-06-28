@@ -16,7 +16,7 @@ func ForwardPodToLocal(exposePorts, podName, privateKey string) (int, error) {
 	localSshPort := util.GetRandomTcpPort()
 
 	// port forward pod 22 -> local <random port>
-	if err := SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
+	if _, err := SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return -1, err
 	}
 

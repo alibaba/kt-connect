@@ -22,7 +22,7 @@ func ByTun2Socks() error {
 	}
 
 	localSshPort := util.GetRandomTcpPort()
-	if err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
+	if _, err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
 	if err = startSocks5Connection(podIP, privateKeyPath, localSshPort, true); err != nil {

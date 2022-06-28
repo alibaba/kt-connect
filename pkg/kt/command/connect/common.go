@@ -37,7 +37,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		watchServicesAndPods(opt.Get().Global.Namespace, svcToIp, headlessPods, true)
 
 		forwardedPodPort := util.GetRandomTcpPort()
-		if err := transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort); err != nil {
+		if _, err := transmission.SetupPortForwardToLocal(shadowPodName, common.StandardDnsPort, forwardedPodPort); err != nil {
 			return err
 		}
 

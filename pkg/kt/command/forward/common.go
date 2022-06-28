@@ -9,31 +9,47 @@ import (
 )
 
 func RedirectService(serviceName string, localPort, remotePort int) error {
-	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Global.Namespace)
+	podName, podPort, err := getPodNameAndPort(serviceName, remotePort)
 	if err != nil {
 		return err
 	}
-	targetPort := intstr.IntOrString { Type: -1 }
+	gone, err := transmission.SetupPortForwardToLocal(podName, podPort, localPort)
+	go func() {
+		<-gone
+	}()
+	return err
+}
+
+func RedirectAddress(remoteAddress string, localPort, remotePort int) error {
+	return fmt.Errorf("redirecting to an arbitrary address havn't been implemented yet")
+}
+
+func getPodNameAndPort(serviceName string, remotePort int) (string, int, error) {
+	svc, err := cluster.Ins().GetService(serviceName, opt.Get().Global.Namespace)
+	if err != nil {
+		return "", 0, err
+	}
+	targetPort := intstr.IntOrString{Type: -1}
 	for _, p := range svc.Spec.Ports {
 		if int(p.Port) == remotePort {
 			targetPort = p.TargetPort
 		}
 	}
 	if targetPort.Type == -1 {
-		return fmt.Errorf("port %d not available for service %s", remotePort, serviceName)
+		return "", 0, fmt.Errorf("port %d not available for service %s", remotePort, serviceName)
 	}
 	pods, err := cluster.Ins().GetPodsByLabel(svc.Spec.Selector, opt.Get().Global.Namespace)
 	if err != nil {
-		return err
+		return "", 0, err
 	}
 	if len(pods.Items) == 0 {
-		return fmt.Errorf("no pod available for service %s", serviceName)
+		return "", 0, fmt.Errorf("no pod available for service %s", serviceName)
 	}
 	podPort := -1
 	if targetPort.Type == intstr.Int {
 		podPort = int(targetPort.IntVal)
 	} else {
-		containerLoop:
+	containerLoop:
 		for _, c := range pods.Items[0].Spec.Containers {
 			for _, p := range c.Ports {
 				if p.Name == targetPort.StrVal {
@@ -44,11 +60,7 @@ func RedirectService(serviceName string, localPort, remotePort int) error {
 		}
 	}
 	if podPort == -1 {
-		return fmt.Errorf("port %d not fit for any pod of service %s", remotePort, serviceName)
+		return "", 0, fmt.Errorf("port %d not fit for any pod of service %s", remotePort, serviceName)
 	}
-	return transmission.SetupPortForwardToLocal(pods.Items[0].Name, podPort, localPort)
-}
-
-func RedirectAddress(remoteAddress string, localPort, remotePort int) error {
-	return fmt.Errorf("redirecting to an arbitrary address havn't been implemented yet")
+	return pods.Items[0].Name, podPort, nil
 }

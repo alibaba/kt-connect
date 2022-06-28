@@ -16,27 +16,36 @@ import (
 )
 
 // SetupPortForwardToLocal mapping local port to shadow pod ssh port
-func SetupPortForwardToLocal(podName string, remotePort, localPort int) error {
-	return setupPortForwardToLocal(podName, remotePort, localPort, true)
+func SetupPortForwardToLocal(podName string, remotePort, localPort int) (chan int, error) {
+	gone := make(chan int)
+	return gone, setupPortForwardToLocal(podName, remotePort, localPort, gone, true)
 }
 
-func setupPortForwardToLocal(podName string, remotePort, localPort int, isInitConnect bool) error {
+func setupPortForwardToLocal(podName string, remotePort, localPort int, gone chan int, isInitConnect bool) error {
 	ready := make(chan struct{})
 	var ticker *time.Ticker
 	go func() {
-		if err := portForward(podName, remotePort, localPort, ready); err != nil {
+		stop := make(chan struct{})
+		fw, err := createPortForwarder(podName, remotePort, localPort, stop, ready)
+		if err != nil {
+			log.Warn().Err(err).Msgf("Invalid port forward parameter")
+			return
+		}
+		// will hang here
+		err = fw.ForwardPorts()
+		if err != nil {
 			if isInitConnect {
 				log.Error().Err(err).Msgf("Failed to setup port forward local:%d -> pod %s:%d", localPort, podName, remotePort)
 			} else {
 				log.Debug().Err(err).Msgf("Port forward local:%d -> pod %s:%d interrupted", localPort, podName, remotePort)
 			}
-			time.Sleep(time.Duration(opt.Get().Global.PortForwardTimeout) * time.Second)
 		}
 		if ticker != nil {
 			ticker.Stop()
 		}
+		time.Sleep(time.Duration(opt.Get().Global.PortForwardTimeout) * time.Second)
 		log.Debug().Msgf("Port forward reconnecting ...")
-		_ = setupPortForwardToLocal(podName, remotePort, localPort, false)
+		_ = setupPortForwardToLocal(podName, remotePort, localPort, gone, false)
 	}()
 
 	select {
@@ -49,24 +58,23 @@ func setupPortForwardToLocal(podName string, remotePort, localPort int, isInitCo
 	}
 }
 
-// PortForward call port forward api
-func portForward(podName string, remotePort, localPort int, ready chan struct{}) error {
+// createPortForwarder fetch a port forward handler
+func createPortForwarder(podName string, remotePort, localPort int, stop, ready chan struct{}) (*portforward.PortForwarder, error) {
 	apiPath := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward", opt.Get().Global.Namespace, podName)
 	log.Debug().Msgf("Request port forward pod:%d -> local:%d via %s", remotePort, localPort, opt.Store.RestConfig.Host)
 	apiUrl, err := parseReqHost(opt.Store.RestConfig.Host, apiPath)
+	if err != nil {
+		return nil, err
+	}
 
 	transport, upgrader, err := spdy.RoundTripperFor(opt.Store.RestConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, apiUrl)
 	ports := []string{fmt.Sprintf("%d:%d", localPort, remotePort)}
-	fw, err := portforward.New(dialer, ports, make(<-chan struct{}), ready, util.BackgroundLogger, util.BackgroundLogger)
-	if err != nil {
-		return err
-	}
-	return fw.ForwardPorts()
+	return portforward.New(dialer, ports, stop, ready, util.BackgroundLogger, util.BackgroundLogger)
 }
 
 // parseReqHost get the final url to port forward api

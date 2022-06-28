@@ -25,7 +25,7 @@ func BySshuttle() error {
 	}
 
 	localSshPort := util.GetRandomTcpPort()
-	if err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
+	if _, err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
 
