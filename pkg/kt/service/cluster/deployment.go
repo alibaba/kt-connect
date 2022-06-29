@@ -20,12 +20,15 @@ func (k *Kubernetes) GetDeployment(name string, namespace string) (*appV1.Deploy
 func (k *Kubernetes) GetDeploymentsByLabel(labels map[string]string, namespace string) (pods *appV1.DeploymentList, err error) {
 	return k.Clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+		TimeoutSeconds: &apiTimeout,
 	})
 }
 
 // GetAllDeploymentInNamespace get all deployment in specified namespace
 func (k *Kubernetes) GetAllDeploymentInNamespace(namespace string) (*appV1.DeploymentList, error) {
-	return k.Clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{})
+	return k.Clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
+		TimeoutSeconds: &apiTimeout,
+	})
 }
 
 // UpdateDeployment ...

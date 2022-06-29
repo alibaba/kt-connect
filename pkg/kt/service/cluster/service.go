@@ -42,12 +42,15 @@ func (k *Kubernetes) GetServicesBySelector(matchLabels map[string]string, namesp
 func (k *Kubernetes) GetServicesByLabel(labels map[string]string, namespace string) (svcs *coreV1.ServiceList, err error) {
 	return k.Clientset.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+		TimeoutSeconds: &apiTimeout,
 	})
 }
 
 // GetAllServiceInNamespace get all services in specified namespace
 func (k *Kubernetes) GetAllServiceInNamespace(namespace string) (*coreV1.ServiceList, error) {
-	return k.Clientset.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
+	return k.Clientset.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{
+		TimeoutSeconds: &apiTimeout,
+	})
 }
 
 // CreateService create kubernetes service

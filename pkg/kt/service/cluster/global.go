@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var apiTimeout int64 = 5
+
 // ResourceMeta ...
 type ResourceMeta struct {
 	Name        string
@@ -30,7 +32,9 @@ type SSHkeyMeta struct {
 
 // GetAllNamespaces get all namespaces
 func (k *Kubernetes) GetAllNamespaces() (*coreV1.NamespaceList, error) {
-	return k.Clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	return k.Clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{
+		TimeoutSeconds: &apiTimeout,
+	})
 }
 
 // GetKtResources fetch all kt pods and deployments

@@ -8,5 +8,7 @@ import (
 
 // GetAllIngressInNamespace get all ingresses in specified namespace
 func (k *Kubernetes) GetAllIngressInNamespace(namespace string) (*extV1.IngressList, error) {
-	return k.Clientset.ExtensionsV1beta1().Ingresses(namespace).List(context.TODO(), metav1.ListOptions{})
+	return k.Clientset.ExtensionsV1beta1().Ingresses(namespace).List(context.TODO(), metav1.ListOptions{
+		TimeoutSeconds: &apiTimeout,
+	})
 }

@@ -19,6 +19,7 @@ func (k *Kubernetes) GetConfigMap(name, namespace string) (*coreV1.ConfigMap, er
 func (k *Kubernetes) GetConfigMapsByLabel(labels map[string]string, namespace string) (pods *coreV1.ConfigMapList, err error) {
 	return k.Clientset.CoreV1().ConfigMaps(namespace).List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+		TimeoutSeconds: &apiTimeout,
 	})
 }
 

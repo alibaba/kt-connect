@@ -79,9 +79,15 @@ func isPartOfRange(ipRange string, subIpRange string) bool {
 }
 
 func getPodIps(k kubernetes.Interface, namespace string) []string {
-	podList, err := k.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
+	podList, err := k.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
+		Limit: 1000,
+		TimeoutSeconds: &apiTimeout,
+	})
 	if err != nil {
-		podList, err = k.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
+		podList, err = k.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
+			Limit: 1000,
+			TimeoutSeconds: &apiTimeout,
+		})
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to fetch pod ips")
 			return []string{}
@@ -99,9 +105,15 @@ func getPodIps(k kubernetes.Interface, namespace string) []string {
 }
 
 func getServiceIps(k kubernetes.Interface, namespace string) []string {
-	serviceList, err := k.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{Limit: 1000})
+	serviceList, err := k.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{
+		Limit: 1000,
+		TimeoutSeconds: &apiTimeout,
+	})
 	if err != nil {
-		serviceList, err = k.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{Limit: 1000})
+		serviceList, err = k.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{
+			Limit: 1000,
+			TimeoutSeconds: &apiTimeout,
+		})
 		if err != nil {
 			log.Warn().Err(err).Msgf("Failed to fetch service ips")
 			return []string{}
