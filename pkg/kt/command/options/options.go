@@ -26,6 +26,7 @@ type ConnectOptions struct {
 	ShareShadow      bool
 	ClusterDomain    string
 	SkipCleanup      bool
+	IncludeDomains   string
 }
 
 // ExchangeOptions ...

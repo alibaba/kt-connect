@@ -73,11 +73,17 @@ func ConnectFlags() []OptionConfig {
 		},
 	}
 	if util.IsMacos() {
-		flags = append(flags, OptionConfig{
-			Target:      "DnsPort",
-			DefaultValue: util.AlternativeDnsPort,
-			Description: "(local dns mode only) Specify local DNS port",
-		})
+		flags = append(flags,
+			OptionConfig {
+				Target:      "DnsPort",
+				DefaultValue: util.AlternativeDnsPort,
+				Description: "(local dns mode only) Specify local DNS port",
+			}, OptionConfig {
+				Target:      "IncludeDomains",
+				DefaultValue: "",
+				Description: "Query domain names of specified suffixes via kt DNS, e.g. 'com', use ',' separated",
+			},
+		)
 	}
 	return flags
 }

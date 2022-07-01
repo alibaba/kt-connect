@@ -67,6 +67,11 @@ func HandleExtraDomainMapping(extraDomains map[string]string, localDnsPort int) 
 	for _, suffix := range getAllDomainSuffixes(extraDomains) {
 		createResolverFile(fmt.Sprintf("%s.local", suffix), suffix, common.Localhost, fmt.Sprintf("%d", localDnsPort))
 	}
+	for _, suffix := range strings.Split(opt.Get().Connect.IncludeDomains, ",") {
+		if len(suffix) > 0 {
+			createResolverFile(fmt.Sprintf("%s.local", suffix), suffix, common.Localhost, fmt.Sprintf("%d", localDnsPort))
+		}
+	}
 }
 
 // RestoreNameServer remove the nameservers added by ktctl
