@@ -30,6 +30,10 @@ func ByTun2Socks() error {
 	}
 
 	if opt.Get().Connect.DisableTunDevice {
+		if util.IsWindows() {
+			log.Warn().Msgf("DNS mode will switch to 'hosts' when tun device is disabled")
+			opt.Get().Connect.DnsMode = util.DnsModeHosts
+		}
 		showSetupSocksMessage(opt.Get().Connect.ProxyPort)
 	} else {
 		if err = tun.Ins().CheckContext(); err != nil {
