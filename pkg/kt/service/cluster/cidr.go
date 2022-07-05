@@ -48,12 +48,17 @@ func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 		for _, ipRange := range strings.Split(opt.Get().Connect.ExcludeIps, ",") {
 			var toRemove []string
 			for _, r := range cidr {
-				if r == ipRange || isPartOfRange(ipRange, r) {
-					// if exclude ip equal or overlap cidr, remove it
+				if r == ipRange {
+					// if exclude ip equal to cidr, remove it and break
+					toRemove = append(toRemove, r)
+					break
+				} else if isPartOfRange(ipRange, r) {
+					// if exclude ip overlap cidr, remove it
 					toRemove = append(toRemove, r)
 				} else if isPartOfRange(r, ipRange) {
 					// if cidr overlap exclude ip, should set bypass route for it
 					excludeCidr = append(excludeCidr, ipRange)
+					break
 				}
 				// otherwise, exclude ip not part of cidr, ignore it
 			}
