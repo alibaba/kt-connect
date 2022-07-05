@@ -25,7 +25,7 @@ func (s *Cli) CheckContext() error {
 }
 
 // SetRoute set specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
+func (s *Cli) SetRoute(ipRange []string, excludeIpRange []string) error {
 	var err, lastErr error
 	anyRouteOk := false
 	for i, r := range ipRange {

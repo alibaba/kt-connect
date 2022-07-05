@@ -56,12 +56,9 @@ func ByTun2Socks() error {
 }
 
 func setupTunRoute() error {
-	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Global.Namespace)
-	if err != nil {
-		return err
-	}
+	cidr, excludeCidr := cluster.Ins().ClusterCidr(opt.Get().Global.Namespace)
 
-	err = tun.Ins().SetRoute(cidrs)
+	err := tun.Ins().SetRoute(cidr, excludeCidr)
 	if err != nil {
 		if tun.IsAllRouteFailError(err) {
 			if strings.Contains(err.(tun.AllRouteFailError).OriginalError().Error(), "exit status") {
@@ -77,7 +74,7 @@ func setupTunRoute() error {
 			log.Warn().Err(err).Msgf("Some route rule is not setup properly")
 		}
 	}
-	if failedRoutes := tun.Ins().CheckRoute(cidrs); len(failedRoutes) > 0 {
+	if failedRoutes := tun.Ins().CheckRoute(cidr); len(failedRoutes) > 0 {
 		log.Warn().Msgf("Skipped route to %v", failedRoutes)
 	}
 	return nil

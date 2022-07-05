@@ -55,7 +55,7 @@ type KubernetesInterface interface {
 
 	GetKtResources(namespace string) ([]coreV1.Pod, []coreV1.ConfigMap, []appV1.Deployment, []coreV1.Service, error)
 	GetAllNamespaces() (*coreV1.NamespaceList, error)
-	ClusterCidrs(namespace string) (cidrs []string, err error)
+	ClusterCidr(namespace string) (cidr []string, excludeCidr []string)
 }
 
 // Kubernetes implements KubernetesInterface

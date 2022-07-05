@@ -15,7 +15,7 @@ import (
 	"testing"
 )
 
-func TestKubernetes_ClusterCidrs(t *testing.T) {
+func TestKubernetes_ClusterCidr(t *testing.T) {
 	type args struct {
 		IncludeIps []string
 	}
@@ -23,8 +23,8 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 		name      string
 		args      args
 		objs      []runtime.Object
-		wantCidrs []string
-		wantErr   bool
+		wantCidr []string
+		dropCidr []string
 	}{
 		{
 			name: "shouldGetClusterCidr",
@@ -41,13 +41,13 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 				buildService("default", "svc1", "192.168.0.18"),
 				buildService("default", "svc2", "192.168.1.18"),
 			},
-			wantCidrs: []string{
+			wantCidr: []string{
 				"192.168.0.0/16",
 				"172.168.0.0/24",
 				"172.167.0.0/24",
 				"10.10.10.0/24",
 			},
-			wantErr: false,
+			dropCidr: nil,
 		},
 	}
 	for _, tt := range tests {
@@ -57,13 +57,12 @@ func TestKubernetes_ClusterCidrs(t *testing.T) {
 			}
 			opt.Get().Connect.IncludeIps = strings.Join(tt.args.IncludeIps, ",")
 			opt.Store.RestConfig = &rest.Config{ Host: "" }
-			gotCidrs, err := k.ClusterCidrs("default")
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Kubernetes.ClusterCidrs() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			includeCidr, excludeCidr := k.ClusterCidr("default")
+			if !reflect.DeepEqual(includeCidr, tt.wantCidr) {
+				t.Errorf("include CIDR = %v, want %v", includeCidr, tt.wantCidr)
 			}
-			if !reflect.DeepEqual(gotCidrs, tt.wantCidrs) {
-				t.Errorf("Kubernetes.ClusterCidrs() = %v, want %v", gotCidrs, tt.wantCidrs)
+			if !reflect.DeepEqual(excludeCidr, tt.dropCidr) {
+				t.Errorf("exclude CIDR = %v, want %v", excludeCidr, tt.dropCidr)
 			}
 		})
 	}
@@ -89,6 +88,11 @@ func Test_calculateMinimalIpRange(t *testing.T) {
 			name: "duplicate address",
 			ips: []string{"1.2.3.4", "1.2.3.4", "1.2.3.4", "1.2.3.4"},
 			miniRange: []string{"1.2.3.4/32"},
+		},
+		{
+			name: "merge range address",
+			ips: []string{"1.2.3.160/28", "1.2.3.176/28"},
+			miniRange: []string{"1.2.3.0/24"},
 		},
 	}
 	for _, test := range tests {

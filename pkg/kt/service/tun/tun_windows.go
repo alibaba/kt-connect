@@ -30,7 +30,7 @@ func (s *Cli) CheckContext() (err error) {
 }
 
 // SetRoute let specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
+func (s *Cli) SetRoute(ipRange []string, excludeIpRange []string) error {
 	var lastErr error
 	anyRouteOk := false
 	for i, r := range ipRange {

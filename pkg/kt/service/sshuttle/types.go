@@ -16,7 +16,8 @@ type SSHVPNRequest struct {
 	LocalSshPort           int
 	RemoteSSHPKPath        string
 	RemoteDNSServerAddress string
-	CustomCIDR             []string
+	IncludeCIDR            []string
+	ExcludeCIDR            []string
 }
 
 // Cli the singleton type

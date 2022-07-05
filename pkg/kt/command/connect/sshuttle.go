@@ -19,10 +19,7 @@ func BySshuttle() error {
 		return err
 	}
 
-	cidrs, err := cluster.Ins().ClusterCidrs(opt.Get().Global.Namespace)
-	if err != nil {
-		return err
-	}
+	cidr, excludeCidr := cluster.Ins().ClusterCidr(opt.Get().Global.Namespace)
 
 	localSshPort := util.GetRandomTcpPort()
 	if _, err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
@@ -33,7 +30,8 @@ func BySshuttle() error {
 		LocalSshPort:           localSshPort,
 		RemoteSSHPKPath:        privateKeyPath,
 		RemoteDNSServerAddress: podIP,
-		CustomCIDR:             cidrs,
+		IncludeCIDR:            cidr,
+		ExcludeCIDR:            excludeCidr,
 	}
 	if err = startSshuttle(req); err != nil {
 		return err

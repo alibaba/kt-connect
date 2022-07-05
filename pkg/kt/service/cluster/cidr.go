@@ -12,23 +12,27 @@ import (
 	"strings"
 )
 
-// ClusterCidrs get cluster Cidrs
-func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
+// ClusterCidr get cluster CIDR
+func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 	ips := getServiceIps(k.Clientset, namespace)
-	if opt.Get().Global.Debug {
-		log.Debug().Msgf("Service CIDR are: %v", calculateMinimalIpRange(ips))
-	}
+	svcCidr := calculateMinimalIpRange(ips)
+	log.Debug().Msgf("Service CIDR are: %v", svcCidr)
+
+	var podCidr []string
 	if !opt.Get().Connect.DisablePodIp {
-		ips = append(ips, getPodIps(k.Clientset, namespace)...)
+		ips = getPodIps(k.Clientset, namespace)
+		podCidr = calculateMinimalIpRange(ips)
+		log.Debug().Msgf("Pod CIDR are: %v", podCidr)
 	}
 
-	cidrs := calculateMinimalIpRange(ips)
-	log.Debug().Msgf("Cluster CIDR are: %v", cidrs)
+	cidr := calculateMinimalIpRange(append(svcCidr, podCidr...))
+	log.Debug().Msgf("Cluster CIDR are: %v", cidr)
 
 	apiServerIp := util.ExtractHostIp(opt.Store.RestConfig.Host)
-	log.Debug().Msgf("Using cluster ip %s", apiServerIp)
-	if apiServerIp != "" {
-		cidrs = removeCidrOf(cidrs, apiServerIp + "/32")
+	log.Debug().Msgf("Using cluster IP %s", apiServerIp)
+	var excludeCidr []string
+	if len(apiServerIp) > 0 {
+		excludeCidr = []string{apiServerIp + "/32"}
 	}
 
 	if opt.Get().Connect.IncludeIps != "" {
@@ -36,16 +40,32 @@ func (k *Kubernetes) ClusterCidrs(namespace string) ([]string, error) {
 			if opt.Get().Connect.Mode == util.ConnectModeTun2Socks && isSingleIp(ipRange) {
 				log.Warn().Msgf("Includes single IP '%s' is not allow in %s mode", ipRange, util.ConnectModeTun2Socks)
 			} else {
-				cidrs = append(cidrs, ipRange)
+				cidr = append(cidr, ipRange)
 			}
 		}
 	}
 	if opt.Get().Connect.ExcludeIps != "" {
 		for _, ipRange := range strings.Split(opt.Get().Connect.ExcludeIps, ",") {
-			cidrs = util.ArrayDelete(cidrs, ipRange)
+			var toRemove []string
+			for _, r := range cidr {
+				if r == ipRange || isPartOfRange(ipRange, r) {
+					// if exclude ip equal or overlap cidr, remove it
+					toRemove = append(toRemove, r)
+				} else if isPartOfRange(r, ipRange) {
+					// if cidr overlap exclude ip, should set bypass route for it
+					excludeCidr = append(excludeCidr, ipRange)
+				}
+				// otherwise, exclude ip not part of cidr, ignore it
+			}
+			for _, r := range toRemove {
+				cidr = util.ArrayDelete(cidr, r)
+			}
 		}
 	}
-	return cidrs, nil
+	if len(excludeCidr) > 0 {
+		log.Debug().Msgf("Non-cluster CIDR are: %v", excludeCidr)
+	}
+	return cidr, excludeCidr
 }
 
 func removeCidrOf(cidrRanges []string, ipRange string) []string {
@@ -225,6 +245,13 @@ func ipRangeToBin(ipRange string) ([32]int, error) {
 }
 
 func ipToBin(ip string) (ipBin [32]int, err error) {
+	slashCount := strings.Count(ip, "/")
+	if slashCount == 1 {
+		return ipRangeToBin(ip)
+	} else if slashCount > 1 {
+		err = fmt.Errorf("invalid ip address: %s", ip)
+		return
+	}
 	ipNum, err := parseIp(ip)
 	if err != nil {
 		return

@@ -17,7 +17,7 @@ func (s *Cli) CheckContext() error {
 }
 
 // SetRoute let specified ip range route to tun device
-func (s *Cli) SetRoute(ipRange []string) error {
+func (s *Cli) SetRoute(ipRange []string, excludeIpRange []string) error {
 	// run command: ip link set dev kt0 up
 	_, _, err := util.RunAndWait(exec.Command("ip",
 		"link",

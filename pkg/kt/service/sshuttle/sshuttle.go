@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 // Version check sshuttle version
@@ -40,11 +39,11 @@ func (s *Cli) Connect(req *SSHVPNRequest) *exec.Cmd {
 	remoteAddr := fmt.Sprintf("root@%s:%d", common.Localhost, req.LocalSshPort)
 	args = append(args, "--ssh-cmd", subCommand, "--remote", remoteAddr, "--exclude", common.Localhost)
 	if opt.Get().Connect.ExcludeIps != "" {
-		for _, ip := range strings.Split(opt.Get().Connect.ExcludeIps, ",") {
+		for _, ip := range req.ExcludeCIDR {
 			args = append(args, "--exclude", ip)
 		}
 	}
-	args = append(args, req.CustomCIDR...)
+	args = append(args, req.IncludeCIDR...)
 	cmd := exec.Command("sshuttle", args...)
 	if !opt.Get().Global.Debug {
 		stdoutPipe, _ := cmd.StdoutPipe()
