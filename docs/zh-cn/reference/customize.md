@@ -47,7 +47,7 @@ hack
 在MacOS和Linux系统下，可以使用Make工具打包，执行以下`make`命令：
 
 ```bash
-TAG=0.3.6-beta1 make ktctl
+TAG=0.3.6 make ktctl
 make upx
 ```
 
@@ -70,7 +70,7 @@ Windows环境下的Make工具使用起来相对繁琐，建议采用下述原始
 #### ** MacOS Shell / Linux Shell / Windows MINGW **
 
 ```bash
-export TAG=0.3.6-beta1
+export TAG=0.3.6
 export GOARCH=amd64
 export GOOS=windows
 go mod download
@@ -81,7 +81,7 @@ upx -9 artifacts/windows/ktctl.exe
 #### ** Windows CMD **
 
 ```bash
-set TAG=0.3.6-beta1
+set TAG=0.3.6
 set GOARCH=amd64
 set GOOS=windows
 go mod download
@@ -92,7 +92,7 @@ upx -9 artifacts\windows\ktctl.exe
 #### ** Windows PowerShell **
 
 ```bash
-$env:TAG="0.3.6-beta1"
+$env:TAG="0.3.6"
 $env:GOARCH="amd64"
 $env:GOOS="windows"
 go mod download
