@@ -25,14 +25,16 @@ func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 		log.Debug().Msgf("Pod CIDR are: %v", podCidr)
 	}
 
-	cidr := calculateMinimalIpRange(append(svcCidr, podCidr...))
-	log.Debug().Msgf("Cluster CIDR are: %v", cidr)
-
 	apiServerIp := util.ExtractHostIp(opt.Store.RestConfig.Host)
 	log.Debug().Msgf("Using cluster IP %s", apiServerIp)
+
+	cidr := mergeIpRange(svcCidr, podCidr, apiServerIp)
+	log.Debug().Msgf("Cluster CIDR are: %v", cidr)
+
+	excludeIps := strings.Split(opt.Get().Connect.ExcludeIps, ",")
 	var excludeCidr []string
 	if len(apiServerIp) > 0 {
-		excludeCidr = []string{apiServerIp + "/32"}
+		excludeIps = append(excludeIps, apiServerIp + "/32")
 	}
 
 	if opt.Get().Connect.IncludeIps != "" {
@@ -45,7 +47,7 @@ func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 		}
 	}
 	if opt.Get().Connect.ExcludeIps != "" {
-		for _, ipRange := range strings.Split(opt.Get().Connect.ExcludeIps, ",") {
+		for _, ipRange := range excludeIps {
 			var toRemove []string
 			for _, r := range cidr {
 				if r == ipRange {
@@ -71,6 +73,23 @@ func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 		log.Debug().Msgf("Non-cluster CIDR are: %v", excludeCidr)
 	}
 	return cidr, excludeCidr
+}
+
+func mergeIpRange(svcCidr []string, podCidr []string, apiServerIp string) []string {
+	cidr := calculateMinimalIpRange(append(svcCidr, podCidr...))
+	apiServerOverlap := false
+	for _, r := range cidr {
+		if isPartOfRange(r, apiServerIp + "/32") {
+			apiServerOverlap = true
+			break
+		}
+	}
+	if !apiServerOverlap {
+		return cidr
+	}
+
+	// A workaround of issue-320
+	return append(removeCidrOf(svcCidr, apiServerIp), removeCidrOf(podCidr, apiServerIp)...)
 }
 
 func removeCidrOf(cidrRanges []string, ipRange string) []string {
