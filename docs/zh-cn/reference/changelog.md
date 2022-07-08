@@ -1,6 +1,22 @@
 更新日志
 ---
 
+### 0.3.6
+
+> 发布时间：2022-07-08
+
+- 增加`birdseye`命令用于查看集群各Service的重定向状态
+- 增加`forward`命令用于将集群的Service映射到本地端口
+- `connect`命令增加`--ingressIp`参数用于支持Ingress域名解析 (issue-322)
+- `connect`命令增加`--includeDomains`参数，支持额外的MacOS域名后缀 (issue-329)
+- `config`命令兼容`set key = value`格式
+- 在Windows下开启`--disableTunDeivce`时，自动切换为`hosts`DNS模式 (issue-324)
+- 完善`config`命令的参数自动补全
+- 优化CIDR的合并逻辑，避免在API Server IP与CIDR相近时导致空的IP范围 (issue-320)
+- 修复一处导致无法多人同时对同一个Service使用`mesh`的BUG
+- 修复Windows环境下误退出时移除非Kt路由的BUG (issue-319)
+- 修复Mac环境`<service-name>.<namespace>.svc`格式域名失效的问题 (issue-325)
+
 ### 0.3.5
 
 > 发布时间：2022-05-30

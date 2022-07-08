@@ -1,6 +1,22 @@
 Changelog
 ---
 
+### 0.3.6
+
+> Release time: 2022-07-08
+
+- Added `birdseye` command to view the network status of each service in the cluster
+- Added `forward` command to redirect requests from local port to a service in cluster
+- `connect` command adds `--ingressIp` parameter to support ingress domain name resolution
+- `connect` command adds `--includeDomains` parameter to support additional domain name suffix in MacOS
+- `config` command now support `set key = value` format
+- Automatically switch to `hosts` DNS mode when `--disableTunDeivce` is enabled on Windows
+- Improve the parameter auto-completion of `config` command
+- Optimize CIDR merge logic to avoid empty IP range when API Server IP is close to CIDR
+- Fixed a bug that prevented multiple developers from using `mesh` on the same service at the same time
+- Fixed a bug of removing non-Kt routes when exiting by mistake in Windows environment
+- Fixed a bug that domain name in `<service-name>.<namespace>.svc` format was ignored in MacOS environment
+
 ### 0.3.5
 
 > Release time: 2022-05-30
