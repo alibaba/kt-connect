@@ -5,7 +5,6 @@ on:
     tags:
     - 'v*.*.*'
 jobs:
-
   release-cli:
     name: Release packages
     runs-on: ubuntu-latest
@@ -50,3 +49,12 @@ jobs:
         args: release --rm-dist
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Homebrew formula
+      uses: dawidd6/action-homebrew-bump-formula@v3
+      with:
+        token: ${{secrets.GITHUB_TOKEN}}
+        formula: kt-connect
+        tag: ${{github.ref}}
+        revision: ${{github.sha}}
+        force: false
