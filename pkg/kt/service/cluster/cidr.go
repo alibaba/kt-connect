@@ -15,12 +15,14 @@ import (
 // ClusterCidr get cluster CIDR
 func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 	ips := getServiceIps(k.Clientset, namespace)
+	log.Debug().Msgf("Found %d IPs", len(ips))
 	svcCidr := calculateMinimalIpRange(ips)
 	log.Debug().Msgf("Service CIDR are: %v", svcCidr)
 
 	var podCidr []string
 	if !opt.Get().Connect.DisablePodIp {
 		ips = getPodIps(k.Clientset, namespace)
+		log.Debug().Msgf("Found %d IPs", len(ips))
 		podCidr = calculateMinimalIpRange(ips)
 		log.Debug().Msgf("Pod CIDR are: %v", podCidr)
 	}
