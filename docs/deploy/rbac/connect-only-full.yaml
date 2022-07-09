@@ -52,3 +52,9 @@ rules:
       - pods/portforward
     verbs:
       - create
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs:
+      - list
