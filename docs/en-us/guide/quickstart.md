@@ -95,15 +95,14 @@ In order to verify the scenarios where the service in cluster access services at
 $ docker run -d --name tomcat -p 8080:8080 tomcat:9
 $ docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
 ```
-KtConnect offers 3 commands for accessing local service from cluster in different cases.
+KtConnect offers 2 commands for accessing local service from cluster in different cases.
 
 - Exchange：redirect all request to specified service in cluster to local
 - Mesh：redirect partial request to specified service in cluster (base on mesh rule) to local
-- Preview：create a new service in cluster, and redirect any request to this service to local
 
 <!-- tabs:start -->
 
-#### ** Exchange **
+#### ** Exchange Command **
 
 Intercept and forward all requests to the specified service in the cluster to specified local port, which is usually used to debug service in the test environment at the middle of an invocation-chain.
 
@@ -113,7 +112,7 @@ Intercept and forward all requests to the specified service in the cluster to sp
 └──────────┘ │    ── ── ── ─┘ │  └──────────┘
          exchange             │
              │   ┌──────────┐ │
-             └──►│ ServiceB'├─┘
+             └──►│ ServiceB'├─┘ (Local Instance)
                  └──────────┘
 ```
 
@@ -140,9 +139,9 @@ kt-connect local v2
 
 The request to `tomcat` service in the cluster is now routed to the local Tomcat instance, thus you can directly debug this service locally.
 
-## ** Mesh **
+## ** Mesh Command **
 
-Intercept and forward part of requests to the specified service in the cluster to specified local port.
+Intercept and forward part of requests to the specified service in the cluster to specified local port. Usual used in team cooperation, one developer need to debug a service while do not want to disturb other developers.
 
 ```text
 ┌──────────┐     ┌──────────┐    ┌──────────┐
@@ -150,11 +149,11 @@ Intercept and forward part of requests to the specified service in the cluster t
 └──────────┘ │   └──────────┘ │  └──────────┘
             mesh              │
              │   ┌──────────┐ │
-             └──►│ ServiceB'├─┘
+             └──►│ ServiceB'├─┘ (Local Instance)
                  └──────────┘
 ```
 
-Mesh command has 2 execution modes. The default `auto` mode will automatically create corresponding routing rules for you without extra service mesh component.
+Mesh command has 2 execution modes. The default `auto` mode will automatically create corresponding routing rules for you **without** extra service mesh component.
 
 In order to verify the results, firstly let's reset the content of the index page of the Tomcat service in the cluster, then use `ktctl mesh` command to create a traffic rule:
 
@@ -189,27 +188,66 @@ The `manual` mode of mesh command provides possibility of more flexible route ru
 
 The most significant difference between `ktctl mesh` and `ktctl exchange` commands is that the latter will completely replace the original application instance, while the former will still retain the original service pod after the shadow pod is created, and the router pod will dynamically generate a `version` header (or label), so only specified traffic will be redirected to local, while ensuring that the normal traffic in the test environment is not effected.
 
-#### ** Preview **
+<!-- tabs:end -->
+
+## Provide local service to others
+
+In addition to the services that have been deployed to the cluster, during the development process, KtConnect can also be used to quickly "put" a local service to the cluster and turn it into a temporary service for other developers or other services in the cluster to use.
+
+- Preview: Register a local service as a service in the cluster
+- Forward: Redirect a local port to a cluster service. Can achieve to access services run on other developer's laptop via localhost while combining with `preview` command
+
+<!-- tabs:start -->
+
+#### ** Preview Command **
 
 Register a local service instance to cluster. Unlike the previous two commands, `ktctl preview` is mainly used to debug or preview a services under developing.
 
-The following command will register the service running on the port `8080` locally to the cluster as a service named `tomcat-preview`.
+The following command will register the service running on the port `8080` locally to the cluster as a service named `tomcat-v2`.
 
 ```bash
-$ ktctl preview tomcat-preview --expose 8080
+$ ktctl preview tomcat-v2 --expose 8080
 00:00AM INF KtConnect start at <PID>
 ... ...
 ---------------------------------------------------------------
- Now you can access your local service in cluster by name 'tomcat-preview'
+ Now you can access your local service in cluster by name 'tomcat-v2'
 ---------------------------------------------------------------
 ... ...
 ```
 
-Now other services in the cluster can access the locally exposed service instance through the service name of `tomcat-preview`, and other developers can also preview the service directly through service name `tomcat-preview` after executing `ktctl connect` on their laptops.
+Now other services in the cluster can access the locally exposed service instance through the service name of `tomcat-v2`, and other developers can also preview the service directly through service name `tomcat-v2` after executing `ktctl connect` on their laptops.
 
 ```bash
-$ curl http://tomcat-preview:8080
+$ curl http://tomcat-v2:8080
 kt-connect local v2
 ```
+
+#### ** Forward Command **
+
+Redirect specified local port to any IP or service in the cluster. It is used to easily access a specific IP or service in the cluster using the `localhost` address during testing. The typical scenario is to access local services of other developers registered by `preview` command.
+
+```text
+         ┌─────────────────────────────┐
+      forward           |           preview
+┌────────┴───────┐      |      ┌───────▼──────┐
+│ localhost:8080 │      |      │ local tomcat │
+└────────────────┘      |      └──────────────┘
+    Developer B         |         Developer A
+```
+
+For example, after a developer A runs the aforementioned `preview` command, another developer B can use the `ktctl forward` command to map it to its own local `6060` port.
+
+```bash
+$ ktctl forward tomcat-v2 6060:8080
+00:00AM INF KtConnect start at <PID>
+... ...
+---------------------------------------------------------------
+ Now you can access port 8080 of service 'tomcat-v2' via 'localhost:6060'
+---------------------------------------------------------------
+```
+
+Now developer B can use the `localhost:6060` address to access the Tomcat service running locally by developer A.
+
+When the forwarded traffic source is a service name in the cluster, the result is similar to the `kubectl port-forward` command, except the additional ability to automatically reconnect when the network is disconnected.
 
 <!-- tabs:end -->

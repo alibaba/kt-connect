@@ -95,17 +95,16 @@ $ docker run -d --name tomcat -p 8080:8080 tomcat:9
 $ docker exec tomcat /bin/bash -c 'mkdir webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
 ```
 
-KtConnect提供了三种能够让集群访问本地服务的命令，分别用于不同的调试场景。
+KtConnect提供了两种能够让集群流量重定向到本地服务的命令，在使用场景上稍有不同。
 
 - Exchange：将集群指定服务的所有流量转向本地
 - Mesh：将集群指定服务的部分流量（按Header或Label规则）转向本地
-- Preview：在集群中创建一个新服务，并将其流量转向本地
 
 <!-- tabs:start -->
 
-#### ** Exchange **
+#### ** Exchange命令 **
 
-将集群里访问指定服务的所有请求拦截并转发到本地的指定端口，通常用于调试在测试环境调用链上的指定服务。
+将集群里访问指定服务的所有请求拦截并转发到本地的指定端口。通常用于调试在测试环境里，调试位于业务调用链中间环节的特定服务。
 
 ```text
 ┌──────────┐     ┌─ ── ── ──     ┌──────────┐
@@ -113,7 +112,7 @@ KtConnect提供了三种能够让集群访问本地服务的命令，分别用�
 └──────────┘ │    ── ── ── ─┘ │  └──────────┘
          exchange             │
              │   ┌──────────┐ │
-             └──►│ ServiceB'├─┘
+             └──►│ ServiceB'├─┘ （本地服务实例）
                  └──────────┘
 ```
 
@@ -139,9 +138,9 @@ kt-connect local v2
 
 可以看到，访问集群里`tomcat`服务的请求被路由到了本地的Tomcat实例，现在就可以直接在本地调试这个服务了。
 
-## ** Mesh **
+## ** Mesh命令 **
 
-将集群里访问指定服务的部分请求拦截并转发到本地的指定端口。
+将集群里访问指定服务的部分请求拦截并转发到本地的指定端口。通常用于团队协作时，需要定向调试调用链中间位置的服务，又不希望影响其他开发者正常使用测试环境的场景。
 
 ```text
 ┌──────────┐     ┌──────────┐    ┌──────────┐
@@ -149,11 +148,11 @@ kt-connect local v2
 └──────────┘ │   └──────────┘ │  └──────────┘
             mesh              │
              │   ┌──────────┐ │
-             └──►│ ServiceB'├─┘
+             └──►│ ServiceB'├─┘ （本地服务实例）
                  └──────────┘
 ```
 
-Mesh命令有两种运行模式，默认的`auto`模式不需要额外的服务网格组件，能够直接实现HTTP请求的自动按需路由。
+Mesh命令有两种运行模式，默认的`auto`模式**不需要**额外的服务网格组件，能够直接实现HTTP请求的自动按需路由。
 
 为了便于验证结果，先重置一下集群里Tomcat服务的首页内容。然后通过`ktctl mesh`命令创建代理Pod：
 
@@ -188,26 +187,65 @@ kt-connect local v2
 
 `ktctl exchange`与`ktctl mesh`命令的最大区别在于，前者会将原应用实例流量全部替换为由本地服务接收，而后者仅将包含指定Header的流量导流到本地，同时保证测试环境正常链路始终可用。
 
-#### ** Preview **
+<!-- tabs:end -->
 
-将本地运行的服务实例注册到集群上。与前两种命令不同，`ktctl preview`主要用于将本地开发中的服务提供给其他开发者进行联调和预览。
+## 将本地服务提供给其他开发者
 
-以下命令会将运行在本地`8080`端口的服务注册到测试集群，命名为`tomcat-preview`。
+除了已经部署到集群的服务，在开发过程中，也可以利用KtConnect将本地服务快速"放"到集群，变成一个临时的服务，供其他开发者或集群中的其他服务使用。
+
+- Preview：将本地服务注册为集群里的Service
+- Forward：将集群服务映射到本地，结合Preview命令可实现开发者之间跨主机使用Localhost地址互访
+
+<!-- tabs:start -->
+
+#### ** Preview命令 **
+
+将本地运行的服务实例注册到集群上。主要用于将本地开发中的服务提供给其他开发者进行联调和预览。
+
+使用`ktctl preview`命令将运行在本地`8080`端口的服务注册到测试集群，命名为`tomcat-v2`。
 
 ```bash
-$ ktctl preview tomcat-preview --expose 8080
+$ ktctl preview tomcat-v2 --expose 8080
 00:00AM INF KtConnect start at <PID>
 ... ...
 ---------------------------------------------------------------
- Now you can access your local service in cluster by name 'tomcat-preview'
+ Now you can access your local service in cluster by name 'tomcat-v2'
 ---------------------------------------------------------------
 ```
 
-现在集群里的服务就可以通过`tomcat-preview`名称来访问本地暴露的服务实例了，其他开发者也可以在执行`ktctl connect`后，直接通过`tomcat-preview`服务名称来预览该服务的实时情况：
+现在集群里的服务就可以通过`tomcat-v2`名称来访问本地注册的服务实例了，其他开发者也可以在执行`ktctl connect`后，直接通过`tomcat-v2`服务名称来预览该服务的实时情况：
 
 ```bash
-$ curl http://tomcat-preview:8080
+$ curl http://tomcat-v2:8080
 kt-connect local v2
 ```
+
+#### ** Forward命令 **
+
+将任意IP或集群中的服务映射到本地的指定端口。用于在测试时，使用`localhost`地址便捷的访问集群中的特定IP或服务，典型场景是是访问其他开发者通过Preview命令注册的本地服务。
+
+```text
+         ┌─────────────────────────────┐
+      forward           |           preview
+┌────────┴───────┐      |      ┌───────▼──────┐
+│ localhost:8080 │      |      │ local tomcat │
+└────────────────┘      |      └──────────────┘
+      开发者 B           |           开发者 A
+```
+
+例如当一个开发者A运行了前述的Preview命令后，另一个开发者B可以使用`ktctl forward`命令将它映射到自己本地的`6060`端口。
+
+```bash
+$ ktctl forward tomcat-v2 6060:8080
+00:00AM INF KtConnect start at <PID>
+... ...
+---------------------------------------------------------------
+ Now you can access port 8080 of service 'tomcat-v2' via 'localhost:6060'
+---------------------------------------------------------------
+```
+
+现在开发者B就可以使用`localhost:6060`地址访问到开发者A本地运行的Tomcat服务了。
+
+当映射的流量源是集群中的服务名时，其效果与`kubectl port-forward`命令相似，只是额外增加了断网自动重连的能力。
 
 <!-- tabs:end -->
