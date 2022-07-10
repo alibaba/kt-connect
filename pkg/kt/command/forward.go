@@ -60,12 +60,16 @@ func Forward(args []string) error {
 		log.Info().Msgf(" Now you can access to '%s:%d' via 'localhost:%d'", target, remotePort, localPort)
 		log.Info().Msg("---------------------------------------------------------------")
 	} else {
-		err = forward.RedirectService(target, localPort, remotePort)
+		localPort, err = forward.RedirectService(target, localPort, remotePort)
 		if err != nil {
 			return err
 		}
+		portMsg := ""
+		if remotePort > 0 {
+			portMsg = fmt.Sprintf(" port %d of", remotePort)
+		}
 		log.Info().Msg("---------------------------------------------------------------")
-		log.Info().Msgf(" Now you can access port %d of service '%s' via 'localhost:%d'", remotePort, target, localPort)
+		log.Info().Msgf(" Now you can access%s service '%s' via 'localhost:%d'", portMsg, target, localPort)
 		log.Info().Msg("---------------------------------------------------------------")
 	}
 

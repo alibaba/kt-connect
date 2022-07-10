@@ -9,10 +9,10 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func RedirectService(serviceName string, localPort, remotePort int) error {
+func RedirectService(serviceName string, localPort, remotePort int) (int, error) {
 	podName, podPort, svcPort, err := getPodNameAndPort(serviceName, remotePort, opt.Get().Global.Namespace)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if localPort <= 0 {
 		// local port note provided, use same as remote port
@@ -22,7 +22,7 @@ func RedirectService(serviceName string, localPort, remotePort int) error {
 	go func() {
 		<-gone
 	}()
-	return err
+	return localPort, err
 }
 
 func RedirectAddress(remoteAddress string, localPort, remotePort int) error {
