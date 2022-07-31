@@ -23,3 +23,8 @@ A: The port mapping function of `Ktctl` depends on the `socat` tool on the clust
 A: Rerun the `ktctl connect` command with `--debug` parameter, and observe whether there is a related domain name checking log output on the `ktctl` console when accessing it.
 If there is an error of "domain <domain-name-you-are-visiting> not exists", please check whether the cluster you are connected to and the service domain name you are visiting is correct (you can verify it by accessing the domain name from a pod in the cluster);
 If no relevant output is printed, it means that the system DNS configuration is not setting to the DNS server of kt correctly. Please raise an [issue](https://github.com/golang/go/issues) with your local operating system version and the ktctl version information, we'll look into it further.
+
+#### Q: Why KtConnect using GPL v3 license, are there any usage restrictions?
+
+A: The network protocol stack logic of KtConnect is implemented by the `tun2socks` project which under the GPL v3 license. Due to the transitivity rule, KtConnect is also open source based on the GPL v3 license.
+You can arbitrarily modify the source code of KtConnect and use it within your enterprise, and you can also use the source code or the binary of KtConnect in other open source projects. However, you cannot sell the software containing the KtConnect source code or binary as a commercial product.

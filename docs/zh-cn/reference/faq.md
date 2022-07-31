@@ -20,3 +20,7 @@ A：Ktctl的端口映射功能依赖于集群主机上的`socat`工具，请在�
 #### Q：启动`ktctl connect`以后，使用域名访问集群中的服务提示 "Could not resolve host" ?
 
 A：使用`--debug`参数重新启动`ktctl connect`命令，在访问域名时观察`ktctl`控制台上是否有相关的域名检查日志输出。若有 "domain <你访问的域名> not exists" 错误，请检查您所连接的集群和使用的服务域名是否正确（可到集群中的Pod访问该域名进行验证）；若无任何与所查域名相关的输出，则说明系统DNS配置未生效，请提交 [issue](https://github.com/golang/go/issues) 告诉我们，并写明本地操作系统版本和使用的`ktctl`版本信息。
+
+#### Q：KtConnect为什么使用GPL v3开源协议，有什么使用限制吗？
+
+A：KtConnect的网协议栈逻辑采用了GPL v3协议的`tun2socks`项目实现，由于该协议的传递性，KtConnect同样基于GPL v3协议开源。您可以任意修改KtConnect的源码并在企业内部使用，也可以在其他开源项目中直接使用KtConnect的源码或二级制发行包，但不能够将包含有KtConnect代码或发行包的软件为商业产品进行出售。

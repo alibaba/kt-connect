@@ -22,6 +22,6 @@
   - [企业定制](zh-cn/reference/customize.md)
   - [常见问题](zh-cn/reference/faq.md)
   - [版本日志](zh-cn/reference/changelog.md)
+  - [工具对比](zh-cn/reference/comparison.md)
   - [升级说明](zh-cn/reference/update.md)
   - [开发计划](zh-cn/reference/todo.md)
-
