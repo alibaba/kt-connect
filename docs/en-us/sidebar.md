@@ -22,4 +22,4 @@
   - [Customization](en-us/reference/customize.md)
   - [FAQ](en-us/reference/faq.md)
   - [Changelog](en-us/reference/changelog.md)
-
+  - [Tool comparison](en-us/reference/comparison.md)
