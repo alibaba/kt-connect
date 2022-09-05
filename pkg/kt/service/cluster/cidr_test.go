@@ -16,22 +16,17 @@ import (
 )
 
 func TestKubernetes_ClusterCidr(t *testing.T) {
-	type args struct {
-		IncludeIps []string
-	}
 	tests := []struct {
-		name      string
-		args      args
-		objs      []runtime.Object
-		wantCidr []string
-		dropCidr []string
+		name       string
+		includeIps []string
+		objs       []runtime.Object
+		wantCidr   []string
+		dropCidr   []string
 	}{
 		{
 			name: "shouldGetClusterCidr",
-			args: args{
-				IncludeIps: []string{
-					"10.10.10.0/24",
-				},
+			includeIps: []string{
+				"10.10.10.0/24",
 			},
 			objs: []runtime.Object{
 				buildPod("default", "pod1", "image", "172.168.0.7", map[string]string{"label": "value"}),
@@ -55,8 +50,8 @@ func TestKubernetes_ClusterCidr(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			opt.Get().Connect.IncludeIps = strings.Join(tt.args.IncludeIps, ",")
-			opt.Store.RestConfig = &rest.Config{ Host: "" }
+			opt.Get().Connect.IncludeIps = strings.Join(tt.includeIps, ",")
+			opt.Store.RestConfig = &rest.Config{Host: ""}
 			includeCidr, excludeCidr := k.ClusterCidr("default")
 			if !reflect.DeepEqual(includeCidr, tt.wantCidr) {
 				t.Errorf("include CIDR = %v, want %v", includeCidr, tt.wantCidr)
@@ -68,30 +63,70 @@ func TestKubernetes_ClusterCidr(t *testing.T) {
 	}
 }
 
+func Test_mergeIpRange(t *testing.T) {
+	tests := []struct {
+		name         string
+		svcCidr      []string
+		podCidr      []string
+		apiServerIp  string
+		expectedCidr []string
+	}{
+		{
+			name:         "no merge needed",
+			svcCidr:      []string{"10.1.2.0/24", "10.2.2.0/24"},
+			podCidr:      []string{"192.168.0.0/16"},
+			apiServerIp:  "1.2.3.4",
+			expectedCidr: []string{"10.1.2.0/24", "10.2.2.0/24", "192.168.0.0/16"},
+		},
+		{
+			name:         "api server ip in svc cidr",
+			svcCidr:      []string{"10.1.2.0/24", "10.2.2.0/24"},
+			podCidr:      []string{"192.168.0.0/16"},
+			apiServerIp:  "10.1.2.4",
+			expectedCidr: []string{"10.2.2.0/24", "192.168.0.0/16"},
+		},
+		{
+			name:         "api server ip in pod cidr",
+			svcCidr:      []string{"10.1.2.0/24", "10.2.2.0/24"},
+			podCidr:      []string{"192.168.0.0/16"},
+			apiServerIp:  "192.168.2.4",
+			expectedCidr: []string{"10.2.2.0/24", "10.2.2.0/24"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mergedCidr := mergeIpRange(tt.svcCidr, tt.podCidr, tt.apiServerIp)
+			if !reflect.DeepEqual(mergedCidr, tt.expectedCidr) {
+				t.Errorf("%s failed with CIDR = %v, want %v", tt.name, mergedCidr, tt.expectedCidr)
+			}
+		})
+	}
+}
+
 func Test_calculateMinimalIpRange(t *testing.T) {
 	tests := []struct {
-		name string
-		ips []string
+		name      string
+		ips       []string
 		miniRange []string
 	}{
 		{
-			name: "1 range",
-			ips: []string{"1.2.3.4", "1.2.3.100"},
+			name:      "1 range",
+			ips:       []string{"1.2.3.4", "1.2.3.100"},
 			miniRange: []string{"1.2.3.0/24"},
 		},
 		{
-			name: "2 ranges",
-			ips: []string{"1.2.3.4", "2.3.4.5", "1.2.3.100", "2.3.5.5"},
+			name:      "2 ranges",
+			ips:       []string{"1.2.3.4", "2.3.4.5", "1.2.3.100", "2.3.5.5"},
 			miniRange: []string{"1.2.3.0/24", "2.3.0.0/16"},
 		},
 		{
-			name: "duplicate address",
-			ips: []string{"1.2.3.4", "1.2.3.4", "1.2.3.4", "1.2.3.4"},
+			name:      "duplicate address",
+			ips:       []string{"1.2.3.4", "1.2.3.4", "1.2.3.4", "1.2.3.4"},
 			miniRange: []string{"1.2.3.4/32"},
 		},
 		{
-			name: "merge range address",
-			ips: []string{"1.2.3.160/28", "1.2.3.176/28"},
+			name:      "merge range address",
+			ips:       []string{"1.2.3.160/28", "1.2.3.176/28"},
 			miniRange: []string{"1.2.3.0/24"},
 		},
 	}
@@ -140,7 +175,7 @@ func Test_isPartOfRange(t *testing.T) {
 	tests := []struct {
 		range1 string
 		range2 string
-		res bool
+		res    bool
 	}{
 		{range1: "192.168.10.11/32", range2: "192.168.10.11/32", res: true},
 		{range1: "192.168.10.0/24", range2: "192.168.10.11/32", res: true},
@@ -175,7 +210,7 @@ func Test_ipToBin(t *testing.T) {
 	}
 }
 
-func Test_binToIpRange(t *testing.T)  {
+func Test_binToIpRange(t *testing.T) {
 	ipBin := [32]int{0, 1, 1, 0, 0, 1, 0, 0,
 		0, 0, 0, 1, 1, 0, 0, 1,
 		1, 1, 1, 1, 1, 1, 1, 1,
