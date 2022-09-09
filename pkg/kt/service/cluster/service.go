@@ -41,7 +41,7 @@ func (k *Kubernetes) GetServicesBySelector(matchLabels map[string]string, namesp
 // GetServicesByLabel get services by label
 func (k *Kubernetes) GetServicesByLabel(labels map[string]string, namespace string) (svcs *coreV1.ServiceList, err error) {
 	return k.Clientset.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+		LabelSelector:  labelApi.SelectorFromSet(labels).String(),
 		TimeoutSeconds: &apiTimeout,
 	})
 }
@@ -74,17 +74,18 @@ func (k *Kubernetes) RemoveService(name, namespace string) (err error) {
 }
 
 func (k *Kubernetes) UpdateServiceHeartBeat(name, namespace string) {
+	key := "service_" + name
 	if _, err := k.Clientset.CoreV1().Services(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
-		if healthy, exists := LastHeartBeatStatus["service_" + name]; healthy || !exists {
+		if healthy, exists := LastHeartBeatStatus.Get(key); healthy || !exists {
 			log.Warn().Err(err).Msgf("Failed to update heart beat of service %s", name)
 		} else {
 			log.Debug().Err(err).Msgf("Service %s heart beat interrupted", name)
 		}
-		LastHeartBeatStatus["service_" + name] = false
+		LastHeartBeatStatus.Set(key, false)
 	} else {
 		log.Debug().Msgf("Heartbeat service %s ticked at %s", name, util.FormattedTime())
-		LastHeartBeatStatus["service_" + name] = true
+		LastHeartBeatStatus.Set(key, true)
 	}
 }
 

@@ -19,7 +19,7 @@ func (k *Kubernetes) GetDeployment(name string, namespace string) (*appV1.Deploy
 // GetDeploymentsByLabel get deployments by label
 func (k *Kubernetes) GetDeploymentsByLabel(labels map[string]string, namespace string) (pods *appV1.DeploymentList, err error) {
 	return k.Clientset.AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+		LabelSelector:  labelApi.SelectorFromSet(labels).String(),
 		TimeoutSeconds: &apiTimeout,
 	})
 }
@@ -86,17 +86,18 @@ func (k *Kubernetes) DecreaseDeploymentRef(name string, namespace string) (clean
 }
 
 func (k *Kubernetes) UpdateDeploymentHeartBeat(name, namespace string) {
+	key := "deployment_" + name
 	if _, err := k.Clientset.AppsV1().Deployments(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
-		if healthy, exists := LastHeartBeatStatus["deployment_" + name]; healthy || !exists {
+		if healthy, exists := LastHeartBeatStatus.Get(key); healthy || !exists {
 			log.Warn().Err(err).Msgf("Failed to update heart beat of deployment %s", name)
 		} else {
 			log.Debug().Err(err).Msgf("Deployment %s heart beat interrupted", name)
 		}
-		LastHeartBeatStatus["deployment_" + name] = false
+		LastHeartBeatStatus.Set(key, false)
 	} else {
 		log.Debug().Msgf("Heartbeat deployment %s ticked at %s", name, util.FormattedTime())
-		LastHeartBeatStatus["deployment_" + name] = true
+		LastHeartBeatStatus.Set(key, true)
 	}
 }
 
