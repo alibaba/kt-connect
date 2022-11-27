@@ -20,8 +20,12 @@ func ByTun2Socks() error {
 	if err != nil {
 		return err
 	}
+	if opt.Get().Connect.ProxyAddr != common.Localhost && !opt.Get().Connect.DisableTunDevice {
+		return fmt.Errorf("parameter --proxyAddr is valid only when --disableTunDevice is used")
+	}
 
 	localSshPort := util.GetRandomTcpPort()
+	socksAddr := fmt.Sprintf("socks5://%s:%d", opt.Get().Connect.ProxyAddr, opt.Get().Connect.ProxyPort)
 	if _, err = transmission.SetupPortForwardToLocal(podName, common.StandardSshPort, localSshPort); err != nil {
 		return err
 	}
@@ -31,15 +35,14 @@ func ByTun2Socks() error {
 
 	if opt.Get().Connect.DisableTunDevice {
 		if util.IsWindows() {
-			log.Warn().Msgf("DNS mode will switch to 'hosts' when tun device is disabled")
+			log.Warn().Msgf("DNS mode will auto switch to 'hosts' when tun device is disabled")
 			opt.Get().Connect.DnsMode = util.DnsModeHosts
 		}
-		showSetupSocksMessage(opt.Get().Connect.ProxyPort)
+		showSetupSocksMessage(socksAddr)
 	} else {
 		if err = tun.Ins().CheckContext(); err != nil {
 			return err
 		}
-		socksAddr := fmt.Sprintf("socks5://127.0.0.1:%d", opt.Get().Connect.ProxyPort)
 		if err = tun.Ins().ToSocks(socksAddr); err != nil {
 			return err
 		}
@@ -83,8 +86,8 @@ func setupTunRoute() error {
 func startSocks5Connection(podIP, privateKey string, localSshPort int, isInitConnect bool) error {
 	var res = make(chan error)
 	var ticker *time.Ticker
-	sshAddress := fmt.Sprintf("127.0.0.1:%d", localSshPort)
-	socks5Address := fmt.Sprintf("127.0.0.1:%d", opt.Get().Connect.ProxyPort)
+	sshAddress := fmt.Sprintf("%s:%d", common.Localhost, localSshPort)
+	socks5Address := fmt.Sprintf("%s:%d", opt.Get().Connect.ProxyAddr, opt.Get().Connect.ProxyPort)
 	gone := false
 	go func() {
 		// will hang here if not error happen
@@ -140,14 +143,14 @@ func setupSocks5HeartBeat(podIP, socks5Address string) *time.Ticker {
 	return ticker
 }
 
-func showSetupSocksMessage(socksPort int) {
+func showSetupSocksMessage(socksAddress string) {
 	if util.IsWindows() {
 		if util.IsCmd() {
-			log.Info().Msgf(">> Please setup proxy config by: set http_proxy=socks5://127.0.0.1:%d <<", socksPort)
+			log.Info().Msgf(">> Please setup proxy config by: set http_proxy=%s <<", socksAddress)
 		} else {
-			log.Info().Msgf(">> Please setup proxy config by: $env:http_proxy=\"socks5://127.0.0.1:%d\" <<", socksPort)
+			log.Info().Msgf(">> Please setup proxy config by: $env:http_proxy=\"%s\" <<", socksAddress)
 		}
 	} else {
-		log.Info().Msgf(">> Please setup proxy config by: export http_proxy=socks5://127.0.0.1:%d <<", socksPort)
+		log.Info().Msgf(">> Please setup proxy config by: export http_proxy=%s <<", socksAddress)
 	}
 }

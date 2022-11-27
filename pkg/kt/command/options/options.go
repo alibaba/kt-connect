@@ -16,6 +16,7 @@ type ConnectOptions struct {
 	DisableTunDevice bool
 	DisableTunRoute  bool
 	ProxyPort        int
+	ProxyAddr        string
 	DnsPort          int
 	DnsCacheTtl      int
 	IncludeIps       string

@@ -67,6 +67,11 @@ func ConnectFlags() []OptionConfig {
 			Description: "(tun2socks mode only) Specify the local port which socks5 proxy should use",
 		},
 		{
+			Target:      "ProxyAddr",
+			DefaultValue: "127.0.0.1",
+			Description: "(tun2socks mode only) Specify the ip address or hostname which socks5 proxy should use",
+		},
+		{
 			Target:      "DnsCacheTtl",
 			DefaultValue: 60,
 			Description: "(local dns mode only) DNS cache refresh interval in seconds",
