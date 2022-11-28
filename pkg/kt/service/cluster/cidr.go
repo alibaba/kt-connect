@@ -36,7 +36,7 @@ func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 	excludeIps := strings.Split(opt.Get().Connect.ExcludeIps, ",")
 	var excludeCidr []string
 	if len(apiServerIp) > 0 {
-		excludeIps = append(excludeIps, apiServerIp + "/32")
+		excludeIps = append(excludeIps, apiServerIp+"/32")
 	}
 
 	if opt.Get().Connect.IncludeIps != "" {
@@ -79,29 +79,53 @@ func (k *Kubernetes) ClusterCidr(namespace string) ([]string, []string) {
 
 func mergeIpRange(svcCidr []string, podCidr []string, apiServerIp string) []string {
 	cidr := calculateMinimalIpRange(append(svcCidr, podCidr...))
-	apiServerOverlap := false
+	mergedCidr := make([]string, 0)
 	for _, r := range cidr {
-		if isPartOfRange(r, apiServerIp + "/32") {
-			apiServerOverlap = true
-			break
+		if isPartOfRange(r, apiServerIp+"/32") {
+			mergedCidr = append(mergedCidr, excludeIpFromRange(r, apiServerIp)...)
+		} else {
+			mergedCidr = append(mergedCidr, r)
 		}
 	}
-	if !apiServerOverlap {
-		return cidr
-	}
-
-	// A workaround of issue-320
-	return append(removeCidrOf(svcCidr, apiServerIp), removeCidrOf(podCidr, apiServerIp)...)
+	return mergedCidr
 }
 
-func removeCidrOf(cidrRanges []string, ipRange string) []string {
-	var newRange []string
-	for _, cidr := range cidrRanges {
-		if !isPartOfRange(cidr, ipRange) {
-			newRange = append(newRange, cidr)
+func excludeIpFromRange(ipRange string, ip string) []string {
+	ipRangeBin, err := ipRangeToBin(ipRange)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to parse IP range '%s', skipping", ipRange)
+		return []string{}
+	}
+	ipBin, err := ipToBin(ip)
+	if err != nil {
+		log.Warn().Err(err).Msgf("Failed to parse IP '%s', skipping", ip)
+		return []string{}
+	}
+	var excludedRanges []string
+	var excludedIpBin [32]int
+	reachHostPart := false
+	for i := 0; i < 32; i++ {
+		if i < 31 && ipRangeBin[i+1] == -1 {
+			reachHostPart = true
+		} else if reachHostPart {
+			excludedIpBin[i-1] = ipBin[i-1]
+			if ipBin[i] == 0 {
+				excludedIpBin[i] = 1
+			} else {
+				excludedIpBin[i] = 0
+			}
+			if i < 31 {
+				excludedIpBin[i+1] = -1
+			}
+			excludedRanges = append(excludedRanges, binToIpRange(excludedIpBin, false))
+		} else if ipRangeBin[i] != ipBin[i] {
+			log.Warn().Err(err).Msgf("IP '%s' is not part of range '%s', skipping", ipRange, ip)
+			return []string{}
+		} else {
+			excludedIpBin[i] = ipBin[i]
 		}
 	}
-	return newRange
+	return excludedRanges
 }
 
 func isPartOfRange(ipRange string, subIpRange string) bool {
@@ -126,12 +150,12 @@ func isPartOfRange(ipRange string, subIpRange string) bool {
 
 func getPodIps(k kubernetes.Interface, namespace string) []string {
 	podList, err := k.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
-		Limit: 1000,
+		Limit:          1000,
 		TimeoutSeconds: &apiTimeout,
 	})
 	if err != nil {
 		podList, err = k.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
-			Limit: 1000,
+			Limit:          1000,
 			TimeoutSeconds: &apiTimeout,
 		})
 		if err != nil {
@@ -152,12 +176,12 @@ func getPodIps(k kubernetes.Interface, namespace string) []string {
 
 func getServiceIps(k kubernetes.Interface, namespace string) []string {
 	serviceList, err := k.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{
-		Limit: 1000,
+		Limit:          1000,
 		TimeoutSeconds: &apiTimeout,
 	})
 	if err != nil {
 		serviceList, err = k.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{
-			Limit: 1000,
+			Limit:          1000,
 			TimeoutSeconds: &apiTimeout,
 		})
 		if err != nil {
@@ -223,7 +247,7 @@ func calculateMinimalIpRange(ips []string) []string {
 }
 
 func binToIpRange(bins [32]int, withAlign bool) string {
-	ips := []string {"0", "0", "0", "0"}
+	ips := []string{"0", "0", "0", "0"}
 	mask := 0
 	end := false
 	for i := 0; i < 4; i++ {

@@ -79,18 +79,22 @@ func Test_mergeIpRange(t *testing.T) {
 			expectedCidr: []string{"10.1.2.0/24", "10.2.2.0/24", "192.168.0.0/16"},
 		},
 		{
-			name:         "api server ip in svc cidr",
-			svcCidr:      []string{"10.1.2.0/24", "10.2.2.0/24"},
-			podCidr:      []string{"192.168.0.0/16"},
-			apiServerIp:  "10.1.2.4",
-			expectedCidr: []string{"10.2.2.0/24", "192.168.0.0/16"},
+			name:        "api server ip in svc cidr",
+			svcCidr:     []string{"10.1.2.0/24", "10.2.2.0/24"},
+			podCidr:     []string{"192.168.0.0/16"},
+			apiServerIp: "10.2.2.26",
+			expectedCidr: []string{"10.1.2.0/24", "10.2.2.128/25", "10.2.2.64/26", "10.2.2.32/27", "10.2.2.0/28",
+				"10.2.2.16/29", "10.2.2.28/30", "10.2.2.24/31", "10.2.2.27/32", "192.168.0.0/16"},
 		},
 		{
-			name:         "api server ip in pod cidr",
-			svcCidr:      []string{"10.1.2.0/24", "10.2.2.0/24"},
-			podCidr:      []string{"192.168.0.0/16"},
-			apiServerIp:  "192.168.2.4",
-			expectedCidr: []string{"10.2.2.0/24", "10.2.2.0/24"},
+			name:        "api server ip in pod cidr",
+			svcCidr:     []string{"10.1.2.0/24", "10.2.2.0/24"},
+			podCidr:     []string{"192.168.0.0/16"},
+			apiServerIp: "192.168.40.80",
+			expectedCidr: []string{"10.1.2.0/24", "10.2.2.0/24", "192.168.128.0/17", "192.168.64.0/18",
+				"192.168.0.0/19", "192.168.48.0/20", "192.168.32.0/21", "192.168.44.0/22", "192.168.42.0/23",
+				"192.168.41.0/24", "192.168.40.128/25", "192.168.40.0/26", "192.168.40.96/27", "192.168.40.64/28",
+				"192.168.40.88/29", "192.168.40.84/30", "192.168.40.82/31", "192.168.40.81/32"},
 		},
 	}
 	for _, tt := range tests {
@@ -158,16 +162,6 @@ func Test_decToBin(t *testing.T) {
 				require.Equal(t, res[i], test.bin[i])
 			}
 		})
-	}
-}
-
-func Test_removeCidrOf(t *testing.T) {
-	cidrs := []string{"192.168.10.0/24", "192.168.11.0/24", "192.168.12.0/24"}
-	expectedCidrs := []string{"192.168.10.0/24", "192.168.12.0/24"}
-	realCidrs := removeCidrOf(cidrs, "192.168.11.1/26")
-	require.Equal(t, len(expectedCidrs), len(realCidrs))
-	for i := 0; i < len(expectedCidrs); i++ {
-		require.Equal(t, expectedCidrs[i], realCidrs[i])
 	}
 }
 
