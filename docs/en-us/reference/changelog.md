@@ -1,6 +1,14 @@
 Changelog
 ---
 
+### 0.3.7
+
+> Release time: 2022-11-29
+
+- Revert `--proxyAddr` parameter of `connect` command
+- Fix a logic issue of CIDR merging in preview version
+- Fix incorrect port number in `forward` prompt message
+
 ### 0.3.6
 
 > Release time: 2022-07-08

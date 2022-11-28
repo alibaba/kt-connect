@@ -21,6 +21,7 @@ ktctl connect
 --disableTunDevice     （仅用于`tun2socks`模式）仅创建Socks5代理，不创建本地tun设备
 --disableTunRoute      （仅用于`tun2socks`模式）仅创建tun设备，不自动设置本地路由规则
 --proxyPort value      （仅用于`tun2socks`模式）指定Socks5代理监听的端口（默认值为2223）
+--proxyAddr value      （仅用于`tun2socks`模式）指定Socks5代理监听的IP地址或主机名（默认值为127.0.0.1）
 --dnsCacheTtl value    （仅用于`localDNS`模式）指定DNS缓存的超时秒数（默认值为60）
 ```
 
@@ -32,3 +33,4 @@ ktctl connect
  `podDNS`模式将使用集群的DNS服务解析所有域名，
  `hosts`模式用于限定本地只允许访问指定Namespace的服务域名，可通过`hosts:<namespaces>`格式指定可访问的Namespace列表，逗号分隔，如`--dnsMode hosts:default,dev,test`，默认只能访问Shadow Pod所在Namespace的服务。
 - `--shareShadow`参数允许所有在同一个Namespace下工作的开发者共用一个Shadow Pod，这种方式能够在一定程度上节约集群资源，但在Shadow Pod偶然发生崩溃时，会同时影响到所有开发者。
+- `--proxyAddr`参数仅在同时使用了`--disableTunDevice`参数时才有效，当使用本地TUN设备时，Socks代理必须监听`127.0.0.1`地址

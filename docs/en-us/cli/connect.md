@@ -21,6 +21,7 @@ Available options:
 --disableTunDevice     (tun2socks mode only) Create socks5 proxy without tun device
 --disableTunRoute      (tun2socks mode only) Do not auto setup tun device route
 --proxyPort value      (tun2socks mode only) Specify the local port which socks5 proxy should use (default: 2223)
+--proxyAddr value      (tun2socks mode only) Specify the ip address or hostname which socks5 proxy should use
 --dnsCacheTtl value    (local dns mode only) DNS cache refresh interval in seconds (default: 60)
 ```
 
@@ -32,3 +33,4 @@ Key options explanation:
   The `podDNS` mode will use the domain name service of the cluster to resolve all domains,
   The `hosts` mode is used to limit the service domain names that are only allowed to access the specified Namespace locally. You can specify a list of accessible Namespaces in the `hosts:<namespaces>` format, separated by commas, such as `--dnsMode hosts:default,dev,test` , by default, only the services of the Namespace where the Shadow Pod is located can be accessed.
 - The `--shareShadow` parameter allows all developers working under the same Namespace to share a Shadow Pod, which can save cluster resources to a certain extent, but when the Shadow Pod crashes accidentally, it will affect all developers at the same time.
+- The `--proxyAddr` parameter is only valid when `--disableTunDevice` parameter is also used, since the local TUN device require a socks proxy listening to `127.0.0.1`.
