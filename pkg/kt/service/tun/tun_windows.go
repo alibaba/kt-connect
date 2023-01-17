@@ -37,7 +37,7 @@ func (s *Cli) SetRoute(ipRange []string, excludeIpRange []string) error {
 
 	// add by lichp, set ipv6 address
 	if opt.Store.Ipv6Cluster == true {
-		lastErr = s.setIPv6Route(ipRange, excludeIpRange)
+		anyRouteOk, lastErr = s.setIPv6Route(ipRange, excludeIpRange)
 	} else {
 		for i, r := range ipRange {
 			log.Info().Msgf("Adding route to %s", r)
@@ -101,66 +101,58 @@ func (s *Cli) SetRoute(ipRange []string, excludeIpRange []string) error {
 	return lastErr
 }
 
-func (s *Cli) setIPv6Route(ipRange []string, excludeIpRange []string) error {
+func (s *Cli) setIPv6Route(ipRange []string, excludeIpRange []string) (bool, error) {
 	var lastErr error
 	anyRouteOk := false
-
 	// add by lichp, set ipv6 address
-	if opt.Store.Ipv6Cluster == true {
-		var err error
-
-		for i, r := range ipRange {
-			if i == 0 {
-				// run command: netsh interface ipv6 set address EtConnectTunnel fd11:1111::/32
-				_, _, err = util.RunAndWait(exec.Command("netsh",
-					"interface",
-					"ipv6",
-					"set",
-					"address",
-					s.GetName(),
-					r,
-				))
-			} else {
-				// run command: netsh interface ipv6 add address EtConnectTunnel fd11:1112::/32
-				_, _, err = util.RunAndWait(exec.Command("netsh",
-					"interface",
-					"ipv6",
-					"add",
-					"address",
-					s.GetName(),
-					r,
-				))
-			}
-			if err != nil {
-				log.Warn().Msgf("Failed to add ip addr %s to tun device", r)
-				lastErr = err
-				continue
-			} else {
-				anyRouteOk = true
-			}
-
-			// run command: netsh interface ipv6 add route fd11:1112::/32 EtConnectTunnel fd11:1112::
+	var err error
+	for i, r := range ipRange {
+		if i == 0 {
+			// run command: netsh interface ipv6 set address EtConnectTunnel fd11:1111::/32
+			_, _, err = util.RunAndWait(exec.Command("netsh",
+				"interface",
+				"ipv6",
+				"set",
+				"address",
+				s.GetName(),
+				r,
+			))
+		} else {
+			// run command: netsh interface ipv6 add address EtConnectTunnel fd11:1112::/32
 			_, _, err = util.RunAndWait(exec.Command("netsh",
 				"interface",
 				"ipv6",
 				"add",
-				"route",
-				r,
+				"address",
 				s.GetName(),
-				strings.Split(r, "/")[0],
+				r,
 			))
-			if err != nil {
-				log.Warn().Msgf("Failed to set route %s to tun device", r)
-				lastErr = err
-			} else {
-				anyRouteOk = true
-			}
+		}
+		if err != nil {
+			log.Warn().Msgf("Failed to add ip addr %s to tun device", r)
+			lastErr = err
+			continue
+		} else {
+			anyRouteOk = true
+		}
+		// run command: netsh interface ipv6 add route fd11:1112::/32 EtConnectTunnel fd11:1112::
+		_, _, err = util.RunAndWait(exec.Command("netsh",
+			"interface",
+			"ipv6",
+			"add",
+			"route",
+			r,
+			s.GetName(),
+			strings.Split(r, "/")[0],
+		))
+		if err != nil {
+			log.Warn().Msgf("Failed to set route %s to tun device", r)
+			lastErr = err
+		} else {
+			anyRouteOk = true
 		}
 	}
-	if !anyRouteOk {
-		return AllRouteFailError{lastErr}
-	}
-	return lastErr
+	return anyRouteOk, lastErr
 }
 
 // CheckRoute check whether all route rule setup properly
