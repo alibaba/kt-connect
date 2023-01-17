@@ -16,6 +16,7 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+	"strings"
 )
 
 // Prepare setup log level, time difference and kube config
@@ -116,6 +117,10 @@ func combineKubeOpts() (err error) {
 	}
 	opt.Store.Clientset = clientSet
 	opt.Store.RestConfig = restConfig
+
+	if opt.Get().Global.IpVersion == 6 || strings.Contains(restConfig.Host, "[") {
+		opt.Store.Ipv6Cluster = true
+	}
 
 	clusterName := "none"
 	for name, context := range config.Contexts {

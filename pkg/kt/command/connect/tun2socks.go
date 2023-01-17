@@ -86,7 +86,7 @@ func setupTunRoute() error {
 func startSocks5Connection(podIP, privateKey string, localSshPort int, isInitConnect bool) error {
 	var res = make(chan error)
 	var ticker *time.Ticker
-	sshAddress := fmt.Sprintf("%s:%d", common.Localhost, localSshPort)
+	sshAddress := fmt.Sprintf("%s:%d", common.LocalhostIp6, localSshPort)
 	socks5Address := fmt.Sprintf("%s:%d", opt.Get().Connect.ProxyAddr, opt.Get().Connect.ProxyPort)
 	gone := false
 	go func() {
@@ -128,7 +128,7 @@ func setupSocks5HeartBeat(podIP, socks5Address string) *time.Ticker {
 		for {
 			select {
 			case <-ticker.C:
-				if c, err2 := dialer.Dial("tcp", fmt.Sprintf("%s:%d", podIP, common.StandardSshPort)); err2 != nil {
+				if c, err2 := dialer.Dial("tcp", fmt.Sprintf("[%s]:%d", podIP, common.StandardSshPort)); err2 != nil {
 					log.Debug().Err(err2).Msgf("Socks proxy heartbeat interrupted")
 				} else {
 					_ = c.Close()

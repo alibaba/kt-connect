@@ -99,6 +99,11 @@ func GlobalFlags() []OptionConfig {
 			DefaultValue: "",
 			Description:  "Specify resource limit for shadow and router pod, e.g. '0.5c,512m'",
 		},
+		{
+			Target:       "IpVersion",
+			DefaultValue: 4,
+			Description:  "network type connect local and remote,the value could be '4' or '6'",
+		},
 	}
 	return flags
 }

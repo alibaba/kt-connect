@@ -29,4 +29,6 @@ type RuntimeStore struct {
 	Replicas int32
 	// Service exposed service name
 	Service string
+	// isIpv6Cluster
+	Ipv6Cluster bool
 }

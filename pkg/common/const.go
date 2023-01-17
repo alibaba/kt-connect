@@ -2,7 +2,8 @@ package common
 
 const (
 	// Localhost ip of localhost
-	Localhost = "127.0.0.1"
+	Localhost    = "127.0.0.1"
+	LocalhostIp6 = "[::]"
 	// YyyyMmDdHhMmSs timestamp format
 	YyyyMmDdHhMmSs = "2006-01-02 15:04:05"
 	// StandardSshPort standard ssh port
