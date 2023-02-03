@@ -8,11 +8,33 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
+type HeartBeatStatus struct {
+	status map[string]bool
+	sync.RWMutex
+}
+
+func (h *HeartBeatStatus) Get(key string) (value bool, exists bool) {
+	h.RLock()
+	value, exists = h.status[key]
+	h.RUnlock()
+	return
+}
+
+func (h *HeartBeatStatus) Set(key string, value bool) {
+	h.Lock()
+	h.status[key] = value
+	h.Unlock()
+	return
+}
+
 // LastHeartBeatStatus record last heart beat status to avoid verbose log
-var LastHeartBeatStatus = make(map[string]bool)
+var LastHeartBeatStatus = &HeartBeatStatus{
+	status: map[string]bool{},
+}
 
 // SetupTimeDifference get time difference between cluster and local
 func SetupTimeDifference() error {
@@ -47,7 +69,7 @@ func SetupTimeDifference() error {
 
 // SetupHeartBeat setup heartbeat watcher
 func SetupHeartBeat(name, namespace string, updater func(string, string)) {
-	ticker := time.NewTicker(time.Minute *util.ResourceHeartBeatIntervalMinus - util.RandomSeconds(0, 10))
+	ticker := time.NewTicker(time.Minute*util.ResourceHeartBeatIntervalMinus - util.RandomSeconds(0, 10))
 	go func() {
 		for range ticker.C {
 			updater(name, namespace)
@@ -57,9 +79,9 @@ func SetupHeartBeat(name, namespace string, updater func(string, string)) {
 
 // SetupPortForwardHeartBeat setup heartbeat watcher for port forward
 func SetupPortForwardHeartBeat(port int) *time.Ticker {
-	ticker := time.NewTicker(util.PortForwardHeartBeatIntervalSec * time.Second - util.RandomSeconds(0, 5))
+	ticker := time.NewTicker(util.PortForwardHeartBeatIntervalSec*time.Second - util.RandomSeconds(0, 5))
 	go func() {
-		TickLoop:
+	TickLoop:
 		for {
 			select {
 			case <-ticker.C:

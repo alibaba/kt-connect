@@ -18,7 +18,7 @@ func (k *Kubernetes) GetConfigMap(name, namespace string) (*coreV1.ConfigMap, er
 // GetConfigMapsByLabel get deployments by label
 func (k *Kubernetes) GetConfigMapsByLabel(labels map[string]string, namespace string) (pods *coreV1.ConfigMapList, err error) {
 	return k.Clientset.CoreV1().ConfigMaps(namespace).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labelApi.SelectorFromSet(labels).String(),
+		LabelSelector:  labelApi.SelectorFromSet(labels).String(),
 		TimeoutSeconds: &apiTimeout,
 	})
 }
@@ -32,17 +32,18 @@ func (k *Kubernetes) RemoveConfigMap(name, namespace string) (err error) {
 }
 
 func (k *Kubernetes) UpdateConfigMapHeartBeat(name, namespace string) {
+	key := "configmap_" + name
 	if _, err := k.Clientset.CoreV1().ConfigMaps(namespace).
 		Patch(context.TODO(), name, types.JSONPatchType, []byte(resourceHeartbeatPatch()), metav1.PatchOptions{}); err != nil {
-		if healthy, exists := LastHeartBeatStatus["configmap_" + name]; healthy || !exists {
+		if healthy, exists := LastHeartBeatStatus.Get(key); healthy || !exists {
 			log.Warn().Err(err).Msgf("Failed to update heart beat of config map %s", name)
 		} else {
 			log.Debug().Err(err).Msgf("Config map %s heart beat interrupted", name)
 		}
-		LastHeartBeatStatus["configmap_" + name] = false
+		LastHeartBeatStatus.Set(key, false)
 	} else {
 		log.Debug().Msgf("Heartbeat configmap %s ticked at %s", name, util.FormattedTime())
-		LastHeartBeatStatus["configmap_" + name] = true
+		LastHeartBeatStatus.Set(key, true)
 	}
 }
 
