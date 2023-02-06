@@ -79,6 +79,13 @@ func Test_mergeIpRange(t *testing.T) {
 			expectedCidr: []string{"10.1.2.0/24", "10.2.2.0/24", "192.168.0.0/16"},
 		},
 		{
+			name:         "api server ip equal to svc cidr",
+			svcCidr:      []string{"10.1.2.26/32", "10.2.2.0/24"},
+			podCidr:      []string{"192.168.0.0/16"},
+			apiServerIp:  "10.1.2.26",
+			expectedCidr: []string{"10.2.2.0/24", "192.168.0.0/16"},
+		},
+		{
 			name:        "api server ip in svc cidr",
 			svcCidr:     []string{"10.1.2.0/24", "10.2.2.0/24"},
 			podCidr:     []string{"192.168.0.0/16"},
