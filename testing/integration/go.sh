@@ -3,7 +3,7 @@
 NS="kt-integration-test"
 SHADOW_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-shadow:vdev"
 ROUTER_IMAGE="registry.cn-hangzhou.aliyuncs.com/rdc-incubator/kt-connect-router:vdev"
-DOCKER_HOST="ubuntu@192.168.64.2"
+DOCKER_HOST=""
 DNS_MODE="localDNS"
 CONNECT_MODE="tun2socks"
 EXCHANGE_MODE="scale"
@@ -34,7 +34,7 @@ function fail() {
 # Print error message
 function error() {
   log "\e[31m${*} !!!\e[0m"
-  log "check logs for detail: \e[33m`ls -cr /tmp/kt-it-*.log`\e[0m"
+  log "check logs for detail: \e[33m$(ls -cr /tmp/kt-it-*.log)\e[0m"
 }
 
 # Test passed
@@ -45,9 +45,10 @@ function success() {
 # Clean everything up
 function cleanup() {
   log "cleaning up ..."
-  rm -f ${HOME}/.kt/pid/*.pid
+  sudo rm -rf ~root/.kt/pid/
+  rm -rf "${HOME}/.kt/pid/"
   if [ "${DOCKER_HOST}" != "" ]; then
-    PID=`ps aux | grep 'CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}'`
+    PID=$(ps aux | grep 'CfNgL 8080:localhost:8080' | grep -v 'grep' | awk '{print $2}')
     if [ "${PID}" != "" ]; then
       log "disconnect from docker host ${DOCKER_HOST}"
       kill -15 ${PID}
@@ -62,11 +63,11 @@ function cleanup() {
 
 # Wait all resource created by ktctl get cleaned
 function check_resources_cleaned() {
-  for i in `seq 10`; do
+  for i in $(seq 10); do
     sleep 6
     log "checking resource clean up, ${i} times"
-    resource_count=`kubectl -n ${NS} get pod,configmap,service | grep '^\(pod/\|configmap/\|service/\).*' | grep -v 'kube-root-ca\.crt' | wc -l`
-    if [ $resource_count -eq 0 ]; then
+    resource_count=$(kubectl -n ${NS} get pod,configmap,service | grep '^\(pod/\|configmap/\|service/\).*' | grep -v 'kube-root-ca\.crt' | wc -l)
+    if [ ${resource_count} -eq 0 ]; then
       return
     fi
   done
@@ -76,10 +77,10 @@ function check_resources_cleaned() {
 
 # Wait pod ready
 function wait_for_pod() {
-  for i in `seq 10`; do
+  for i in $(seq 10); do
     log "checking pod ${1}, ${i} times"
-    exist=`kubectl -n ${NS} get pod | grep "^${1}-" | grep "${2}/${2}"`
-    if [ "$exist" != "" ]; then
+    exist=$(kubectl -n ${NS} get pod | grep "^${1}-" | grep "${2}/${2}")
+    if [ "${exist}" != "" ]; then
       return
     fi
     sleep 3
@@ -89,14 +90,24 @@ function wait_for_pod() {
 
 # Check if background job running
 function check_job() {
-  declare -i count=`jobs | grep "${1}" | wc -l`
+  declare -i count=$(jobs | grep "${1}" | wc -l)
   if [ ${count} -ne 1 ]; then fail "failed to setup ${1} job"; fi
 }
 
 # Check if ktctl pid file exists
 function check_pid_file() {
-  pidFile=`ls -t ${HOME}/.kt/pid/${1}-*.pid | head -1`
-  pid=`cat ${pidFile}`
+  if [ "${1}" = "connect" ]; then
+    kt_home=~root/.kt
+    with_sudo="sudo"
+  else
+    kt_home="${HOME}/.kt"
+    with_sudo=""
+  fi
+  pidFile=$(${with_sudo} ls -t "${kt_home}/pid/" | grep "${1}-.*\.pid" | head -1)
+  if [ "${pidFile}" = "" ]; then
+    fail "cannot find pid file for command ${1}"
+  fi
+  pid=$(cat "${pidFile}")
   log "ktctl ${1} pid: ${pid}"
 }
 
@@ -112,13 +123,13 @@ function verify() {
     shift 2
   fi
   log "accessing ${url}"
-  for c in `seq ${RETRY_TIMES}`; do
+  for c in $(seq ${RETRY_TIMES}); do
     if [ "${header}" != "" ]; then
-      res=`curl -H "${header}" --connect-timeout 2 -s ${url}`
+      res=$(curl -H "${header}" --connect-timeout 2 -s ${url})
     else
-      res=`curl --connect-timeout 2 -s ${url}`
+      res=$(curl --connect-timeout 2 -s ${url})
     fi
-    if [ "$res" = "${*}" ]; then
+    if [ "${res}" = "${*}" ]; then
       return
     fi
     log "retry times: ${c}"
@@ -133,7 +144,7 @@ function prepare_cluster() {
   if [ ${?} -ne 0 ]; then fail "failed to require root access"; fi
 
   # Check environment is clean
-  existPid=`ps aux | grep "ktctl" | grep -v "grep" | awk '{print $2}' | sort -n | head -1`
+  existPid=$(ps aux | grep "ktctl" | grep -v "grep" | awk '{print $2}' | sort -n | head -1)
   if [ "${existPid}" != "" ]; then fail "ktctl already running before test start (pid: ${existPid})"; fi
 
   rm -f /tmp/kt-it-*.log
@@ -149,10 +160,10 @@ function prepare_cluster() {
   kubectl -n ${NS} exec deployment/tomcat -c tomcat -- /bin/bash \
     -c 'mkdir -p webapps/ROOT; echo "kt-connect demo v1" > webapps/ROOT/index.html'
 
-  podIp=`kubectl -n ${NS} get pod --selector app=tomcat -o jsonpath='{.items[0].status.podIP}'`
+  podIp=$(kubectl -n ${NS} get pod --selector app=tomcat -o jsonpath='{.items[0].status.podIP}')
   log "tomcat pod-ip: ${podIp}"
   if [ "${podIp}" = "" ]; then fail "failed to setup test deployment"; fi
-  clusterIP=`kubectl -n ${NS} get service tomcat -o jsonpath='{.spec.clusterIP}'`
+  clusterIP=$(kubectl -n ${NS} get service tomcat -o jsonpath='{.spec.clusterIP}')
   log "tomcat cluster-ip: ${clusterIP}"
   if [ "${clusterIP}" = "" ]; then fail "failed to setup test service"; fi
 }
@@ -186,7 +197,7 @@ function prepare_local() {
   fi
   sleep 3
 
-  exist=`docker ps -a | grep ' tomcat$' | grep -i ' Up '`
+  exist=$(docker ps -a | grep ' tomcat$' | grep -i ' Up ')
   if [ "${exist}" = "" ]; then fail "failed to start up local tomcat container"; fi
   docker exec tomcat /bin/bash -c 'mkdir -p webapps/ROOT; echo "kt-connect local v2" > webapps/ROOT/index.html'
   if [ $? -ne 0 ]; then fail "failed to update tomcat index page content"; fi
