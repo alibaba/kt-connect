@@ -16,7 +16,7 @@ require (
 	github.com/xjasonlyu/tun2socks/v2 v2.4.1
 	golang.org/x/crypto v0.0.0-20220331220935-ae2d96664a29
 	golang.org/x/net v0.0.0-20220403103023-749bd193bc2b
-	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461
+	golang.org/x/sys v0.1.0
 	golang.zx2c4.com/wintun v0.0.0-20211104114900-415007cec224
 	gopkg.in/yaml.v3 v3.0.0
 	k8s.io/api v0.22.0
