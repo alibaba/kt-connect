@@ -118,10 +118,7 @@ func dumpHosts(hostsMap map[string]string, linesToKeep []string) []string {
 			lines = append(lines, fmt.Sprintf("%s %s", ip, host))
 		}
 	}
-	for _, l := range linesToKeep {
-		lines = append(lines, l)
-	}
-	lines = append(lines, ktHostsEscapeEnd)
+	lines = append(lines, linesToKeep...)
 	return lines
 }
 
