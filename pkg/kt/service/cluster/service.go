@@ -12,10 +12,11 @@ import (
 
 // SvcMetaAndSpec ...
 type SvcMetaAndSpec struct {
-	Meta      *ResourceMeta
-	External  bool
-	Ports     map[int]int
-	Selectors map[string]string
+	Meta           *ResourceMeta
+	External       bool
+	Ports          map[int]int
+	Selectors      map[string]string
+	PortNamePrefix string
 }
 
 // GetService get service

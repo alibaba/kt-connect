@@ -56,6 +56,7 @@ type PreviewOptions struct {
 	External         bool
 	Expose           string
 	SkipPortChecking bool
+	PortNamePrefix   string
 }
 
 // ForwardOptions ...
