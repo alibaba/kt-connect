@@ -18,6 +18,11 @@ func PreviewFlags() []OptionConfig {
 			DefaultValue: false,
 			Description:  "Do not check whether specified local ports are listened",
 		},
+		{
+			Target:       "PortNamePrefix",
+			DefaultValue: "kt-",
+			Description:  "Customize the port name prefix",
+		},
 	}
 	return flags
 }

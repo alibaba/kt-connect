@@ -15,8 +15,8 @@ func Expose(serviceName string) error {
 	version := strings.ToLower(util.RandomString(5))
 	shadowPodName := fmt.Sprintf("%s-kt-%s", serviceName, version)
 	labels := map[string]string{
-		util.KtRole:    util.RolePreviewShadow,
-		util.KtTarget:  util.RandomString(20),
+		util.KtRole:   util.RolePreviewShadow,
+		util.KtTarget: util.RandomString(20),
 	}
 	annotations := map[string]string{
 		util.KtConfig: fmt.Sprintf("service=%s", serviceName),
@@ -53,9 +53,10 @@ func exposeLocalService(serviceName, shadowPodName string, labels, annotations m
 			Labels:      map[string]string{},
 			Annotations: map[string]string{},
 		},
-		External:  opt.Get().Preview.External,
-		Ports:     ports,
-		Selectors: labels,
+		External:       opt.Get().Preview.External,
+		Ports:          ports,
+		Selectors:      labels,
+		PortNamePrefix: opt.Get().Preview.PortNamePrefix,
 	}); err != nil {
 		return err
 	}

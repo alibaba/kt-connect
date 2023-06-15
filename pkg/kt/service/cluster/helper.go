@@ -26,9 +26,14 @@ func createService(metaAndSpec *SvcMetaAndSpec) *coreV1.Service {
 	metaAndSpec.Meta.Annotations = util.MapPut(metaAndSpec.Meta.Annotations, util.KtLastHeartBeat, util.GetTimestamp())
 	metaAndSpec.Meta.Labels = util.MergeMap(metaAndSpec.Meta.Labels, map[string]string{util.ControlBy: util.KubernetesToolkit})
 
+	portNamePrefix := metaAndSpec.PortNamePrefix
+	if portNamePrefix == "" {
+		portNamePrefix = "kt-"
+	}
+
 	for srcPort, targetPort := range metaAndSpec.Ports {
 		servicePorts = append(servicePorts, coreV1.ServicePort{
-			Name:       fmt.Sprintf("kt-%d", srcPort),
+			Name:       fmt.Sprintf("%s%d", portNamePrefix, srcPort),
 			Port:       int32(srcPort),
 			TargetPort: intstr.FromInt(targetPort),
 		})
@@ -141,7 +146,7 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 		},
 		Ports: []coreV1.ContainerPort{},
 		Resources: coreV1.ResourceRequirements{
-			Limits: coreV1.ResourceList{},
+			Limits:   coreV1.ResourceList{},
 			Requests: coreV1.ResourceList{},
 		},
 	}
@@ -150,8 +155,8 @@ func createContainer(image string, args []string, envs map[string]string, ports 
 	}
 	for name, port := range ports {
 		container.Ports = append(container.Ports, coreV1.ContainerPort{
-			Name: name,
-			Protocol: coreV1.ProtocolTCP,
+			Name:          name,
+			Protocol:      coreV1.ProtocolTCP,
 			ContainerPort: int32(port),
 		})
 	}
