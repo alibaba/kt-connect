@@ -55,7 +55,7 @@ func setupDns(shadowPodName, shadowPodIp string) error {
 		}
 		return dns.SetNameServer(fmt.Sprintf("%s:%d", common.Localhost, dnsPort))
 	} else {
-		return fmt.Errorf("invalid dns mode: '%s', supportted mode are %s, %s, %s", opt.Get().Connect.DnsMode,
+		return fmt.Errorf("invalid dns mode: '%s', supported mode are %s, %s, %s", opt.Get().Connect.DnsMode,
 			util.DnsModeLocalDns, util.DnsModePodDns, util.DnsModeHosts)
 	}
 	return nil

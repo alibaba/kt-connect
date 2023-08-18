@@ -55,7 +55,7 @@ func Connect() error {
 	} else if opt.Get().Connect.Mode == util.ConnectModeShuttle {
 		err = connect.BySshuttle()
 	} else {
-		err = fmt.Errorf("invalid connect mode: '%s', supportted mode are %s, %s", opt.Get().Connect.Mode,
+		err = fmt.Errorf("invalid connect mode: '%s', supported mode are %s, %s", opt.Get().Connect.Mode,
 			util.ConnectModeTun2Socks, util.ConnectModeShuttle)
 	}
 	if err != nil {

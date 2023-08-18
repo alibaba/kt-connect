@@ -56,7 +56,7 @@ func Exchange(resourceName string) error {
 	} else if opt.Get().Exchange.Mode == util.ExchangeModeSelector {
 		err = exchange.BySelector(resourceName)
 	} else {
-		err = fmt.Errorf("invalid exchange method '%s', supportted are %s, %s, %s", opt.Get().Exchange.Mode,
+		err = fmt.Errorf("invalid exchange method '%s', supported are %s, %s, %s", opt.Get().Exchange.Mode,
 			util.ExchangeModeSelector, util.ExchangeModeScale, util.ExchangeModeEphemeral)
 	}
 	if err != nil {
