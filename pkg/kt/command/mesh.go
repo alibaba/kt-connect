@@ -64,7 +64,7 @@ func Mesh(resourceName string) error {
 	} else if opt.Get().Mesh.Mode == util.MeshModeAuto {
 		err = mesh.AutoMesh(svc)
 	} else {
-		err = fmt.Errorf("invalid mesh method '%s', supportted are %s, %s", opt.Get().Mesh.Mode,
+		err = fmt.Errorf("invalid mesh method '%s', supported are %s, %s", opt.Get().Mesh.Mode,
 			util.MeshModeAuto, util.MeshModeManual)
 	}
 	if err != nil {
