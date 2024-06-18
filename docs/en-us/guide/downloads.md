@@ -3,7 +3,7 @@ Downloads And Install
 
 <!-- tabs:start -->
 
-#### ** MacOS **
+#### **MacOS**
 
 Simply use [Homebrew](https://brew.sh) to install kt-connect:
 
